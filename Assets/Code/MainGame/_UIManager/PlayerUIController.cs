@@ -7,25 +7,55 @@ public class PlayerUIController : MonoBehaviour
     public TMP_Text hpText;
     public TMP_Text moneyText;
     public TMP_Text starText;
+    public TMP_Text winText;
 
-    private void OnEnable()
-    {
-        UpdateUI(); // อัปเดตครั้งแรก
-        // ถ้าคุณมี Event System ใน PlayerState ให้ Subscribe มาตรงนี้
-    }
+    // ตัวแปรสำหรับจำตัวละครที่เป็น "คนเล่น" (Human)
+    private PlayerState myPlayer;
 
     private void Update()
     {
-        // อัปเดต UI ทุกเฟรม (ง่ายสุด แต่เปลืองนิดหน่อย)
+        // 1. ถ้ายังหาตัวคนเล่นไม่เจอ ให้ลองหาดู
+        if (myPlayer == null)
+        {
+            FindHumanPlayer();
+            return; // ยังไม่มีข้อมูล ให้ข้ามไปก่อน
+        }
+
+        // 2. ถ้าเจอแล้ว ให้อัปเดตค่าจาก "คนเล่น" เท่านั้น (ไม่สนใจว่าเทิร์นใคร)
         UpdateUI();
+    }
+
+    private void FindHumanPlayer()
+    {
+        if (GameTurnManager.Instance != null && GameTurnManager.Instance.allPlayers != null)
+        {
+            // วนหาในลิสต์ผู้เล่นทั้งหมด
+            foreach (var p in GameTurnManager.Instance.allPlayers)
+            {
+                // เงื่อนไข: เอาตัวที่ไม่ใช่ null และ ไม่ใช่ AI
+                if (p != null && !p.isAI)
+                {
+                    myPlayer = p;
+                    Debug.Log($"[UI] 🔒 ล็อคการแสดงผลที่ผู้เล่น: {myPlayer.name}");
+                    break; // เจอแล้วหยุดหาเลย
+                }
+            }
+        }
     }
 
     private void UpdateUI()
     {
-        if (PlayerState.Instance == null) return;
+        // ใช้ข้อมูลจาก myPlayer ที่เราล็อคไว้ แทน GameTurnManager.CurrentPlayer
+        if (hpText != null)
+            hpText.text = $"HP: {myPlayer.PlayerHealth}";
 
-        hpText.text = $"HP: {PlayerState.Instance.PlayerHealth}/100";
-        moneyText.text = $"Money: {PlayerState.Instance.PlayerMoney}";
-        starText.text = $"Star: {PlayerState.Instance.PlayerStar}";
+        if (moneyText != null)
+            moneyText.text = $"Money: {myPlayer.PlayerMoney}";
+
+        if (starText != null)
+            starText.text = $"{myPlayer.PlayerStar}";
+
+        if (winText != null)
+            winText.text = $"{myPlayer.WinCount}";
     }
 }

@@ -113,7 +113,6 @@ public class DiceRollerFromPNG : MonoBehaviour
         float elapsed = 0f;
         int finalIndex = 0;
 
-        // ... (ส่วน Animation หมุนติ้วๆ เหมือนเดิม) ...
         if (dicePanels == null || dicePanels.Length == 0 || dicePanels[0] == null)
         {
             FindAndSetupDicePanels();
@@ -133,45 +132,22 @@ public class DiceRollerFromPNG : MonoBehaviour
             yield return new WaitForSeconds(0.1f);
         }
 
-        // --- ❄️ [แก้ไขตรงนี้] ช่วงสรุปผล ❄️ ---
-        
-        // 1. สุ่มตัวเลขดิบมาก่อน
-        int rawResult = (forcedResult != -1) ? forcedResult : Random.Range(1, dicePanels.Length + 1);
-        int finalResult = rawResult;
+        // --- ช่วงสรุปผล ---
+        int finalResult = (forcedResult != -1) ? forcedResult : Random.Range(1, dicePanels.Length + 1);
 
-        // 2. ✨ เช็คว่าผู้เล่นคนปัจจุบันติด Ice Effect หรือไม่
-        if (GameTurnManager.CurrentPlayer != null)
-        {
-            PlayerState pState = GameTurnManager.CurrentPlayer.GetComponent<PlayerState>();
-            if (pState != null && pState.hasIceEffect)
-            {
-                // ❄️ สูตร: หาร 2 (ปัดเศษขึ้น เพื่อไม่ให้เดิน 0 ช่อง)
-                finalResult = Mathf.CeilToInt(rawResult / 2f);
-                
-                // ล้างสถานะทิ้ง (โดนครั้งเดียวหาย)
-                pState.hasIceEffect = false; 
-
-                Debug.Log($"<color=cyan>❄️ Ice Effect Active! แต้มเดิม {rawResult} เหลือ {finalResult}</color>");
-            }
-        }
-
-        // 3. แสดงผลหน้าลูกเต๋าตามแต้มที่คำนวณใหม่แล้ว
         ShowOnlyPanel(finalResult);
         if (sfxSource != null && rollResultSound != null) sfxSource.PlayOneShot(rollResultSound, 1.0f);
 
         Debug.Log($"🎲 ลูกเต๋าออก {finalResult} (Multiplier: x{pendingMultiplier})");
-        
         yield return new WaitForSeconds(0.5f);
-
-        // คำนวณผลลัพธ์สุดท้าย (คูณไอเทมอื่นๆ ถ้ามี)
-        int finalNumber = finalResult * pendingMultiplier;
-        
+        int finalnubmber = finalResult* pendingMultiplier;
         HideAllPanels();
         isRolling = false;
 
+        // ✅ จุดสำคัญ: ส่งไม้ต่อให้ GameTurnManager เพื่อเปลี่ยน State เป็น Moving
         if (GameTurnManager.Instance != null)
         {
-            GameTurnManager.Instance.OnDiceRolled(finalNumber);
+            GameTurnManager.Instance.OnDiceRolled(finalnubmber);
         }
     }
 

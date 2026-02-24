@@ -16,20 +16,24 @@ public class ShopPackManager : MonoBehaviour
 
     void Start()
     {
-        // ... (โค้ดส่วนนี้เหมือนเดิม) ...
+        // ปุ่มซื้อซอง
         for (int i = 0; i < packButtons.Length; i++)
         {
             int index = i;
             packButtons[i].onClick.AddListener(() => OpenPack(index));
         }
 
+        // ปุ่มปิด Panel
         closeButton.onClick.AddListener(() => packResultPanel.SetActive(false));
-        packResultPanel.SetActive(false);
+
+        packResultPanel.SetActive(false); // ปิดไว้ก่อน
     }
 
     void OpenPack(int packIndex)
     {
         Debug.Log($"เปิดซอง {packIndex + 1}");
+
+        // เปิด Panel
         packResultPanel.SetActive(true);
 
         // ล้างช่องการ์ดก่อน
@@ -43,14 +47,13 @@ public class ShopPackManager : MonoBehaviour
         for (int i = 0; i < cardsPerPack && i < cardSlots.Length; i++)
         {
             CardData card = GetRandomCardForPack(packIndex);
-            
-            // ถ้าได้ null (ไม่มีการ์ดใน pool นั้นแล้ว) ให้ข้ามไปเลย ช่องนั้นจะว่าง (SetActive false)
             if (card == null) continue;
 
-            // Mark ว่าการ์ดถูกใช้แล้ว
             card.isUsable = true;
+           /* cardSlots[i].preserveAspect = true;
+cardSlots[i].rectTransform.sizeDelta = new Vector2(200, 450); // ขนาดเดียวกันทุกใบ*/
 
-            // แสดงผล
+            // แสดงผลในช่อง
             cardSlots[i].sprite = card.icon;
             cardSlots[i].gameObject.SetActive(true);
 
@@ -60,47 +63,29 @@ public class ShopPackManager : MonoBehaviour
 
     CardData GetRandomCardForPack(int packIndex)
     {
-        float rand = Random.value; // สุ่มค่า 0.0 - 1.0
+        float rand = Random.value;
         CardRarity rarity = CardRarity.Common;
 
         switch (packIndex)
         {
-            case 0: 
-                // แบบแรก: Normal 70%, Rare 30%
-                rarity = (rand <= 0.7f) ? CardRarity.Common : CardRarity.Rare;
-                break;
-
-            case 1: 
-                // แบบสอง: Normal 30%, Rare 60%, SR 10%
-                if (rand <= 0.3f) 
-                    rarity = CardRarity.Common; // 0.0 - 0.3 (30%)
-                else if (rand <= 0.9f) 
-                    rarity = CardRarity.Rare;   // 0.3 - 0.9 (60%)
-                else 
-                    rarity = CardRarity.SR;     // 0.9 - 1.0 (10%)
-                break;
-
-            case 2: 
-                // แบบสาม: Rare 60%, SR 30%, SSR 10%
-                if (rand <= 0.6f) 
-                    rarity = CardRarity.Rare;   // 0.0 - 0.6 (60%)
-                else if (rand <= 0.9f) 
-                    rarity = CardRarity.SR;     // 0.6 - 0.9 (30%)
-                else 
-                    rarity = CardRarity.SSR;    // 0.9 - 1.0 (10%)
-                break;
-
-            case 3: 
-                // แบบสี่: SR 70%, SSR 30%
-                rarity = (rand <= 0.7f) ? CardRarity.SR : CardRarity.SSR;
-                break;
+            case 0: rarity = (rand <= 0.7f) ? CardRarity.Common : CardRarity.Rare; break;
+            case 1: if (rand <= 0.5f) rarity = CardRarity.Common;
+                    else if (rand <= 0.8f) rarity = CardRarity.Rare;
+                    else rarity = CardRarity.SR; break;
+            case 2: if (rand <= 0.5f) rarity = CardRarity.Rare;
+                    else if (rand <= 0.9f) rarity = CardRarity.SR;
+                    else rarity = CardRarity.SSR; break;
+            case 3: rarity = (rand <= 0.6f) ? CardRarity.SR : CardRarity.SSR; break;
         }
 
-        // ดึงการ์ดจาก Pool ตาม Rarity ที่สุ่มได้ และต้องยังไม่ถูกใช้ (!isUsable)
         List<CardData> pool = allCards.FindAll(c => !c.isUsable && c.rarity == rarity);
 
-        // **แก้ไขตรงนี้**: ตัดส่วน Fallback ทิ้งทั้งหมด
-        // ถ้าไม่มีการ์ดใน Pool นี้เหลือแล้ว ให้ return null ทันที เพื่อให้ช่องนั้น "ว่าง"
+        if (pool.Count == 0)
+            pool = allCards.FindAll(c => !c.isUsable && c.rarity == CardRarity.Common);
+
+        if (pool.Count == 0)
+            pool = allCards.FindAll(c => !c.isUsable);
+
         if (pool.Count == 0) return null;
 
         int index = Random.Range(0, pool.Count);

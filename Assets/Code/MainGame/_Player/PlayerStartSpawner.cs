@@ -1,122 +1,128 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-/// <summary>
-/// จัดการตำแหน่งเริ่มต้นของผู้เล่นให้ตรงกับช่อง Start ของบอร์ด
-/// และช่วยกู้สถานะเมื่อกลับจากฉากอื่นแล้วตำแหน่ง/Route อ้างอิงไม่ถูกต้อง
-/// </summary>
 public class PlayerStartSpawner : MonoBehaviour
 {
     public RouteManager routeManager;
-    public PlayerPathWalker playerPathWalker;
+    public List<PlayerPathWalker> allPlayers;
 
-    [Header("Recovery Settings")]
-    [Tooltip("ถ้าเข้า scene บอร์ดแล้ว currentNode ไม่อยู่ใน map นี้ ให้ย้ายกลับ Start อัตโนมัติ")]
-    public bool respawnWhenCurrentNodeInvalid = true;
+    // สมุดจดตำแหน่ง (Static)
+    public static Dictionary<string, int> LastKnownPositions = new Dictionary<string, int>();
 
-    private void Start()
+    public static void SaveAllPlayersPositions(List<PlayerPathWalker> players)
     {
-        ResolveReferences();
-        SpawnPlayerAtRandomStart();
-    }
-
-    private void OnEnable()
-    {
-        SceneManager.sceneLoaded += OnSceneLoaded;
-    }
-
-    private void OnDisable()
-    {
-        SceneManager.sceneLoaded -= OnSceneLoaded;
-    }
-
-    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
-    {
-        ResolveReferences();
-
-        // ไม่เจอ RouteManager = ไม่ใช่ฉากบอร์ด/ยังไม่พร้อม
-        if (routeManager == null || playerPathWalker == null)
-            return;
-
-        if (!respawnWhenCurrentNodeInvalid)
-            return;
-
-        NodeConnection currentNodeData = routeManager.GetNodeData(playerPathWalker.currentNodeID);
-        if (currentNodeData == null || currentNodeData.node == null)
+        LastKnownPositions.Clear();
+        foreach (var p in players)
         {
-            Debug.LogWarning($"[PlayerStartSpawner] Current node ID {playerPathWalker.currentNodeID} is invalid in scene '{scene.name}'. Respawning to Start tile.");
-            SpawnPlayerAtRandomStart();
+            if (p != null)
+            {
+                if (LastKnownPositions.ContainsKey(p.name))
+                    LastKnownPositions[p.name] = p.currentNodeID;
+                else
+                    LastKnownPositions.Add(p.name, p.currentNodeID);
+
+                Debug.Log($"💾 Save Position: {p.name} at Node {p.currentNodeID}");
+            }
         }
     }
 
-    private void ResolveReferences()
+    IEnumerator Start()
     {
-        if (playerPathWalker == null)
-            playerPathWalker = GetComponent<PlayerPathWalker>();
+        // ⏳ รอให้ RouteManager พร้อมจริงๆ
+        while (routeManager == null || routeManager.nodeConnections == null || routeManager.nodeConnections.Count == 0)
+        {
+            Debug.Log("⏳ Waiting for RouteManager to initialize...");
+            yield return null;
+        }
 
-        if (routeManager == null)
-            routeManager = FindObjectOfType<RouteManager>(true);
+        yield return new WaitForSeconds(0.1f);
 
-        if (routeManager == null)
-            routeManager = RouteManager.Instance;
+        // อัปเดตรายชื่อคนใน GameTurnManager
+        if (GameTurnManager.Instance != null)
+        {
+            GameTurnManager.Instance.allPlayers.Clear();
+            foreach (var p in allPlayers)
+            {
+                if (p != null)
+                {
+                    // 🛠️ แก้ไข: ต้องดึง GetComponent<PlayerState>() เพราะ GameTurnManager เก็บ PlayerState ไม่ใช่ Walker
+                    var state = p.GetComponent<PlayerState>();
+                    if (state != null)
+                    {
+                        GameTurnManager.Instance.allPlayers.Add(state);
+                    }
+                }
+            }
+        }
+
+        SpawnAllPlayers();
     }
 
-    public void SpawnPlayerAtRandomStart()
+    public void SpawnAllPlayers()
     {
-        if (!ResolveAndValidate())
-            return;
-
+        // หาจุด Start ทั้งหมดเตรียมไว้สำหรับ Player
         List<NodeConnection> startNodes = routeManager.nodeConnections
-            .Where(n => n != null && n.node != null && n.type == TileType.Start)
-            .ToList();
+            .Where(n => n.type == TileType.Start).ToList();
 
-        if (startNodes.Count == 0)
+        foreach (var playerWalker in allPlayers)
         {
-            Debug.LogWarning("[PlayerStartSpawner] ไม่พบ Node ที่เป็น TileType.Start, fallback ไปช่องแรกที่ใช้งานได้");
+            if (playerWalker == null) continue;
 
-            NodeConnection fallback = routeManager.nodeConnections
-                .FirstOrDefault(n => n != null && n.node != null);
+            playerWalker.gameObject.SetActive(true);
+            NodeConnection targetData = null;
 
-            if (fallback == null)
+            // 1. เช็คว่ามีตำแหน่งเดิมที่ Save ไว้ไหม? (สำหรับตอนกลับมาจากฉากต่อสู้)
+            if (LastKnownPositions.ContainsKey(playerWalker.name))
             {
-                Debug.LogError("[PlayerStartSpawner] ไม่มี Node ที่ใช้งานได้ใน RouteManager");
-                return;
+                int savedID = LastKnownPositions[playerWalker.name];
+                targetData = routeManager.nodeConnections.Find(x => x.tileID == savedID);
             }
 
-            playerPathWalker.TeleportToNode(fallback.node);
-            Debug.Log($"[PlayerStartSpawner] Spawned with fallback node: {fallback.node.name} (ID: {fallback.tileID})");
-            return;
+            // 2. ถ้าไม่มี Save (เพิ่งเริ่มเกม) -> ใช้ Logic สุ่มเกิดตามที่คุณขอ
+            if (targetData == null)
+            {
+                PlayerState state = playerWalker.GetComponent<PlayerState>();
+
+                if (state != null && state.isAI)
+                {
+                    // 🤖 AI: สุ่มเกิดที่ "ช่องไหนก็ได้"
+                    if (routeManager.nodeConnections.Count > 0)
+                    {
+                        int randomIndex = Random.Range(0, routeManager.nodeConnections.Count);
+                        targetData = routeManager.nodeConnections[randomIndex];
+                        Debug.Log($"🤖 AI {playerWalker.name} สุ่มเกิดที่ช่อง ID: {targetData.tileID}");
+                    }
+                }
+                else
+                {
+                    // 👤 Player: สุ่มเกิดที่ "ช่อง Start" เท่านั้น
+                    if (startNodes.Count > 0)
+                    {
+                        int randomIndex = Random.Range(0, startNodes.Count);
+                        targetData = startNodes[randomIndex];
+                        Debug.Log($"👤 Player {playerWalker.name} สุ่มเกิดที่ Start ID: {targetData.tileID}");
+                    }
+                    else
+                    {
+                        // Fallback: ถ้าแมพไม่มีจุด Start เลย ให้เอาช่องแรกสุด (กัน Error)
+                        if (routeManager.nodeConnections.Count > 0)
+                            targetData = routeManager.nodeConnections[0];
+                    }
+                }
+            }
+
+            // 3. สั่งย้ายตำแหน่ง
+            if (targetData != null && targetData.node != null)
+            {
+                playerWalker.TeleportToNode(targetData.node);
+                playerWalker.currentNodeID = targetData.tileID; // ยัด ID กันเหนียว
+            }
+            else
+            {
+                Debug.LogError($"⛔ ไม่พบตำแหน่งเกิดสำหรับ {playerWalker.name}");
+            }
         }
-
-        NodeConnection randomStart = startNodes[Random.Range(0, startNodes.Count)];
-        playerPathWalker.TeleportToNode(randomStart.node);
-        Debug.Log($"[PlayerStartSpawner] Spawned player at start node: {randomStart.node.name} (ID: {randomStart.tileID})");
-    }
-
-    private bool ResolveAndValidate()
-    {
-        ResolveReferences();
-
-        if (routeManager == null)
-        {
-            Debug.LogWarning("[PlayerStartSpawner] RouteManager ยังไม่ได้เชื่อมต่อ");
-            return false;
-        }
-
-        if (playerPathWalker == null)
-        {
-            Debug.LogWarning("[PlayerStartSpawner] PlayerPathWalker ยังไม่ได้เชื่อมต่อ");
-            return false;
-        }
-
-        if (routeManager.nodeConnections == null || routeManager.nodeConnections.Count == 0)
-        {
-            Debug.LogWarning("[PlayerStartSpawner] RouteManager.nodeConnections ว่าง");
-            return false;
-        }
-
-        return true;
     }
 }

@@ -189,32 +189,9 @@ public class DeckManager : MonoBehaviour
             useCardImages = System.Array.ConvertAll(useCardObjs, o => o.GetComponent<Image>());
 
             BindRemoveButtons();
-            BindRightClickEvents();
             UpdateUseCardUI();
             SortAndRefreshCards();
             Debug.Log("✅ DeckManager: UI Bound สำเร็จใน Scene " + SceneManager.GetActiveScene().name);
-        }
-    }
-    
-    void BindRightClickEvents()
-    {
-        if (useCardImages == null) return;
-
-        for (int i = 0; i < useCardImages.Length; i++)
-        {
-            if (useCardImages[i] == null) continue;
-
-            GameObject obj = useCardImages[i].gameObject;
-
-            // 1. ลองดึง Component มาก่อน ถ้าไม่มีให้ Add เข้าไป
-            DeckSlotRightClick clicker = obj.GetComponent<DeckSlotRightClick>();
-            if (clicker == null)
-            {
-                clicker = obj.AddComponent<DeckSlotRightClick>();
-            }
-
-            // 2. ระบุว่าปุ่มนี้คือ Index ที่เท่าไหร่
-            clicker.slotIndex = i;
         }
     }
     
@@ -231,49 +208,17 @@ public class DeckManager : MonoBehaviour
         }
     }
 
-   public void UpdateUseCardUI()
-{
-    // 1. เช็คว่า Array UI มีอยู่จริงไหม
-    if (useCardImages == null) return;
-
-    // 2. เช็คว่า Array Data มีอยู่จริงไหม (กัน cardUse.Length พัง)
-    if (cardUse == null) 
+    public void UpdateUseCardUI()
     {
-        // ถ้าไม่มีข้อมูลการ์ด ให้เคลียร์รูปทิ้งให้หมด (ถ้าต้องการ) หรือแค่ return
-        return; 
-    }
-
-    for (int i = 0; i < useCardImages.Length; i++)
-    {
-        // 3. (สำคัญมาก) เช็คว่าช่องใส่รูปใน Inspector ถูกลากใส่หรือยัง?
-        // ถ้าช่องนี้ว่าง (None) ให้ข้ามไปเลย กัน Error
-        if (useCardImages[i] == null) 
+        if (useCardImages == null) return;
+        for (int i = 0; i < useCardImages.Length; i++)
         {
-            Debug.LogWarning($"DeckManager: ช่อง useCardImages[{i}] ใน Inspector ยังไม่ได้ลากใส่ Image!");
-            continue; 
-        }
-
-        // --- เริ่มการทำงาน ---
-        if (i < cardUse.Length && cardUse[i] != null)
-        {
-            // ใส่รูปการ์ด
-            useCardImages[i].sprite = cardUse[i].icon;
-        }
-        else 
-        {
-            // ใส่รูป Default (ถ้ามี) หรือเคลียร์เป็น null
-            if (defaultSprite != null)
-            {
+            if (i < cardUse.Length && cardUse[i] != null)
+                useCardImages[i].sprite = cardUse[i].icon;
+            else if (i < useCardImages.Length) 
                 useCardImages[i].sprite = defaultSprite;
-            }
-            else
-            {
-                // ถ้าไม่มี defaultSprite ให้ใส่ null (รูปจะหายไป) หรือปล่อยไว้
-                useCardImages[i].sprite = null; 
-            }
         }
     }
-}
 
     public void SortAndRefreshCards()
     {
@@ -333,39 +278,4 @@ public class DeckManager : MonoBehaviour
                 canvas.enabled = false;
         }
     }
-    // ในไฟล์ DeckManager.cs
-
-// ฟังก์ชันสำหรับทำให้การ์ดใช้ไม่ได้ (เช่น ใช้แล้วหมดไป หรือติด Cooldown)
-public void LockCard(CardData card)
-{
-    if (card == null) return;
-
-    // 1. เปลี่ยนค่าใน Runtime (เหมือนเดิม)
-    card.isUsable = false;
-
-    // 2. บันทึกลง PlayerPrefs (เหมือนเดิม)
-    PlayerPrefs.SetInt("CardState_" + card.cardName, 0); 
-
-    // --- ส่วนที่เพิ่ม: วนลูปหาการ์ดในเด็ค แล้วลบออก ---
-    for (int i = 0; i < cardUse.Length; i++)
-    {
-        // เช็คว่าช่องนี้มีการ์ด และชื่อตรงกับใบที่กำลังล็อค
-        if (cardUse[i] != null && cardUse[i].cardName == card.cardName)
-        {
-            cardUse[i] = null; // ลบออกจากเด็ค (Set เป็น null)
-        }
-    }
-
-    // บันทึกสถานะเด็คใหม่ลง PlayerPrefs ทันที (เพื่อให้การลบมีผลถาวร)
-    // (ฟังก์ชันนี้มีอยู่ใน DeckManager ที่เราเขียนกันก่อนหน้านี้แล้ว)
-    SaveCurrentDeck(); 
-    // ----------------------------------------------------
-
-    PlayerPrefs.Save();
-
-    // (แถม) รีเฟรช UI เฉพาะใน DeckManager เผื่อหน้าจอเปิดอยู่
-    UpdateUseCardUI(); 
-    
-    Debug.Log($"🚫 Card Locked & Removed from Deck: {card.cardName}");
-}
 }

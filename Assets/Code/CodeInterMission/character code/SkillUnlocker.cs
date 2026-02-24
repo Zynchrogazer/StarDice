@@ -17,9 +17,12 @@ public class SkillUnlocker : MonoBehaviour
         }
 
         // กำหนดให้ปุ่มสุ่มแต่ละปุ่มกดแล้วเรียก RandomUnlockSkill
-        for (int i = 0; i < randomButtons.Length; i++)
-        {
-            randomButtons[i].onClick.AddListener(() => RandomUnlockSkill());
+        for(int i = 0; i < randomButtons.Length; i++)
+    {
+            if (randomButtons[i] != null) // ✅ เช็ค null เสมอ
+            {
+                randomButtons[i].onClick.AddListener(() => RandomUnlockSkill());
+            }
         }
     }
 

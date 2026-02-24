@@ -32,7 +32,7 @@ public class EventManager : MonoBehaviour
 
     /// <summary>
     /// เมธอดสำหรับให้ระบบอื่น (เช่น PlayerPathWalker) เรียกใช้เพื่อส่ง Event
-    /// </summary>
+    /// </summarya
     /// <param name="nodeData">ข้อมูลของโหนดที่ผู้เล่นหยุด (จาก RouteManager)</param>
     /// <param name="playerObject">GameObject ของผู้เล่นที่ตกบนช่องนี้</param>
     public void RaisePlayerLandedOnNode(NodeConnection nodeData, GameObject playerObject)

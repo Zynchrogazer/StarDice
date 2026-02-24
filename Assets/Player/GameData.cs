@@ -6,8 +6,8 @@ public class GameData : MonoBehaviour
     public static GameData Instance;
 
     public PlayerData selectedPlayer;
- public CardData[] savedDeck;
-     public List<CardData> selectedDeck = new List<CardData>(); 
+    public CardData[] savedDeck;
+    public List<CardData> selectedDeck = new List<CardData>(); 
     public List<CardData> selectedCards = new List<CardData>();
 
     private void Awake()

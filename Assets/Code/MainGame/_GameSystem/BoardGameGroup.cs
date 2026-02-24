@@ -5,22 +5,31 @@ public class BoardGameGroup : MonoBehaviour
 {
     public static BoardGameGroup Instance { get; private set; }
 
-    // ใช้เป็น fallback สำหรับ scene เก่าที่อาจไม่มี RouteManager
+    [Header("Legacy fallback")]
     public string boardSceneName = "MainGame";
+
+    [Header("Board scene names (recommended)")]
+    public string[] boardSceneNames = new string[]
+    {
+        "MainGame",
+        "TestMain",
+        "MainLight",
+        "MainWater",
+        "MainWind",
+        "MainEarth",
+        "MainDark"
+    };
 
     private void Awake()
     {
-        // 🛡️ Logic ความเป็นอมตะ
         if (Instance != null && Instance != this)
         {
-            // ถ้ามีของเก่าอยู่แล้ว (คือตัวที่เราเล่นค้างไว้)
-            // ให้ทำลายตัวใหม่ทิ้งซะ (ตัวใหม่ที่เพิ่งโหลดมาพร้อม Scene)
             Destroy(gameObject);
             return;
         }
 
         Instance = this;
-        DontDestroyOnLoad(gameObject); // ห้ามทำลายก้อนนี้
+        DontDestroyOnLoad(gameObject);
     }
 
     private void OnEnable()
@@ -35,13 +44,7 @@ public class BoardGameGroup : MonoBehaviour
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        // ✅ เช็คจาก scene ที่โหลดเข้ามา "โดยตรง" และรวม inactive object
-        // แก้เคสที่บอร์ดถูกซ่อนอยู่ก่อนแล้ว ทำให้ FindObjectOfType หา RouteManager ไม่เจอ
-        bool isBoardScene = SceneHasRouteManager(scene);
-
-        // fallback: เผื่อ scene เก่าที่ยังไม่ได้วาง RouteManager
-        if (!isBoardScene && scene.name == boardSceneName)
-            isBoardScene = true;
+        bool isBoardScene = IsBoardScene(scene);
 
         if (isBoardScene)
         {
@@ -53,6 +56,36 @@ public class BoardGameGroup : MonoBehaviour
             Debug.Log($"[BoardSystem] Entering {scene.name}. Hiding Board.");
             ShowBoard(false);
         }
+    }
+
+    private bool IsBoardScene(Scene scene)
+    {
+        // 1) เช็คจากชื่อ scene ก่อน (กันกรณี RouteManager หาไม่เจอชั่วคราว)
+        if (IsBoardName(scene.name))
+            return true;
+
+        // 2) เช็คจาก RouteManager ใน scene ที่โหลดมา (รวม inactive)
+        if (SceneHasRouteManager(scene))
+            return true;
+
+        return false;
+    }
+
+    private bool IsBoardName(string sceneName)
+    {
+        if (!string.IsNullOrEmpty(boardSceneName) && sceneName == boardSceneName)
+            return true;
+
+        if (boardSceneNames != null)
+        {
+            for (int i = 0; i < boardSceneNames.Length; i++)
+            {
+                if (!string.IsNullOrEmpty(boardSceneNames[i]) && sceneName == boardSceneNames[i])
+                    return true;
+            }
+        }
+
+        return false;
     }
 
     private bool SceneHasRouteManager(Scene scene)
@@ -72,9 +105,6 @@ public class BoardGameGroup : MonoBehaviour
 
     public void ShowBoard(bool show)
     {
-        // เปิด/ปิด ลูกๆ ทั้งหมดในก้อนนี้
-        // เราไม่ใช้ gameObject.SetActive(false) กับตัวเองตรงๆ
-        // เพราะเดี๋ยว Script นี้จะหยุดทำงานไปด้วย
         foreach (Transform child in transform)
         {
             child.gameObject.SetActive(show);

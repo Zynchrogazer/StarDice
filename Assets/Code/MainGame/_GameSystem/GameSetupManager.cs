@@ -30,10 +30,10 @@ public class GameSetupManager : MonoBehaviour
         }
 
         // 3. เริ่มกระบวนการ Sync ข้อมูล
-        if (PlayerState.Instance != null)
+        if (GameTurnManager.CurrentPlayer != null)
         {
             // ⛔ ย้ำอีกครั้ง: บรรทัดนี้ปิดไว้เพื่อป้องกัน "เลือดเด้งเต็ม" ตอนกลับมาจากมินิเกม
-            // PlayerState.Instance.LoadFromPlayerData(currentData); 
+            // GameTurnManager.CurrentPlayer.LoadFromPlayerData(currentData); 
 
             Debug.Log("[GameSetupManager] Saving current game state to Data...");
             UpdatePlayerData();
@@ -45,11 +45,11 @@ public class GameSetupManager : MonoBehaviour
         if (currentData == null) return;
 
         // ดึงค่าปัจจุบันจาก PlayerState
-        int currentHealth = PlayerState.Instance.PlayerHealth;
+        int currentHealth = GameTurnManager.CurrentPlayer.PlayerHealth;
 
         // ถ้าคุณแยก Inventory ไปแล้ว อาจต้องดึงเงินจาก PlayerInventory หรือ GameData แทน
         // แต่ถ้ายังอยู่ที่เดิม ก็ใช้บรรทัดนี้:
-        int currentMoney = PlayerState.Instance.PlayerMoney;
+        int currentMoney = GameTurnManager.CurrentPlayer.PlayerMoney;
 
         Debug.Log($"<color=lightblue>[GameSetupManager]</color> Updating {currentData.playerName}: HP={currentHealth}");
 

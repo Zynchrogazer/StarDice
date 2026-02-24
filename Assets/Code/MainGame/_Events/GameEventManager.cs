@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.SceneManagement;
@@ -27,8 +26,6 @@ public class GameEventManager : MonoBehaviour
     public GameObject shopPanel;
     private GameObject currentEventTarget;
 
-    public int[] windTeleportTargetIDs; 
-    public string windTeleportPanelName = "windteleportpanel";
     // ✅ ตัวแปรเช็คสถานะการเล่น (เชื่อมกับ State Machine)
 
     public Sprite moneySprite; // 🖼️ ลากรูปเหรียญมาใส่ตรงนี้
@@ -188,11 +185,8 @@ public class GameEventManager : MonoBehaviour
             case "randomminigame": TriggerMinigameEvent(target); break;
             case "battle": StartCoroutine(MonsterBattleCoroutine()); break;
             case "boss":StartCoroutine(BossBattleCoroutine());break;
-            case "specialboss":StartCoroutine(SpecialBossBattleCoroutine());break;
             case "shop": shopPanel.SetActive(true); break;
             case "draw": Draw(target); break;
-            case "windteleport": WindTeleportEffect(target); break;
-            case "iceeffect": ApplyIceEffect(target); break;
             default:
                 if (eventPanels.ContainsKey(eventName.ToLower())) ShowPanel(eventName, true);
                 else GameTurnManager.Instance?.RequestEndTurn();
@@ -200,81 +194,6 @@ public class GameEventManager : MonoBehaviour
         }
     }
 
-    private void ApplyIceEffect(GameObject target)
-    {
-        PlayerState p = target.GetComponent<PlayerState>();
-        if (p != null)
-        {
-            p.hasIceEffect = true; // ✅ ติดสถานะแช่แข็ง
-            Debug.Log($"<color=cyan>❄️ Player {target.name} ติดสถานะ Ice Effect! (ทอยครั้งหน้าหารครึ่ง)</color>");
-        }
-        
-        // แสดง Panel แจ้งเตือน (อย่าลืมสร้าง Panel ชื่อ icepanel ใน Unity)
-        ShowPanel("icepanel", true); 
-    }
-
-    private void WindTeleportEffect(GameObject target)
-    {
-        // 1. เช็คความปลอดภัย: ถ้าไม่ได้ใส่ ID ไว้เลย หรือ Player/Map ไม่พร้อม ให้หยุด
-        if (windTeleportTargetIDs == null || windTeleportTargetIDs.Length == 0)
-        {
-            Debug.LogError("WindTeleport: ยังไม่ได้กำหนด ID ปลายทางใน Inspector!");
-            GameTurnManager.Instance.RequestEndTurn(); // จบเทิร์นกันเกมค้าง
-            return;
-        }
-
-        PlayerPathWalker walker = target.GetComponent<PlayerPathWalker>();
-
-        if (walker != null && RouteManager.Instance != null)
-        {
-            // 2. ✨ [สุ่ม] เลือก ID หนึ่งตัวจากรายการที่ใส่ไว้
-            int randomIndex = Random.Range(0, windTeleportTargetIDs.Length);
-            int chosenID = windTeleportTargetIDs[randomIndex];
-
-            Debug.Log($"<color=cyan>WindTeleport: สุ่มได้ Node ID {chosenID} (จากทั้งหมด {windTeleportTargetIDs.Length} จุด)</color>");
-
-            // 3. ค้นหา Node จาก ID ที่สุ่มได้
-            var targetConnection = RouteManager.Instance.nodeConnections.Find(x => x.tileID == chosenID);
-
-            if (targetConnection != null && targetConnection.node != null)
-            {
-                // วาปไปที่ Node นั้น
-                walker.TeleportToNode(targetConnection.node);
-            }
-            else
-            {
-                Debug.LogError($"<color=red>WindTeleport Error: ไม่พบ Node ID {chosenID} ใน RouteManager!</color>");
-            }
-        }
-
-        // แสดง Panel และรอจบเทิร์น
-        ShowPanel(windTeleportPanelName, true);
-    }
-
-
-    [Header("ลากรูปใส่ตรงนี้ (เรียงตามลำดับ 0, 1, 2...)")]
-    public Sprite[] itemImages; 
-
-    [Header("ลาก UI Image เปล่าๆ มาใส่ตรงนี้")]
-    public Image showImage;
-    
-    public ItemID Sword = ItemID.Sword; // สมมติกล่องนี้ดรอปดาบไฟ
-    public ItemID Armor = ItemID.Armor; 
-    public ItemID DawnRing = ItemID.DawnRign; 
-    public ItemID WhiteFeather = ItemID.WhiteFeather; 
-    public ItemID RecoverRing = ItemID.RecoverRing; 
-    public ItemID HearthNeckless = ItemID.HearthNeckless; 
-   
-   public ItemID KnightSword = ItemID.KnightSword; 
-   public ItemID KnightArmor = ItemID.KnightArmor; 
-   public ItemID KnightShoes = ItemID.KnightShoes; 
-
-   public ItemID LightSpear = ItemID.LightSpear; 
-   public ItemID FireLegendarySword = ItemID.FireLegendarySword; 
-   public ItemID WaterLegendaryArmor = ItemID.WaterLegendaryArmor; 
-   public ItemID WindSpear = ItemID.WindSpear; 
-   public ItemID EarthLegendaryArmor = ItemID.EarthLegendaryArmor; 
-   public ItemID DarkLegendaryRing = ItemID.DarkLegendaryRing; 
     private void ApplyTreasureBoxEffect(GameObject target)
     {
         PlayerState p = target.GetComponent<PlayerState>();
@@ -308,132 +227,6 @@ public class GameEventManager : MonoBehaviour
             p.PlayerMoney += 100;
             resultSprite = moneySprite;
             Debug.Log("Treasure: Got Money");
-
-             int roll = Random.Range(1, 101);
-            
-            if (roll < 51)
-            {
-                int randomItem = Random.Range(0, 6); 
-
-            if (randomItem == 0)
-                {
-                    EquipmentManager.Instance.UnlockItem(Sword);
-                    showImage.sprite = itemImages[0]; 
-                    showImage.gameObject.SetActive(true);
-                    Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
-                }
-            else if(randomItem == 1){
-                EquipmentManager.Instance.UnlockItem(Armor);
-                showImage.sprite = itemImages[1]; 
-                 showImage.gameObject.SetActive(true);
-                 Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
-            }
-             else if(randomItem == 2){
-                EquipmentManager.Instance.UnlockItem(DawnRing);
-                showImage.sprite = itemImages[2]; 
-                 showImage.gameObject.SetActive(true);
-                 Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
-            }
-             else if(randomItem == 3){
-                EquipmentManager.Instance.UnlockItem(WhiteFeather);
-                showImage.sprite = itemImages[3]; 
-                 showImage.gameObject.SetActive(true);
-                 Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
-            }
-             else if(randomItem == 4){
-                EquipmentManager.Instance.UnlockItem(RecoverRing);
-                showImage.sprite = itemImages[4]; 
-                 showImage.gameObject.SetActive(true);
-                 Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
-            }
-             else if(randomItem == 5){
-                EquipmentManager.Instance.UnlockItem(HearthNeckless);
-                showImage.sprite = itemImages[5]; 
-                 showImage.gameObject.SetActive(true);
-                 Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
-            }
-                 
-    
-            }
-            
-            else if (roll < 71 && roll > 50)
-        {
-                            int randomItem = Random.Range(0, 3); 
-
-            if (randomItem == 0)
-                {
-                    EquipmentManager.Instance.UnlockItem(KnightSword);
-                    showImage.sprite = itemImages[6]; 
-                    showImage.gameObject.SetActive(true);
-                    Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
-                }
-            else if(randomItem == 1){
-                EquipmentManager.Instance.UnlockItem(KnightArmor);
-                showImage.sprite = itemImages[7]; 
-                 showImage.gameObject.SetActive(true);
-                 Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
-            }
-             else if(randomItem == 2){
-                EquipmentManager.Instance.UnlockItem(DawnRing);
-                showImage.sprite = itemImages[8]; 
-                 showImage.gameObject.SetActive(true);
-                 Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
-            }
-        }
-
-        else if (roll > 99)
-        {
-                            int randomItem = Random.Range(0, 6); 
-
-            if (randomItem == 0)
-                {
-                    EquipmentManager.Instance.UnlockItem(LightSpear);
-                    showImage.sprite = itemImages[9]; 
-                    showImage.gameObject.SetActive(true);
-                    Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
-                }
-            else if(randomItem == 1){
-                EquipmentManager.Instance.UnlockItem(FireLegendarySword);
-                showImage.sprite = itemImages[10]; 
-                 showImage.gameObject.SetActive(true);
-                 Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
-            }
-             else if(randomItem == 2){
-                EquipmentManager.Instance.UnlockItem(WaterLegendaryArmor);
-                showImage.sprite = itemImages[11]; 
-                 showImage.gameObject.SetActive(true);
-                 Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
-            }
-             else if(randomItem == 3){
-                EquipmentManager.Instance.UnlockItem(WindSpear);
-                showImage.sprite = itemImages[12]; 
-                 showImage.gameObject.SetActive(true);
-                 Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
-            }
-             else if(randomItem == 4){
-                EquipmentManager.Instance.UnlockItem(EarthLegendaryArmor);
-                showImage.sprite = itemImages[13]; 
-                 showImage.gameObject.SetActive(true);
-                 Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
-            }
-             else if(randomItem == 5){
-                EquipmentManager.Instance.UnlockItem(DarkLegendaryRing);
-                showImage.sprite = itemImages[14]; 
-                 showImage.gameObject.SetActive(true);
-                 Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
-            }
-
-            else
-            {
-                showImage.sprite = itemImages[15]; 
-                 showImage.gameObject.SetActive(true);
-                 Debug.Log("ผู้เล่นไม่ได้ไอเท็ม");
-                
-            }
-        }
-
-          
-        
         
 
         // 4. สั่งให้กล่องเปิด! (พร้อมส่ง Callback ว่าถ้าเสร็จแล้วให้ทำอะไร)
@@ -597,186 +390,14 @@ public class GameEventManager : MonoBehaviour
     {
         ShowPanel("monster", false);
         yield return new WaitForSeconds(1f);
-        string[] Scenes = { "fightDarkNormal", "fightEarthNormal", "fightLightNormal", "fightWaterNormal", "fightWindNormal", "TestFight" };
-        int randomIndex = Random.Range(0, Scenes.Length);
-        SceneManager.LoadScene(Scenes[randomIndex]);
-    }
-
-    public int countroundbattle = 0; // ตัวนับรอบที่ตีกับศัตรู
-    public int countbattle = 0; // ตัวนับการเจอศัตรู
-
-    public void AddCount1(int amount)
-    {
-        countroundbattle += amount;
-        Debug.Log("Count 1 ตอนนี้คือ: " + countroundbattle);
-    }
-
-    public void AddCount2(int amount)
-    {
-        countbattle += amount;
-        Debug.Log("Count 2 ตอนนี้คือ: " + countbattle);
+        SceneManager.LoadScene("TestFight");
     }
 
     private IEnumerator BossBattleCoroutine()
     {
-       ShowPanel("boss", false);
-    yield return new WaitForSeconds(1f);
-    int bosslevel = 0;
-
-    if(countbattle > 0){
-     bosslevel = countroundbattle/countbattle ;
-    }
-    // 1. ดึงชื่อ Scene ปัจจุบันออกมาเช็ค
-    string currentSceneName = SceneManager.GetActiveScene().name;
-
-
-    // 2. สร้างเงื่อนไข (if-else)
-
-    if (currentSceneName == "MainLight") 
-    {
-
-        if(bosslevel < 11)
-            {
-        SceneManager.LoadScene("FinalBoss hard"); 
-            }
-        else if(bosslevel >=11  && bosslevel <= 15)
-            {
-                SceneManager.LoadScene("FianlBoss medium");
-            }
-         else 
-            {
-                SceneManager.LoadScene("FinalBoss");
-            }
-
-        
-    }
-
-   else if (currentSceneName == "TestMain") 
-    {
-
-        if(bosslevel < 11)
-            {
-        SceneManager.LoadScene("bossfire hard"); 
-            }
-        else if(bosslevel >=11  && bosslevel <= 15)
-            {
-                SceneManager.LoadScene("bossfire medium");
-            }
-         else 
-            {
-                SceneManager.LoadScene("bossfire");
-            }
-    }
-
-    
-    else if (currentSceneName == "MainWater") 
-    {
-        if(bosslevel < 11)
-            {
-        SceneManager.LoadScene("boss water hard"); 
-            }
-        else if(bosslevel >=11  && bosslevel <= 15)
-            {
-                SceneManager.LoadScene("boss water medium");
-            }
-         else 
-            {
-                SceneManager.LoadScene("boss water");
-            }
-    }
-    
-    else if (currentSceneName == "MainWind")
-    {
-          if(bosslevel < 11)
-            {
-        SceneManager.LoadScene("boss wind hard"); 
-            }
-        else if(bosslevel >=11  && bosslevel <= 15)
-            {
-                SceneManager.LoadScene("boss wind medium");
-            }
-         else 
-            {
-                SceneManager.LoadScene("boss wind");
-            }
-    }
-        
-
-     else if (currentSceneName == "MainEarth")
-    {
-          if(bosslevel < 11)
-            {
-        SceneManager.LoadScene("boss earth hard"); 
-            }
-        else if(bosslevel >=11  && bosslevel <= 15)
-            {
-                SceneManager.LoadScene("boss earth medium");
-            }
-         else 
-            {
-                SceneManager.LoadScene("boss earth");
-            }
-    }
-         
-
-     else if (currentSceneName == "MainDark")
-    {
-          if(bosslevel < 11)
-            {
-        SceneManager.LoadScene("boss dark hard");
-            }
-        else if(bosslevel >=11  && bosslevel <= 15)
-            {
-                SceneManager.LoadScene("boss dark medium");
-            }
-         else 
-            {
-                SceneManager.LoadScene("boss dark");
-            }
-
-    }
-
-countbattle = 0;
-countroundbattle = 0;
-
-    }
-
-    private IEnumerator SpecialBossBattleCoroutine()
-    {
-         string currentSceneName = SceneManager.GetActiveScene().name;
-        ShowPanel("specialboss", false);
-    yield return new WaitForSeconds(1f);
-
-    if(currentSceneName == "MainLight")
-        {
-            SceneManager.LoadScene("SpecialBoss"); 
-        }
-           
-        else if (currentSceneName == "TestMain") 
-    {
-        SceneManager.LoadScene("specialbossfire"); 
-            
-    }
-    else if (currentSceneName == "MainWater") 
-    {
-        SceneManager.LoadScene("Special boss water"); 
-            
-    }
-     else if (currentSceneName == "MainWind") 
-    {
-        SceneManager.LoadScene("special boss wind"); 
-            
-    }
-     else if (currentSceneName == "MainEarth") 
-    {
-        SceneManager.LoadScene("specialboss earth"); 
-            
-    }
-     else if (currentSceneName == "MainDark") 
-    {
-        SceneManager.LoadScene("special boss dark"); 
-            
-    }
+        ShowPanel("boss", false);
+        yield return new WaitForSeconds(1f);
+        SceneManager.LoadScene("bossfire");
     }
 
     private void ShowPanel(string panelKey, bool autoClose)

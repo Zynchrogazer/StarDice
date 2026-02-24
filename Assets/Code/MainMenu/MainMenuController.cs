@@ -1,55 +1,46 @@
 using UnityEngine;
-using UnityEngine.SceneManagement; // จำเป็นสำหรับการเปลี่ยน Scene
-using System.Collections.Generic;
+using UnityEngine.SceneManagement; // จำเป็นต้องมีเพื่อสั่งเปลี่ยน Scene
 
 public class MainMenuController : MonoBehaviour
 {
     [Header("Settings")]
-    public string gameSceneName = "InterMission"; // ⭐️ ใส่ชื่อ Scene เกมหลักของคุณที่นี่
+    public string gameSceneName = "GameScene"; // ใส่ชื่อ Scene เกมของคุณตรงนี้ (เช่น "MainGame" หรือ "DeckBuilding")
 
-    [Header("DATABASE (ต้องลากใส่!)")]
-    // ต้องเอา Database มาใส่เพื่อให้รู้ว่าจะลบสถานะการ์ดใบไหนบ้าง
-    public List<CardData> allCardsDatabase; 
-
-    // รายชื่อ Key ที่ต้องลบ (ก๊อปมาจาก BackupSaveManager)
-    private string[] keysToClear = new string[] 
+    // รายชื่อ Key ที่ต้องการรีเซ็ตเมื่อกด New Game (ต้องตรงกับใน BackupSaveManager)
+    private string[] keysToReset = new string[] 
     { 
         "MonsterWater", "MonsterEarth", "MonsterWind", "MonsterLight", "MonsterDark",
-        "CurrentDeckData" // เพิ่ม Deck เข้าไปด้วยเลย
+        "CurrentDeckData" 
+        // ถ้ามี Level หรือ Money ก็ใส่เพิ่มตรงนี้
     };
 
-    // ฟังก์ชันนี้เอาไปผูกกับปุ่ม New Game (หรือปุ่ม Yes ใน Confirm Panel)
-    public void OnClickNewGame()
+    public void OnNewGameClicked()
     {
-        Debug.Log("🗑️ Deleting Active Save Data...");
+        Debug.Log("🗑️ Clearing Active Data for New Game...");
 
-        // 1. ลบข้อมูลทั่วไป (Monster, Deck)
-        foreach (string key in keysToClear)
+        // 1. วนลูปเพื่อลบข้อมูลการเล่นปัจจุบันทิ้ง (Reset)
+        foreach (string key in keysToReset)
         {
             PlayerPrefs.DeleteKey(key);
         }
 
-        // 2. ลบสถานะการ์ด (Card States) - Logic เดียวกับ ResetActiveGame
-        if (allCardsDatabase != null)
-        {
-            foreach (var card in allCardsDatabase)
-            {
-                if (card != null)
-                {
-                    string cardKey = "CardState_" + card.cardName;
-                    PlayerPrefs.DeleteKey(cardKey);
-                    
-                    // รีเซ็ตค่าใน Memory ด้วย
-                    card.isUsable = false; 
-                }
-            }
-        }
-
-        // 3. บันทึกการลบ
+        // 2. บันทึกการลบ
         PlayerPrefs.Save();
 
-        // 4. เปลี่ยนไปฉากเกม
-        Debug.Log("🚀 Loading Game Scene: " + gameSceneName);
+        // 3. เปลี่ยนฉากไปเริ่มเกม
         SceneManager.LoadScene(gameSceneName);
+    }
+
+    // (แถม) ปุ่ม Continue: โหลดฉากเกมเลยโดยไม่ลบค่า (เล่นต่อจากล่าสุด)
+    public void OnContinueClicked()
+    {
+        SceneManager.LoadScene(gameSceneName);
+    }
+    
+    // (แถม) ปุ่ม Exit
+    public void OnExitClicked()
+    {
+        Application.Quit();
+        Debug.Log("Quit Game");
     }
 }

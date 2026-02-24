@@ -24,6 +24,6 @@ public abstract class TileEffectSO : ScriptableObject, ITileEffect
     public abstract void Execute(NodeConnection nodeData, GameObject playerObject, PlayerData playerData);
     protected PlayerData GetPlayerDataFromState()
     {
-        return PlayerState.Instance?.selectedPlayerPreset;
+        return GameTurnManager.CurrentPlayer?.selectedPlayerPreset;
     }
 }

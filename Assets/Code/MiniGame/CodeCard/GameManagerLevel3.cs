@@ -187,7 +187,7 @@ public void SubtractScore(int amount)
 void GoToNextScene()
 {
     ScoreManager.Instance.ResetScore();
-    UnityEngine.SceneManagement.SceneManager.LoadScene(18); // หรือชื่อ Scene ถัดไป
+    UnityEngine.SceneManagement.SceneManager.LoadScene(1); // หรือชื่อ Scene ถัดไป
 }
 
 

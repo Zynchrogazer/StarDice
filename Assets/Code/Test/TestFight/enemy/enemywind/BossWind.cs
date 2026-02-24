@@ -23,9 +23,6 @@ public class BossWind : MonoBehaviour
     int EnemyStunPlayer = 0;
     private int playerHP;
 
-       [Header("Sound Collection")]
-    public AudioClip[] sfxList;
-    
     private int enemySkill1Cooldown = 0;
     private int enemySkill2Cooldown = 0;
 
@@ -163,35 +160,12 @@ public class BossWind : MonoBehaviour
     int bossshieldwater = 0;
     int EnemyFireShield = 0;
     private List<CardData> selectedCards = new List<CardData>();
-     void Start()
-    { Debug.Log(">>> BattleSystem เริ่มทำงานแล้วนะ! <<<");
-
-       ApplyEquippedItems();
+    void Start()
+    {
 
         if (GameData.Instance != null && GameData.Instance.selectedCards.Count > 0)
         {
-            List<CardData> myHand = new List<CardData>();
-
-        // 2. วนลูปหยิบการ์ดจาก DeckManager (cardUse คือเด็คที่เราจัดไว้)
-        foreach (var card in DeckManager.Instance.cardUse)
-        {
-            if (card != null) // เช็คกันเหนียว เผื่อเป็นช่องว่าง
-            {
-                myHand.Add(card);
-            }
-        }
-
-        // 3. (Optional) ถ้าอยากให้เริ่มเกมจั่วแค่ 3 ใบแรก
-        if (myHand.Count > 4)
-        {
-            // ตัดให้เหลือแค่ 3 ใบแรก
-            myHand = myHand.GetRange(0, 4);
-        }
-
-        Debug.Log($"[BattleSystem] เจอการ์ดจาก DeckManager จำนวน {myHand.Count} ใบ");
-
-        // 4. ส่งการ์ดเข้าสู่ระบบ UI ของ BattleSystem
-        LoadSelectedCards(myHand);
+            LoadSelectedCards(GameData.Instance.selectedCards);
         }
         else
         {
@@ -224,22 +198,7 @@ public class BossWind : MonoBehaviour
         }
 
     }
-
-    public void ApplyEquippedItems()
-    {
-        // 1. ดึง Array ของไอเท็ม 2 ชิ้นมาจาก Manager
-        EquipmentData[] items = PlayerDataManager.Instance.equippedItems;
-
-        // 2. วนลูปเช็คทีละชิ้น (ทั้งช่อง 0 และช่อง 1)
-        foreach (EquipmentData item in items)
-        {
-            // เช็คว่าช่องนั้นมีของใส่จริงไหม (กัน Error)
-            if (item != null)
-            {
-                ApplyEffect(item.itemID);
-            }
-        }
-    }    public void ShowSkillEffectOnce(int index)
+    public void ShowSkillEffectOnce(int index)
     {
         StartCoroutine(ShowAndHideEffect(skillEffectObjects[index]));
     }
@@ -255,17 +214,6 @@ public class BossWind : MonoBehaviour
         yield return new WaitForSeconds(3f);
         effect.SetActive(false); // ✅ ซ่อน
     }
-
-        void PlaySoundEffect(int index)
-{
-    // เช็คทีเดียวตรงนี้เลย ปลอดภัย ไม่ต้องเขียนซ้ำ
-    if (index < sfxList.Length && sfxList[index] != null)
-    {
-        GetComponent<AudioSource>().PlayOneShot(sfxList[index]);
-    }
-}
-
-
     public void LoadSelectedCards(List<CardData> cards)
     {
         selectedCards = new List<CardData>(cards);
@@ -288,7 +236,7 @@ public class BossWind : MonoBehaviour
 
                 int index = i;
                 cardButtons[i].onClick.RemoveAllListeners();
-                cardButtons[i].onClick.AddListener(() => UseCard(card,index));
+                cardButtons[i].onClick.AddListener(() => UseCard(card));
             }
             else
             {
@@ -463,12 +411,12 @@ public class BossWind : MonoBehaviour
         StartCoroutine(MyDelay());
         isPlayerTurn = false;  // ผู้เล่นใช้เทิร์นนี้แล้ว
         ShowSkillEffectOnce(8);
-         UpdateSkillButtons();
+       
         DamageNormalEnemy(selectedPlayer.attackDamage);
         StartCoroutine(DelayedEnemyTurn());
     }
 
-  void UseSkill(SkillData skill)
+   void UseSkill(SkillData skill)
     {
         StartCoroutine(MyDelay());
         if (!skillCooldowns.ContainsKey(skill))
@@ -494,7 +442,6 @@ public class BossWind : MonoBehaviour
             isDamageBoosted = true; // เปิดบัฟ
             skillCooldowns[skill] = 7;
             Debug.Log("ใช้สกิล 3 ลดเลือดตัวเอง 10 ดาเมจโจมตีจะคูณ 2 ในเทิร์นนี้");
-            PlaySoundEffect(3);
             ShowSkillEffectOnce(7);
 
             UpdateSkillButtons();
@@ -565,7 +512,6 @@ public class BossWind : MonoBehaviour
             isPlayerTurn = false;
             burnTurnsLeft = 3;
             ShowSkillEffectOnce(4);
-            PlaySoundEffect(7);
             skillCooldowns[skill] = 6;
             Debug.Log("ศัตรูติดสถานะไฟ 3 เทิร์น!");
              UpdateSkillButtons();
@@ -577,7 +523,7 @@ public class BossWind : MonoBehaviour
         {
             skillCooldowns[skill] = 5;
             ShowSkillEffectOnce(25);
-            PlaySoundEffect(7);
+
             if (isDamageBoosted)
             {
                 finalDamage *= 2;
@@ -626,7 +572,6 @@ public class BossWind : MonoBehaviour
             DamageEnemy(finalDamage);
             skillCooldowns[skill] = 5;
             ShowSkillEffectOnce(25);
-            PlaySoundEffect(7);
             Debug.Log($"ใช้สกิล (ธาตุไฟ) โจมตีแบบสุ่ม ดาเมจที่ออกคือ {finalDamage}");
             isPlayerTurn = false;
             UpdateSkillButtons();
@@ -638,7 +583,6 @@ public class BossWind : MonoBehaviour
             isPlayerTurn = false;
             SuperburnTurnsLeft = 3;
             ShowSkillEffectOnce(4);
-            PlaySoundEffect(7);
             skillCooldowns[skill] = 6;
             Debug.Log("ศัตรูติดสถานะไฟ 3 เทิร์น!");
             // ไม่ใช้ isDamageBoosted กับสกิลนี้
@@ -649,7 +593,7 @@ public class BossWind : MonoBehaviour
         {
             skillCooldowns[skill] = 6;
             ShowSkillEffectOnce(25);
-            PlaySoundEffect(7);
+
             if (isDamageBoosted)
             {
                 finalDamage *= 2;
@@ -671,7 +615,6 @@ public class BossWind : MonoBehaviour
             isPlayerTurn = false;
             skillCooldowns[skill] = 7;
               ShowSkillEffectOnce(23);
-              PlaySoundEffect(3);
             Debug.Log("ผู้เล่นโจมตีธรรมดาแรงขึ้น 5 เท่า");
             UpdateSkillButtons();
             StartCoroutine(DelayedEnemyTurn());
@@ -726,7 +669,6 @@ public class BossWind : MonoBehaviour
             skillCooldowns[skill] = 3;
             isPlayerTurn = false;
             ShowSkillEffectOnce(27);
-            PlaySoundEffect(8);
             DamageEnemy(finalDamage); // ✅ ตีศัตรู
             UpdateSkillButtons();
             StartCoroutine(DelayedEnemyTurn());
@@ -741,7 +683,6 @@ public class BossWind : MonoBehaviour
 
             skillCooldowns[skill] = 3; // คูลดาวน์ 3 เทิร์น
             ShowSkillEffectOnce(2);
-            PlaySoundEffect(2);
             Debug.Log("ใช้สกิล Heal รักษา HP 20");
             isPlayerTurn = false;
             UpdateSkillButtons();
@@ -796,7 +737,6 @@ public class BossWind : MonoBehaviour
             skillCooldowns[skill] = 5;
             isPlayerTurn = false;
             ShowSkillEffectOnce(28);
-            PlaySoundEffect(8);
             DamageEnemy(finalDamage); // ✅ ตีศัตรู
             UpdateSkillButtons();
             StartCoroutine(DelayedEnemyTurn());
@@ -812,7 +752,6 @@ public class BossWind : MonoBehaviour
 
             skillCooldowns[skill] = 5; // คูลดาวน์ 5 เทิร์น
             ShowSkillEffectOnce(2);
-            PlaySoundEffect(2);
             Debug.Log("ใช้สกิล Heal รักษา HP 40");
             isPlayerTurn = false;
             UpdateSkillButtons();
@@ -829,7 +768,6 @@ public class BossWind : MonoBehaviour
 
             skillCooldowns[skill] = 15; // คูลดาวน์ 15 เทิร์น
             ShowSkillEffectOnce(2);
-            PlaySoundEffect(2);
             Debug.Log("ใช้สกิลเพิ่ม maxHP 50");
             isPlayerTurn = false;
             UpdateSkillButtons();
@@ -875,7 +813,6 @@ public class BossWind : MonoBehaviour
 
             skillCooldowns[skill] = 8; // คูลดาวน์ 5 เทิร์น
              ShowSkillEffectOnce(29);
-             PlaySoundEffect(3);
             isPlayerTurn = false;
             UpdateSkillButtons();
             StartCoroutine(DelayedEnemyTurn());
@@ -890,7 +827,6 @@ public class BossWind : MonoBehaviour
                 NerfEarth = true;
             }
              ShowSkillEffectOnce(30);
-             PlaySoundEffect(5);
             isPlayerTurn = false;
             UpdateSkillButtons();
             StartCoroutine(DelayedEnemyTurn());
@@ -934,7 +870,6 @@ public class BossWind : MonoBehaviour
             }
             skillCooldowns[skill] = 3;
             ShowSkillEffectOnce(19);
-            PlaySoundEffect(9);
 
             DamageEnemy(finalDamage);
             isPlayerTurn = false;
@@ -977,7 +912,6 @@ public class BossWind : MonoBehaviour
             skillCooldowns[skill] = 5;
             DamageEnemy(finalDamage);
             ShowSkillEffectOnce(1);
-            PlaySoundEffect(9);
             isPlayerTurn = false;
             UpdateSkillButtons();
             StartCoroutine(DelayedEnemyTurn());
@@ -1027,7 +961,7 @@ public class BossWind : MonoBehaviour
             }
             skillCooldowns[skill] = 5;
             ShowSkillEffectOnce(31);
-            PlaySoundEffect(9);
+
             DamageEnemy(finalDamage);
             isPlayerTurn = false;
             UpdateSkillButtons();
@@ -1067,7 +1001,7 @@ public class BossWind : MonoBehaviour
             }
             skillCooldowns[skill] = 6;
             ShowSkillEffectOnce(32);
-            PlaySoundEffect(9);
+
             DamageEnemy(finalDamage);
             isPlayerTurn = false;
             UpdateSkillButtons();
@@ -1107,7 +1041,7 @@ public class BossWind : MonoBehaviour
             }
             skillCooldowns[skill] = 8;
             ShowSkillEffectOnce(33);
-            PlaySoundEffect(9);
+
             DamageEnemy(finalDamage);
             isPlayerTurn = false;
             UpdateSkillButtons();
@@ -1131,7 +1065,7 @@ public class BossWind : MonoBehaviour
         {
             usedOnceSkills.Add(skill);
             ShowSkillEffectOnce(34);
-            PlaySoundEffect(6);
+
             selectedPlayer.speed *= 2;
 
             Debug.Log($"ใช้สกิล ความเร็ว {selectedPlayer.speed}");
@@ -1149,7 +1083,6 @@ public class BossWind : MonoBehaviour
             Debug.Log("ใช้สกิลที่ 3: หลบการโจมตี 50% เป็นเวลา 3 เทิร์น");
             isPlayerTurn = false;
             ShowSkillEffectOnce(34);
-            PlaySoundEffect(6);
             UpdateSkillButtons();
             StartCoroutine(DelayedEnemyTurn());
             return;
@@ -1206,7 +1139,6 @@ public class BossWind : MonoBehaviour
             skillCooldowns[skill] = 3;
             DamageEnemy(finalDamage);
             ShowSkillEffectOnce(22);
-            PlaySoundEffect(10);
             isPlayerTurn = false;
             UpdateSkillButtons();
             StartCoroutine(DelayedEnemyTurn());
@@ -1236,7 +1168,6 @@ public class BossWind : MonoBehaviour
             Debug.Log("ใช้สกิล 3: สตั๊นศัตรู 3 เทิร์น!");
             isPlayerTurn = false;
             ShowSkillEffectOnce(21);
-            PlaySoundEffect(5);
             StartCoroutine(ShakeEnemy());
             UpdateSkillButtons();
             StartCoroutine(DelayedEnemyTurn()); // ไปเทิร์นศัตรู
@@ -1277,7 +1208,6 @@ public class BossWind : MonoBehaviour
             DamageEnemy(finalDamage);
             ShowSkillEffectOnce(22);
             ShowSkillEffectOnce(35);
-            PlaySoundEffect(10);
             isPlayerTurn = false;
             UpdateSkillButtons();
             StartCoroutine(DelayedEnemyTurn());
@@ -1290,7 +1220,6 @@ public class BossWind : MonoBehaviour
 
             skillCooldowns[skill] = 8;
             ShowSkillEffectOnce(36);
-            PlaySoundEffect(5);
             isPlayerTurn = false;
             UpdateSkillButtons();
             StartCoroutine(DelayedEnemyTurn());
@@ -1308,7 +1237,6 @@ public class BossWind : MonoBehaviour
             }
             usedOnceSkills.Add(skill);
             ShowSkillEffectOnce(37);
-            PlaySoundEffect(4);
             isPlayerTurn = false;
             UpdateSkillButtons();
             StartCoroutine(DelayedEnemyTurn());
@@ -1326,7 +1254,6 @@ public class BossWind : MonoBehaviour
             }
             usedOnceSkills.Add(skill);
             ShowSkillEffectOnce(38);
-            PlaySoundEffect(5);
             isPlayerTurn = false;
             UpdateSkillButtons();
             StartCoroutine(DelayedEnemyTurn());
@@ -1339,7 +1266,6 @@ public class BossWind : MonoBehaviour
 
             skillCooldowns[skill] = 8;
             ShowSkillEffectOnce(37);
-            PlaySoundEffect(3);
             isPlayerTurn = false;
             UpdateSkillButtons();
             StartCoroutine(DelayedEnemyTurn());
@@ -1352,7 +1278,6 @@ public class BossWind : MonoBehaviour
 
             skillCooldowns[skill] = 6;
             ShowSkillEffectOnce(37);
-            PlaySoundEffect(3);
             isPlayerTurn = false;
             UpdateSkillButtons();
             StartCoroutine(DelayedEnemyTurn());
@@ -1402,7 +1327,6 @@ public class BossWind : MonoBehaviour
             skillCooldowns[skill] = 3;
             DamageEnemy(finalDamage);
             ShowSkillEffectOnce(15);
-            PlaySoundEffect(11);
             isPlayerTurn = false;
             UpdateSkillButtons();
             StartCoroutine(DelayedEnemyTurn());
@@ -1439,7 +1363,6 @@ public class BossWind : MonoBehaviour
             DamageEnemy(finalDamage);
             skillCooldowns[skill] = 5;
             ShowSkillEffectOnce(18);
-            PlaySoundEffect(11);
             Debug.Log($"ใช้สกิลที่ 2 (ธาตุมืด) โจมตีแบบสุ่ม ดาเมจที่ออกคือ {finalDamage}");
             isPlayerTurn = false;
             UpdateSkillButtons();
@@ -1454,7 +1377,6 @@ public class BossWind : MonoBehaviour
             Debug.Log("ใช้สกิลที่ 3: หลบการโจมตี 50% เป็นเวลา 5 เทิร์น");
             isPlayerTurn = false;
             ShowSkillEffectOnce(16);
-            PlaySoundEffect(6);
             UpdateSkillButtons();
             StartCoroutine(DelayedEnemyTurn());
             return;
@@ -1489,7 +1411,6 @@ public class BossWind : MonoBehaviour
             DamageEnemy(finalDamage);
             ShowSkillEffectOnce(15);
             ShowSkillEffectOnce(39);
-            PlaySoundEffect(11);
             isPlayerTurn = false;
             UpdateSkillButtons();
             StartCoroutine(DelayedEnemyTurn());
@@ -1527,7 +1448,6 @@ public class BossWind : MonoBehaviour
             skillCooldowns[skill] = 7;
             ShowSkillEffectOnce(18);
             ShowSkillEffectOnce(40);
-            PlaySoundEffect(11);
             Debug.Log($"ใช้สกิลที่ 2 (ธาตุมืด) โจมตีแบบสุ่ม ดาเมจที่ออกคือ {finalDamage}");
             isPlayerTurn = false;
             UpdateSkillButtons();
@@ -1566,7 +1486,6 @@ public class BossWind : MonoBehaviour
             skillCooldowns[skill] = 7;
             ShowSkillEffectOnce(18);
              ShowSkillEffectOnce(15);
-             PlaySoundEffect(11);
             Debug.Log($"ใช้สกิลที่ 2 (ธาตุมืด) โจมตีแบบสุ่ม ดาเมจที่ออกคือ {finalDamage}");
             isPlayerTurn = false;
             UpdateSkillButtons();
@@ -1582,7 +1501,6 @@ public class BossWind : MonoBehaviour
             Debug.Log("ใช้สกิลที่ 3: หลบการโจมตี 50% เป็นเวลา 5 เทิร์น");
             isPlayerTurn = false;
             ShowSkillEffectOnce(16);
-            PlaySoundEffect(6);
             UpdateSkillButtons();
             StartCoroutine(DelayedEnemyTurn());
             return;
@@ -1599,7 +1517,6 @@ public class BossWind : MonoBehaviour
             isPlayerTurn = false;
             UpdateSkillButtons();
             ShowSkillEffectOnce(41);
-            PlaySoundEffect(3);
             StartCoroutine(DelayedEnemyTurn());
             return;
         }
@@ -1608,7 +1525,7 @@ public class BossWind : MonoBehaviour
         {
             skillCooldowns[skill] = 7;
             ShowSkillEffectOnce(42);
-            PlaySoundEffect(3);
+
             BootDamageDark = 2;
 
 
@@ -1663,7 +1580,6 @@ public class BossWind : MonoBehaviour
             skillCooldowns[skill] = 3;
             DamageEnemy(finalDamage);
             ShowSkillEffectOnce(44);
-            PlaySoundEffect(12);
             isPlayerTurn = false;
             UpdateSkillButtons();
             StartCoroutine(DelayedEnemyTurn());
@@ -1674,7 +1590,6 @@ public class BossWind : MonoBehaviour
             lightBuffTurnsLeft = 3;
             skillCooldowns[skill] = 8;
             ShowSkillEffectOnce(13);
-            PlaySoundEffect(3);
             Debug.Log("ใช้สกิล 2: บัฟดาเมจคูณ 2 เป็นเวลา 3 เทิร์น");
             isPlayerTurn = false;
             UpdateSkillButtons();
@@ -1690,7 +1605,6 @@ public class BossWind : MonoBehaviour
             UpdatePlayerHPUI();
             Debug.Log($"ใช้สกิล 3 ฮีลเลือด {healAmount} HP");
             ShowSkillEffectOnce(12);
-            PlaySoundEffect(2);
             // เปิดโล่ ลดดาเมจ 50% เป็นเวลา 3 เทิร์น
             lightShieldTurnsLeft = 3;
             Debug.Log("เปิดโล่ป้องกัน 50% เป็นเวลา 3 เทิร์น");
@@ -1730,7 +1644,6 @@ public class BossWind : MonoBehaviour
             skillCooldowns[skill] = 3;
             DamageEnemy(finalDamage);
             ShowSkillEffectOnce(44);
-            PlaySoundEffect(12);
             isPlayerTurn = false;
             UpdateSkillButtons();
             StartCoroutine(DelayedEnemyTurn());
@@ -1746,7 +1659,7 @@ public class BossWind : MonoBehaviour
             UpdatePlayerHPUI();
             Debug.Log($"ใช้สกิล ฮีลเลือด {healAmount} HP");
             ShowSkillEffectOnce(12);
-            PlaySoundEffect(2);
+
             skillCooldowns[skill] = 15;
             isPlayerTurn = false;
             UpdateSkillButtons();
@@ -1763,7 +1676,7 @@ public class BossWind : MonoBehaviour
             UpdatePlayerHPUI();
             Debug.Log($"ใช้สกิล ฮีลเลือด {healAmount} HP");
             ShowSkillEffectOnce(12);
-            PlaySoundEffect(2);
+
             usedOnceSkills.Add(skill);
             isPlayerTurn = false;
             UpdateSkillButtons();
@@ -1779,7 +1692,6 @@ public class BossWind : MonoBehaviour
             skillCooldowns[skill] = 8;
             isPlayerTurn = false;
              ShowSkillEffectOnce(13);
-             PlaySoundEffect(3);
             UpdateSkillButtons();
             StartCoroutine(DelayedEnemyTurn());
             return;
@@ -1812,7 +1724,6 @@ public class BossWind : MonoBehaviour
 
             skillCooldowns[skill] = 8; // คูลดาวน์ 9 เทิร์น
             ShowSkillEffectOnce(45); 
-            PlaySoundEffect(5);
             isPlayerTurn = false;
             UpdateSkillButtons();
             StartCoroutine(DelayedEnemyTurn());
@@ -1828,7 +1739,6 @@ public class BossWind : MonoBehaviour
             }
             isPlayerTurn = false;
             ShowSkillEffectOnce(46); 
-            PlaySoundEffect(5);
             UpdateSkillButtons();
             StartCoroutine(DelayedEnemyTurn());
             return;
@@ -1860,7 +1770,6 @@ public class BossWind : MonoBehaviour
             EarthSmashEarthLeft = false;
         }
         
-      PlaySoundEffect(0);
 
          finaldamgedef = Mathf.RoundToInt(damageN * (100f / (100f + enemyDef)));
         damageN = finaldamgedef;
@@ -1874,7 +1783,6 @@ public class BossWind : MonoBehaviour
 
         if (enemyHP <= 0)
         {
-            OpenChest();
             Debug.Log("ศัตรูแพ้แล้ว!");
             ShowResultPanelVictory("Victory!");
         }
@@ -1886,61 +1794,6 @@ public class BossWind : MonoBehaviour
            playerturntext.gameObject.SetActive(false);
     enemyturntext.gameObject.SetActive(true);
         int finalDamage = damage;
-
-        playerdamageItems = 0;
-        if (knightswords)
-        {
-            playerdamageItems += Mathf.RoundToInt(finalDamage* 0.05f);
-        }
-        if (lightrings)
-        {
-            playerdamageItems += Mathf.RoundToInt(finalDamage* 0.05f);
-        }
-        if (lightspears)
-        {
-            playerdamageItems += Mathf.RoundToInt(finalDamage* 0.1f);
-        }
-        if (firedaggers)
-        {
-            playerdamageItems += Mathf.RoundToInt(finalDamage* 0.07f);
-        }
-        if (firelegendaryswords)
-        {
-            playerdamageItems += Mathf.RoundToInt(finalDamage* 0.1f);
-        }
-        if (windswords)
-        {
-            playerdamageItems += Mathf.RoundToInt(finalDamage* 0.07f);
-        }
-        if (windspears)
-        {
-             playerdamageItems += Mathf.RoundToInt(finalDamage* 0.1f);
-        }
-        if (darkdaggers)
-        {
-              playerdamageItems += Mathf.RoundToInt(finalDamage* 0.1f);
-        }
-        if (darkrings)
-        {
-            int healAmount = Mathf.RoundToInt(finalDamage* 0.1f);
-            playerHP += healAmount;
-            playerHP = Mathf.Clamp(playerHP, 0, selectedPlayer.maxHP);
-            UpdatePlayerHPUI();
-        }
-        if (darklegendaryrings)
-        {
-            int healAmount = Mathf.RoundToInt(finalDamage* 0.3f);
-            playerHP += healAmount;
-            playerHP = Mathf.Clamp(playerHP, 0, selectedPlayer.maxHP);
-            UpdatePlayerHPUI();
-        }
-        if (darklegendarydaggers)
-        {
-             playerdamageItems += Mathf.RoundToInt(finalDamage* 0.2f);
-        }
-
-        finalDamage += playerdamageItems;
-        ///card and item
         //int finalWaterDamage = damage;
          if (lightBuffTurnsLeft > 0)//สกิล 2 แสง
     {
@@ -2114,32 +1967,10 @@ public class BossWind : MonoBehaviour
 
         if (enemyHP <= 0)
         {
-            OpenChest();
             Debug.Log("ศัตรูแพ้แล้ว!");
             ShowResultPanelVictory("Victory!");
         }
     }
-
-      public Sprite[] itemImages; 
-    public Image showImage;
-     public ItemID WindLegendaryEye = ItemID.WindLegendaryEye ;
-
-    public void OpenChest()
-    {
-        // เรียกใช้คำสั่งปลดล็อก
-         int roll = Random.Range(1, 101);
-            
-            if (roll < 51)
-            {
-                 EquipmentManager.Instance.UnlockItem(WindLegendaryEye);
-                 showImage.sprite = itemImages[0]; 
-                 showImage.gameObject.SetActive(true);
-            }
-        
-       
-    }
-
-    
     void DamagePlayer(int damage) //<-- ดาเมจศัตรู
     {
               playerturntext.gameObject.SetActive(true);
@@ -2506,7 +2337,7 @@ StartCoroutine(DelayedEnemyTurn());
                 ShowSkillEffectOnce(2);
                 playerHP += healAmount;
                 playerHP = Mathf.Clamp(playerHP, 0, selectedPlayer.maxHP);
-                PlaySoundEffect(2);
+
                 UpdatePlayerHPUI();
 
                 Debug.Log($"ฟื้นฟู HP 30% (+{healAmount}) หลังจากดีเลย์ 3 เทิร์น");
@@ -2530,7 +2361,7 @@ StartCoroutine(DelayedEnemyTurn());
     {
         // 1. รอ 5 วินาที ตามที่คุณต้องการ
         Debug.Log("AI: กำลังรอ 5 วินาที...");
-        yield return new WaitForSeconds(3f); // ⬅️ นี่คือ MyDelay() ของคุณ
+        yield return new WaitForSeconds(5f); // ⬅️ นี่คือ MyDelay() ของคุณ
         Debug.Log("AI: รอครบ 5 วิแล้ว, เริ่มเทิร์นผู้เล่น");
 
         // 2. ย้ายโค้ด "จบเทิร์น" ทั้งหมดจาก EnemyTurn() มาไว้ที่นี่
@@ -2758,26 +2589,6 @@ StartCoroutine(DelayedEnemyTurn());
 
     IEnumerator DelayedEnemyTurn()
     {
-          //item
-        if (recoverrings)
-        {
-            playerHP+= 2;
-            playerHP = Mathf.Clamp(playerHP, 0, selectedPlayer.maxHP);
-            UpdatePlayerHPUI();
-        }
-        if (regenrings)
-        {
-             playerHP+= 5;
-            playerHP = Mathf.Clamp(playerHP, 0, selectedPlayer.maxHP);
-            UpdatePlayerHPUI();
-        }
-        if (watergodarmors)
-        {
-             playerHP+= 5;
-            playerHP = Mathf.Clamp(playerHP, 0, selectedPlayer.maxHP);
-            UpdatePlayerHPUI();
-        }
-        //skill and card
         if (regenTurnsLeft > 0)//การ์ดเลือดเพิ่ม 10 ถึง 10 turn
         {
             playerHP += regenAmountPerTurn;
@@ -2793,7 +2604,7 @@ StartCoroutine(DelayedEnemyTurn());
             regenwater--;
             UpdatePlayerHPUI();
             ShowSkillEffectOnce(2);
-            PlaySoundEffect(2);
+            
         }
         if (passiveAttackBonusPerTurn > 0)//การ์ดเพิ่มโจมตีธรรมดา 1 ทุกเทิร์น
             {
@@ -2856,7 +2667,7 @@ StartCoroutine(DelayedEnemyTurn());
             Debug.Log("ศัตรูหลุดจากสตั๊นแล้ว");
         }
 
-        yield return new WaitForSeconds(3f);
+        yield return new WaitForSeconds(5f);
           isPlayerTurn = true;
             // ✅ ข้ามเทิร์นศัตรู กลับมาที่ผู้เล่นทันที
         
@@ -2891,7 +2702,6 @@ StartCoroutine(DelayedEnemyTurn());
         //ShowSkillEffectOnce(5); 
         DamagePlayer(damage);
         ShowSkillEffectOnce(47);
-        PlaySoundEffect(9);
         enemySkill1Cooldown = 3;
         Debug.Log("ศัตรูใช้ ลม ทำดาเมจ " + damage);
     }
@@ -2920,7 +2730,6 @@ StartCoroutine(DelayedEnemyTurn());
         //ShowSkillEffectOnce(5); 
         DamagePlayer(damage);
         ShowSkillEffectOnce(48);
-        PlaySoundEffect(9);
         enemySkill2Cooldown = 4;
         Debug.Log("ศัตรูใช้ ลม ทำดาเมจ " + damage);
     }
@@ -2950,7 +2759,6 @@ StartCoroutine(DelayedEnemyTurn());
         DamagePlayer(damage);
          ShowSkillEffectOnce(48);
         ShowSkillEffectOnce(49);
-        PlaySoundEffect(9);
         enemySkill3Cooldown = 5;
         Debug.Log("ศัตรูใช้ ลม ทำดาเมจ " + damage);
     }
@@ -2961,7 +2769,6 @@ StartCoroutine(DelayedEnemyTurn());
         EnemyDarkWalk = Random.Range(2,6);
         enemySkill4Cooldown = 6;
         ShowSkillEffectOnce(51);
-        PlaySoundEffect(6);
         
     }
         void EnemySkill5() //<--สกิล 5 ศัตรู
@@ -2970,6 +2777,7 @@ StartCoroutine(DelayedEnemyTurn());
         EnemyReflectWind = 1;
         enemySkill5Cooldown = 3;
         ShowSkillEffectOnce(52);
+        //ShowSkillEffectOnce(6); 
     }
 
 
@@ -3133,39 +2941,12 @@ public void ShowPlayerDamageNumber(string text)
 IEnumerator MyDelay()
     {
         Debug.Log("ก่อนรอ");
-        yield return new WaitForSeconds(3f); // รอ 5 วินาที
+        yield return new WaitForSeconds(5f); // รอ 5 วินาที
         Debug.Log("หลังรอ");
     }
 
 
-  
-// Method สำหรับปิดปุ่มและเปลี่ยนสีให้มืด
-void DisableCardButton(int index)
-{
-    // เช็คว่า index ที่ส่งมาถูกต้องไหม (กัน Error Array out of range)
-    if (index >= 0 && index < cardButtons.Length)
-    {
-        // 1. ปิดไม่ให้กดซ้ำ
-        cardButtons[index].interactable = false;
-
-        // 2. ดึงรูปภาพของปุ่มมาเปลี่ยนสี
-        Image btnImage = cardButtons[index].GetComponent<Image>();
-        if (btnImage != null)
-        {
-            // ใช้ new Color(แดง, เขียว, น้ำเงิน, ความทึบ)
-            // 0.5f = เทามาตรฐาน (มืด)
-            // 0.75f = เทาอ่อน (สว่างขึ้น) <-- แนะนำค่านี้
-            // 1.0f = ขาวปกติ (สว่างสุด)
-            // เปลี่ยนเป็นสีเทา (มืดลง)
-
-            btnImage.color = new Color(0.75f, 0.75f, 0.75f, 1f);
-            
-            // หรือถ้าอยากให้มืดกว่านี้ ใช้ new Color(0.5f, 0.5f, 0.5f, 1f); ก็ได้
-        }
-    }
-}
-
-     void UseCard(CardData card,int buttonIndex)
+    void UseCard(CardData card)
 {
 playerturntext.gameObject.SetActive(false);
     enemyturntext.gameObject.SetActive(true);
@@ -3186,120 +2967,64 @@ StartCoroutine(MyDelay());
         Debug.Log($"ใช้การ์ด: {card.cardName}");
         usedCards.Add(card); // ✅ ใช้ครั้งเดียวแล้วลบ
         hasUsedCardThisTurn = true;
-        DisableCardButton(buttonIndex);
         switch (card.effectType)
         {
             case CardEffectType.ReduceEnemyDamage:
                 reduceEnemyDamageTurns = card.value; // เช่น 3 เทิร์น
                 Debug.Log($"ศัตรูจะโจมตีเบาลงครึ่งหนึ่ง {card.value} เทิร์น");
                 ShowCardEffectOnce(0);
-                PlaySoundEffect(5);
-            if (buttonIndex >= 0 && buttonIndex < cardButtons.Length)
-    {
-        cardButtons[buttonIndex].interactable = false; // ปิดปุ่มกดไม่ได้
-        
-        var img = cardButtons[buttonIndex].GetComponent<Image>();
-        if (img != null) 
-        {
-            img.color = Color.gray; // เปลี่ยนเป็นสีมืด (เทา)
-        }
-    }
-                if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
                  isPlayerTurn = false;
                 break;
             case CardEffectType.SilenceEnemy:
                 silenceEnemyTurns = card.value;
                 Debug.Log($"ศัตรูถูกผนึกสกิล {card.value} เทิร์น");
                ShowCardEffectOnce(1); 
-               PlaySoundEffect(5);
-               if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
                  isPlayerTurn = false;
                 break;
             case CardEffectType.ReflectDamage:
                 reflectNextAttack = true;
-                if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
                 Debug.Log("เปิดการ์ดสะท้อนดาเมจ ศัตรูจะโดนดาเมจ x2 และเราไม่เสียเลือดในครั้งต่อไป");
                  isPlayerTurn = false;
                   ShowCardEffectOnce(2);
                 break;
             case CardEffectType.IgnoreElement:
                 isIgnoreElementCardActive = true;
-                if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
                 Debug.Log("ใช้การ์ด Ignore Element — การโจมตีครั้งถัดไปจะไม่สนธาตุศัตรู!");
                  isPlayerTurn = false;
                 break;
             case CardEffectType.PermanentAttackBoost:
                 int bonus = Random.Range(5, 21); // สุ่ม 5-20
                 selectedPlayer.attackDamage += bonus;
-                if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
                 Debug.Log($"เพิ่มพลังโจมตีปกติถาวร +{bonus}. พลังใหม่ = {selectedPlayer.attackDamage}");
-                
                  isPlayerTurn = false;
-                 
                   ShowCardEffectOnce(3);
-                  PlaySoundEffect(3);
                 break;
             case CardEffectType.PermanentAttackBoost05:
                 selectedPlayer.attackDamage *= 1 / 2;
-                if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
                  isPlayerTurn = false;
                  ShowCardEffectOnce(3);
-                 PlaySoundEffect(3);
                 break;
             case CardEffectType.DoubleNormalAttack:
                 doubleAttackTurnsLeft = card.value;
                 selectedPlayer.attackDamage = Mathf.RoundToInt(selectedPlayer.attackDamage * 2 );
                 Debug.Log($"เปิดบัฟโจมตีธรรมดาคูณ 2 เป็นเวลา {card.value} เทิร์น");
-                if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
                  isPlayerTurn = false;
                  ShowCardEffectOnce(3);
-                 PlaySoundEffect(3);
                 break;
             case CardEffectType.PermanentAttackBoostRandom:
                 float bonusRandom = Random.Range(0.5f, 3.5f);
                 selectedPlayer.attackDamage = Mathf.RoundToInt(selectedPlayer.attackDamage * bonusRandom);
                 Debug.Log($"เพิ่มพลังโจมตีปกติถาวร +{bonusRandom}. พลังใหม่ = {selectedPlayer.attackDamage}");
-                if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
                  isPlayerTurn = false;
                  ShowCardEffectOnce(3);
-                 PlaySoundEffect(3);
                 break;
             case CardEffectType.HealRandomHP:
                 int healAmount = Random.Range(10, 101); // 10-100
                 ShowSkillEffectOnce(2); 
-                PlaySoundEffect(2);
                  playerHP += healAmount;
                  playerHP = Mathf.Clamp(playerHP, 0, selectedPlayer.maxHP);
                  UpdatePlayerHPUI();
                 Debug.Log($"ฟื้นฟู HP แบบสุ่ม: +{healAmount} หน่วย (HP ปัจจุบัน: {playerHP})");
-                if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
                  isPlayerTurn = false;
                    break;
             case CardEffectType.DelayedHeal:
@@ -3312,67 +3037,38 @@ StartCoroutine(MyDelay());
                 delayedHealPercent = 0.3f; // 30%
                  isDelayedHealActive = true;
                 Debug.Log("ฟื้นฟู 30% ของ HP ในอีก 3 เทิร์น");
-                if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
                  isPlayerTurn = false;
                 break;
             case CardEffectType.PermanentEnemyAttackReduction:
                 isEnemyAttackReducedPermanently = true;
                 Debug.Log("เปิดการ์ดลดดาเมจศัตรูถาวร 30%");
                 ShowCardEffectOnce(0);
-                PlaySoundEffect(5);
-                if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
                 isPlayerTurn = false;
                 break;
             case CardEffectType.FullHeal:
                 int healedAmount = selectedPlayer.maxHP - playerHP;
                 ShowSkillEffectOnce(2); 
-                PlaySoundEffect(2);
                  playerHP = selectedPlayer.maxHP;
                 UpdatePlayerHPUI();
                 Debug.Log($"ฟื้นฟูเลือดจนเต็ม (+{healedAmount} HP)");
-                if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
                  isPlayerTurn = false;
                 break;
             case CardEffectType.RegenerateHPOverTime:
                 regenTurnsLeft = 10;
                 regenAmountPerTurn = 10;
-                PlaySoundEffect(2);
                 Debug.Log("เปิดการ์ดฟื้นฟู HP 10 ต่อเทิร์น นาน 10 เทิร์น");
-                if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
                  isPlayerTurn = false;
                 break;
             case CardEffectType.AddAttackPerTurn:
                 passiveAttackBonusPerTurn = 1; // บวกทีละ 1 ทุกเทิร์น
-                PlaySoundEffect(3);
                 Debug.Log("การ์ดเปิดใช้งาน: +1 พลังโจมตีปกติทุกเทิร์น (ถาวร)");
                 ShowCardEffectOnce(3);
-                if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
                  isPlayerTurn = false;
                 break;
             case CardEffectType.HealEveryTurn:
                 isHealingEveryTurn = true;
                 healPerTurnAmount = 1;
-                PlaySoundEffect(2);
                 Debug.Log("เปิดการ์ดฮีล: จะฟื้น 1 HP ทุกเทิร์น");
-                if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
                  isPlayerTurn = false;
                 break;
             case CardEffectType.PermanentDodge:
@@ -3380,11 +3076,6 @@ StartCoroutine(MyDelay());
                 dodgeChance = 0.1f; // 10% หลบ
                 Debug.Log("การ์ดหลบหลีกเปิดใช้งาน: หลบได้ 10% ตลอดทั้งเกม");
                 ShowCardEffectOnce(3);
-                PlaySoundEffect(6);
-                if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
                  isPlayerTurn = false;
                 break;
             case CardEffectType.DrainLifePercent:
@@ -3393,7 +3084,7 @@ StartCoroutine(MyDelay());
                 drainAmount = Mathf.Min(drainAmount, enemyHP - 1);
 
                 enemyHP -= drainAmount;
-                enemyHP = Mathf.Clamp(enemyHP, 0, 100); // ปรับตาม max HP ศัตรู
+                enemyHP = Mathf.Clamp(enemyHP, 0, enemyMaxHP); // ปรับตาม max HP ศัตรู
                 StartCoroutine(ShakeEnemy());
 
                 playerHP += drainAmount;
@@ -3401,11 +3092,6 @@ StartCoroutine(MyDelay());
 
                 Debug.Log($"ดูดเลือดศัตรู {drainAmount} หน่วย (คิดเป็น {Mathf.RoundToInt(drainPercent * 100)}%)");
                 ShowCardEffectOnce(4);
-                PlaySoundEffect(5);
-                if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
                 UpdateEnemyHPUI();
                 UpdatePlayerHPUI();
                  isPlayerTurn = false;
@@ -3418,85 +3104,50 @@ StartCoroutine(MyDelay());
                 enemyHP = Mathf.Clamp(enemyHP, 0, enemyMaxHP);
 
                 Debug.Log($"ศัตรูเสียเลือดทันที {damageAmount} หน่วย (30% ของ max HP)");
-                if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
                 ShowCardEffectOnce(5);
-                PlaySoundEffect(0);
                 UpdateEnemyHPUI();
                  isPlayerTurn = false;
                 break;
             case CardEffectType.PermanentElementalBoost:
                  isElementalAttackBoosted = true;
-                 if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
                   isPlayerTurn = false;
                   ShowCardEffectOnce(3);
-                  PlaySoundEffect(3);
                 break;
             case CardEffectType.PermanentElementalBoostx2:
                  isElementalAttackBoostedx2 = 2;
-                 if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
                   isPlayerTurn = false;
                   ShowCardEffectOnce(3);
-                  PlaySoundEffect(3);
                 break;
             case CardEffectType.PermanentElementalBoostRandom:
              float BootElementPercent = Random.Range(0.5f, 3.5f);
                 ElementalAttackBoostedRandom = 3;
                  isElementalAttackBoostedRandom = BootElementPercent;
-                 if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
                   isPlayerTurn = false;
-                  ShowCardEffectOnce(3);PlaySoundEffect(3);
+                  ShowCardEffectOnce(3);
                 break;
             case CardEffectType.AttackSuperBoost:
              SuperBoostAttackTurn = card.value;
              int BootAttackDamage = Random.Range(3 ,5);
                  AttackBoosted = BootAttackDamage;
-                 if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
                   isPlayerTurn = false;
-                  ShowCardEffectOnce(3);PlaySoundEffect(3);
+                  ShowCardEffectOnce(3);
                 break;
              case CardEffectType.AttackBoostTurnRandom:
              RandomBootDamageTurn = Random.Range(1 ,5);
-             if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
               isPlayerTurn = false;
-              ShowCardEffectOnce(3);PlaySoundEffect(3);
+              ShowCardEffectOnce(3);
                 break;
             case CardEffectType.DamageBuffIncreaseEachTurn:
                 isElementalBuffPerTurnActive = true;
                 Debug.Log("เปิดการ์ดเพิ่มพลังโจมตี +0.5 ทุกเทิร์น");
-                if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
                 isPlayerTurn = false;
-                ShowCardEffectOnce(3);PlaySoundEffect(3);
+                ShowCardEffectOnce(3);
                 break;
             case CardEffectType.DoubleAttackAndLoseHP3Turns:
                 doubleAttackandloseTurnsLeft = 3;
                 Debug.Log("เปิดการ์ด บัฟโจมตี x2 และเสีย HP 10% ต่อเทิร์น เป็นเวลา 3 เทิร์น");
-                if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
                 isPlayerTurn = false;
-                ShowCardEffectOnce(3);PlaySoundEffect(3);
+                ShowCardEffectOnce(3);
                 break;
             case CardEffectType.HalfDamageAndDoubleMaxHP:
                 isHalfDamageAll = true;
@@ -3508,11 +3159,7 @@ StartCoroutine(MyDelay());
                 UpdatePlayerHPUI(); // ปรับแถบ HP ตามใหม่
 
                 Debug.Log("เปิดการ์ด ลดดาเมจทุกอย่างครึ่งนึง และเพิ่ม Max HP x2 พร้อมฟื้นเต็ม");
-                ShowSkillEffectOnce(2);PlaySoundEffect(2);
-                if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
+                ShowSkillEffectOnce(2);
                 isPlayerTurn = false;
                 break;
             case CardEffectType.HalfHP_AndBoostAttack15x:
@@ -3527,115 +3174,66 @@ StartCoroutine(MyDelay());
                 StartCoroutine(ShakePlayer());
                  ShowPlayerDamageNumber($"-{selectedPlayer.maxHP / 2}");
                 ShowCardEffectOnce(3);
-                PlaySoundEffect(3);
                 UpdatePlayerHPUI();
                 attackMultiplierTurn = true;
-                if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
                  isPlayerTurn = false;
                 break;
             case CardEffectType.Heal20PercentMaxHP:
                 int healAmount20Percent = Mathf.RoundToInt(selectedPlayer.maxHP * 0.2f);
                 ShowSkillEffectOnce(2); 
-                PlaySoundEffect(2);
                 playerHP += healAmount20Percent;
                 playerHP = Mathf.Clamp(playerHP, 0, selectedPlayer.maxHP);
 
                 Debug.Log($"ฟื้นฟู HP {healAmount20Percent} (20% ของ Max HP)");
-                if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
+
                 UpdatePlayerHPUI();
                 isPlayerTurn = false;
                 break;
             case CardEffectType.HealFullAndReduceAttack:
                 playerHP = selectedPlayer.maxHP; // เพิ่มเลือดจนเต็ม
                 ShowSkillEffectOnce(2);
-                PlaySoundEffect(2);
                 checkReduceAttackHealFull = true;
-                if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
                 UpdatePlayerHPUI(); isPlayerTurn = false;
                 break;
             case CardEffectType.Poison:
                 poisonEnemyTurnsLeft = Random.Range(2, 6); // สุ่ม 2–5 เทิร์น
                 isPoisonEnemy = true;
                 Debug.Log($"ศัตรูติดพิษ {poisonEnemyTurnsLeft} เทิร์น ลดเลือด 5% ของ Max HP ต่อเทิร์น");
-                if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
                 isPlayerTurn = false;
                 ShowCardEffectOnce(6);
-                PlaySoundEffect(11);
                 break;
             case CardEffectType.HealOverTimePercent:
                 healOverTimeTurnsLeft = Random.Range(1, 6); // 1-5 เทิร์น
                 isHealingOverTime = true;
-                PlaySoundEffect(2);
                 Debug.Log($"เพิ่มเลือด 10% ของ Max HP ทุกเทิร์น เป็นเวลา {healOverTimeTurnsLeft} เทิร์น");
-                if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
                 isPlayerTurn = false;
                 break;
             case CardEffectType.HalfPlayerDamage_HealOnAttack:
                  healOnAttackTurnsLeft = Random.Range(1, 6); // 1–5 เทิร์น
-                 PlaySoundEffect(3);
                Debug.Log($"ดาเมจผู้เล่นถูกลดครึ่ง และจะฟื้น HP 10% ทุกครั้งที่โจมตีศัตรู เป็นเวลา {healOnAttackTurnsLeft} เทิร์น");
-               if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
                 isPlayerTurn = false;
                 break;
             case CardEffectType.ConfuseEnemy:
                 confuseEnemyTurns = 2;
                 Debug.Log("ศัตรูติดสถานะมึนงง: โจมตีเบาลงครึ่ง และโดนดาเมจแรงขึ้น 2 เท่า เป็นเวลา 2 เทิร์น");
-                if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
                 ShowCardEffectOnce(7);
-                PlaySoundEffect(5);
                  isPlayerTurn = false;
                 break;
             case CardEffectType.ConfuseEnemyHitSelf:
                 confuseHitSelfTurns = 4;
                 Debug.Log("ศัตรูติดสถานะสับสน 4 เทิร์น — อาจโจมตีตัวเองหรือโจมตีเราแรงขึ้น");
-                if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
                  isPlayerTurn = false;
                 ShowCardEffectOnce(8);
-                PlaySoundEffect(5);
                 break;
             case CardEffectType.ReduceEnemyDamageHalf:
                 isEnemyDamageReducedHalf = 3;
-                if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
                  isPlayerTurn = false;
                   ShowCardEffectOnce(0);
-                  PlaySoundEffect(5);
                 break;
             case CardEffectType.AttackBoostRandomRange:
                 AttackBoostRandomRange = true;
-                if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
                  isPlayerTurn = false;
                   ShowCardEffectOnce(3);
-                  PlaySoundEffect(3);
                 break;
             case CardEffectType.SacrificeHPForMassiveDamage:
                 int hpLost = Mathf.FloorToInt(playerHP * 0.7f);
@@ -3644,14 +3242,9 @@ StartCoroutine(MyDelay());
                 UpdatePlayerHPUI();
                  StartCoroutine(ShakePlayer());
                 ShowCardEffectOnce(3);
-                PlaySoundEffect(3);
                   ShowPlayerDamageNumber($"-{hpLost}");
                 Debug.Log($"เสียเลือด {hpLost} HP เพื่อบัฟดาเมจ x5 เป็นเวลา 3 เทิร์น");
                 ultraDamageTurns = 3;
-                if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
                  isPlayerTurn = false;
                 break;
             case CardEffectType.ReduceEnemyHPBy20Percent:
@@ -3661,14 +3254,9 @@ StartCoroutine(MyDelay());
                 enemyHP = Mathf.Clamp(enemyHP, 0, enemyMaxHP);
                 UpdateEnemyHPUI();
                   ShowCardEffectOnce(5);
-                  PlaySoundEffect(0);
                  StartCoroutine(ShakeEnemy());
                 ShowDamageNumber($"-{damageAmounttwenty}");
                Debug.Log($"ใช้การ์ดลด HP ศัตรูทันที {damageAmounttwenty} หน่วย (20% ของ Max HP)");
-               if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
                 isPlayerTurn = false;
                 break;
             case CardEffectType.ReduceEnemyHPBy15Percent:
@@ -3678,36 +3266,21 @@ StartCoroutine(MyDelay());
                 enemyHP = Mathf.Clamp(enemyHP, 0, enemyMaxHP);
                 UpdateEnemyHPUI();
                 ShowCardEffectOnce(5);
-                PlaySoundEffect(0);
                  StartCoroutine(ShakeEnemy());
                 ShowDamageNumber($"-{damageAmountfifty}");
                Debug.Log($"ใช้การ์ดลด HP ศัตรูทันที {damageAmountfifty} หน่วย (15% ของ Max HP)");
-               if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
                 isPlayerTurn = false;
                 break;
             case CardEffectType.CurseAttackUpLoseHPPerTurn:
                 isCursedAttack = true;
-                PlaySoundEffect(5);
                 Debug.Log("คำสาปพลังคลั่ง: เพิ่มดาเมจ 2 เท่า ถาวร แต่จะเสีย HP 5% ของ Max ทุกเทิร์น");
-                if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
                  isPlayerTurn = false;
                 ShowCardEffectOnce(9);
                 break;
             case CardEffectType.PreventDeathOnce:
                 hasPreventDeathEffect = true;
                 Debug.Log("ใช้การ์ดหัวใจที่ไม่ยอมแพ้! ถ้า HP หมด จะรอดตาย 1 ครั้งด้วย HP 1");
-                if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
                 ShowCardEffectOnce(10);
-                PlaySoundEffect(2);
                  isPlayerTurn = false;
                 break;
 
@@ -3728,12 +3301,7 @@ StartCoroutine(MyDelay());
 
                     DamageEnemy(damage);
                     ShowSkillEffectOnce(0);
-                    PlaySoundEffect(7);
                     Debug.Log($"ใช้การ์ดโจมตีไฟ ดาเมจ: {damage}");
-                    if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
                     isPlayerTurn = false;
                     break;
                 }
@@ -3753,12 +3321,7 @@ StartCoroutine(MyDelay());
 
                     DamageEnemy(damage);
                     ShowSkillEffectOnce(27);
-                    PlaySoundEffect(8);
                     Debug.Log($"ใช้การ์ดโจมตีน้ำ ดาเมจ: {damage}");
-                    if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
                     isPlayerTurn = false;
                     break;
                 }
@@ -3778,12 +3341,7 @@ StartCoroutine(MyDelay());
 
                     DamageEnemy(damage);
                       ShowSkillEffectOnce(19);
-                      PlaySoundEffect(9);
                     Debug.Log($"ใช้การ์ดโจมตีลม ดาเมจ: {damage}");
-                    if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
                     isPlayerTurn = false;
                     break;
                 }
@@ -3803,12 +3361,7 @@ StartCoroutine(MyDelay());
 
                     DamageEnemy(damage);
                      ShowSkillEffectOnce(22);
-                     PlaySoundEffect(10);
                     Debug.Log($"ใช้การ์ดโจมตีดิน ดาเมจ: {damage}");
-                    if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
                     isPlayerTurn = false;
                     break;
                 }
@@ -3823,12 +3376,7 @@ StartCoroutine(MyDelay());
 
                     DamageEnemy(damage);
                     ShowSkillEffectOnce(15);
-                    PlaySoundEffect(11);
                     Debug.Log($"ใช้การ์ดโจมตีมืด ดาเมจ: {damage}");
-                    if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
                     isPlayerTurn = false;
                     break;
                 }
@@ -3843,12 +3391,7 @@ StartCoroutine(MyDelay());
 
                     DamageEnemy(damage);
                     ShowSkillEffectOnce(44);
-                    PlaySoundEffect(12);
                     Debug.Log($"ใช้การ์ดโจมตีแสง ดาเมจ: {damage}");
-                    if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
                     isPlayerTurn = false;
                     break;
                 }
@@ -3856,12 +3399,7 @@ StartCoroutine(MyDelay());
                 {
                     int damage = card.value;
                     DamageEnemy(damage);
-                    PlaySoundEffect(0);
                     Debug.Log($"ใช้การ์ดโจมตีกายภาพ ดาเมจ: {damage}");
-                    if (DeckManager.Instance != null)
-            {
-                DeckManager.Instance.LockCard(card);
-            }
                     isPlayerTurn = false;
                     ShowSkillEffectOnce(8);
                     break;
@@ -3883,265 +3421,12 @@ StartCoroutine(MyDelay());
         cardButtons[index].interactable = false;
     }
 
-    UpdateSkillButtons();
     StartCoroutine(DelayedEnemyTurn()); // จบเทิร์น
 }
 
-int playerdamageItems = 0;
-bool knightswords = false;
-bool lightrings = false;
-bool lightspears  =false;
-bool firedaggers = false;
-bool firelegendaryswords = false;
-bool windswords = false;
-bool  windspears = false;
-bool darkdaggers  =false;
-bool darkrings = false;
- bool darklegendaryrings = false;
-bool darklegendarydaggers = false;
 
-//recover
-bool recoverrings =false;
-bool regenrings = false;
-bool watergodarmors = false;
-void ApplyEffect(ItemID id)
-    {
-        switch (id)
-        {
 
-            //Normal
-            case ItemID.Sword:
-                selectedPlayer.attackDamage += 5; // เพิ่มพลังกายภาพโจมตี 5
-                Debug.Log("Effect: ใส่ดาบ เพิ่มโจมตี +5");
-                break;
 
-            case ItemID.Armor:
-                selectedPlayer.def += 20; // เพิ่มป้องกัน 20
-                Debug.Log("Effect: ใส่เกราะ เพิ่มป้องกัน +20");
-                break;
-            case ItemID.DawnRign:
-                int healAmount = 20;
-                  playerHP += healAmount;
-                 playerHP = Mathf.Clamp(playerHP, 0, selectedPlayer.maxHP);
-                 UpdatePlayerHPUI();
-                 break;
-            case ItemID.WhiteFeather:
-                selectedPlayer.speed +=20;
-                break;
-            case ItemID.RecoverRing: // ADD Method RecoverItem
-                recoverrings= true;
-                break;
-            case ItemID.HearthNeckless:
-                   int healAmount20Percent = Mathf.RoundToInt(selectedPlayer.maxHP * 0.2f);
-                 playerHP = healAmount20Percent;
-                  playerHP = Mathf.Clamp(playerHP, 0, selectedPlayer.maxHP);
-                 UpdatePlayerHPUI();
-                 break;
-            case ItemID.KnightSword: //ADD Method ItemDamage
-                 knightswords = true;
-                 break;
-            case ItemID.KnightArmor:
-                 selectedPlayer.def += Mathf.RoundToInt(selectedPlayer.def*0.05f);
-                 break;
-            case ItemID.KnightShoes:
-                selectedPlayer.speed += Mathf.RoundToInt(selectedPlayer.speed*0.1f);
-                break;
-
-                //light
-
-            case ItemID.LightArmor:
-                if(enemyElement == ElementType.Dark)
-                {
-                    selectedPlayer.def += Mathf.RoundToInt(selectedPlayer.def*0.1f);
-                }
-                break;
-            case ItemID.LightNeckless:
-                 healAmount =  50;
-                  playerHP += healAmount;
-                 playerHP = Mathf.Clamp(playerHP, 0, selectedPlayer.maxHP);
-                 UpdatePlayerHPUI();
-                 break;
-            case ItemID.LightRing:  //ADD Method ItemDamage
-                lightrings = true;
-                break;
-            case ItemID.LightSpear://ADD Method ItemDamage
-                if (enemyElement == ElementType.Dark)
-                {
-                    lightspears = true;
-                }
-                break;
-            case ItemID.GodArmor:
-                selectedPlayer.def += Mathf.RoundToInt(selectedPlayer.def*0.15f);
-                break;
-
-                //Fire
-
-            case ItemID.FireDagger: //ADD Method ItemDamage
-                firedaggers = true;
-                break;
-            case ItemID.FireAxe:
-            int roll = Random.Range(1, 101);
-                if(roll <= 10)
-                {
-                    int damage = 10;
-                    if (enemyElement == ElementType.Wind)
-                    {
-                        damage *= 2;
-                        Debug.Log("ศัตรูธาตุลม โดนไฟคูณ 2");
-                    }
-                    else if (enemyElement == ElementType.Water)
-                    {
-                        damage /= 2;
-                        Debug.Log("ศัตรูธาตุน้ำ โดนไฟลดครึ่ง");
-                    }
-
-                    DamageEnemy(damage);
-                    ShowSkillEffectOnce(0);
-                    PlaySoundEffect(7);
-                }
-                break;
-            case ItemID.FireArmor:
-                if (enemyElement == ElementType.Wind)
-                {
-                    selectedPlayer.def += Mathf.RoundToInt(selectedPlayer.def*0.10f);
-                }
-                break;
-            case ItemID.FireLegendarySword: //ADD Method ItemDamage
-                if (enemyElement == ElementType.Wind)
-                {
-                    firelegendaryswords = true;
-                }
-                break;
-            case ItemID.FireSword:
-            
-             int rollburn = Random.Range(1, 101);
-                if(rollburn <= 20)
-                {
-                    int damage = 10;
-                    if (enemyElement == ElementType.Wind)
-                    {
-                        damage *= 2;
-                        Debug.Log("ศัตรูธาตุลม โดนไฟคูณ 2");
-                    }
-                    else if (enemyElement == ElementType.Water)
-                    {
-                        damage /= 2;
-                        Debug.Log("ศัตรูธาตุน้ำ โดนไฟลดครึ่ง");
-                    }
-
-                    DamageEnemy(damage);
-                    ShowSkillEffectOnce(0);
-                    PlaySoundEffect(7);
-                }
-            
-                break;
-            
-                //water
-                case ItemID.WaterArmor:
-                    selectedPlayer.def += Mathf.RoundToInt(selectedPlayer.def*0.10f);
-                    break;
-                case ItemID.RegenRing: //ADD Method RecoverItem
-                    regenrings = true;
-                    break;
-                case ItemID.WaterNeckless:
-                     healAmount =  70;
-                    playerHP += healAmount;
-                    playerHP = Mathf.Clamp(playerHP, 0, selectedPlayer.maxHP);
-                    UpdatePlayerHPUI();
-                    break;
-                case ItemID.WaterLegendaryArmor:
-                if (enemyElement == ElementType.Fire)
-                {
-                    selectedPlayer.def+=  Mathf.RoundToInt(selectedPlayer.def*0.15f);
-                }
-                break;
-                case ItemID.WaterGodArmor: //ADD Method RecoverItem
-                    selectedPlayer.def+=  Mathf.RoundToInt(selectedPlayer.def*0.15f);
-                    watergodarmors = true;
-                    break;
-                
-                //Wind
-
-                case ItemID.WindShoes:
-                    selectedPlayer.speed +=  Mathf.RoundToInt(selectedPlayer.speed*0.2f);
-                    break;
-                case ItemID.WindEye:
-                    isDodgeActive = true;
-                    dodgeChance += 0.1f; // 10% หลบ
-                    break;
-                case ItemID.WindSword: //ADD Method ItemDamage
-                    windswords = true;
-                    break;
-                case ItemID.WindSpear://ADD Method ItemDamage
-                    if(enemyElement == ElementType.Earth)
-                {
-                    windspears = true;
-                }
-                break;
-                case ItemID.WindLegendaryEye:
-                    isDodgeActive = true;
-                    dodgeChance += 0.3f; // 30% หลบ
-                    break;
-
-                //Earth
-
-                case ItemID.EarthArmor:
-                    selectedPlayer.def+=  Mathf.RoundToInt(selectedPlayer.def*0.1f);
-                    break;
-                case ItemID.EarthHammer:
-                  int rollhammer = Random.Range(1, 101);
-                if(rollhammer <= 10)
-                {
-                    enemyStunTurnsLeft +=1;
-                }
-                    break;
-                case ItemID.EarthRing:
-                  int rollearthring = Random.Range(1, 101);
-                if(rollearthring <= 7)
-                { superreduce += 1;
-                }
-                break;
-                case ItemID.EarthLegendaryArmor:
-                if (enemyElement == ElementType.Water)
-                {
-                    selectedPlayer.def += Mathf.RoundToInt(selectedPlayer.def*0.15f);
-                }
-                break;
-                case ItemID.EarthLegendaryHammer:
-              int rolllehammer = Random.Range(1, 101);
-                if(rolllehammer <= 20)
-                {
-                    enemyStunTurnsLeft +=1;
-                }
-                    break;
-
-                //Dark
-
-                case ItemID.DarkDagger: //ADD Method ItemDamage
-                    if (enemyElement == ElementType.Light) 
-                {
-                    darkdaggers =true;
-                }
-                break;
-                case ItemID.DarkShoes:
-                     isDodgeActive = true;
-                    dodgeChance += 0.15f; // 15% หลบ
-                    break;
-                case ItemID.DarkRing: //ADD Method ItemDamage
-                    darkrings = true;
-                    break;
-                case ItemID.DarkLegendaryRing://ADD Method ItemDamage
-                    darklegendaryrings = true;
-                    break;
-                case ItemID.DarkLegendaryDagger://ADD Method ItemDamage
-                    darklegendarydaggers = true;
-                    break;
-
-            case ItemID.None:
-            default:
-                break;
-        }
-    }
 }
 
 
