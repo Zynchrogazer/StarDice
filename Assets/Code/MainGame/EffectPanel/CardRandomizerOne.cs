@@ -60,5 +60,7 @@ public class CardRandomizerOne : MonoBehaviour
             cardNameText.text = selectedCard.cardName;
 
         Debug.Log("การ์ดที่สุ่มได้จริง: " + selectedCard.cardName);
+
+        
     }
 }

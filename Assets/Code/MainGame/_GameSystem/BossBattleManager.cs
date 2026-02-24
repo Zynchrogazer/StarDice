@@ -23,8 +23,8 @@ public class BossBattleManager : MonoBehaviour
         Debug.Log($"--- PREPARING FOR BOSS BATTLE ---");
 
         // 1. เก็บข้อมูลปัจจุบันของผู้เล่นลงใน "กระเป๋าเดินทาง"
-        GameTurnManager.CurrentPlayer.PlayerHealth = playerData.GetMaxHealth();
-        GameTurnManager.CurrentPlayer.PlayerMoney = playerData.Money;
+        PlayerState.Instance.PlayerHealth = playerData.GetMaxHealth();
+        PlayerState.Instance.PlayerMoney = playerData.Money;
         Debug.Log($"Data saved: HP={playerData.GetMaxHealth()}, Money={playerData.Money}");
 
         // 2. สั่งให้โหลด Scene ต่อสู้

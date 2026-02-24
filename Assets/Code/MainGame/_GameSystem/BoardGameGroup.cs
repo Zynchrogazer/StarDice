@@ -9,19 +9,19 @@ public class BoardGameGroup : MonoBehaviour
     public string boardSceneName = "MainGame";
 
     private void Awake()
+{
+    // 🛡️ Logic ความเป็นอมตะ
+    if (Instance != null && Instance != this)
     {
-        // 🛡️ Logic ความเป็นอมตะ
-        if (Instance != null && Instance != this)
-        {
-            // ถ้ามีของเก่าอยู่แล้ว (คือตัวที่เราเล่นค้างไว้)
-            // ให้ทำลายตัวใหม่ทิ้งซะ (ตัวใหม่ที่เพิ่งโหลดมาพร้อม Scene)
-            Destroy(gameObject);
-            return;
-        }
-
-        Instance = this;
-        DontDestroyOnLoad(gameObject); // ห้ามทำลายก้อนนี้
+        // ถ้ามีของเก่าอยู่แล้ว (คือตัวที่เราเล่นค้างไว้)
+        // ให้ทำลายตัวใหม่ทิ้งซะ (ตัวใหม่ที่เพิ่งโหลดมาพร้อม Scene)
+        Destroy(gameObject);
+        return;
     }
+
+    Instance = this;
+    DontDestroyOnLoad(gameObject); // ห้ามทำลายก้อนนี้
+}
 
     private void OnEnable()
     {
@@ -34,21 +34,26 @@ public class BoardGameGroup : MonoBehaviour
     }
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+{
+    RouteManager mapSystem = FindObjectOfType<RouteManager>();
+    bool isBoardScene = mapSystem != null;
+
+    // fallback สำหรับ scene เก่าที่อาจยังไม่มี RouteManager
+    if (!isBoardScene && scene.name == boardSceneName)
+        isBoardScene = true;
+
+    if (isBoardScene)
     {
-        // เช็คชื่อ Scene
-        if (scene.name == boardSceneName)
-        {
-            // 🏠 ถ้ากลับมาบ้าน (Board Game) -> ให้แสดงตัว
-            Debug.Log("[BoardSystem] Welcome Home! Showing Board.");
-            ShowBoard(true);
-        }
-        else
-        {
-            // ⚔️ ถ้าไปที่อื่น (Battle / Minigame) -> ให้ซ่อนตัว
-            Debug.Log($"[BoardSystem] Entering {scene.name}. Hiding Board.");
-            ShowBoard(false);
-        }
+        Debug.Log("[BoardSystem] Welcome Home! Showing Board.");
+        ShowBoard(true);
     }
+    else
+    {
+        Debug.Log($"[BoardSystem] Entering {scene.name}. Hiding Board.");
+        ShowBoard(false);
+    }
+}
+
 
     public void ShowBoard(bool show)
     {

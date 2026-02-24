@@ -159,7 +159,7 @@ public class EnemyFirebalance : MonoBehaviour
     private List<CardData> selectedCards = new List<CardData>();
     void Start()
     { Debug.Log(">>> BattleSystem เริ่มทำงานแล้วนะ! <<<");
-      GameEventManager.Instance.AddCount2(1);
+
        ApplyEquippedItems();
 
         if (GameData.Instance != null && GameData.Instance.selectedCards.Count > 0)
@@ -2402,7 +2402,7 @@ StartCoroutine(DelayedEnemyTurn());
 
     void EnemyTurn()
     {
-  GameEventManager.Instance.AddCount1(1);
+
         playerturntext.gameObject.SetActive(false);
         enemyturntext.gameObject.SetActive(true);
 

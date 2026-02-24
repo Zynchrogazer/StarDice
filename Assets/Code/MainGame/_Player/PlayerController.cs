@@ -37,6 +37,6 @@ public class PlayerController : MonoBehaviour
     }
     public int GetCurrentHP()
     {
-        return GameTurnManager.CurrentPlayer.PlayerHealth;
+        return PlayerState.Instance.PlayerHealth;
     }
 }

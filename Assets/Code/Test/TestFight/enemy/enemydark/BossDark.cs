@@ -1837,8 +1837,6 @@ public class BossDark : MonoBehaviour
 
     }
 
-    
-
     void DamageNormalEnemy(int damagenormal)
     {
          playerturntext.gameObject.SetActive(false);
@@ -1878,7 +1876,6 @@ public class BossDark : MonoBehaviour
         if (enemyHP <= 0)
         {
             OpenChest();
-            
             Debug.Log("ศัตรูแพ้แล้ว!");
             ShowResultPanelVictory("Victory!");
         }
@@ -2126,7 +2123,6 @@ public class BossDark : MonoBehaviour
         if (enemyHP <= 0)
         {
             OpenChest();
-            
             Debug.Log("ศัตรูแพ้แล้ว!");
             ShowResultPanelVictory("Victory!");
         }

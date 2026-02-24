@@ -35,7 +35,8 @@ public class BackupSaveManager : MonoBehaviour
 
     private string[] keysToBackup = new string[] 
     { 
-        "MonsterWater", "MonsterEarth", "MonsterWind", "MonsterLight", "MonsterDark",
+        "MonsterWater", "MonsterEarth", "MonsterWind", "MonsterLight", "MonsterDark","MonsterFire",             // <--- เพิ่มอันนี้
+        "HasChosenMainCharacter"   // <--- และอันนี้ (สำคัญมากสำหรับการเริ่มเกมใหม่)
     };
 
     private void Start()

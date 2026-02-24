@@ -67,6 +67,5 @@ public class GameManager : MonoBehaviour
         gameOverPanel.SetActive(true);  // แสดง Game Over Panel
         UpdateScoreText();  // อัปเดตคะแนนใน Game Over
         Time.timeScale = 0f;  // หยุดเวลา (เกมหยุด)
-        
     }
 }

@@ -21,11 +21,11 @@ public class BossSceneController : MonoBehaviour
 
     void Start()
     {
-        if (GameTurnManager.CurrentPlayer != null)
+        if (PlayerState.Instance != null)
         {
             // 1. แกะข้อมูลออกจากกระเป๋าตอนเริ่ม
-            currentPlayerHealth = GameTurnManager.CurrentPlayer.PlayerHealth;
-            currentPlayerMoney = GameTurnManager.CurrentPlayer.PlayerMoney;
+            currentPlayerHealth = PlayerState.Instance.PlayerHealth;
+            currentPlayerMoney = PlayerState.Instance.PlayerMoney;
 
             UpdateUI();
         }
@@ -57,11 +57,11 @@ public class BossSceneController : MonoBehaviour
         Debug.Log("--- BOSS BATTLE END ---");
 
         // ตรวจสอบว่ามี Persistence Instance อยู่หรือไม่
-        if (GameTurnManager.CurrentPlayer != null)
+        if (PlayerState.Instance != null)
         {
             // 1. บันทึกข้อมูลล่าสุด (HP, Money) กลับลงใน "กระเป๋าเดินทาง"
-            GameTurnManager.CurrentPlayer.PlayerHealth = currentPlayerHealth;
-            GameTurnManager.CurrentPlayer.PlayerMoney = currentPlayerMoney;
+            PlayerState.Instance.PlayerHealth = currentPlayerHealth;
+            PlayerState.Instance.PlayerMoney = currentPlayerMoney;
             Debug.Log($"Data saved for return: HP={currentPlayerHealth}, Money={currentPlayerMoney}");
         }
 

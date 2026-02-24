@@ -163,7 +163,7 @@ public class EnemyDarkDamage: MonoBehaviour
     { Debug.Log(">>> BattleSystem เริ่มทำงานแล้วนะ! <<<");
 
        ApplyEquippedItems();
-          GameEventManager.Instance.AddCount2(1);
+
         if (GameData.Instance != null && GameData.Instance.selectedCards.Count > 0)
         {
             List<CardData> myHand = new List<CardData>();
@@ -2418,7 +2418,7 @@ StartCoroutine(DelayedEnemyTurn());
 
     void EnemyTurn()
     {
-  GameEventManager.Instance.AddCount1(1);
+
         playerturntext.gameObject.SetActive(false);
         enemyturntext.gameObject.SetActive(true);
 

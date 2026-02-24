@@ -1,79 +1,61 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
-using System; // ✅ เพิ่มเพื่อใช้ Action
 
 public class BoxOpener : MonoBehaviour
 {
     public Image boxImage;
     public Sprite boxOpenSprite;
     public Image rewardImage;
-    // public Sprite[] rewardSprites; // ❌ ไม่ใช้สุ่มเองแล้ว ให้รับมาจาก Manager แทนจะได้ตรงกัน
+    public Sprite[] rewardSprites;
     public float revealDelay = 1f;
 
-    public RectTransform boxTransform;
+    public RectTransform boxTransform; // กล่องที่จะสั่น
     public float shakeDuration = 0.5f;
     public float shakeStrength = 10f;
 
     private bool isOpened = false;
+    //public GameEventManager gameEventManager;
 
-    // เก็บ Sprite กล่องปิดไว้คืนค่าตอนเริ่มใหม่
-    private Sprite defaultBoxSprite;
-
-    private void Awake()
-    {
-        if (boxImage != null) defaultBoxSprite = boxImage.sprite;
-    }
-
-    private void OnEnable()
-    {
-        // รีเซ็ตค่าทุกครั้งที่เปิด Panel ขึ้นมาใหม่
-        isOpened = false;
-        if (boxImage != null && defaultBoxSprite != null) boxImage.sprite = defaultBoxSprite;
-        if (rewardImage != null) rewardImage.gameObject.SetActive(false);
-    }
-
-    // ✅ ฟังก์ชันเปิดกล่องแบบใหม่: รับรูปรางวัล + คำสั่งตอนจบ (onComplete)
-    public void OpenBox(Sprite resultSprite, Action onComplete)
+    public void OpenBox()
     {
         if (isOpened) return;
         isOpened = true;
 
-        StartCoroutine(ShakeAndOpen(resultSprite, onComplete));
+        StartCoroutine(ShakeAndOpen());
     }
 
-    IEnumerator ShakeAndOpen(Sprite resultSprite, Action onComplete)
+    IEnumerator ShakeAndOpen()
     {
-        // 1. สั่นกล่อง
+        // สั่นกล่องก่อนเปิด
         Vector3 originalPos = boxTransform.anchoredPosition;
         float elapsed = 0f;
 
         while (elapsed < shakeDuration)
         {
-            float offsetX = UnityEngine.Random.Range(-1f, 1f) * shakeStrength;
-            float offsetY = UnityEngine.Random.Range(-1f, 1f) * shakeStrength;
+            float offsetX = Random.Range(-1f, 1f) * shakeStrength;
+            float offsetY = Random.Range(-1f, 1f) * shakeStrength;
+
             boxTransform.anchoredPosition = originalPos + new Vector3(offsetX, offsetY, 0);
+
             elapsed += Time.deltaTime;
             yield return null;
         }
+
+        // คืนตำแหน่ง
         boxTransform.anchoredPosition = originalPos;
 
-        // 2. เปิดกล่อง
-        if (boxImage != null) boxImage.sprite = boxOpenSprite;
+        // เปลี่ยน Sprite เป็นกล่องเปิด
+        boxImage.sprite = boxOpenSprite;
 
-        // 3. โชว์รางวัล
+        // รอแล้วโชว์รางวัล
         yield return new WaitForSeconds(revealDelay);
 
-        if (rewardImage != null)
-        {
-            rewardImage.sprite = resultSprite; // ใช้รูปที่รับมาจาก Manager
-            rewardImage.gameObject.SetActive(true);
-        }
-
-        // 4. รอให้คนดูรางวัลแปปนึง (3 วินาที)
+        int rand = Random.Range(0, rewardSprites.Length);
+        rewardImage.sprite = rewardSprites[rand];
+        rewardImage.gameObject.SetActive(true);
         yield return new WaitForSeconds(3f);
-
-        // ✅ 5. ส่งสัญญาณกลับไปบอก Manager ว่า "เสร็จแล้ว! ปิดได้!"
-        onComplete?.Invoke();
+        
+        
     }
 }

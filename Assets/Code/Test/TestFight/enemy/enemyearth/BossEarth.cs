@@ -1836,25 +1836,6 @@ public class BossEarth : MonoBehaviour
 
     }
 
-    public int nextLevelToUnlock = 5;
-
-    public void WinLevel()
-    {
-        Debug.Log("Level Complete!");
-
-        // 1. ตรวจสอบว่าด่านที่กำลังจะปลดล็อค มากกว่าที่เคยบันทึกไว้ไหม
-        // (เพื่อป้องกันการย้อนกลับมาเล่นด่าน 1 แล้วทำให้ด่าน 3 กลับมาล็อค)
-        if (nextLevelToUnlock > PlayerPrefs.GetInt("levelReached", 1))
-        {
-            // 2. บันทึกข้อมูลด่านสูงสุดที่ปลดล็อค
-            PlayerPrefs.SetInt("levelReached", nextLevelToUnlock);
-            PlayerPrefs.Save(); // ยืนยันการบันทึก
-        }
-
-        // 3. กลับไปหน้าเลือกด่าน หรือ ไปด่านต่อไป
-        // SceneManager.LoadScene("LevelSelectMenu");
-    }
-
     void DamageNormalEnemy(int damagenormal)
     {
          playerturntext.gameObject.SetActive(false);
@@ -1894,7 +1875,6 @@ public class BossEarth : MonoBehaviour
         if (enemyHP <= 0)
         {
             OpenChest();
-            WinLevel();
             Debug.Log("ศัตรูแพ้แล้ว!");
             ShowResultPanelVictory("Victory!");
         }
@@ -2134,7 +2114,6 @@ public class BossEarth : MonoBehaviour
         if (enemyHP <= 0)
         {
             OpenChest();
-            WinLevel();
             Debug.Log("ศัตรูแพ้แล้ว!");
             ShowResultPanelVictory("Victory!");
         }

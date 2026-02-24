@@ -1,217 +1,250 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine.SceneManagement;
+using UnityEngine.SceneManagement; // เพิ่มเข้ามาเพื่อจัดการ Event การโหลดซีน
 
+/// <summary>
+/// หัวใจหลักในการควบคุมการเดินของผู้เล่นบนบอร์ด
+/// เป็น Singleton ที่ไม่ถูกทำลายเมื่อเปลี่ยนซีน และสามารถหา Dependencies เจอได้ด้วยตัวเอง
+/// </summary>
+[RequireComponent(typeof(PlayerMovement))] // แนะนำให้ใส่ไว้ เพื่อบังคับว่าต้องมี PlayerMovement เสมอ
 public class PlayerPathWalker : MonoBehaviour
 {
+    public static PlayerPathWalker Instance { get; private set; }
+
     [Header("Settings")]
-    public float moveSpeed = 5f;
+    [Tooltip("ระยะเวลาที่จะหยุดนิ่งหลังเดินถึงแต่ละช่อง (วินาที)")]
     public float delayAfterNodeArrival = 0.5f;
 
-    [Header("Audio")]
-    public AudioClip walkSound;
-    public AudioClip landSound;
-
-    private AudioSource audioSource;
-
-    [Range(0f, 1f)] public float soundVolume = 0.8f;
-
     [Header("State")]
+    [Tooltip("ID ของ Node ที่ผู้เล่นยืนอยู่ ณ ปัจจุบัน (จะถูกอัปเดตอัตโนมัติ)")]
     public int currentNodeID;
 
+    // --- ตัวแปรภายใน ไม่ต้องตั้งค่าใน Inspector ---
     private RouteManager routeManager;
     private ChoiceUIManager choiceUIManager;
-    private PlayerState myState;
-
+    private PlayerMovement playerMovement;
     private int stepsRemaining = 0;
     private bool isExecutingTurn = false;
-    private bool isMoving = false;
     private Transform chosenNodeFromUI;
 
+    // --- Properties สำหรับให้สคริปต์อื่นเรียกใช้ ---
     public bool IsExecutingTurn => isExecutingTurn;
-    public bool IsMoving => isMoving;
     public Transform CurrentNodeTransform => routeManager?.GetNodeData(currentNodeID)?.node;
+
+    #region Unity Lifecycle & Scene Management
 
     private void Awake()
     {
-        myState = GetComponent<PlayerState>();
-        audioSource = GetComponent<AudioSource>();
-        if (audioSource != null)
+        // ตั้งค่า Singleton Pattern พร้อมทำให้เป็นอมตะ
+        if (Instance != null && Instance != this)
         {
-            audioSource.loop = true; // ให้เสียงวนลูปถ้ายาวไม่พอ
-            audioSource.playOnAwake = false; // อย่าเพิ่งเล่นตอนเริ่มเกม
-        }
-    }
-
-    private void OnEnable() { SceneManager.sceneLoaded += OnSceneLoaded; }
-    private void OnDisable() { SceneManager.sceneLoaded -= OnSceneLoaded; }
-
-    void OnSceneLoaded(Scene scene, LoadSceneMode mode)
-    {
-        if (scene.name == "TestFight" || scene.name == "Shop" || scene.name.Contains("Minigame")) return;
-
-        routeManager = RouteManager.Instance;
-        choiceUIManager = FindObjectOfType<ChoiceUIManager>();
-    }
-
-    private void Start()
-    {
-        if (routeManager == null) routeManager = RouteManager.Instance;
-    }
-
-    public void ExecuteMove(int steps)
-    {
-        // 🛡️ Force Reset ป้องกันสถานะค้างจากเทิร์นก่อน
-        if (isExecutingTurn || isMoving)
-        {
-            StopAllCoroutines();
-            isExecutingTurn = false;
-            isMoving = false;
-        }
-
-        if (steps <= 0)
-        {
-            CheckFinalNodeEvent(); // ถ้าได้ 0 ก้าว ให้เช็ค Event ช่องที่ยืนอยู่ทันที
+            Destroy(gameObject);
             return;
         }
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
 
+        // ดึง Component ที่จำเป็นจาก GameObject เดียวกัน
+        playerMovement = GetComponent<PlayerMovement>();
+    }
+    private void Start()
+    {
+        // ✅ เพิ่มส่วนนี้: ถ้าเริ่มเกมมาแล้วยังไม่มี UI ให้หาทันที
+        if (choiceUIManager == null)
+        {
+            // ใส่ true เพื่อหาตัวที่ปิดอยู่ (Inactive) ด้วย
+            choiceUIManager = FindObjectOfType<ChoiceUIManager>(true);
+
+            if (choiceUIManager != null)
+                Debug.Log($"[PlayerPathWalker] Auto-linked ChoiceUI in Start: {choiceUIManager.name}");
+        }
+
+        // กันเหนียว: หา RouteManager ด้วยถ้ายังไม่มี
+        if (routeManager == null)
+        {
+            routeManager = RouteManager.Instance;
+        }
+    }
+    private void OnEnable()
+    {
+        // "สมัคร" รอฟัง event เมื่อซีนถูกโหลดเสร็จ
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    private void OnDisable()
+    {
+        // "ยกเลิก" การรอฟัง event เพื่อป้องกัน memory leak
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    /// <summary>
+    /// เมธอดนี้จะทำงาน "อัตโนมัติ" ทุกครั้งที่ซีนใหม่โหลดเสร็จ
+    /// เพื่อค้นหา Dependencies ที่จำเป็นในซีนนั้นๆ
+    /// </summary>
+    void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        // RouteManager เป็น Singleton อมตะเหมือนกัน จึงหาจาก Instance ได้เลย
+        routeManager = RouteManager.Instance;
+
+        // ChoiceUIManager เป็น Object ที่อยู่ในซีน จึงต้องใช้ FindObjectOfType เพื่อค้นหา
+        choiceUIManager = FindObjectOfType<ChoiceUIManager>(true);
+        //choiceUIManager = FindFirstObjectByType<ChoiceUIManager>();
+
+        if (routeManager == null)   
+            Debug.LogError("[PlayerPathWalker] Critical Error: Could not find RouteManager.Instance!");
+        if (choiceUIManager == null)
+            Debug.LogWarning("[PlayerPathWalker] Could not find ChoiceUIManager in the current scene. Path selection will not be available.");
+    }
+
+    #endregion
+
+    #region Public API
+
+    /// <summary>
+    /// เมธอดหลักสำหรับสั่งให้ผู้เล่นเริ่มเดิน
+    /// </summary>
+    /// <param name="steps">จำนวนก้าวที่ได้จากการทอยเต๋า</param>
+    public void ExecuteMove(int steps)
+    {
+        if (isExecutingTurn)
+        {
+            Debug.LogWarning("Player is already moving.");
+            return;
+        }
+        if (steps <= 0)
+        {
+            Debug.Log("Move command ignored (0 steps).");
+            return;
+        }
+        if (CurrentNodeTransform == null)
+        {
+            Debug.LogError("CurrentNodeTransform is NULL! Cannot start move. Make sure player is spawned correctly.");
+            return;
+        }
         GiveTurnStartBonus();
         stepsRemaining = steps;
+        Debug.Log($"<color=cyan>--- Starting Turn: Move {steps} steps from {CurrentNodeTransform.name} ---</color>");
         StartCoroutine(MoveTurnCoroutine());
     }
 
+    /// <summary>
+    /// ย้ายผู้เล่นไปยังตำแหน่งของ Node ที่ระบุทันที (ใช้สำหรับตอนเริ่มเกมหรือ Event วาร์ป)
+    /// </summary>
+    public void TeleportToNode(Transform targetNode)
+    {
+        if (isExecutingTurn || targetNode == null || routeManager == null) return;
+
+        transform.position = targetNode.position;
+        // อัปเดต ID ของตำแหน่งปัจจุบันให้ถูกต้อง
+        currentNodeID = routeManager.ExtractNumberFromName(targetNode.name);
+    }
+
+    #endregion
+
+    #region Internal Logic
+
+    /// <summary>
+    /// Coroutine ที่จัดการ Logic การเดินในแต่ละช่อง การเลือกเส้นทาง และการส่ง Event
+    /// </summary>
     private IEnumerator MoveTurnCoroutine()
     {
         isExecutingTurn = true;
-        
+
         if (choiceUIManager != null) choiceUIManager.HideChoices();
 
         while (stepsRemaining > 0)
         {
-            if (routeManager == null) break;
+            if (routeManager == null)
+            {
+                Debug.LogError("RouteManager is missing! Aborting move.");
+                break;
+            }
 
             List<Transform> choices = routeManager.GetAllConnectedNodes(CurrentNodeTransform);
             Transform nextNode = null;
 
-            if (choices.Count == 0) break;
-            else if (choices.Count == 1) nextNode = choices[0];
+            if (choices.Count == 0)
+            {
+                Debug.LogWarning($"Player is at a dead end: {CurrentNodeTransform.name}. Move aborted.");
+                break; // ไม่มีทางไปต่อ
+            }
+            else if (choices.Count == 1)
+            {
+                nextNode = choices[0]; // ทางเดียว ไปได้เลย
+            }
             else
             {
-                // === ระบบทางแยก ===
-                if (myState != null && myState.isAI)
+                // มีหลายทางเลือก (ทางแยก)
+                if (choiceUIManager != null)
                 {
-                    nextNode = choices[Random.Range(0, choices.Count)];
-                    yield return new WaitForSeconds(0.5f);
+                    Debug.Log($"Path selection needed at {CurrentNodeTransform.name}.");
+                    chosenNodeFromUI = null;
+                    choiceUIManager.DisplayChoices(choices, OnPathChosen);
+                    // รอจนกว่าผู้เล่นจะกดเลือกทางจาก UI
+                    yield return new WaitUntil(() => chosenNodeFromUI != null);
+                    nextNode = chosenNodeFromUI;
                 }
                 else
                 {
-                    if (choiceUIManager != null)
-                    {
-                        chosenNodeFromUI = null;
-                        choiceUIManager.DisplayChoices(choices, OnPathChosen);
-                        yield return new WaitUntil(() => chosenNodeFromUI != null);
-                        nextNode = chosenNodeFromUI;
-                    }
-                    else nextNode = choices[0];
+                    Debug.LogError("ChoiceUIManager is missing! Cannot proceed with multiple path choices. Aborting move.");
+                    break;
                 }
             }
 
-            // สั่งเดินไปยังโหนดถัดไป
-            yield return StartCoroutine(MoveTowardsCoroutine(nextNode));
+            // สั่งให้ PlayerMovement เคลื่อนที่ไป
+            playerMovement.MoveTo(nextNode);
+            yield return new WaitUntil(() => !playerMovement.IsMoving); // รอจนกว่าจะเดินถึง
 
+            // อัปเดตตำแหน่งปัจจุบัน (ID)
             currentNodeID = routeManager.ExtractNumberFromName(nextNode.name);
             stepsRemaining--;
+            Debug.Log($"Arrived at {CurrentNodeTransform.name}. Steps remaining: {stepsRemaining}");
 
             if (stepsRemaining > 0)
                 yield return new WaitForSeconds(delayAfterNodeArrival);
         }
 
+        // --- จบเทิร์น ---
+        Debug.Log($"<color=yellow>--- Turn Ended at {CurrentNodeTransform.name} ---</color>");
+
+        // ส่ง Event บอกระบบอื่นว่าเดินถึงที่หมายสุดท้ายแล้ว
+        NodeConnection finalNodeData = routeManager.GetNodeData(currentNodeID);
+        if (finalNodeData != null && EventManager.Instance != null)
+        {
+            EventManager.Instance.RaisePlayerLandedOnNode(finalNodeData, this.gameObject);
+        }
+
         isExecutingTurn = false;
-        CheckFinalNodeEvent(); // ✅ เดินจบแล้ว ไปเช็ค Event ต่อ
     }
 
-    private void CheckFinalNodeEvent()
-    {
-        NodeConnection finalNodeData = routeManager?.GetNodeData(currentNodeID);
-
-        if (finalNodeData != null)
-        {
-            Debug.Log($"[PathWalker] {name} landed on ID: {currentNodeID}. Triggering Event...");
-
-            if (audioSource != null && landSound != null)
-            {
-                // ปรับ Pitch กลับเป็นปกติ (เผื่อตอนเดินเราไปสุ่ม Pitch ไว้)
-                //audioSource.pitch = 1.0f;
-                //audioSource.PlayOneShot(landSound, soundVolume);
-            }
-
-            // ✅ 1. บอก Manager ให้ล็อค State ไว้ที่ EventProcessing (กัน AI วิ่งแซง)
-            if (GameTurnManager.Instance != null)
-                GameTurnManager.Instance.SetState(GameState.EventProcessing);
-
-            // ✅ 2. ส่งไม้ต่อให้ EventManager (ใช้สคริปต์ EventManager ตัวเดิมของคุณ)
-            if (EventManager.Instance != null)
-            {
-                EventManager.Instance.RaisePlayerLandedOnNode(finalNodeData, this.gameObject);
-            }
-            else
-            {
-                // ถ้าไม่มี EventManager ให้จบเทิร์นเลย
-                GameTurnManager.Instance?.RequestEndTurn();
-            }
-        }
-        else
-        {
-            GameTurnManager.Instance?.RequestEndTurn();
-        }
-    }
-
-    private IEnumerator MoveTowardsCoroutine(Transform targetNode)
-    {
-        isMoving = true;
-        if (audioSource != null && walkSound != null)
-        {
-            audioSource.PlayOneShot(walkSound);
-            //Debug.Log($"<color=yellow>⭐ PlayWalkingSound");
-        }
-        while (Vector3.Distance(transform.position, targetNode.position) > 0.01f)
-        {
-            transform.position = Vector3.MoveTowards(transform.position, targetNode.position, moveSpeed * Time.deltaTime);
-            yield return null;
-        }
-        transform.position = targetNode.position;
-        isMoving = false;
-    }
-
+    /// <summary>
+    /// Callback ที่ถูกเรียกโดย ChoiceUIManager เมื่อผู้เล่นกดเลือกเส้นทาง
+    /// </summary>
     private void OnPathChosen(Transform chosenNode)
     {
         chosenNodeFromUI = chosenNode;
         if (choiceUIManager != null) choiceUIManager.HideChoices();
     }
 
-    public void TeleportToNode(Transform targetNode)
-    {
-        if (targetNode == null || routeManager == null) return;
-        transform.position = targetNode.position;
-        currentNodeID = routeManager.ExtractNumberFromName(targetNode.name);
-    }
+    #endregion
 
+    public void SetChoiceUIManager(ChoiceUIManager newUI)
+    {
+        this.choiceUIManager = newUI;
+        Debug.Log("[PlayerPathWalker] ChoiceUIManager reference updated successfully.");
+    }
     private void GiveTurnStartBonus()
     {
-        if (myState == null) return;
-        myState.PlayerStar += Random.Range(1, 4);
-    }
+        if (PlayerState.Instance == null) return;
 
-    public void SetChoiceUIManager(ChoiceUIManager ui) { this.choiceUIManager = ui; }
+        int starBonus = Random.Range(1, 4); // สุ่ม 1, 2, หรือ 3
+        PlayerState.Instance.PlayerStar += starBonus;
 
-    public void ReconnectReferences(RouteManager newRouteManager)
-    {
-        this.routeManager = newRouteManager;
-        this.choiceUIManager = FindObjectOfType<ChoiceUIManager>();
-        StopAllCoroutines();
-        isExecutingTurn = false;
-        isMoving = false;
+        Debug.Log($"🌟 Turn Start Bonus! ได้รับดาว {starBonus} ดวง (รวม: {PlayerState.Instance.PlayerStar})");
+
+        // ถ้าคุณมี UI ที่ต้องอัปเดตดาว สามารถสั่งตรงนี้ได้เลย
+        // เช่น UIManager.Instance.UpdateStarUI();
     }
 
     public void WarpByCard(Transform targetNode)
@@ -225,7 +258,7 @@ public class PlayerPathWalker : MonoBehaviour
 
         // 2. อัปเดต Logic ว่าตอนนี้เรายืนอยู่ที่ Node ไหน (แก้ตรงนี้!)
         bool found = false;
-
+        
         for (int i = 0; i < RouteManager.Instance.nodeConnections.Count; i++)
         {
             // เช็คว่า Node ในลิสต์ ตรงกับ Node ที่เราเลือกไหม
@@ -235,7 +268,7 @@ public class PlayerPathWalker : MonoBehaviour
                 // 🔴 จุดที่แก้ไข: ใช้ currentNodeID และดึงค่า tileID มาใส่
                 // ---------------------------------------------------------
                 currentNodeID = RouteManager.Instance.nodeConnections[i].tileID;
-
+                
                 Debug.Log($"[Card Effect] อัปเดตตำแหน่งเป็น Node ID: {currentNodeID}");
                 found = true;
                 break; // เจอแล้วหยุดหา
@@ -246,7 +279,7 @@ public class PlayerPathWalker : MonoBehaviour
         {
             Debug.LogError("[Card Effect] ไม่พบ Node ปลายทางใน RouteManager! ระบบเดินอาจผิดพลาด");
         }
-
+        
         // 3. (Optional) Play Sound
         // AudioManager.Instance.PlaySfx("WarpSound");
     }
