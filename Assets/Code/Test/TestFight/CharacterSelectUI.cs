@@ -1,0 +1,40 @@
+using UnityEngine;
+using UnityEngine.UI;
+
+public class CharacterSelectUI : MonoBehaviour
+{
+    public PlayerData[] allCharacters;   // ตัวละครทั้งหมด
+    public Button[] characterButtons;    // ปุ่มที่วางใน Scene
+
+    void Start()
+    {
+        SetupButtons();
+    }
+
+    void SetupButtons()
+    {
+        for (int i = 0; i < characterButtons.Length; i++)
+        {
+            int index = i;
+
+            // ลบ Listener เก่า แล้วผูกใหม่
+            characterButtons[i].onClick.RemoveAllListeners();
+            characterButtons[i].onClick.AddListener(() => OnButtonClick(index));
+
+            // ตั้งสีปุ่มตาม Data
+            if (CharacterSelectManager.Instance.selectedPlayer == allCharacters[i])
+                characterButtons[i].image.color = Color.gray; // ปุ่มถูกเลือก
+            else
+                characterButtons[i].image.color = Color.white; // ปุ่มไม่ถูกเลือก
+        }
+    }
+
+    void OnButtonClick(int index)
+    {
+        // อัปเดต Data
+        CharacterSelectManager.Instance.SelectCharacter(allCharacters[index]);
+
+        // Refresh UI สีปุ่ม
+        SetupButtons();
+    }
+}
