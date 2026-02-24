@@ -283,4 +283,12 @@ public class PlayerPathWalker : MonoBehaviour
         // 3. (Optional) Play Sound
         // AudioManager.Instance.PlaySfx("WarpSound");
     }
+    public void ReconnectReferences(RouteManager newMap)
+{
+    this.routeManager = newMap;
+    this.playerMovement = GetComponent<PlayerMovement>();
+    // ค้นหา UI ใหม่ใน Scene ที่โหลด
+    this.choiceUIManager = FindObjectOfType<ChoiceUIManager>(true);
+    Debug.Log($"[PlayerPathWalker] References reconnected for {gameObject.name}");
+}
 }

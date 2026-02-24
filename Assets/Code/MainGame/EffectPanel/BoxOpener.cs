@@ -1,61 +1,64 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
+using System; // เพิ่มอันนี้เพื่อให้ใช้ Action ได้
 
 public class BoxOpener : MonoBehaviour
 {
     public Image boxImage;
     public Sprite boxOpenSprite;
     public Image rewardImage;
-    public Sprite[] rewardSprites;
+    // public Sprite[] rewardSprites; // บรรทัดนี้ไม่จำเป็นต้องใช้แล้ว เพราะ GameEventManager จะเป็นคนส่งรูปมาให้เอง
     public float revealDelay = 1f;
 
-    public RectTransform boxTransform; // กล่องที่จะสั่น
+    public RectTransform boxTransform; 
     public float shakeDuration = 0.5f;
     public float shakeStrength = 10f;
 
     private bool isOpened = false;
-    //public GameEventManager gameEventManager;
 
-    public void OpenBox()
+    // แก้ไขฟังก์ชันให้รับพารามิเตอร์ 2 ตัว ตามที่ GameEventManager ส่งมา
+    public void OpenBox(Sprite resultSprite, Action onComplete)
     {
         if (isOpened) return;
         isOpened = true;
 
-        StartCoroutine(ShakeAndOpen());
+        // ส่งรูปรางวัลและคำสั่งปิดหน้าต่างเข้าไปใน Coroutine
+        StartCoroutine(ShakeAndOpen(resultSprite, onComplete));
     }
 
-    IEnumerator ShakeAndOpen()
+    IEnumerator ShakeAndOpen(Sprite resultSprite, Action onComplete)
     {
-        // สั่นกล่องก่อนเปิด
+        // 1. สั่นกล่องก่อนเปิด
         Vector3 originalPos = boxTransform.anchoredPosition;
         float elapsed = 0f;
-
         while (elapsed < shakeDuration)
         {
-            float offsetX = Random.Range(-1f, 1f) * shakeStrength;
-            float offsetY = Random.Range(-1f, 1f) * shakeStrength;
-
+            float offsetX = UnityEngine.Random.Range(-1f, 1f) * shakeStrength;
+            float offsetY = UnityEngine.Random.Range(-1f, 1f) * shakeStrength;
             boxTransform.anchoredPosition = originalPos + new Vector3(offsetX, offsetY, 0);
-
             elapsed += Time.deltaTime;
             yield return null;
         }
-
-        // คืนตำแหน่ง
         boxTransform.anchoredPosition = originalPos;
 
-        // เปลี่ยน Sprite เป็นกล่องเปิด
+        // 2. เปลี่ยน Sprite เป็นกล่องเปิด
         boxImage.sprite = boxOpenSprite;
 
-        // รอแล้วโชว์รางวัล
+        // 3. รอแล้วโชว์รางวัลตามรูปที่ GameEventManager ส่งมา
         yield return new WaitForSeconds(revealDelay);
-
-        int rand = Random.Range(0, rewardSprites.Length);
-        rewardImage.sprite = rewardSprites[rand];
+        
+        if (resultSprite != null)
+        {
+            rewardImage.sprite = resultSprite;
+        }
         rewardImage.gameObject.SetActive(true);
+
+        // 4. รอโชว์ของ 3 วินาที แล้วสั่งให้ GameEventManager ปิดหน้าต่างและจบเทิร์น
         yield return new WaitForSeconds(3f);
         
+        onComplete?.Invoke(); // เรียกใช้ Callback ที่ส่งมา
         
+        isOpened = false; 
     }
 }

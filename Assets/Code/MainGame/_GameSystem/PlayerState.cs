@@ -7,7 +7,7 @@ using System.Collections.Generic;
 
 public class PlayerState : MonoBehaviour
 {
-    //public static PlayerState Instance { get; private set; }
+    public static PlayerState Instance { get; private set; }
     [Header("AI Settings")]
     public bool isAI = false;
     [Header("Player Stats")]
