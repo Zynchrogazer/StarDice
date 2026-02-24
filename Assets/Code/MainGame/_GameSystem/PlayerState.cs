@@ -17,6 +17,7 @@ public class PlayerState : MonoBehaviour
     public int PlayerStar = 0;
     public int CurrentAttack;
     public bool DebuffBurn = false;
+    public bool hasIceEffect = false;
     public ElementType PlayerElement { get; set; }
 
     [Header("Battle Stats")]

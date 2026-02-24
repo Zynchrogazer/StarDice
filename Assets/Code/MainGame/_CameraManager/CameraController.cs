@@ -6,23 +6,30 @@ public class CameraController : MonoBehaviour
     public static CameraController Instance { get; private set; }
 
     [Header("Settings (Isometric View)")]
-    // ค่ามาตรฐาน: X=-8, Y=12, Z=-8
+    // เราจะใช้ offset เพื่อหา "ระยะห่างเริ่มต้น" เท่านั้น ไม่ได้ใช้กำหนดทิศทางแล้ว
     public Vector3 offset = new Vector3(-8f, 12f, -8f);
     public float smoothSpeed = 5f;
 
     [Header("Zoom Settings")]
-    public float zoomSpeed = 4f;   // ความไวในการซูม
-    public float minZoom = 0.5f;   // ซูมเข้าได้ใกล้สุดแค่ไหน (ค่าน้อย = ใกล้)
-    public float maxZoom = 2.0f;   // ซูมออกได้ไกลสุดแค่ไหน (ค่ามาก = ไกล)
-    private float currentZoomMultiplier = 1f; // ตัวคูณระยะปัจจุบัน (1 = ปกติ)
+    public float zoomSpeed = 4f;
+    public float minZoom = 0.5f;
+    public float maxZoom = 2.0f;
+    private float currentZoomMultiplier = 1f;
 
     [Header("Angle Settings")]
-    [Range(0, 90)] public float rotationX = 45f; // มุมก้ม
-    [Range(0, 360)] public float rotationY = 45f; // มุมหันข้าง
+    [Range(0, 90)] public float rotationX = 45f;
+    [Range(0, 360)] public float rotationY = 45f;
+
+    // ✨ [เพิ่ม] ความไวในการหมุนกล้อง
+    [Header("Rotation Settings")]
+    public float rotateSpeed = 5f;
 
     [Header("State")]
     public Transform target;
     private bool isBattleScene = false;
+    
+    // ✨ [เพิ่ม] ตัวแปรเก็บระยะห่างพื้นฐาน (คำนวณจาก offset เดิม)
+    private float defaultDistance; 
 
     private void Awake()
     {
@@ -33,6 +40,9 @@ public class CameraController : MonoBehaviour
         }
         Instance = this;
         DontDestroyOnLoad(gameObject);
+
+        // ✨ คำนวณระยะห่างเริ่มต้นจากค่า Offset ที่ตั้งไว้
+        defaultDistance = offset.magnitude;
     }
 
     private void OnEnable() { SceneManager.sceneLoaded += OnSceneLoaded; }
@@ -64,21 +74,34 @@ public class CameraController : MonoBehaviour
 
     private void Update()
     {
-        // ✨ รับค่าการ Zoom จาก Mouse Scroll Wheel
-        // (ทำใน Update เพื่อความลื่นไหลของการรับ Input)
         if (!isBattleScene && target != null)
         {
+            // ---------------------------------------------------------
+            // 1. Logic การ Zoom (เหมือนเดิม)
+            // ---------------------------------------------------------
             float scroll = Input.GetAxis("Mouse ScrollWheel");
-
-            // ถ้ามีการเลื่อนลูกกลิ้ง
             if (scroll != 0f)
             {
-                // Scroll Up (ค่า +) = Zoom In (ลดตัวคูณ)
-                // Scroll Down (ค่า -) = Zoom Out (เพิ่มตัวคูณ)
                 currentZoomMultiplier -= scroll * zoomSpeed;
-
-                // จำกัดค่าไม่ให้ซูมใกล้/ไกลเกินไป
                 currentZoomMultiplier = Mathf.Clamp(currentZoomMultiplier, minZoom, maxZoom);
+            }
+
+            // ---------------------------------------------------------
+            // 2. ✨ [เพิ่ม] Logic การหมุนกล้อง (Orbit) เมื่อกดคลิกขวาค้าง
+            // ---------------------------------------------------------
+            if (Input.GetMouseButton(1)) // 0=ซ้าย, 1=ขวา, 2=กลาง
+            {
+                float mouseX = Input.GetAxis("Mouse X") * rotateSpeed;
+                float mouseY = Input.GetAxis("Mouse Y") * rotateSpeed;
+
+                // หมุนแนวนอน (Y-Axis)
+                rotationY += mouseX;
+
+                // หมุนแนวตั้ง (X-Axis) - ลบออกเพื่อให้ลากลงแล้วเงยหน้า (Invert) หรือบวกตามความถนัด
+                rotationX -= mouseY; 
+                
+                // จำกัดมุมก้มเงย ไม่ให้ทะลุพื้น หรือตีลังกา
+                rotationX = Mathf.Clamp(rotationX, 10f, 85f);
             }
         }
     }
@@ -93,16 +116,29 @@ public class CameraController : MonoBehaviour
             return;
         }
 
-        // 1. คำนวณตำแหน่ง (Position) พร้อมคูณค่า Zoom เข้าไป
-        // ✨ สูตร: ระยะทางเดิม * ตัวคูณ Zoom
-        Vector3 finalOffset = offset * currentZoomMultiplier;
+        // ---------------------------------------------------------
+        // 3. ✨ [แก้ไข] การคำนวณตำแหน่งใหม่ (Orbit Calculation)
+        // ---------------------------------------------------------
+        
+        // ก. คำนวณระยะทางปัจจุบัน (ระยะเริ่มต้น * ตัวคูณซูม)
+        float currentDist = defaultDistance * currentZoomMultiplier;
 
-        Vector3 desiredPosition = target.position + finalOffset;
+        // ข. สร้าง Rotation จากค่า rotationX, rotationY ที่เราปรับได้
+        Quaternion rotation = Quaternion.Euler(rotationX, rotationY, 0);
+
+        // ค. คำนวณตำแหน่งที่กล้องควรอยู่
+        // สูตร: ตำแหน่งเป้าหมาย - (ทิศทางตามมุมหมุน * ระยะห่าง)
+        // การคูณ Quaternion * Vector3.forward คือการหาทิศทางข้างหน้าของมุมนั้นๆ
+        // เราใช้ -Vector3.forward (คือถอยหลัง) เพื่อวางกล้องไว้ข้างหลังเป้าหมายตามระยะห่าง
+        Vector3 negDistance = new Vector3(0.0f, 0.0f, -currentDist);
+        Vector3 desiredPosition = target.position + rotation * negDistance;
+
+        // ง. Smooth Movement
         Vector3 smoothedPosition = Vector3.Lerp(transform.position, desiredPosition, smoothSpeed * Time.deltaTime);
         transform.position = smoothedPosition;
 
-        // 2. คำนวณการหมุน (Rotation)
-        transform.rotation = Quaternion.Euler(rotationX, rotationY, 0);
+        // จ. บังคับให้กล้องหันหน้ามองเป้าหมายเสมอ (หรือใช้ transform.rotation = rotation ก็ได้)
+        transform.LookAt(target);
     }
 
     public void FindTarget()

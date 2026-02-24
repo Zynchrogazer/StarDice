@@ -178,11 +178,11 @@ public class BoardManager : MonoBehaviour
 
             // 2. บอส -> ไป bossfire (ต้องแยกออกมา!)
             case TileType.Boss:
-            case TileType.SpecialBoss: // รวม SpecialBoss ไว้ด้วยก็ได้ถ้าอยากให้ไปฉากบอสเหมือนกัน
                 Debug.Log($"[BoardManager] 👿 BOSS FIGHT! Triggering Boss Event.");
                 // ✅ ส่ง Event ชื่อ "boss" เพื่อให้ GameEventManager โหลดฉาก bossfire
                 GameEventManager.Instance.TriggerEvent("boss", playerObject);
                 break;
+            
 
             // 3. กรณีอื่นๆ -> ใช้ชื่อ Event ตามที่ตั้งไว้ใน RouteManager
             default:
@@ -217,10 +217,49 @@ public class BoardManager : MonoBehaviour
         }
         return false;
     }
-
+ 
     private void StartBattle(GameObject attacker, GameObject defender)
     {
+        string currentSceneName = SceneManager.GetActiveScene().name;
         Debug.Log($"Loading Battle Scene (PvP): {attacker.name} vs {defender.name}");
-        SceneManager.LoadScene("TestFight");
+         
+         if (currentSceneName == "MainLight") 
+    {
+        string[] Scenes = { "Light buff", "Light damage", "Light heal", "Lightone" };
+        int randomIndex = Random.Range(0, Scenes.Length);
+        SceneManager.LoadScene(Scenes[randomIndex]);      
     }
+
+     if (currentSceneName == "TestMain") 
+    {
+        string[] Scenes = { "enemyfire buff", "enemyfire damage", "enemyfire heal", "enemyfire1" };
+        int randomIndex = Random.Range(0, Scenes.Length);
+        SceneManager.LoadScene(Scenes[randomIndex]);      
+    }
+     if (currentSceneName == "MainWater") 
+    {
+        string[] Scenes = { "enemy water buff", "enemy water damage", "enemy water heal", "enemy water" };
+        int randomIndex = Random.Range(0, Scenes.Length);
+        SceneManager.LoadScene(Scenes[randomIndex]);      
+    }
+    if (currentSceneName == "MainWind") 
+    {
+        string[] Scenes = { "enemy wind buff", "enemy wind damage", "enemy wind heal", "enemy wind" };
+        int randomIndex = Random.Range(0, Scenes.Length);
+        SceneManager.LoadScene(Scenes[randomIndex]);      
+    }
+     if (currentSceneName == "MainEarth") 
+    {
+        string[] Scenes = { "enemy earth buff", "enemy earth damage", "enemy earth heal", "enemy earth" };
+        int randomIndex = Random.Range(0, Scenes.Length);
+        SceneManager.LoadScene(Scenes[randomIndex]);      
+    }
+    if (currentSceneName == "MainDark") 
+    {
+        string[] Scenes = { "enemy dark buff", "enemy dark damage", "enemy dark heal", "enemy dark" };
+        int randomIndex = Random.Range(0, Scenes.Length);
+        SceneManager.LoadScene(Scenes[randomIndex]);      
+    }
+}
+
 }

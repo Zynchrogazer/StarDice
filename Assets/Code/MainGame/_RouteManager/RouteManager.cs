@@ -7,7 +7,7 @@ using UnityEditor;
 #endif
 
 // enum ที่กำหนดประเภทของช่อง
-public enum TileType { Normal , Event, Monster, Trap, Draw, Star, Teleport, Heal, Start, Boss, Minigame, Shop, Treasure, SpecialBoss, Lava}
+public enum TileType { Normal , Event, Monster, Trap, Draw, Star, Teleport, Heal, Start, Boss, Minigame, Shop, Treasure, SpecialBoss, Lava, windteleport, iceeffect}
 
 
 
@@ -148,12 +148,14 @@ public class RouteManager : MonoBehaviour
                     case TileType.Heal: nc.eventName = "heal"; break;
                     case TileType.Teleport: nc.eventName = "warp"; break;
                     case TileType.Minigame: nc.eventName = "randomminigame"; break;
-                    case TileType.SpecialBoss: nc.eventName = "specialboss"; break;
                     case TileType.Draw: nc.eventName = "draw"; break;
                     case TileType.Shop: nc.eventName = "shop"; break;
                     case TileType.Start: nc.eventName = "start"; break;
                     case TileType.Treasure: nc.eventName = "treasurebox"; break;
                     case TileType.Lava: nc.eventName = "lava"; break;
+                    case TileType.windteleport: nc.eventName = "windteleport"; break;
+                    case TileType.iceeffect: nc.eventName = "iceeffect"; break;
+                    case TileType.SpecialBoss: nc.eventName = "specialboss"; break;
 
                         //{ Normal , Event, Monster, Trap, Draw, Star, Teleport, Heal, Start, Boss, Minigame, Shop, Treasure, SpecialBoss}
                 }
