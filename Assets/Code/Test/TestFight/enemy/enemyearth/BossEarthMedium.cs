@@ -4,7 +4,7 @@ using TMPro;
 using System.Collections;
 using System.Collections.Generic;
 
-public class SpecialEarth : MonoBehaviour
+public class BossEarthMedium : MonoBehaviour
 {
     [Header("Player Setup")]
     public PlayerData selectedPlayer;
@@ -13,7 +13,7 @@ public class SpecialEarth : MonoBehaviour
     public TMP_Text playerHPText;
 
     [Header("Enemy Setup")]
-    private int enemyHP = 350;
+    private int enemyHP = 420;
     public Slider enemyHPBar;
     public TMP_Text enemyHPText;
 
@@ -43,6 +43,8 @@ public class SpecialEarth : MonoBehaviour
     private int enemySkill3Cooldown = 0;
     private int enemySkill4Cooldown = 0;
     private int enemySkill5Cooldown = 0;
+
+    private int enemySkill6Cooldown = 0;
 
     private int playerStunTurns = 0;
     [Header("Result Panel")]
@@ -121,8 +123,8 @@ public class SpecialEarth : MonoBehaviour
     private bool isCursedAttack = false;
     private bool hasPreventDeathEffect = false;
     private int ultraDamageTurns = 0;
-    private int enemySpeed = 30;
-    private int enemyDef = 70; //def ของศัตรู
+    private int enemySpeed = 20;
+    private int enemyDef = 100; //def ของศัตรู
 
     private int finaldamgedef = 1;
     private int damegeEnemydef = 1;
@@ -380,7 +382,7 @@ public class SpecialEarth : MonoBehaviour
 
     void SetupEnemy()
     {
-        enemyHP = 350;
+        enemyHP = 420;
         enemyMaxHP = enemyHP; // เก็บ maxHP ไว้ใช้ในภายหลัง
 
         enemyHPBar.maxValue = enemyMaxHP;
@@ -1836,6 +1838,24 @@ public class SpecialEarth : MonoBehaviour
 
     }
 
+public int nextLevelToUnlock = 5;
+
+    public void WinLevel()
+    {
+        Debug.Log("Level Complete!");
+
+        // 1. ตรวจสอบว่าด่านที่กำลังจะปลดล็อค มากกว่าที่เคยบันทึกไว้ไหม
+        // (เพื่อป้องกันการย้อนกลับมาเล่นด่าน 1 แล้วทำให้ด่าน 3 กลับมาล็อค)
+        if (nextLevelToUnlock > PlayerPrefs.GetInt("levelReached", 1))
+        {
+            // 2. บันทึกข้อมูลด่านสูงสุดที่ปลดล็อค
+            PlayerPrefs.SetInt("levelReached", nextLevelToUnlock);
+            PlayerPrefs.Save(); // ยืนยันการบันทึก
+        }
+
+        // 3. กลับไปหน้าเลือกด่าน หรือ ไปด่านต่อไป
+        // SceneManager.LoadScene("LevelSelectMenu");
+    }
     void DamageNormalEnemy(int damagenormal)
     {
          playerturntext.gameObject.SetActive(false);
@@ -1874,12 +1894,12 @@ public class SpecialEarth : MonoBehaviour
 
         if (enemyHP <= 0)
         {
+            OpenChest();
+            WinLevel();
             Debug.Log("ศัตรูแพ้แล้ว!");
             ShowResultPanelVictory("Victory!");
         }
     }
-
-
 
     void DamageEnemy(int damage) //<-- ดาเมจผู้เล่น
     {
@@ -1887,7 +1907,7 @@ public class SpecialEarth : MonoBehaviour
     enemyturntext.gameObject.SetActive(true);
         int finalDamage = damage;
 
-        playerdamageItems = 0;
+         playerdamageItems = 0;
         if (knightswords)
         {
             playerdamageItems += Mathf.RoundToInt(finalDamage* 0.05f);
@@ -2114,27 +2134,27 @@ public class SpecialEarth : MonoBehaviour
 
         if (enemyHP <= 0)
         {
+            OpenChest();
+            WinLevel();
             Debug.Log("ศัตรูแพ้แล้ว!");
             ShowResultPanelVictory("Victory!");
         }
     }
-
      public Sprite[] itemImages; 
     public Image showImage;
-    public ItemID EarthLegendaryArmor = ItemID.EarthLegendaryArmor; 
-
+    public ItemID EarthLegendaryHammer = ItemID.EarthLegendaryHammer; // สมมติกล่องนี้ดรอปดาบไฟ
     public void OpenChest()
     {
         // เรียกใช้คำสั่งปลดล็อก
          int roll = Random.Range(1, 101);
             
-            if (roll < 51)
+            if (roll < 61)
             {
-                 EquipmentManager.Instance.UnlockItem(EarthLegendaryArmor);
+                 EquipmentManager.Instance.UnlockItem(EarthLegendaryHammer);
                   showImage.sprite = itemImages[0]; 
                  showImage.gameObject.SetActive(true);
+                 Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
             }
-          
 
     }
     void DamagePlayer(int damage) //<-- ดาเมจศัตรู
@@ -2536,6 +2556,7 @@ StartCoroutine(DelayedEnemyTurn());
         if (enemySkill3Cooldown > 0) enemySkill3Cooldown--;
         if (enemySkill4Cooldown > 0) enemySkill4Cooldown--;
          if (enemySkill5Cooldown > 0) enemySkill5Cooldown--;
+         if(enemySkill6Cooldown > 0) enemySkill6Cooldown--;
 
         if (playerStunTurns > 0) playerStunTurns--;
 
@@ -2561,13 +2582,19 @@ StartCoroutine(DelayedEnemyTurn());
         float scoreSkill3 = CalculateSkill3Score();
         float scoreSkill4 = CalculateSkill4Score();
         float scoreSkill5 = CalculateSkill5Score();
+        float scoreSkill6 = CalculateSkill6Score();
         float scoreBasicAttack = CalculateBasicAttackScore(basicAttackDamage);
 
         // 2. หาว่าท่าไหนมีคะแนนสูงสุด
-        float maxScore = Mathf.Max(scoreSkill1, scoreSkill2, scoreSkill3, scoreSkill4, scoreSkill5, scoreBasicAttack);
+        float maxScore = Mathf.Max(scoreSkill1, scoreSkill2, scoreSkill3, scoreSkill4, scoreSkill5, scoreSkill6, scoreBasicAttack);
 
         // 3. เลือกใช้ท่านั้น
         // (สำคัญ: เช็คท่าที่คะแนนสูงก่อน เช่น สกิล 3 > สกิล 2 > สกิล 1)
+        if(maxScore == scoreSkill6 && scoreSkill6 > -999)
+        {
+            Debug.Log("AI เลือก: Skill 6 (dodge)");
+            EnemySkill6();
+        }
 
         if (maxScore == scoreSkill5 && scoreSkill5 > -999) // -999 คือใช้ไม่ได้ (ติด Cooldown)
         {
@@ -2610,7 +2637,7 @@ StartCoroutine(DelayedEnemyTurn());
     {
         if (enemySkill1Cooldown > 0) return -1000; // ใช้ไม่ได้
 
-        float score = 40; // ค่าพื้นฐานของดาเมจ
+        float score = 45; // ค่าพื้นฐานของดาเมจ
 
         // ถ้าผู้เล่นแพ้ทาง (ธาตุ wind) ให้คะแนนเยอะๆ
         if (selectedPlayer.elementType == ElementType.Water)
@@ -2636,19 +2663,27 @@ StartCoroutine(DelayedEnemyTurn());
     float CalculateSkill2Score() // สกิล 2: โจมตี (Damage)
     {
         
+       
         if (enemySkill2Cooldown > 0) return -1000; // ใช้ไม่ได้
 
-        float score = 50; 
+        float score = 70; // ค่าพื้นฐานของดาเมจ
 
-       
-       if (enemyHP > (enemyMaxHP * 0.8f)) // ถ้าเลือดมากกว่า 80%
-            score -= 50; 
-        // ถ้าเลือดตัวเอง (enemyHP) เหลือน้อย, สกิลนี้จะสำคัญมาก
-        if (enemyHP < (enemyMaxHP * 0.5f)) // ถ้าเลือดต่ำกว่า 50%
-            score += 60; // ให้โบนัส
-        
-        if (enemyHP < (enemyMaxHP * 0.25f)) // ถ้าเลือดต่ำกว่า 25%
-            score += 80; // ให้โบนัสหนักๆ (อยากใช้ท่านี้สุดๆ)
+        // ถ้าผู้เล่นแพ้ทาง (ธาตุ wind) ให้คะแนนเยอะๆ
+        if (selectedPlayer.elementType == ElementType.Water)
+            score *= 2;
+
+        else if (selectedPlayer.elementType == ElementType.Wind)
+            score /= 2;
+
+
+        // ถ้าผู้เล่นมีโล่ (isShieldActive) หรือสะท้อน (reflectNextAttackWind)
+        // การโจมตีจะได้ผลน้อยมาก หรือโดนสวน
+        if (isShieldActive || reflectNextAttackWind || doublereflectNextAttackWind > 0 || reflectNextAttack || shieldTurnsLeft > 0 || ReduceWater > 0 || superreduce > 0 || isDodgeActive || isShieldActive || EarthBootDef > 0 || lightShieldTurnsLeft > 0 || superreducelight > 0 || EarthNerfDamage > 0 || NerfEnemyDamgelight > 0 )
+            score = 2; // ให้คะแนนน้อยสุดๆ (แต่ยังดีกว่าติดลบ)
+
+        // ถ้าสกิลนี้สามารถฆ่าผู้เล่นได้ ให้คะแนนโบนัสสูงสุด
+        if (playerHP <= score)
+            score += 500;
 
         return score;
     }
@@ -2657,19 +2692,41 @@ StartCoroutine(DelayedEnemyTurn());
     {
         if (enemySkill3Cooldown > 0) return -1000; // ใช้ไม่ได้
 
-        float score = 50;
+        float score = 50; 
 
-        if (enemySkill1Cooldown <= 1 )
-            score *= 2;
+       
+       if (enemyHP > (enemyMaxHP * 0.8f)) // ถ้าเลือดมากกว่า 80%
+            score -= 50; 
+        // ถ้าเลือดตัวเอง (enemyHP) เหลือน้อย, สกิลนี้จะสำคัญมาก
+        if (enemyHP < (enemyMaxHP * 0.5f)) // ถ้าเลือดต่ำกว่า 50%
+            score += 80; // ให้โบนัส
+        
+        if (enemyHP < (enemyMaxHP * 0.25f)) // ถ้าเลือดต่ำกว่า 25%
+            score += 100; // ให้โบนัสหนักๆ (อยากใช้ท่านี้สุดๆ)
 
         return score;
     }
 
     float CalculateSkill4Score()
     {
-        if (enemySkill5Cooldown > 0) return -1000; // ใช้ไม่ได้
+        if (enemySkill4Cooldown > 0) return -1000; // ใช้ไม่ได้
 
-        float score = 60; 
+        float score = 100;
+
+        if (enemySkill1Cooldown <= 1  || enemySkill2Cooldown <= 1 )
+            score *= 2;
+        
+        if (enemyHP < (enemyMaxHP * 0.25f)) // ถ้าเลือดต่ำกว่า 25%
+            score -= 60; 
+
+        return score;
+    }
+    
+      float CalculateSkill5Score() 
+    {
+         if (enemySkill5Cooldown > 0) return -1000; // ใช้ไม่ได้
+
+        float score = 70; 
       
         // ถ้าเลือดตัวเอง (enemyHP) เหลือน้อย, สกิลนี้จะสำคัญมาก
         if (enemyHP < (enemyMaxHP * 0.5f)) // ถ้าเลือดต่ำกว่า 50%
@@ -2680,12 +2737,12 @@ StartCoroutine(DelayedEnemyTurn());
 
         return score;
     }
-    
-      float CalculateSkill5Score() 
-    {
-         if (enemySkill5Cooldown > 0) return -1000; // ใช้ไม่ได้
 
-        float score = 70; 
+    float CalculateSkill6Score()
+    {
+         if (enemySkill6Cooldown > 0) return -1000; // ใช้ไม่ได้
+
+        float score = 80; 
       
         // ถ้าเลือดตัวเอง (enemyHP) เหลือน้อย, สกิลนี้จะสำคัญมาก
         if (enemyHP < (enemyMaxHP * 0.5f)) // ถ้าเลือดต่ำกว่า 50%
@@ -2714,21 +2771,21 @@ StartCoroutine(DelayedEnemyTurn());
 
     void UpdatePlayerHPUI()
     {
-        playerHPBar.maxValue = selectedPlayer.maxHP;;
+        playerHPBar.maxValue = selectedPlayer.maxHP;
         playerHPBar.value = playerHP;
         playerHPText.text = $"HP: {playerHP}/{selectedPlayer.maxHP}";
     }
 
     void UpdateEnemyHPUI()
     {
-        enemyHPBar.maxValue = 350;
+        enemyHPBar.maxValue = 420;
         enemyHPBar.value = enemyHP;
-        enemyHPText.text = $"HP: {enemyHP}/350";
+        enemyHPText.text = $"HP: {enemyHP}/420";
     }
 
     IEnumerator DelayedEnemyTurn()
     {
-         //item
+         // item
         if (recoverrings)
         {
             playerHP+= 2;
@@ -2748,6 +2805,7 @@ StartCoroutine(DelayedEnemyTurn());
             UpdatePlayerHPUI();
         }
         //skill and card
+
         if (regenTurnsLeft > 0)//การ์ดเลือดเพิ่ม 10 ถึง 10 turn
         {
             playerHP += regenAmountPerTurn;
@@ -2840,7 +2898,7 @@ StartCoroutine(DelayedEnemyTurn());
  void EnemyUseSkill1() //<--สกิล 1 ศัตรู
     {
         
-        int damage = 40;
+        int damage = 45;
 
         if (selectedPlayer.elementType == ElementType.Wind)
         {
@@ -2870,42 +2928,71 @@ StartCoroutine(DelayedEnemyTurn());
     {
       
 
-       int healAmount = 50;
-        enemyHP += healAmount;
-        enemyHP = Mathf.Clamp(enemyHP, 0, enemyMaxHP);
-        ShowSkillEffectOnce(3);
-        PlaySoundEffect(2);
-        UpdateEnemyHPUI();
-        enemySkill2Cooldown = 3;
-        Debug.Log($"ศัตรูใช้สกิล Heal ฟื้น {healAmount} HP");
+         
+        int damage = 70;
+
+        if (selectedPlayer.elementType == ElementType.Wind)
+        {
+            damage /= 2;
+            Debug.Log("ผู้เล่นเป็นธาตุลม ดาเมจถูกลดครึ่งหนึ่ง");
+        }
+        else if (selectedPlayer.elementType == ElementType.Water)
+        {
+            damage *= 2;
+            Debug.Log("ผู้เล่นเป็นธาตุน้ำ ดาเมจคูณ 2");
+        }
+
+        if (reduceEnemyDamageTurns > 0)//การ์ดลดดาเมจศัตรุ 50%
+        {
+            damage /= 2;
+            Debug.Log($"ดาเมจของศัตรูจากสกิลลดลงครึ่งหนึ่ง เหลือ {damage}");
+        }
+        //ShowSkillEffectOnce(5); 
+        DamagePlayer(damage);
+        ShowSkillEffectOnce(47);
+        ShowSkillEffectOnce(48);
+        PlaySoundEffect(10);
+        enemySkill2Cooldown = 5;
+        Debug.Log("ศัตรูใช้ ดิน ทำดาเมจ " + damage);
 
     }
 
     void EnemySkill3() //<--สกิล 3 ศัตรู
     {
 
-        EnemyFireBuffx3 = 1;
-        enemySkill4Cooldown = 4;
-        ShowSkillEffectOnce(48);
-        PlaySoundEffect(3);
-        //ShowSkillEffectOnce(6);
-
+       int healAmount = 50;
+        enemyHP += healAmount;
+        enemyHP = Mathf.Clamp(enemyHP, 0, enemyMaxHP);
+        ShowSkillEffectOnce(3);
+        PlaySoundEffect(2);
+        UpdateEnemyHPUI();
+        enemySkill3Cooldown = 3;
+        Debug.Log($"ศัตรูใช้สกิล Heal ฟื้น {healAmount} HP");
     }
 
     void EnemySkill4() //<--สกิล 4 ศัตรู
     {
 
-        EnemyShieldWater= 1;
+        EnemyStunPlayer= 1;
         enemySkill4Cooldown = 3;
-        ShowSkillEffectOnce(49);
+        ShowSkillEffectOnce(47);
+        PlaySoundEffect(3);
+        //ShowSkillEffectOnce(6); 
     }
         void EnemySkill5() //<--สกิล 5 ศัตรู
     {
 
-        EnemyShieldEarth = 1;
+        EnemyShieldWater = 1;
         enemySkill5Cooldown = 3;
-        ShowSkillEffectOnce(49);
-
+        ShowSkillEffectOnce(50);
+        //ShowSkillEffectOnce(6); 
+    }
+    void EnemySkill6()
+    {
+        EnemyShieldEarth = 1;
+        enemySkill6Cooldown = 5;
+        ShowSkillEffectOnce(50);
+        //ShowSkillEffectOnce(6); 
     }
 
 
@@ -4078,8 +4165,6 @@ void ApplyEffect(ItemID id)
                 break;
         }
     }
-
-
 
 }
 
