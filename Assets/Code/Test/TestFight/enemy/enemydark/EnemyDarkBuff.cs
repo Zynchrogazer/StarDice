@@ -1873,9 +1873,22 @@ public class EnemyDarkbuff: MonoBehaviour
 
         if (enemyHP <= 0)
         {
+            GiveExpToPlayer();
             OpenChest();
             Debug.Log("ศัตรูแพ้แล้ว!");
             ShowResultPanelVictory("Victory!");
+        }
+    }
+
+    public PlayerState player;
+    public void GiveExpToPlayer()
+    {
+        int expReward = 700; // จำนวน EXP ที่ต้องการให้
+        
+        if (player != null)
+        {
+            player.GainExp(expReward);
+            Debug.Log($"ได้รับ EXP {expReward} หน่วย!");
         }
     }
 
@@ -2110,6 +2123,7 @@ public class EnemyDarkbuff: MonoBehaviour
 
         if (enemyHP <= 0)
         {
+            GiveExpToPlayer();
             OpenChest();
             Debug.Log("ศัตรูแพ้แล้ว!");
             ShowResultPanelVictory("Victory!");

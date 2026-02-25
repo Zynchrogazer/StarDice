@@ -165,7 +165,7 @@ public class SpecialFire : MonoBehaviour
     private List<CardData> selectedCards = new List<CardData>();
    void Start()
     { Debug.Log(">>> BattleSystem เริ่มทำงานแล้วนะ! <<<");
-
+ GameEventManager.Instance.AddCount2(1);
        ApplyEquippedItems();
 
         if (GameData.Instance != null && GameData.Instance.selectedCards.Count > 0)
@@ -1873,8 +1873,21 @@ public class SpecialFire : MonoBehaviour
 
         if (enemyHP <= 0)
         {
+            GiveExpToPlayer();
             Debug.Log("ศัตรูแพ้แล้ว!");
             ShowResultPanelVictory("Victory!");
+        }
+    }
+
+    public PlayerState player;
+    public void GiveExpToPlayer()
+    {
+        int expReward = 700; // จำนวน EXP ที่ต้องการให้
+        
+        if (player != null)
+        {
+            player.GainExp(expReward);
+            Debug.Log($"ได้รับ EXP {expReward} หน่วย!");
         }
     }
 
@@ -2103,6 +2116,8 @@ public class SpecialFire : MonoBehaviour
 
         if (enemyHP <= 0)
         {
+            GiveExpToPlayer();
+            OpenChest();
             Debug.Log("ศัตรูแพ้แล้ว!");
             ShowResultPanelVictory("Victory!");
         }
@@ -2403,7 +2418,7 @@ StartCoroutine(DelayedEnemyTurn());
 
     void EnemyTurn()
     {
-
+         GameEventManager.Instance.AddCount1(1);
         playerturntext.gameObject.SetActive(false);
         enemyturntext.gameObject.SetActive(true);
 
