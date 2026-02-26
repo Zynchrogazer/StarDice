@@ -1,12 +1,15 @@
 ﻿using UnityEngine;
 using System;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 
 [System.Serializable]
 
 
 public class PlayerState : MonoBehaviour
 {
+    private const string IntermissionSceneName = "InterMission";
+
     //public static PlayerState Instance { get; private set; }
     [Header("AI Settings")]
     public bool isAI = false;
@@ -35,6 +38,7 @@ public class PlayerState : MonoBehaviour
 
     public event System.Action OnDied;
     public event Action OnStatsUpdated;
+    private bool isDefeatHandling = false;
     private void Awake()
     {
         //if (Instance != null && Instance != this)
@@ -60,6 +64,13 @@ public class PlayerState : MonoBehaviour
             // (Optional) ถ้าอยากให้บอทเริ่มมาเลือดเต็มตาม MaxHealth ที่ตั้งใน Inspector
             PlayerHealth = MaxHealth;
         }
+
+        OnDied += HandleDefeat;
+    }
+
+    private void OnDestroy()
+    {
+        OnDied -= HandleDefeat;
     }
 
     public void LoadFromPlayerData(PlayerData data)
@@ -162,6 +173,55 @@ public class PlayerState : MonoBehaviour
         WinCount++;
         
         GainExp(50);
+    }
+
+    private void HandleDefeat()
+    {
+        if (isDefeatHandling || isAI) return;
+        isDefeatHandling = true;
+
+        // ✅ เก็บเงินสะสมทั้งหมดกลับข้อมูลหลัก เพื่อให้คงอยู่หลังออกจากด่าน
+        if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
+        {
+            GameData.Instance.selectedPlayer.SetMoney(PlayerMoney);
+        }
+
+        // ✅ รีเซ็ตความก้าวหน้าภายในด่าน (เลเวล/EXP/Win) เมื่อแพ้
+        ResetInStageProgress();
+
+        Debug.Log($"[PlayerState] Defeated -> return to {IntermissionSceneName}");
+        SceneManager.LoadScene(IntermissionSceneName);
+    }
+
+    private void ResetInStageProgress()
+    {
+        PlayerData sourceData = selectedPlayerPreset;
+        if (sourceData == null && GameData.Instance != null)
+        {
+            sourceData = GameData.Instance.selectedPlayer;
+        }
+
+        if (sourceData != null)
+        {
+            PlayerLevel = sourceData.level;
+            CurrentExp = sourceData.currentExp;
+            MaxExp = sourceData.maxExp > 0 ? sourceData.maxExp : 100;
+            MaxHealth = sourceData.GetMaxHealth();
+            PlayerHealth = MaxHealth;
+            CurrentAttack = sourceData.attackDamage;
+        }
+        else
+        {
+            PlayerLevel = 1;
+            CurrentExp = 0;
+            MaxExp = Mathf.Max(MaxExp, 100);
+            PlayerHealth = Mathf.Max(PlayerHealth, 1);
+        }
+
+        WinCount = 0;
+        hasIceEffect = false;
+        DebuffBurn = false;
+        OnStatsUpdated?.Invoke();
     }
     // --- Other Methods ---
 
