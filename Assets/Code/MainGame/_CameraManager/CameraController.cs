@@ -87,6 +87,13 @@ public class CameraController : MonoBehaviour
     {
         if (isBattleScene) return;
 
+        // ซิงก์เป้าหมายกับเทิร์นปัจจุบันเสมอ
+        // เพื่อให้กล้องสลับไปหา Player/AI ที่กำลังเล่นทันทีเมื่อเปลี่ยนเทิร์น
+        if (GameTurnManager.CurrentPlayer != null && target != GameTurnManager.CurrentPlayer.transform)
+        {
+            target = GameTurnManager.CurrentPlayer.transform;
+        }
+
         if (target == null)
         {
             FindTarget();
