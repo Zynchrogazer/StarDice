@@ -52,8 +52,25 @@ public class PlayerData : ScriptableObject
         }
     }
 
+    public int CurrentHealth => currentHealth;
+
     private void OnEnable()
     {
+        if (maxHealth <= 0)
+        {
+            maxHealth = Mathf.Max(1, maxHP);
+        }
+
+        // ถ้ายังไม่เคยเซ็ตค่า (เช่น Asset ใหม่) ให้เริ่มด้วยเลือดเต็ม
+        if (currentHealth <= 0)
+        {
+            currentHealth = maxHealth;
+        }
+        else
+        {
+            currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
+        }
+
         LoadMoney();
     }
 
@@ -88,7 +105,7 @@ public class PlayerData : ScriptableObject
 
     public int GetMaxHealth()
     {
-        return maxHP;
+        return Mathf.Max(1, maxHealth);
     }
 
     /// <summary>
