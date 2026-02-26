@@ -7,7 +7,7 @@ public class BossSceneController : MonoBehaviour
 {
     [Header("Scene Configuration")]
     [Tooltip("ชื่อของ Scene บอร์ดเกมที่จะกลับไป")]
-    public string mainBoardSceneName = "BoardGameScene"; // << ตั้งชื่อ Scene หลักของคุณ
+    public string mainBoardSceneName = "TestMain"; // default fallback
 
     [Header("Player Battle Data (Simulated)")]
     // นี่คือค่าจำลองสำหรับใช้ใน Scene นี้
@@ -56,6 +56,8 @@ public class BossSceneController : MonoBehaviour
     {
         Debug.Log("--- BOSS BATTLE END ---");
 
+        string targetBoardScene = PlayerPrefs.GetString(GameEventManager.LastBoardSceneKey, mainBoardSceneName);
+
         // ตรวจสอบว่ามี Persistence Instance อยู่หรือไม่
         if (GameTurnManager.CurrentPlayer != null)
         {
@@ -66,8 +68,8 @@ public class BossSceneController : MonoBehaviour
         }
 
         // 2. สั่งให้โหลด Scene บอร์ดเกมกลับไป
-        Debug.Log($"Returning to scene: {mainBoardSceneName}");
-        SceneManager.LoadScene(mainBoardSceneName);
+        Debug.Log($"Returning to scene: {targetBoardScene}");
+        SceneManager.LoadScene(targetBoardScene);
     }
 
     private void UpdateUI()

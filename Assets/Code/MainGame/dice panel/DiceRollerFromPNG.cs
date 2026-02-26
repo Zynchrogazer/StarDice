@@ -47,14 +47,16 @@ public class DiceRollerFromPNG : MonoBehaviour
         }
     }
 
-    private void OnDisable() { SceneManager.sceneLoaded -= OnSceneLoaded; }
+    private void OnDisable()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+        GameEventManager.OnBoardSceneReady -= RefreshReferences;
+    }
 
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        if (scene.name == "TestMain") // ✅ เปลี่ยนชื่อให้ตรงกับฉากหลักของคุณ
-        {
-            RefreshReferences();
-        }
+        if (scene.name == "TestFight" || scene.name == "Shop" || scene.name.Contains("Minigame")) return;
+        RefreshReferences();
     }
 
     private IEnumerator CheckStateOnEnable()

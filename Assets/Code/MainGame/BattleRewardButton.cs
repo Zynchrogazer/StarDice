@@ -46,7 +46,8 @@ public class BattleRewardButton : MonoBehaviour
 
         if (!found) Debug.LogWarning("⚠ หาผู้เล่นตัวจริงไม่เจอ! (ค่า WinCount อาจไม่อัปเดต)");
 
-        // 3. 🏠 ย้ายกลับบ้าน (ตามโค้ดเดิมของคุณ)
-        SceneManager.LoadScene("TestMain");
+        // 3. 🏠 ย้ายกลับบ้าน (กลับฉากบอร์ดล่าสุดที่จำไว้)
+        string targetBoardScene = PlayerPrefs.GetString(GameEventManager.LastBoardSceneKey, "TestMain");
+        SceneManager.LoadScene(targetBoardScene);
     }
 }

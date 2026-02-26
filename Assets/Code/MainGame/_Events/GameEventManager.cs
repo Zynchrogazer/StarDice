@@ -6,6 +6,8 @@ using UnityEngine.SceneManagement;
 
 public class GameEventManager : MonoBehaviour
 {
+    public const string LastBoardSceneKey = "LastBoardSceneName";
+
     [Header("Scene Settings")]
     public string boardGameSceneName = "TestMain";
     public static GameEventManager Instance { get; private set; }
@@ -595,6 +597,7 @@ public class GameEventManager : MonoBehaviour
 
     private IEnumerator MonsterBattleCoroutine()
     {
+        RememberCurrentBoardScene();
         ShowPanel("monster", false);
         yield return new WaitForSeconds(1f);
         string[] Scenes = { "fightDarkNormal", "fightEarthNormal", "fightLightNormal", "fightWaterNormal", "fightWindNormal", "TestFight" };
@@ -619,6 +622,7 @@ public class GameEventManager : MonoBehaviour
 
     private IEnumerator BossBattleCoroutine()
     {
+       RememberCurrentBoardScene();
        ShowPanel("boss", false);
     yield return new WaitForSeconds(1f);
     int bosslevel = 0;
@@ -743,6 +747,7 @@ countroundbattle = 0;
 
     private IEnumerator SpecialBossBattleCoroutine()
     {
+         RememberCurrentBoardScene();
          string currentSceneName = SceneManager.GetActiveScene().name;
         ShowPanel("specialboss", false);
     yield return new WaitForSeconds(1f);
@@ -815,6 +820,18 @@ countroundbattle = 0;
         StopAllCoroutines();
         isRandomSpinning = false; // ✅ ปลดล็อคกำแพงตัวที่ 1
         Debug.Log("<color=orange>[EventManager] 🧹 ล้างสถานะสุ่มค้างเรียบร้อย</color>");
+    }
+
+    private void RememberCurrentBoardScene()
+    {
+        string currentSceneName = SceneManager.GetActiveScene().name;
+        if (string.IsNullOrEmpty(currentSceneName)) return;
+
+        boardGameSceneName = currentSceneName;
+        PlayerPrefs.SetString(LastBoardSceneKey, currentSceneName);
+        PlayerPrefs.Save();
+
+        Debug.Log($"[EventManager] จำฉากบอร์ดล่าสุดเป็น '{currentSceneName}'");
     }
     #endregion
 }
