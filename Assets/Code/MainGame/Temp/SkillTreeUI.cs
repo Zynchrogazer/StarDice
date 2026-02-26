@@ -6,7 +6,8 @@ using UnityEngine.SceneManagement;
 public class SkillTreeUI : MonoBehaviour
 {
     [Header("UI References")]
-    public TextMeshProUGUI goldText;
+    public TextMeshProUGUI moneyText;
+    public TextMeshProUGUI goldText; // backward compatibility
 
     [Header("Star Skill")]
     public TextMeshProUGUI starLevelText;
@@ -20,15 +21,25 @@ public class SkillTreeUI : MonoBehaviour
 
     private void Start()
     {
+        if (PassiveSkillManager.Instance != null)
+        {
+            PassiveSkillManager.Instance.ApplyPassiveBonusToCurrentPlayer();
+        }
+
         UpdateUI();
 
-        // ผูกปุ่มกด
         upgradeStarBtn.onClick.AddListener(() => {
-            if (PassiveSkillManager.Instance.TryUpgradeStarSkill()) UpdateUI();
+            if (PassiveSkillManager.Instance != null && PassiveSkillManager.Instance.TryUpgradeStarSkill())
+            {
+                UpdateUI();
+            }
         });
 
         upgradeAttackBtn.onClick.AddListener(() => {
-            if (PassiveSkillManager.Instance.TryUpgradeAttackSkill()) UpdateUI();
+            if (PassiveSkillManager.Instance != null && PassiveSkillManager.Instance.TryUpgradeAttackSkill())
+            {
+                UpdateUI();
+            }
         });
     }
 
@@ -36,26 +47,28 @@ public class SkillTreeUI : MonoBehaviour
     {
         if (PassiveSkillManager.Instance == null) return;
 
-        // อัปเดตเงิน
-        goldText.text = $"Gold: {PassiveSkillManager.Instance.globalGold}";
+        int playerMoney = GameTurnManager.CurrentPlayer != null
+            ? GameTurnManager.CurrentPlayer.PlayerMoney
+            : (GameData.Instance?.selectedPlayer != null ? GameData.Instance.selectedPlayer.Money : 0);
 
-        // อัปเดตปุ่มดาว
+        if (moneyText != null) moneyText.text = $"Money: {playerMoney}";
+        if (goldText != null) goldText.text = $"Money: {playerMoney}";
+
         int starLv = PassiveSkillManager.Instance.starSkillLevel;
-        int starCost = PassiveSkillManager.Instance.GetUpgradeCost(starLv);
-        starLevelText.text = $"Lv. {starLv} (+{PassiveSkillManager.Instance.GetStarBonusAmount()} Stars)";
+        int starCost = PassiveSkillManager.Instance.GetStarUpgradeCost();
+        starLevelText.text = $"Lv. {starLv} (+{PassiveSkillManager.Instance.GetStarBonusAmount()} MaxHP)";
         starCostText.text = $"Cost: {starCost}";
-        upgradeStarBtn.interactable = PassiveSkillManager.Instance.globalGold >= starCost;
+        upgradeStarBtn.interactable = playerMoney >= starCost;
 
-        // อัปเดตปุ่มโจมตี
         int atkLv = PassiveSkillManager.Instance.attackSkillLevel;
-        int atkCost = PassiveSkillManager.Instance.GetUpgradeCost(atkLv);
+        int atkCost = PassiveSkillManager.Instance.GetAttackUpgradeCost();
         attackLevelText.text = $"Lv. {atkLv} (+{PassiveSkillManager.Instance.GetAttackBonusAmount()} Dmg)";
         attackCostText.text = $"Cost: {atkCost}";
-        upgradeAttackBtn.interactable = PassiveSkillManager.Instance.globalGold >= atkCost;
+        upgradeAttackBtn.interactable = playerMoney >= atkCost;
     }
 
     public void OnBackButtonClicked()
     {
-        SceneManager.LoadScene("MainMenu"); // หรือชื่อฉากเมนูของคุณ
+        SceneManager.LoadScene("MainMenu");
     }
 }

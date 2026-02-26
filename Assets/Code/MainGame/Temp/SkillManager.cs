@@ -5,62 +5,105 @@ public class SkillManager : MonoBehaviour
 {
     public static SkillManager Instance;
 
-    // รายชื่อ ID ของสกิลที่ปลดล็อคไปแล้ว
     public HashSet<string> unlockedSkillIDs = new HashSet<string>();
 
-    public int playerSkillPoints = 5; // สมมติว่ามีแต้ม 5 แต้ม
+    public int defaultSkillPoints = 5; // เก็บไว้เผื่อระบบเก่า
 
     private void Awake()
     {
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
-
-        // (Test) สกิลเริ่มต้นอาจจะให้ฟรี
-        // UnlockSkill("Skill_Basic_01"); 
     }
 
-    // เช็คว่าสกิลนี้ "ปลดล็อคไปแล้วหรือยัง"
+
+    private void Start()
+    {
+        ApplyAllPassiveBonusesToCurrentPlayer();
+        OnSkillTreeUpdated?.Invoke();
+    }
+
     public bool IsUnlocked(PassiveSkillData skill)
     {
-        return unlockedSkillIDs.Contains(skill.skillID);
+        return skill != null && unlockedSkillIDs.Contains(skill.skillID);
     }
 
-    // เช็คว่าสกิลนี้ "สามารถอัปได้ไหม" (เงื่อนไขครบไหม)
     public bool CanUnlock(PassiveSkillData skill)
     {
-        // 1. ถ้าปลดไปแล้ว ก็ไม่ต้องปลดอีก
+        if (skill == null) return false;
         if (IsUnlocked(skill)) return false;
 
-        // 2. เช็คแต้มพอไหม
-        if (playerSkillPoints < skill.costPoint) return false;
+        PlayerState player = GameTurnManager.CurrentPlayer;
+        if (player == null || player.PlayerMoney < skill.costPoint) return false;
 
-        // 3. (หัวใจสำคัญ) เช็คว่าสกิลก่อนหน้า (Prerequisites) ปลดครบทุกอันหรือยัง
-        foreach (var req in skill.requiredSkills)
+        if (skill.requiredSkills != null)
         {
-            if (!IsUnlocked(req))
+            foreach (var req in skill.requiredSkills)
             {
-                return false; // มีอันนึงยังไม่ปลด -> อัปไม่ได้
+                if (req != null && !IsUnlocked(req))
+                {
+                    return false;
+                }
             }
         }
 
-        return true; // ผ่านทุกเงื่อนไข
+        return true;
     }
 
-    // สั่งปลดล็อค
     public bool TryUnlockSkill(PassiveSkillData skill)
     {
-        if (CanUnlock(skill))
+        if (!CanUnlock(skill))
         {
-            playerSkillPoints -= skill.costPoint;
-            unlockedSkillIDs.Add(skill.skillID);
-
-            // แจ้งเตือน UI ให้อัปเดตใหม่ทั้งหน้า
-            OnSkillTreeUpdated?.Invoke();
-            return true;
+            return false;
         }
-        return false;
+
+        PlayerState player = GameTurnManager.CurrentPlayer;
+        player.PlayerMoney -= skill.costPoint;
+
+        if (GameData.Instance?.selectedPlayer != null)
+        {
+            GameData.Instance.selectedPlayer.SetMoney(player.PlayerMoney);
+        }
+
+        unlockedSkillIDs.Add(skill.skillID);
+
+        ApplyAllPassiveBonusesToCurrentPlayer();
+
+        OnSkillTreeUpdated?.Invoke();
+        return true;
     }
 
-    // Event เอาไว้บอกปุ่มต่างๆ ให้รีเฟรชสี
+    public void ApplyAllPassiveBonusesToCurrentPlayer()
+    {
+        if (GameTurnManager.CurrentPlayer == null || GameData.Instance?.selectedPlayer == null)
+        {
+            return;
+        }
+
+        PlayerState player = GameTurnManager.CurrentPlayer;
+        PlayerData data = GameData.Instance.selectedPlayer;
+
+        int bonusAtk = 0;
+        int bonusHp = 0;
+        int bonusStar = 0;
+
+        PassiveSkillData[] allSkills = Resources.LoadAll<PassiveSkillData>("");
+        foreach (var passive in allSkills)
+        {
+            if (passive == null || !IsUnlocked(passive)) continue;
+            bonusAtk += passive.bonusAttack;
+            bonusHp += passive.bonusMaxHP;
+            bonusStar += passive.bonusStar;
+        }
+
+        int oldMaxHp = player.MaxHealth;
+
+        player.CurrentAttack = data.attackDamage + bonusAtk;
+        player.MaxHealth = data.maxHP + bonusHp;
+        player.PlayerStar = bonusStar;
+
+        int hpDelta = player.MaxHealth - oldMaxHp;
+        player.PlayerHealth = Mathf.Clamp(player.PlayerHealth + hpDelta, 0, player.MaxHealth);
+    }
+
     public System.Action OnSkillTreeUpdated;
 }

@@ -18,4 +18,14 @@ public class PassiveSkillData : ScriptableObject
 
     // (แถม) ราคาพอยต์ที่ต้องใช้
     public int costPoint = 1;
+
+    [Header("Passive Bonus")]
+    public int bonusAttack = 0;
+    public int bonusMaxHP = 0;
+    public int bonusStar = 0;
+
+    public bool HasAnyBonus()
+    {
+        return bonusAttack != 0 || bonusMaxHP != 0 || bonusStar != 0;
+    }
 }

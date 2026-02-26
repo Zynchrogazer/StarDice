@@ -5,12 +5,18 @@ public class PassiveSkillManager : MonoBehaviour
     public static PassiveSkillManager Instance { get; private set; }
 
     [Header("Save Data")]
-    public int globalGold = 0;          // เงินสะสมถาวร (สำหรับซื้อของ/อัปสกิล)
     public int starSkillLevel = 0;      // เลเวลสกิล: เก็บดาวเพิ่ม
     public int attackSkillLevel = 0;    // เลเวลสกิล: ตีแรงขึ้น
 
     [Header("Settings")]
     public int baseUpgradeCost = 100;   // ราคาเริ่มต้น
+    public int attackCostStep = 60;     // เพิ่มราคาสายโจมตีต่อเลเวล
+    public int starCostStep = 45;       // เพิ่มราคาสายดาวต่อเลเวล
+    public int starBonusPerLevel = 1;
+    public int attackBonusPerLevel = 5;
+
+    private const string StarSkillLvKey = "StarSkillLv";
+    private const string AtkSkillLvKey = "AtkSkillLv";
 
     private void Awake()
     {
@@ -19,87 +25,130 @@ public class PassiveSkillManager : MonoBehaviour
             Destroy(gameObject);
             return;
         }
+
         Instance = this;
-        DontDestroyOnLoad(gameObject); // ห้ามตายเมื่อเปลี่ยนฉาก
-        LoadData(); // โหลดเซฟทันทีที่เริ่มเกม
-    }
-
-    // --- 💰 ระบบจัดการเงินและอัปเกรด ---
-
-    public void AddGold(int amount)
-    {
-        globalGold += amount;
-        SaveData();
+        DontDestroyOnLoad(gameObject);
+        LoadData();
     }
 
     public bool TryUpgradeStarSkill()
     {
-        int cost = GetUpgradeCost(starSkillLevel);
-        if (globalGold >= cost)
+        int cost = GetStarUpgradeCost();
+        return TrySpendCurrentPlayerMoney(cost, () =>
         {
-            globalGold -= cost;
             starSkillLevel++;
+            ApplyPassiveBonusToCurrentPlayer();
             SaveData();
-            return true;
-        }
-        return false;
+        });
     }
 
     public bool TryUpgradeAttackSkill()
     {
-        int cost = GetUpgradeCost(attackSkillLevel);
-        if (globalGold >= cost)
+        int cost = GetAttackUpgradeCost();
+        return TrySpendCurrentPlayerMoney(cost, () =>
         {
-            globalGold -= cost;
             attackSkillLevel++;
+            ApplyPassiveBonusToCurrentPlayer();
             SaveData();
-            return true;
-        }
-        return false;
+        });
     }
 
-    public int GetUpgradeCost(int currentLevel)
+    public int GetStarUpgradeCost()
     {
-        // สูตรคำนวณราคา: ราคาเพิ่มขึ้นทีละ 50% หรือบวกเพิ่มตามใจชอบ
-        return baseUpgradeCost + (currentLevel * 50);
+        return baseUpgradeCost + (starSkillLevel * starCostStep);
     }
 
-    // --- 💪 ระบบคำนวณโบนัส (เอาไปใช้ในเกม) ---
+    public int GetAttackUpgradeCost()
+    {
+        return baseUpgradeCost + 20 + (attackSkillLevel * attackCostStep);
+    }
 
     public int GetStarBonusAmount()
     {
-        // ตัวอย่าง: เวลละ 1 ดวง (หรือจะเป็็น % ก็ได้)
-        return starSkillLevel * 1;
+        return starSkillLevel * starBonusPerLevel;
     }
 
     public int GetAttackBonusAmount()
     {
-        // ตัวอย่าง: เวลละ 5 damage
-        return attackSkillLevel * 5;
+        return attackSkillLevel * attackBonusPerLevel;
     }
 
-    // --- 💾 ระบบ Save/Load (ใช้ PlayerPrefs ง่ายๆ) ---
+    public void ApplyPassiveBonusToCurrentPlayer()
+    {
+        if (GameTurnManager.CurrentPlayer == null || GameData.Instance?.selectedPlayer == null)
+        {
+            return;
+        }
+
+        PlayerState player = GameTurnManager.CurrentPlayer;
+        PlayerData data = GameData.Instance.selectedPlayer;
+
+        int baseAttack = data.attackDamage;
+        int baseMaxHp = data.maxHP;
+
+        int bonusAttack = GetAttackBonusAmount();
+        int bonusMaxHp = GetStarBonusAmount();
+
+        int oldMaxHp = player.MaxHealth;
+
+        player.CurrentAttack = baseAttack + bonusAttack;
+        player.MaxHealth = baseMaxHp + bonusMaxHp;
+
+        if (player.MaxHealth != oldMaxHp)
+        {
+            int hpDelta = player.MaxHealth - oldMaxHp;
+            player.PlayerHealth = Mathf.Clamp(player.PlayerHealth + hpDelta, 0, player.MaxHealth);
+        }
+        else
+        {
+            player.PlayerHealth = Mathf.Clamp(player.PlayerHealth, 0, player.MaxHealth);
+        }
+    }
+
+    private bool TrySpendCurrentPlayerMoney(int amount, System.Action onSuccess)
+    {
+        if (amount < 0)
+        {
+            return false;
+        }
+
+        if (GameTurnManager.CurrentPlayer == null || GameData.Instance?.selectedPlayer == null)
+        {
+            Debug.LogWarning("[PassiveSkillManager] Current player or GameData is missing.");
+            return false;
+        }
+
+        PlayerState player = GameTurnManager.CurrentPlayer;
+        if (player.PlayerMoney < amount)
+        {
+            return false;
+        }
+
+        player.PlayerMoney -= amount;
+        GameData.Instance.selectedPlayer.SetMoney(player.PlayerMoney);
+        onSuccess?.Invoke();
+        return true;
+    }
 
     private void SaveData()
     {
-        PlayerPrefs.SetInt("GlobalGold", globalGold);
-        PlayerPrefs.SetInt("StarSkillLv", starSkillLevel);
-        PlayerPrefs.SetInt("AtkSkillLv", attackSkillLevel);
+        PlayerPrefs.SetInt(StarSkillLvKey, starSkillLevel);
+        PlayerPrefs.SetInt(AtkSkillLvKey, attackSkillLevel);
         PlayerPrefs.Save();
     }
 
     private void LoadData()
     {
-        globalGold = PlayerPrefs.GetInt("GlobalGold", 0);
-        starSkillLevel = PlayerPrefs.GetInt("StarSkillLv", 0);
-        attackSkillLevel = PlayerPrefs.GetInt("AtkSkillLv", 0);
+        starSkillLevel = PlayerPrefs.GetInt(StarSkillLvKey, 0);
+        attackSkillLevel = PlayerPrefs.GetInt(AtkSkillLvKey, 0);
     }
 
-    // คำสั่งล้างเซฟ (เผื่อใช้เทส)
     [ContextMenu("Reset Save")]
     public void ResetSave()
     {
-        PlayerPrefs.DeleteAll();
+        PlayerPrefs.DeleteKey(StarSkillLvKey);
+        PlayerPrefs.DeleteKey(AtkSkillLvKey);
         LoadData();
+        ApplyPassiveBonusToCurrentPlayer();
     }
 }
