@@ -146,9 +146,11 @@ public class NormaSystem : MonoBehaviour
         }
 
         // ✅ ตรวจสอบสถานะว่าควรเปิดปุ่มทอยเต๋าหรือไม่
+        PlayerState currentPlayer = GameTurnManager.CurrentPlayer;
         if (GameTurnManager.Instance != null &&
+            currentPlayer != null &&
             GameTurnManager.Instance.currentState == GameState.WaitingForRoll &&
-            !GameTurnManager.CurrentPlayer.isAI)
+            !currentPlayer.isAI)
         {
             DiceRollerFromPNG.Instance?.ForceEnableButton();
         }

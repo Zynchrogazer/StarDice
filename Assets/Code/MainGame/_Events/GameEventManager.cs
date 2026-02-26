@@ -191,7 +191,10 @@ public class GameEventManager : MonoBehaviour
             case "battle": StartCoroutine(MonsterBattleCoroutine()); break;
             case "boss":StartCoroutine(BossBattleCoroutine());break;
             case "specialboss":StartCoroutine(SpecialBossBattleCoroutine());break;
-            case "shop": shopPanel.SetActive(true); break;
+            case "shop":
+                if (shopPanel != null) shopPanel.SetActive(true);
+                else GameTurnManager.Instance?.RequestEndTurn();
+                break;
             case "draw": Draw(target); break;
             case "windteleport": WindTeleportEffect(target); break;
             case "iceeffect": ApplyIceEffect(target); break;
@@ -221,7 +224,7 @@ public class GameEventManager : MonoBehaviour
         if (windTeleportTargetIDs == null || windTeleportTargetIDs.Length == 0)
         {
             Debug.LogError("WindTeleport: ยังไม่ได้กำหนด ID ปลายทางใน Inspector!");
-            GameTurnManager.Instance.RequestEndTurn(); // จบเทิร์นกันเกมค้าง
+            GameTurnManager.Instance?.RequestEndTurn(); // จบเทิร์นกันเกมค้าง
             return;
         }
 
