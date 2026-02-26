@@ -72,7 +72,7 @@ public class PlayerState : MonoBehaviour
         PlayerHealth = data.maxHP; // เริ่มเกมเลือดเต็ม
         CurrentAttack = data.attackDamage;
         // 2. โหลดเงิน (ถ้าต้องการใช้ค่าเริ่มต้นจาก Data)
-        // PlayerMoney = data.Money; 
+        PlayerMoney = data.Money;
 
         // 3. ✅ โหลดข้อมูล Level จาก PlayerData
         PlayerLevel = data.level;

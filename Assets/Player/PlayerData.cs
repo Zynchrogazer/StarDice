@@ -5,6 +5,8 @@ using UnityEngine;
 
 public class PlayerData : ScriptableObject
 {
+    private const string MoneySaveKeyPrefix = "PLAYER_MONEY_";
+
     public string playerName;
     public ElementType element;
     public Sprite playerSprite;
@@ -29,7 +31,7 @@ public class PlayerData : ScriptableObject
     public int maxExp = 100;   // EXP ที่ต้องใช้ในการอัปเวลครั้งแรก
     // ------------------------------------
 
-    private int money = 50;
+    [SerializeField] private int money = 50;
     private int star = 55; // ถ้าคุณใช้ star ด้วย ก็ควรเพิ่ม Property ให้มันเหมือน Money
 
     public event Action<int> OnMoneyChanged;
@@ -44,9 +46,38 @@ public class PlayerData : ScriptableObject
         set
         {
             if (money == value) return;
-            money = value;
+            money = Mathf.Max(0, value);
+            SaveMoney();
             OnMoneyChanged?.Invoke(money);
         }
+    }
+
+    private void OnEnable()
+    {
+        LoadMoney();
+    }
+
+    private string GetMoneySaveKey()
+    {
+        string playerKey = string.IsNullOrEmpty(playerName) ? name : playerName;
+        return $"{MoneySaveKeyPrefix}{playerKey}";
+    }
+
+    private void LoadMoney()
+    {
+        string saveKey = GetMoneySaveKey();
+        if (!PlayerPrefs.HasKey(saveKey))
+        {
+            return;
+        }
+
+        money = Mathf.Max(0, PlayerPrefs.GetInt(saveKey, money));
+    }
+
+    private void SaveMoney()
+    {
+        PlayerPrefs.SetInt(GetMoneySaveKey(), money);
+        PlayerPrefs.Save();
     }
 
     private void Die()
@@ -78,7 +109,21 @@ public class PlayerData : ScriptableObject
         this.Money = newAmount; // ใช้ Property เพื่อให้ Event OnMoneyChanged ทำงาน
     }
 
+    public void AddMoney(int amount)
+    {
+        if (amount <= 0) return;
+        Money += amount;
+    }
+
+    public bool TrySpendMoney(int amount)
+    {
+        if (amount <= 0) return true;
+        if (Money < amount) return false;
+
+        Money -= amount;
+        return true;
+    }
+
 
 
 }
-

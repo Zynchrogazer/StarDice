@@ -7,6 +7,10 @@ public class ShopPackManager : MonoBehaviour
     public List<CardData> allCards;       // ScriptableObject 47 ใบ
     public Button[] packButtons = new Button[4]; // ปุ่มซื้อซอง 4 ปุ่ม
 
+    [Header("Pack Prices")]
+    [Tooltip("ราคาแต่ละซองตามลำดับปุ่ม หากใส่ไม่ครบจะใช้ 100 เป็นค่าเริ่มต้น")]
+    public int[] packPrices = new int[] { 60, 100, 150, 220 };
+
     [Header("Pack Result UI")]
     public GameObject packResultPanel; // Panel แสดงผลการ์ด
     public Image[] cardSlots;          // Image 5 ช่องที่อยู่ใน Panel
@@ -31,7 +35,20 @@ public class ShopPackManager : MonoBehaviour
 
     void OpenPack(int packIndex)
     {
-        Debug.Log($"เปิดซอง {packIndex + 1}");
+        if (GameData.Instance == null || GameData.Instance.selectedPlayer == null)
+        {
+            Debug.LogWarning("เปิดซองไม่สำเร็จ: ไม่พบข้อมูลผู้เล่น");
+            return;
+        }
+
+        int price = GetPackPrice(packIndex);
+        if (!GameData.Instance.selectedPlayer.TrySpendMoney(price))
+        {
+            Debug.Log($"เงินไม่พอสำหรับเปิดซอง {packIndex + 1}. ต้องใช้ {price} แต่มี {GameData.Instance.selectedPlayer.Money}");
+            return;
+        }
+
+        Debug.Log($"เปิดซอง {packIndex + 1} (จ่าย {price}, เงินคงเหลือ {GameData.Instance.selectedPlayer.Money})");
 
         // เปิด Panel
         packResultPanel.SetActive(true);
@@ -50,8 +67,6 @@ public class ShopPackManager : MonoBehaviour
             if (card == null) continue;
 
             card.isUsable = true;
-           /* cardSlots[i].preserveAspect = true;
-cardSlots[i].rectTransform.sizeDelta = new Vector2(200, 450); // ขนาดเดียวกันทุกใบ*/
 
             // แสดงผลในช่อง
             cardSlots[i].sprite = card.icon;
@@ -59,6 +74,16 @@ cardSlots[i].rectTransform.sizeDelta = new Vector2(200, 450); // ขนาดเ
 
             Debug.Log($"ได้รับการ์ด: {card.cardName} ({card.rarity})");
         }
+    }
+
+    int GetPackPrice(int packIndex)
+    {
+        if (packPrices != null && packIndex >= 0 && packIndex < packPrices.Length)
+        {
+            return Mathf.Max(0, packPrices[packIndex]);
+        }
+
+        return 100;
     }
 
     CardData GetRandomCardForPack(int packIndex)

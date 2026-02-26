@@ -3,6 +3,10 @@ using UnityEngine.SceneManagement;
 
 public class BattleRewardButton : MonoBehaviour
 {
+    [Header("Money Reward")]
+    [SerializeField] private int minBattleMoneyReward = 30;
+    [SerializeField] private int maxBattleMoneyReward = 120;
+
     // เรียกฟังก์ชันนี้เมื่อกดปุ่ม "รับรางวัล" (Link ผ่าน OnClick ใน Inspector)
     public void OnClaimRewardClicked()
     {
@@ -22,6 +26,18 @@ public class BattleRewardButton : MonoBehaviour
 
                 // 2. 🎯 สั่งบวก WinCount และ Exp เข้าตัวจริงทันที
                 player.RecordBattleWin();
+
+                // 3. 💰 สุ่มเงินรางวัลหลังชนะ Battle
+                int reward = Random.Range(minBattleMoneyReward, maxBattleMoneyReward + 1);
+                player.PlayerMoney += reward;
+
+                // Sync เข้ากับ PlayerData ที่เป็นข้อมูลหลักให้เงินคงอยู่ข้ามด่าน/ข้ามซีน
+                if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
+                {
+                    GameData.Instance.selectedPlayer.AddMoney(reward);
+                }
+
+                Debug.Log($"💰 ได้รับเงินจาก Battle +{reward} (รวมตอนนี้ {player.PlayerMoney})");
 
                 found = true;
                 break;
