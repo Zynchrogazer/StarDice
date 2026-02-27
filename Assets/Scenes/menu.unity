@@ -763,51 +763,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 432141157}
   m_CullTransparentMesh: 1
---- !u!1 &501718204
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 501718206}
-  - component: {fileID: 501718205}
-  m_Layer: 0
-  m_Name: ChangerScene
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &501718205
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 501718204}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: eef55937b238ff54eae1dab325cd634e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  sceneName: MiniGameFappy
---- !u!4 &501718206
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 501718204}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 421.30566, y: 280.56317, z: 15.261279}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &755297002
 GameObject:
   m_ObjectHideFlags: 0
@@ -1207,7 +1162,6 @@ GameObject:
   - component: {fileID: 964879970}
   - component: {fileID: 964879969}
   - component: {fileID: 964879968}
-  - component: {fileID: 964879967}
   m_Layer: 5
   m_Name: 'No Button '
   m_TagString: Untagged
@@ -1235,19 +1189,6 @@ RectTransform:
   m_AnchoredPosition: {x: 233.5, y: -48}
   m_SizeDelta: {x: 187, y: 64}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &964879967
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 964879965}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bbb3ead12c98d444ebd3c1de73b8a0d6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  panelToClose: {fileID: 0}
 --- !u!114 &964879968
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1292,7 +1233,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 964879967}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: ClosePanel, Assembly-CSharp
         m_MethodName: Close
         m_Mode: 1
@@ -1608,7 +1549,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1496009527}
-  - component: {fileID: 1496009528}
   m_Layer: 0
   m_Name: quit system
   m_TagString: Untagged
@@ -1631,18 +1571,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1496009528
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1496009525}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0e63a38f2b04e3047b4fb81c76180e6b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &1587748224
 GameObject:
   m_ObjectHideFlags: 0
@@ -2444,7 +2372,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1912165122
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2766,7 +2694,6 @@ SceneRoots:
   - {fileID: 1308441355}
   - {fileID: 2009850344}
   - {fileID: 42596516}
-  - {fileID: 501718206}
   - {fileID: 792155505}
   - {fileID: 1496009527}
   - {fileID: 755297004}

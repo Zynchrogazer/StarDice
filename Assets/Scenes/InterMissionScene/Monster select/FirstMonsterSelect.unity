@@ -3956,7 +3956,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 823512307}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: ChangeSceneButton, Assembly-CSharp
         m_MethodName: GoToScene
         m_Mode: 1
@@ -4338,7 +4338,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1526614022}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: CharacterSelectMenu, Assembly-CSharp
         m_MethodName: SelectCharacter
         m_Mode: 5
@@ -4989,7 +4989,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 286391922}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bbb3ead12c98d444ebd3c1de73b8a0d6, type: 3}
+  m_Script: {fileID: 11500000, guid: 5f7b916b59663804681e5f66295d953b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   panelToClose: {fileID: 1388552610}
@@ -6464,7 +6464,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 401582384}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bbb3ead12c98d444ebd3c1de73b8a0d6, type: 3}
+  m_Script: {fileID: 11500000, guid: 5f7b916b59663804681e5f66295d953b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   panelToClose: {fileID: 1713344464}
@@ -8249,7 +8249,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1526614022}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: CharacterSelectMenu, Assembly-CSharp
         m_MethodName: SelectCharacter
         m_Mode: 5
@@ -8858,7 +8858,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 535426175}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bbb3ead12c98d444ebd3c1de73b8a0d6, type: 3}
+  m_Script: {fileID: 11500000, guid: 5f7b916b59663804681e5f66295d953b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   panelToClose: {fileID: 1668636563}
@@ -11486,7 +11486,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 686792235}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bbb3ead12c98d444ebd3c1de73b8a0d6, type: 3}
+  m_Script: {fileID: 11500000, guid: 5f7b916b59663804681e5f66295d953b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   panelToClose: {fileID: 541915169}
@@ -12767,51 +12767,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 804950840}
   m_CullTransparentMesh: 1
---- !u!1 &823512306
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 823512308}
-  - component: {fileID: 823512307}
-  m_Layer: 0
-  m_Name: 'test main '
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &823512307
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 823512306}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b8bc61dfbf767d64caa04e948057186f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  sceneToLoad: TestMain
---- !u!4 &823512308
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 823512306}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 357.5056, y: 214.62125, z: -46.772522}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &835063837
 GameObject:
   m_ObjectHideFlags: 0
@@ -13263,6 +13218,7 @@ RectTransform:
   - {fileID: 1713344465}
   - {fileID: 1388552611}
   - {fileID: 1730545502}
+  - {fileID: 1668636564}
   - {fileID: 541915170}
   - {fileID: 2062524329}
   m_Father: {fileID: 2000040330}
@@ -17100,7 +17056,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1526614022}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: CharacterSelectMenu, Assembly-CSharp
         m_MethodName: SelectCharacter
         m_Mode: 5
@@ -23152,7 +23108,6 @@ RectTransform:
   - {fileID: 1242480358}
   - {fileID: 1642139824}
   - {fileID: 286391923}
-  - {fileID: 1668636564}
   m_Father: {fileID: 856747789}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -24215,7 +24170,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1454328091}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bbb3ead12c98d444ebd3c1de73b8a0d6, type: 3}
+  m_Script: {fileID: 11500000, guid: 5f7b916b59663804681e5f66295d953b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   panelToClose: {fileID: 1730545501}
@@ -24589,7 +24544,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1526614022}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: CharacterSelectMenu, Assembly-CSharp
         m_MethodName: SelectCharacter
         m_Mode: 5
@@ -25770,50 +25725,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1525156519}
   m_CullTransparentMesh: 1
---- !u!1 &1526614019
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1526614021}
-  - component: {fileID: 1526614022}
-  m_Layer: 0
-  m_Name: Monster lock manager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1526614021
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1526614019}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 615.32214, y: 214.85814, z: -44.057358}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1526614022
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1526614019}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 146e8e439535203459ddd5a2c5f2cfb6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &1540793628
 GameObject:
   m_ObjectHideFlags: 0
@@ -28834,12 +28745,12 @@ RectTransform:
   - {fileID: 62119563}
   - {fileID: 1025256506}
   - {fileID: 535426176}
-  m_Father: {fileID: 1388552611}
+  m_Father: {fileID: 856747789}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0.000061035156}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 195.90216, y: 168.2472}
+  m_SizeDelta: {x: 1247.804, y: 779.6604}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1668636565
 MonoBehaviour:
@@ -30231,7 +30142,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1526614022}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: CharacterSelectMenu, Assembly-CSharp
         m_MethodName: SelectCharacter
         m_Mode: 5
@@ -35928,7 +35839,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1526614022}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: CharacterSelectMenu, Assembly-CSharp
         m_MethodName: SelectCharacter
         m_Mode: 5
@@ -36408,7 +36319,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 2131552458}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bbb3ead12c98d444ebd3c1de73b8a0d6, type: 3}
+  m_Script: {fileID: 11500000, guid: 5f7b916b59663804681e5f66295d953b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   panelToClose: {fileID: 2062524328}
@@ -36789,10 +36700,8 @@ SceneRoots:
   - {fileID: 1613853833}
   - {fileID: 2131735821}
   - {fileID: 1366073250}
-  - {fileID: 823512308}
   - {fileID: 430770408}
   - {fileID: 1653643879}
   - {fileID: 993787847}
-  - {fileID: 1526614021}
   - {fileID: 499396934}
   - {fileID: 1357349009}

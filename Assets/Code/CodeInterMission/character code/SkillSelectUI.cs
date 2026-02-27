@@ -23,16 +23,34 @@ public class SkillSelectUI : MonoBehaviour
 
     private bool randomButtonClicked = false;
 
+ 
+    public Image skillSlot1; // ลากช่องรูปสกิล 1 มาใส่
+    public Image skillSlot2; // ลากช่องรูปสกิล 2 มาใส่
+    public Image skillSlot3; // ลากช่องรูปสกิล 3 มาใส่
     void Start()
     {
         // ล็อคสกิล 3–9 เริ่มต้น
-        for (int i = 3; i < playerData.allSkills.Length; i++)
+      /*  for (int i = 3; i < playerData.allSkills.Length; i++)
         {
             if (playerData.allSkills[i] != null)
                 playerData.allSkills[i].isLocked = true;
-        }
+        }*/
 
         // ตั้งปุ่มสกิล
+
+        if (playerData != null && playerData.allSkills.Length >= 3 && playerData.skills.Length >= 3)
+        {
+            // บังคับยัดข้อมูลสกิล 1, 2, 3 เข้าช่อง
+            playerData.skills[0] = playerData.allSkills[0];
+            playerData.skills[1] = playerData.allSkills[1];
+            playerData.skills[2] = playerData.allSkills[2];
+
+            // บังคับเปลี่ยนรูปภาพหน้าจอ ให้ตรงกับที่เพิ่งยัดเข้าไปเป๊ะๆ
+            if (skillSlot1 != null) skillSlot1.sprite = playerData.skills[0].icon;
+            if (skillSlot2 != null) skillSlot2.sprite = playerData.skills[1].icon;
+            if (skillSlot3 != null) skillSlot3.sprite = playerData.skills[2].icon;
+        }
+        
         for (int i = 0; i < changeSkillButtons.Length; i++)
         {
             int index = i;
