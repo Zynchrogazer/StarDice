@@ -12,7 +12,7 @@ public class ChoiceUIManager : MonoBehaviour
     public GameObject choiceArrowPrefab; // เปลี่ยนจาก Button เป็น GameObject
 
     [Tooltip("ตำแหน่งความสูงที่จะให้ลูกศรลอยเหนือช่อง")]
-    public float yOffset = 0.1f;
+    public float yOffset = 0.2f;
 
     // List สำหรับเก็บลูกศรที่สร้างขึ้นมาทั้งหมด เพื่อใช้ในการลบทิ้ง
     private List<GameObject> spawnedArrows = new List<GameObject>();
@@ -69,4 +69,5 @@ public class ChoiceUIManager : MonoBehaviour
         }
         spawnedArrows.Clear();
     }
+
 }

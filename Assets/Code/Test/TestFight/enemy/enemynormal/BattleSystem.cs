@@ -157,40 +157,71 @@ public class BattleSystem : MonoBehaviour
 
     private List<CardData> selectedCards = new List<CardData>();
     void Start()
-    { Debug.Log(">>> BattleSystem เริ่มทำงานแล้วนะ! <<<");
- GameEventManager.Instance.AddCount2(1);
-       ApplyEquippedItems();
+    {
+        Debug.Log(">>> BattleSystem เริ่มทำงานแล้วนะ! <<<");
 
-        if (GameData.Instance != null && GameData.Instance.selectedCards.Count > 0)
+        if (GameEventManager.Instance != null)
         {
-            List<CardData> myHand = new List<CardData>();
+            GameEventManager.Instance.AddCount2(1);
+        }
 
-        // 2. วนลูปหยิบการ์ดจาก DeckManager (cardUse คือเด็คที่เราจัดไว้)
-        foreach (var card in DeckManager.Instance.cardUse)
+        if (PlayerDataManager.Instance != null)
         {
-            if (card != null) // เช็คกันเหนียว เผื่อเป็นช่องว่าง
+            ApplyEquippedItems();
+        }
+
+        List<CardData> myHand = new List<CardData>();
+        if (DeckManager.Instance != null && DeckManager.Instance.cardUse != null)
+        {
+            foreach (var card in DeckManager.Instance.cardUse)
             {
-                myHand.Add(card);
+                if (card != null)
+                {
+                    myHand.Add(card);
+                }
             }
-        }
-
-        // 3. (Optional) ถ้าอยากให้เริ่มเกมจั่วแค่ 3 ใบแรก
-        if (myHand.Count > 4)
-        {
-            // ตัดให้เหลือแค่ 3 ใบแรก
-            myHand = myHand.GetRange(0, 4);
-        }
-
-        Debug.Log($"[BattleSystem] เจอการ์ดจาก DeckManager จำนวน {myHand.Count} ใบ");
-
-        // 4. ส่งการ์ดเข้าสู่ระบบ UI ของ BattleSystem
-        LoadSelectedCards(myHand);
         }
         else
         {
-            Debug.LogWarning("ไม่มีการ์ดที่สุ่มไว้ใน GameData");
+            Debug.LogWarning("[BattleSystem] DeckManager ยังไม่พร้อม จะไม่โหลดการ์ดในรอบนี้");
         }
+
+        if (myHand.Count > 4)
+        {
+            myHand = myHand.GetRange(0, 4);
+        }
+
+        if (myHand.Count > 0)
+        {
+            Debug.Log($"[BattleSystem] เจอการ์ดจาก DeckManager จำนวน {myHand.Count} ใบ");
+            LoadSelectedCards(myHand);
+        }
+        else
+        {
+            Debug.LogWarning("[BattleSystem] ไม่พบการ์ดสำหรับแสดงในฉากต่อสู้");
+        }
+
+        if (GameData.Instance == null)
+        {
+            Debug.LogError("[BattleSystem] ไม่พบ GameData ในฉาก ทำให้ไม่สามารถโหลดตัวละครผู้เล่นได้");
+            enabled = false;
+            return;
+        }
+
         selectedPlayer = GameData.Instance.selectedPlayer;
+        if (selectedPlayer == null)
+        {
+            Debug.LogWarning("[BattleSystem] GameData.selectedPlayer เป็นค่าว่าง ลอง fallback จาก PlayerPrefs");
+            LoadSelectedCharacter();
+        }
+
+        if (selectedPlayer == null)
+        {
+            Debug.LogError("[BattleSystem] ยังไม่พบข้อมูลตัวละครผู้เล่น ทำให้ตัวละครไม่โผล่");
+            enabled = false;
+            return;
+        }
+
         SetupPlayer();
         SetupEnemy();
         SetupButtons();

@@ -156,40 +156,75 @@ public class BattleSystemDark : MonoBehaviour
     int EnemyDarkWalk = 0;
     private List<CardData> selectedCards = new List<CardData>();
     void Start()
-    { Debug.Log(">>> BattleSystem เริ่มทำงานแล้วนะ! <<<");
- GameEventManager.Instance.AddCount2(1);
-       ApplyEquippedItems();
+    {
+        Debug.Log(">>> BattleSystemDark เริ่มทำงานแล้วนะ! <<<");
 
-        if (GameData.Instance != null && GameData.Instance.selectedCards.Count > 0)
+        if (GameEventManager.Instance != null)
         {
-            List<CardData> myHand = new List<CardData>();
-
-        // 2. วนลูปหยิบการ์ดจาก DeckManager (cardUse คือเด็คที่เราจัดไว้)
-        foreach (var card in DeckManager.Instance.cardUse)
-        {
-            if (card != null) // เช็คกันเหนียว เผื่อเป็นช่องว่าง
-            {
-                myHand.Add(card);
-            }
+            GameEventManager.Instance.AddCount2(1);
         }
 
-        // 3. (Optional) ถ้าอยากให้เริ่มเกมจั่วแค่ 3 ใบแรก
-        if (myHand.Count > 4)
+        if (PlayerDataManager.Instance != null)
         {
-            // ตัดให้เหลือแค่ 3 ใบแรก
-            myHand = myHand.GetRange(0, 4);
-        }
-
-        Debug.Log($"[BattleSystem] เจอการ์ดจาก DeckManager จำนวน {myHand.Count} ใบ");
-
-        // 4. ส่งการ์ดเข้าสู่ระบบ UI ของ BattleSystem
-        LoadSelectedCards(myHand);
+            ApplyEquippedItems();
         }
         else
         {
-            Debug.LogWarning("ไม่มีการ์ดที่สุ่มไว้ใน GameData");
+            Debug.LogWarning("[BattleSystemDark] ไม่พบ PlayerDataManager ข้ามการ ApplyEquippedItems");
         }
+
+        List<CardData> myHand = new List<CardData>();
+        if (DeckManager.Instance != null && DeckManager.Instance.cardUse != null)
+        {
+            foreach (var card in DeckManager.Instance.cardUse)
+            {
+                if (card != null)
+                {
+                    myHand.Add(card);
+                }
+            }
+        }
+        else
+        {
+            Debug.LogWarning("[BattleSystemDark] DeckManager ยังไม่พร้อม จะไม่โหลดการ์ดในรอบนี้");
+        }
+
+        if (myHand.Count > 4)
+        {
+            myHand = myHand.GetRange(0, 4);
+        }
+
+        if (myHand.Count > 0)
+        {
+            Debug.Log($"[BattleSystemDark] เจอการ์ดจาก DeckManager จำนวน {myHand.Count} ใบ");
+            LoadSelectedCards(myHand);
+        }
+        else
+        {
+            Debug.LogWarning("[BattleSystemDark] ไม่พบการ์ดสำหรับแสดงในฉากต่อสู้");
+        }
+
+        if (GameData.Instance == null)
+        {
+            Debug.LogError("[BattleSystemDark] ไม่พบ GameData ในฉาก ทำให้ไม่สามารถโหลดตัวละครผู้เล่นได้");
+            enabled = false;
+            return;
+        }
+
         selectedPlayer = GameData.Instance.selectedPlayer;
+        if (selectedPlayer == null)
+        {
+            Debug.LogWarning("[BattleSystemDark] GameData.selectedPlayer เป็นค่าว่าง ลอง fallback จาก PlayerPrefs");
+            LoadSelectedCharacter();
+        }
+
+        if (selectedPlayer == null)
+        {
+            Debug.LogError("[BattleSystemDark] ยังไม่พบข้อมูลตัวละครผู้เล่น ทำให้ตัวละครไม่โผล่");
+            enabled = false;
+            return;
+        }
+
         SetupPlayer();
         SetupEnemy();
         SetupButtons();
@@ -219,19 +254,20 @@ public class BattleSystemDark : MonoBehaviour
 
     public void ApplyEquippedItems()
     {
-        // 1. ดึง Array ของไอเท็ม 2 ชิ้นมาจาก Manager
-        EquipmentData[] items = PlayerDataManager.Instance.equippedItems;
+        if (PlayerDataManager.Instance == null || PlayerDataManager.Instance.equippedItems == null)
+        {
+            Debug.LogWarning("[BattleSystemDark] ไม่สามารถโหลดอุปกรณ์ได้ เพราะ PlayerDataManager/equippedItems ยังไม่พร้อม");
+            return;
+        }
 
-        // 2. วนลูปเช็คทีละชิ้น (ทั้งช่อง 0 และช่อง 1)
+        EquipmentData[] items = PlayerDataManager.Instance.equippedItems;
         foreach (EquipmentData item in items)
         {
-            // เช็คว่าช่องนั้นมีของใส่จริงไหม (กัน Error)
             if (item != null)
             {
                 ApplyEffect(item.itemID);
             }
         }
-
     }
     public void ShowSkillEffectOnce(int index)
     {
