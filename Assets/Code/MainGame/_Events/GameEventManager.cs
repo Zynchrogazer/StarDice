@@ -563,8 +563,8 @@ public class GameEventManager : MonoBehaviour
         }
 
         // 3. ✋ หยุดค้างไว้ (Hold) เพื่อให้คนดูรู้ว่า "ได้อันนี้แหละ!"
-        Debug.Log($"[EventManager] หยุดที่: {selectedKey} (รอ 1.5 วินาที)");
-        yield return new WaitForSeconds(1.5f); // <-- อยากให้นานแค่ไหนแก้ตรงนี้
+        Debug.Log($"[EventManager] หยุดที่: {selectedKey} (รอ 3 วินาที)");
+        yield return new WaitForSeconds(3f); // ค้างที่ผลลัพธ์ประมาณ 3 วินาที
 
         // 4. 🧹 ซ่อนวงล้อ
         foreach (var p in randomEventPanels) p?.SetActive(false);
