@@ -8,12 +8,15 @@ public class PlayerUIController : MonoBehaviour
     public TMP_Text moneyText;
     public TMP_Text starText;
     public TMP_Text winText;
+    public TMP_Text levelText;
 
     // ตัวแปรสำหรับจำตัวละครที่เป็น "คนเล่น" (Human)
     private PlayerState myPlayer;
 
     private void Update()
     {
+        TryAutoAssignUIRefs();
+
         // 1. ถ้ายังหาตัวคนเล่นไม่เจอ ให้ลองหาดู
         if (myPlayer == null)
         {
@@ -57,5 +60,31 @@ public class PlayerUIController : MonoBehaviour
 
         if (winText != null)
             winText.text = $"{myPlayer.WinCount}";
+
+        if (levelText != null)
+            levelText.text = $"Lv. {myPlayer.PlayerLevel}";
+    }
+
+    /// <summary>
+    /// กันกรณีลืมผูก UI ใน Inspector ของแต่ละ Board Scene
+    /// จะพยายามหา Text จากชื่อวัตถุอัตโนมัติแบบครั้งต่อครั้งจนกว่าจะครบ
+    /// </summary>
+    private void TryAutoAssignUIRefs()
+    {
+        if (hpText != null && moneyText != null && starText != null && winText != null && levelText != null)
+            return;
+
+        TMP_Text[] texts = FindObjectsByType<TMP_Text>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        foreach (var txt in texts)
+        {
+            if (txt == null) continue;
+            string n = txt.name.ToLower();
+
+            if (hpText == null && n.Contains("hp")) hpText = txt;
+            else if (moneyText == null && n.Contains("money")) moneyText = txt;
+            else if (starText == null && n.Contains("star")) starText = txt;
+            else if (winText == null && n.Contains("win")) winText = txt;
+            else if (levelText == null && (n.Contains("level") || n.Contains("lv"))) levelText = txt;
+        }
     }
 }
