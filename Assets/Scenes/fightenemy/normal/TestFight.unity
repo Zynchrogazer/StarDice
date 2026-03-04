@@ -712,6 +712,7 @@ MonoBehaviour:
   - {fileID: 197692920}
   - {fileID: 1388920022}
   - {fileID: 162763654}
+  sfxList: []
   playerturntext: {fileID: 431445524}
   enemyturntext: {fileID: 1150717984}
   elementType: 3
@@ -805,6 +806,12 @@ MonoBehaviour:
   - {fileID: 1141079641}
   - {fileID: 1690438962}
   - {fileID: 1311768495}
+  player: {fileID: 0}
+  itemImages: []
+  showImage: {fileID: 0}
+  Sword: 1
+  Armor: 2
+  WhiteFeather: 4
 --- !u!1 &145566218
 GameObject:
   m_ObjectHideFlags: 0
@@ -11537,6 +11544,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d210242891f8ac5458043693199ff1f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  minBattleMoneyReward: 30
+  maxBattleMoneyReward: 120
 --- !u!1001 &1662331186
 PrefabInstance:
   m_ObjectHideFlags: 0

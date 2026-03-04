@@ -605,7 +605,7 @@ public class GameEventManager : MonoBehaviour
         yield return new WaitForSeconds(1f);
         string[] Scenes = { "fightDarkNormal", "fightEarthNormal", "fightLightNormal", "fightWaterNormal", "fightWindNormal", "TestFight" };
         int randomIndex = Random.Range(0, Scenes.Length);
-        SceneManager.LoadScene(Scenes[5]);
+        SceneManager.LoadScene(Scenes[randomIndex]);
     }
 
     public int countroundbattle = 0; // ตัวนับรอบที่ตีกับศัตรู
