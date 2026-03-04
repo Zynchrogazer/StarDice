@@ -8,6 +8,7 @@ public class SkillManager : MonoBehaviour
     public HashSet<string> unlockedSkillIDs = new HashSet<string>();
 
     public int defaultSkillPoints = 5; // เก็บไว้เผื่อระบบเก่า
+    private int appliedPassiveStarBonus = 0;
 
     private void Awake()
     {
@@ -96,10 +97,13 @@ public class SkillManager : MonoBehaviour
         }
 
         int oldMaxHp = player.MaxHealth;
+        int oldAppliedStarBonus = appliedPassiveStarBonus;
 
         player.CurrentAttack = data.attackDamage + bonusAtk;
         player.MaxHealth = data.maxHP + bonusHp;
-        player.PlayerStar = bonusStar;
+        int starDelta = bonusStar - oldAppliedStarBonus;
+        player.PlayerStar = Mathf.Max(0, player.PlayerStar + starDelta);
+        appliedPassiveStarBonus = bonusStar;
 
         int hpDelta = player.MaxHealth - oldMaxHp;
         player.PlayerHealth = Mathf.Clamp(player.PlayerHealth + hpDelta, 0, player.MaxHealth);
