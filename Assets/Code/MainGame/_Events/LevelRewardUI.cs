@@ -154,11 +154,4 @@ public class LevelRewardUI : MonoBehaviour
         }
     }
 
-    private void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.E) && player != null)
-        {
-            player.GainExp(100); 
-        }
-    }
 }

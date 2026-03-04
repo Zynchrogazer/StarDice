@@ -36,6 +36,11 @@ public class PlayerState : MonoBehaviour
     public PlayerData selectedPlayerPreset { get; private set; }
     public List<CardData> selectedCards { get; private set; } = new List<CardData>();
 
+    // Snapshot ของค่าถาวรจาก PlayerData (ใช้รีเซ็ตเมื่อออกจาก Board)
+    private int persistentLevelSnapshot = 1;
+    private int persistentCurrentExpSnapshot = 0;
+    private int persistentMaxExpSnapshot = 100;
+
     public event System.Action OnDied;
     public event Action OnStatsUpdated;
     private bool isDefeatHandling = false;
@@ -66,11 +71,13 @@ public class PlayerState : MonoBehaviour
         }
 
         OnDied += HandleDefeat;
+        SceneManager.sceneLoaded += OnSceneLoaded;
     }
 
     private void OnDestroy()
     {
         OnDied -= HandleDefeat;
+        SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
     public void LoadFromPlayerData(PlayerData data)
@@ -96,6 +103,8 @@ public class PlayerState : MonoBehaviour
 
         // กันเหนียว: ถ้า MaxExp เป็น 0 ให้ตั้งค่าเริ่มต้น
         if (MaxExp <= 0) MaxExp = 100;
+
+        CachePersistentProgressSnapshot(data);
 
         Debug.Log($"[PlayerState] Loaded: Level {PlayerLevel}, HP {PlayerHealth}/{MaxHealth}");
     }
@@ -173,6 +182,39 @@ public class PlayerState : MonoBehaviour
         WinCount++;
         
         GainExp(50);
+    }
+
+    private void CachePersistentProgressSnapshot(PlayerData data)
+    {
+        if (data == null) return;
+
+        persistentLevelSnapshot = Mathf.Max(1, data.level);
+        persistentCurrentExpSnapshot = Mathf.Max(0, data.currentExp);
+        persistentMaxExpSnapshot = data.maxExp > 0 ? data.maxExp : 100;
+    }
+
+    private void RestorePersistentProgressToPlayerData()
+    {
+        if (selectedPlayerPreset == null) return;
+
+        selectedPlayerPreset.level = persistentLevelSnapshot;
+        selectedPlayerPreset.currentExp = persistentCurrentExpSnapshot;
+        selectedPlayerPreset.maxExp = persistentMaxExpSnapshot;
+    }
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        if (isAI || scene.name != IntermissionSceneName) return;
+
+        // เงินเป็นค่าถาวร -> sync กลับข้อมูลหลัก
+        if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
+        {
+            GameData.Instance.selectedPlayer.SetMoney(PlayerMoney);
+        }
+
+        // เลเวล/EXP ในบอร์ดเป็นค่าชั่วคราว -> รีเซ็ตและย้ำข้อมูลใน PlayerData
+        RestorePersistentProgressToPlayerData();
+        ResetInStageProgress();
     }
 
     private void HandleDefeat()
