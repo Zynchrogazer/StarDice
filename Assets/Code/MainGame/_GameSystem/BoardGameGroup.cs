@@ -5,6 +5,8 @@ public class BoardGameGroup : MonoBehaviour
 {
     public static BoardGameGroup Instance { get; private set; }
 
+    private bool shouldResetOnNextBoardEntry = false;
+
     [Header("Legacy fallback")]
     public string boardSceneName = "MainGame";
 
@@ -50,11 +52,22 @@ public class BoardGameGroup : MonoBehaviour
         {
             Debug.Log($"[BoardSystem] Welcome Home ({scene.name})! Showing Board.");
             ShowBoard(true);
+
+            if (shouldResetOnNextBoardEntry)
+            {
+                ResetBoardSessionState();
+                shouldResetOnNextBoardEntry = false;
+            }
         }
         else
         {
             Debug.Log($"[BoardSystem] Entering {scene.name}. Hiding Board.");
             ShowBoard(false);
+
+            if (scene.name == "InterMission")
+            {
+                shouldResetOnNextBoardEntry = true;
+            }
         }
     }
 
@@ -101,6 +114,27 @@ public class BoardGameGroup : MonoBehaviour
         }
 
         return false;
+    }
+
+
+    private void ResetBoardSessionState()
+    {
+        Debug.Log("[BoardSystem] ♻️ Reset board session state for fresh run.");
+
+        if (NormaSystem.Instance != null)
+        {
+            NormaSystem.Instance.ResetForNewBoardSession();
+        }
+
+        if (GameEventManager.Instance != null)
+        {
+            GameEventManager.Instance.ResetForNewBoardSession();
+        }
+
+        if (GameTurnManager.Instance != null)
+        {
+            GameTurnManager.Instance.ResetForNewBoardSession();
+        }
     }
 
     public void ShowBoard(bool show)

@@ -611,6 +611,14 @@ public class GameEventManager : MonoBehaviour
     public int countroundbattle = 0; // ตัวนับรอบที่ตีกับศัตรู
     public int countbattle = 0; // ตัวนับการเจอศัตรู
 
+    public void ResetForNewBoardSession()
+    {
+        currentEventTarget = null;
+        countbattle = 0;
+        countroundbattle = 0;
+        ResetEventStatus();
+    }
+
     public void AddCount1(int amount)
     {
         countroundbattle += amount;

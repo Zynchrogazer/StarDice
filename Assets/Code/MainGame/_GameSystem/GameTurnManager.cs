@@ -146,6 +146,35 @@ public class GameTurnManager : MonoBehaviour
         StartCoroutine(StartTurnRoutine());
     }
 
+
+    public void ResetForNewBoardSession()
+    {
+        StopAllCoroutines();
+        RefreshPlayers();
+
+        foreach (var player in allPlayers)
+        {
+            player?.ResetForNewBoardSession();
+        }
+
+        currentPlayerIndex = 0;
+        SetState(GameState.Idle);
+
+        PlayerStartSpawner.LastKnownPositions.Clear();
+        PlayerStartSpawner spawner = FindObjectOfType<PlayerStartSpawner>(true);
+        if (spawner != null)
+        {
+            spawner.SpawnAllPlayers();
+        }
+
+        if (GameEventManager.Instance != null)
+        {
+            GameEventManager.Instance.ResetEventStatus();
+        }
+
+        StartCoroutine(StartTurnRoutine());
+    }
+
     // ===== ⭐ 핵심: RETURN FROM BATTLE =====
     // เปลี่ยนจาก private void HandleReturnFromBattle() เป็น public
     public void HandleReturnFromBattle()

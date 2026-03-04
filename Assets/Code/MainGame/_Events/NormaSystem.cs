@@ -126,6 +126,34 @@ public class NormaSystem : MonoBehaviour
         }
     }
 
+
+    public void ResetForNewBoardSession()
+    {
+        currentNormaRank = 1;
+        selectedNorma = NormaType.Stars;
+        targetAmount = 999;
+
+        if (NormaUIManager.Instance != null)
+        {
+            NormaUIManager.Instance.UpdateInfoUI();
+        }
+
+        StopAllCoroutines();
+        StartCoroutine(PromptInitialSelectionWhenReady());
+    }
+
+    private IEnumerator PromptInitialSelectionWhenReady()
+    {
+        yield return new WaitUntil(() => GameTurnManager.CurrentPlayer != null);
+        yield return new WaitUntil(() => GameTurnManager.Instance != null && GameTurnManager.Instance.currentState == GameState.WaitingForRoll);
+        yield return new WaitForSeconds(0.2f);
+
+        if (currentNormaRank == 1)
+        {
+            PromptNormaSelection(2);
+        }
+    }
+
     private void OnEnable()
     {
         // ดักฟังข่าวเมื่อซีนพร้อม เพื่ออัปเดต UI 

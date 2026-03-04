@@ -217,6 +217,40 @@ public class PlayerState : MonoBehaviour
         ResetInStageProgress();
     }
 
+<<<<<<< ours
+=======
+
+    public void ResetForNewBoardSession()
+    {
+        if (isAI)
+        {
+            PlayerStar = 0;
+            WinCount = 0;
+            DebuffBurn = false;
+            hasIceEffect = false;
+            OnStatsUpdated?.Invoke();
+            return;
+        }
+
+        PlayerData sourceData = selectedPlayerPreset;
+        if (sourceData == null && GameData.Instance != null)
+        {
+            sourceData = GameData.Instance.selectedPlayer;
+        }
+
+        if (sourceData != null)
+        {
+            LoadFromPlayerData(sourceData);
+        }
+
+        PlayerStar = 0;
+        WinCount = 0;
+        DebuffBurn = false;
+        hasIceEffect = false;
+        OnStatsUpdated?.Invoke();
+    }
+
+>>>>>>> theirs
     private void HandleDefeat()
     {
         if (isDefeatHandling || isAI) return;
