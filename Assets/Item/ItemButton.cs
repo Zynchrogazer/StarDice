@@ -17,6 +17,24 @@ public class ItemButton : MonoBehaviour
 
     void OnEnable()
     {
+        if (PlayerDataManager.Instance != null)
+        {
+            PlayerDataManager.Instance.OnEquipmentChanged += RefreshState;
+        }
+
+        RefreshState();
+    }
+
+    void OnDisable()
+    {
+        if (PlayerDataManager.Instance != null)
+        {
+            PlayerDataManager.Instance.OnEquipmentChanged -= RefreshState;
+        }
+    }
+
+    private void RefreshState()
+    {
         if (itemData != null)
         {
             // 1. ตั้งรูปไอคอน
@@ -24,7 +42,7 @@ public class ItemButton : MonoBehaviour
 
             // 2. เช็คสถานะ
             bool isOwned = itemData.isOwned;
-            bool isEquipped = PlayerDataManager.Instance.IsItemEquipped(itemData);
+            bool isEquipped = PlayerDataManager.Instance != null && PlayerDataManager.Instance.IsItemEquipped(itemData);
 
             Button btn = GetComponent<Button>();
             
@@ -61,12 +79,23 @@ public class ItemButton : MonoBehaviour
 
             // *** สำคัญมาก: ต้องยัดค่าสีกลับเข้าไปในปุ่ม ***
             btn.colors = colors;
+
+            if (equippedOverlay != null)
+            {
+                equippedOverlay.SetActive(isEquipped);
+            }
         }
     }
 
     public void OnClick()
     {
         // ... (โค้ดเดิม)
+        if (PlayerDataManager.Instance == null)
+        {
+            Debug.LogWarning("[ItemButton] PlayerDataManager.Instance is null");
+            return;
+        }
+
         PlayerDataManager.Instance.EquipItem(itemData, targetSlotIndex);
        // if (panelManager != null) panelManager.ClosePanel();
         EquippedItemDisplay display = FindObjectOfType<EquippedItemDisplay>();

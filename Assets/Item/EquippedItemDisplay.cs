@@ -14,6 +14,19 @@ public class EquippedItemDisplay : MonoBehaviour
     {
         // เริ่ม Scene มาให้อัปเดตทันที (เผื่อข้าม Scene มา)
         UpdateUI();
+
+        if (PlayerDataManager.Instance != null)
+        {
+            PlayerDataManager.Instance.OnEquipmentChanged += UpdateUI;
+        }
+    }
+
+    void OnDestroy()
+    {
+        if (PlayerDataManager.Instance != null)
+        {
+            PlayerDataManager.Instance.OnEquipmentChanged -= UpdateUI;
+        }
     }
 
     // ฟังก์ชันสำหรับสั่งให้เปลี่ยนรูป

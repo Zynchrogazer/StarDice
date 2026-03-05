@@ -11,11 +11,20 @@ public class EquipmentManager : MonoBehaviour
 
     // ตัวแปร Dictionary เพื่อให้ค้นหาไอเท็มไวขึ้น (ไม่ต้องวนลูปทุกครั้ง)
     private Dictionary<ItemID, EquipmentData> equipmentMap = new Dictionary<ItemID, EquipmentData>();
+    private const string OwnershipPrefKeyPrefix = "EquipmentOwned_";
 
     private void Awake()
     {
-        if (Instance == null) Instance = this;
-        else Destroy(gameObject);
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+            return;
+        }
 
         // แปลง List เป็น Dictionary ตอนเริ่มเกมเพื่อให้ค้นหาไว
         foreach (var item in allEquipmentList)
@@ -25,6 +34,8 @@ public class EquipmentManager : MonoBehaviour
                 equipmentMap.Add(item.itemID, item);
             }
         }
+
+        LoadOwnershipStates();
     }
 
     // --- ฟังก์ชันที่คุณต้องการ: สั่งให้ isOwned เป็น true ---
@@ -36,6 +47,8 @@ public class EquipmentManager : MonoBehaviour
             
             // ตั้งค่าเป็น True
             item.isOwned = true;
+            PlayerPrefs.SetInt(OwnershipPrefKeyPrefix + idToUnlock, 1);
+            PlayerPrefs.Save();
             
             Debug.Log($"ปลดล็อกไอเท็มสำเร็จ: {item.itemName} ({item.itemID})");
 
@@ -63,5 +76,23 @@ public class EquipmentManager : MonoBehaviour
     public void TestUnlockSword()
     {
         UnlockItem(ItemID.Sword);
+    }
+
+    public EquipmentData GetEquipmentById(ItemID id)
+    {
+        equipmentMap.TryGetValue(id, out var data);
+        return data;
+    }
+
+    private void LoadOwnershipStates()
+    {
+        foreach (var pair in equipmentMap)
+        {
+            string key = OwnershipPrefKeyPrefix + pair.Key;
+            if (PlayerPrefs.HasKey(key))
+            {
+                pair.Value.isOwned = PlayerPrefs.GetInt(key) == 1;
+            }
+        }
     }
 }
