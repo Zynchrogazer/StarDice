@@ -141,6 +141,27 @@ public class PlayerData : ScriptableObject
         return true;
     }
 
+    public void ResetSkillLocksForStageStart(int initiallyUnlockedSkillCount = 3)
+    {
+        if (allSkills == null) return;
+
+        int unlockedCount = Mathf.Max(0, initiallyUnlockedSkillCount);
+
+        for (int i = 0; i < allSkills.Length; i++)
+        {
+            SkillData skill = allSkills[i];
+            if (skill == null) continue;
+
+            skill.isLocked = i >= unlockedCount;
+        }
+
+        if (skills == null || allSkills.Length < 3 || skills.Length < 3) return;
+
+        skills[0] = allSkills[0];
+        skills[1] = allSkills[1];
+        skills[2] = allSkills[2];
+    }
+
 
 
 }

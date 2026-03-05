@@ -86,13 +86,8 @@ if (playerData != null && playerData.allSkills.Length >= 3 && playerData.skills.
 
 private void ResetSkillLocksForStageStart()
 {
-    if (playerData == null || playerData.allSkills == null) return;
-
-    for (int i = 0; i < playerData.allSkills.Length; i++)
-    {
-        if (playerData.allSkills[i] != null)
-            playerData.allSkills[i].isLocked = i >= 3;
-    }
+    if (playerData == null) return;
+    playerData.ResetSkillLocksForStageStart();
 }
 
     public void RefreshSkillButtons()

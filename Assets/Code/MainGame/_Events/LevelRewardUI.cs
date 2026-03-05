@@ -79,15 +79,18 @@ public class LevelRewardUI : MonoBehaviour
 
             int milestoneReached = player.PlayerLevel / 10;
 
-            while (setup.nextMilestoneIndex < milestoneReached && setup.nextMilestoneIndex < setup.rewardPanels.Count)
+            while (setup.nextMilestoneIndex < milestoneReached)
             {
-                GameObject panelToShow = setup.rewardPanels[setup.nextMilestoneIndex];
-                
-                if (panelToShow != null)
+                // ปลดล็อคสกิลตาม milestone เสมอ แม้ไม่ได้ตั้ง reward panel ไว้
+                AutoUnlockOneSkill();
+
+                if (setup.nextMilestoneIndex < setup.rewardPanels.Count)
                 {
-                    panelToShow.SetActive(true); 
-                    
-                    AutoUnlockOneSkill(); // เรียกฟังก์ชันสุ่ม
+                    GameObject panelToShow = setup.rewardPanels[setup.nextMilestoneIndex];
+                    if (panelToShow != null)
+                    {
+                        panelToShow.SetActive(true);
+                    }
                 }
                 
                 setup.nextMilestoneIndex++; 
@@ -167,13 +170,48 @@ public class LevelRewardUI : MonoBehaviour
 
     private void ResetMilestoneProgress()
     {
+        string currentPlayerName = GetActiveCharacterName();
+
         foreach (var setup in rewardSetups)
         {
-            if (setup != null)
-            {
-                setup.nextMilestoneIndex = 0;
-            }
+            if (setup == null) continue;
+
+            bool isCorrectCharacter = string.IsNullOrEmpty(setup.characterName)
+                                      || string.Equals(setup.characterName.Trim(), currentPlayerName.Trim(), System.StringComparison.OrdinalIgnoreCase);
+
+            setup.nextMilestoneIndex = isCorrectCharacter ? LoadMilestoneProgress(setup) : 0;
         }
+    }
+
+    private string GetMilestoneSaveKey(CharacterRewardSetup setup)
+    {
+        string activeCharacter = GetActiveCharacterName();
+        string setupCharacter = (setup?.characterName ?? string.Empty).Trim();
+        string keyCharacter = string.IsNullOrEmpty(setupCharacter) ? activeCharacter : setupCharacter;
+
+        if (string.IsNullOrEmpty(keyCharacter))
+        {
+            keyCharacter = "UnknownCharacter";
+        }
+
+        return $"{RewardMilestoneKeyPrefix}{keyCharacter}";
+    }
+
+    private void SaveMilestoneProgress(CharacterRewardSetup setup)
+    {
+        if (setup == null) return;
+
+        string saveKey = GetMilestoneSaveKey(setup);
+        PlayerPrefs.SetInt(saveKey, Mathf.Max(0, setup.nextMilestoneIndex));
+        PlayerPrefs.Save();
+    }
+
+    private int LoadMilestoneProgress(CharacterRewardSetup setup)
+    {
+        if (setup == null) return 0;
+
+        string saveKey = GetMilestoneSaveKey(setup);
+        return Mathf.Max(0, PlayerPrefs.GetInt(saveKey, 0));
     }
 
     private void OnDestroy()
