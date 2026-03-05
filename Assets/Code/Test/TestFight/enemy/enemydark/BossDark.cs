@@ -255,7 +255,7 @@ public class BossDark : MonoBehaviour
     // เช็คทีเดียวตรงนี้เลย ปลอดภัย ไม่ต้องเขียนซ้ำ
     if (index < sfxList.Length && sfxList[index] != null)
     {
-        GetComponent<AudioSource>().PlayOneShot(sfxList[index]);
+        BattleAudioUtility.PlaySfx(this, sfxList, index);
     }
 }
 
