@@ -217,8 +217,7 @@ public class PlayerState : MonoBehaviour
         ResetInStageProgress();
     }
 
-<<<<<<< ours
-=======
+
 
     public void ResetForNewBoardSession()
     {
@@ -250,7 +249,7 @@ public class PlayerState : MonoBehaviour
         OnStatsUpdated?.Invoke();
     }
 
->>>>>>> theirs
+
     private void HandleDefeat()
     {
         if (isDefeatHandling || isAI) return;
