@@ -20,6 +20,7 @@ public class PlayerState : MonoBehaviour
     public int PlayerStar = 0;
     public int CurrentAttack;
     public bool DebuffBurn = false;
+    public int DebuffBurnTurnsRemaining = 0;
     public bool hasIceEffect = false;
     public ElementType PlayerElement { get; set; }
 
@@ -156,12 +157,21 @@ public class PlayerState : MonoBehaviour
         return true;
     }
 
+    public void ApplyBurnDebuff(int turns)
+    {
+        DebuffBurn = turns > 0;
+        DebuffBurnTurnsRemaining = Mathf.Max(0, turns);
+        OnStatsUpdated?.Invoke();
+    }
+
     public bool TryConsumeBurnDebuff(int burnDamage)
     {
-        if (!DebuffBurn) return false;
+        if (!DebuffBurn || DebuffBurnTurnsRemaining <= 0) return false;
 
-        DebuffBurn = false;
         TakeDamage(burnDamage);
+
+        DebuffBurnTurnsRemaining = Mathf.Max(0, DebuffBurnTurnsRemaining - 1);
+        DebuffBurn = DebuffBurnTurnsRemaining > 0;
         OnStatsUpdated?.Invoke();
         return true;
     }
@@ -242,6 +252,7 @@ public class PlayerState : MonoBehaviour
             PlayerStar = 0;
             WinCount = 0;
             DebuffBurn = false;
+            DebuffBurnTurnsRemaining = 0;
             hasIceEffect = false;
             OnStatsUpdated?.Invoke();
             return;
@@ -261,6 +272,7 @@ public class PlayerState : MonoBehaviour
         PlayerStar = 0;
         WinCount = 0;
         DebuffBurn = false;
+        DebuffBurnTurnsRemaining = 0;
         hasIceEffect = false;
         OnStatsUpdated?.Invoke();
     }
@@ -311,6 +323,7 @@ public class PlayerState : MonoBehaviour
         WinCount = 0;
         hasIceEffect = false;
         DebuffBurn = false;
+        DebuffBurnTurnsRemaining = 0;
         OnStatsUpdated?.Invoke();
     }
     // --- Other Methods ---

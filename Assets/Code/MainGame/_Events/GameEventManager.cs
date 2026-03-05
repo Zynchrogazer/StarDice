@@ -508,7 +508,14 @@ public class GameEventManager : MonoBehaviour
 
     private void LavaEffect(GameObject target)
     {
-        target.GetComponent<PlayerState>()?.TakeDamage(25);
+        PlayerState player = target.GetComponent<PlayerState>();
+        if (player != null)
+        {
+            player.TakeDamage(25);
+            player.ApplyBurnDebuff(3);
+            Debug.Log($"<color=orange>🔥 {target.name} ติดสถานะ Burn 3 เทิร์น</color>");
+        }
+
         ShowPanel("lavapanel", true);
     }
 
