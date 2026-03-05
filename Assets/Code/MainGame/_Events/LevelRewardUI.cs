@@ -15,6 +15,8 @@ public class CharacterRewardSetup
 
 public class LevelRewardUI : MonoBehaviour
 {
+    private const string RewardMilestoneKeyPrefix = "LEVEL_REWARD_MILESTONE_";
+
     [Header("References")]
     public PlayerState player;
     public TMP_Text levelText;
@@ -42,9 +44,11 @@ public class LevelRewardUI : MonoBehaviour
 
         if (player != null)
         {
+            LoadMilestoneProgress();
             player.OnStatsUpdated += HandleStatsUpdated;
             UpdateLevelText(); 
             UnlockStartingSkills(); 
+            CheckLevelRewards();
         }
     }
 
@@ -65,11 +69,12 @@ public class LevelRewardUI : MonoBehaviour
     private void CheckLevelRewards()
     {
         if (player == null || player.selectedPlayerPreset == null) return;
-        string currentPlayerName = player.selectedPlayerPreset.name;
+        string currentPlayerName = GetActiveCharacterName();
 
         foreach (var setup in rewardSetups)
         {
-            bool isCorrectCharacter = string.IsNullOrEmpty(setup.characterName) || setup.characterName.Trim() == currentPlayerName.Trim();
+            bool isCorrectCharacter = string.IsNullOrEmpty(setup.characterName)
+                                      || string.Equals(setup.characterName.Trim(), currentPlayerName.Trim(), System.StringComparison.OrdinalIgnoreCase);
             if (!isCorrectCharacter) continue;
 
             int milestoneReached = player.PlayerLevel / 10;
@@ -86,6 +91,7 @@ public class LevelRewardUI : MonoBehaviour
                 }
                 
                 setup.nextMilestoneIndex++; 
+                SaveMilestoneProgress(setup);
             }
         }
     }
@@ -128,11 +134,12 @@ public class LevelRewardUI : MonoBehaviour
     {
         if (player.selectedPlayerPreset == null) return;
 
-        string currentPlayerName = player.selectedPlayerPreset.name;
+        string currentPlayerName = GetActiveCharacterName();
 
         foreach (var setup in rewardSetups)
         {
-            if (setup.characterName.Trim() == currentPlayerName.Trim())
+            string setupName = setup.characterName == null ? string.Empty : setup.characterName.Trim();
+            if (string.Equals(setupName, currentPlayerName.Trim(), System.StringComparison.OrdinalIgnoreCase))
             {
                 foreach (Button btn in setup.startingSkills)
                 {
@@ -144,6 +151,41 @@ public class LevelRewardUI : MonoBehaviour
                 break; 
             }
         }
+    }
+
+    private string GetActiveCharacterName()
+    {
+        if (player?.selectedPlayerPreset == null) return string.Empty;
+
+        if (!string.IsNullOrWhiteSpace(player.selectedPlayerPreset.playerName))
+        {
+            return player.selectedPlayerPreset.playerName.Trim();
+        }
+
+        return player.selectedPlayerPreset.name.Trim();
+    }
+
+    private string GetMilestonePrefKey(CharacterRewardSetup setup)
+    {
+        string active = GetActiveCharacterName();
+        string setupName = string.IsNullOrWhiteSpace(setup.characterName) ? "ANY" : setup.characterName.Trim();
+        return $"{RewardMilestoneKeyPrefix}{active}_{setupName}";
+    }
+
+    private void LoadMilestoneProgress()
+    {
+        foreach (var setup in rewardSetups)
+        {
+            string key = GetMilestonePrefKey(setup);
+            setup.nextMilestoneIndex = Mathf.Max(0, PlayerPrefs.GetInt(key, 0));
+        }
+    }
+
+    private void SaveMilestoneProgress(CharacterRewardSetup setup)
+    {
+        string key = GetMilestonePrefKey(setup);
+        PlayerPrefs.SetInt(key, Mathf.Max(0, setup.nextMilestoneIndex));
+        PlayerPrefs.Save();
     }
 
     private void OnDestroy()
