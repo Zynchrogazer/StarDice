@@ -184,18 +184,21 @@ IEnumerator GameLoop()
 
     void EndGame()
     {
+        if (gameOverPanel != null && gameOverPanel.activeSelf) return;
+
         isGameOver = true;
         Debug.Log("🎯 Game Over!");
         phaseText.text = "Game Over";
 
          gameOverPanel.SetActive(true);
     finalScoreText.text = "Your Score: " + score.ToString();
+    MiniGameRewardService.TryGrantMoneyReward(score, "MemoryGame");
 
     // เพิ่ม EventListener ให้ปุ่ม
     nextSceneButton.onClick.RemoveAllListeners();
     nextSceneButton.onClick.AddListener(() =>
     {
-        UnityEngine.SceneManagement.SceneManager.LoadScene(1);
+        MiniGameRewardService.ReturnToBoardScene();
     });
 
     Debug.Log("🎯 Game Over!");

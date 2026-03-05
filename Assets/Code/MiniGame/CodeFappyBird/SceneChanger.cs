@@ -7,6 +7,14 @@ public class SceneChangeManager : MonoBehaviour
 
     public void GoToScene(string name)
 {
+    Time.timeScale = 1f;
+
+    if (string.IsNullOrWhiteSpace(name) || name == "BOARD")
+    {
+        MiniGameRewardService.ReturnToBoardScene();
+        return;
+    }
+
     SceneManager.LoadScene(name);
 }
 }

@@ -173,30 +173,11 @@ public class BattleSystemDark : MonoBehaviour
             Debug.LogWarning("[BattleSystemDark] ไม่พบ PlayerDataManager ข้ามการ ApplyEquippedItems");
         }
 
-        List<CardData> myHand = new List<CardData>();
-        if (DeckManager.Instance != null && DeckManager.Instance.cardUse != null)
-        {
-            foreach (var card in DeckManager.Instance.cardUse)
-            {
-                if (card != null)
-                {
-                    myHand.Add(card);
-                }
-            }
-        }
-        else
-        {
-            Debug.LogWarning("[BattleSystemDark] DeckManager ยังไม่พร้อม จะไม่โหลดการ์ดในรอบนี้");
-        }
-
-        if (myHand.Count > 4)
-        {
-            myHand = myHand.GetRange(0, 4);
-        }
+        List<CardData> myHand = BattleCardHandResolver.GetOpeningHand(4);
 
         if (myHand.Count > 0)
         {
-            Debug.Log($"[BattleSystemDark] เจอการ์ดจาก DeckManager จำนวน {myHand.Count} ใบ");
+            Debug.Log($"[BattleSystemDark] เจอการ์ดสำหรับเริ่มต่อสู้ {myHand.Count} ใบ");
             LoadSelectedCards(myHand);
         }
         else
@@ -4054,7 +4035,6 @@ void ApplyEffect(ItemID id)
 
 
 }
-
 
 
 

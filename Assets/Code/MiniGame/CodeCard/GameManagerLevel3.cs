@@ -173,10 +173,12 @@ public void SubtractScore(int amount)
 
 
 
-    void EndGame(bool won)
+void EndGame(bool won)
 {
     gameEnded = true;
     resultPanel.SetActive(true);
+
+    MiniGameRewardService.TryGrantMoneyReward(ScoreManager.Instance != null ? ScoreManager.Instance.totalScore : score, "CardMemory");
 
     if (won)
         resultText.text = "You matched all cards!\nMistakes: " + mistakes;
@@ -186,8 +188,11 @@ public void SubtractScore(int amount)
 
 void GoToNextScene()
 {
-    ScoreManager.Instance.ResetScore();
-    UnityEngine.SceneManagement.SceneManager.LoadScene(1); // หรือชื่อ Scene ถัดไป
+    if (ScoreManager.Instance != null)
+    {
+        ScoreManager.Instance.ResetScore();
+    }
+    MiniGameRewardService.ReturnToBoardScene();
 }
 
 
