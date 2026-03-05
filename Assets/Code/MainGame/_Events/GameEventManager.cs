@@ -192,10 +192,21 @@ public class GameEventManager : MonoBehaviour
             case "boss":StartCoroutine(BossBattleCoroutine());break;
             case "specialboss":StartCoroutine(SpecialBossBattleCoroutine());break;
             case "shop":
-                if (shopPanel != null) shopPanel.SetActive(true);
-                else GameTurnManager.Instance?.RequestEndTurn();
+                if (ShopManager.Instance != null)
+                {
+                    ShopManager.Instance.HandleShopOpened();
+                }
+                else if (shopPanel != null)
+                {
+                    shopPanel.SetActive(true);
+                }
+                else
+                {
+                    GameTurnManager.Instance?.RequestEndTurn();
+                }
                 break;
             case "draw": Draw(target); break;
+            case "lava": LavaEffect(target); break;
             case "windteleport": WindTeleportEffect(target); break;
             case "iceeffect": ApplyIceEffect(target); break;
             default:
@@ -494,6 +505,13 @@ public class GameEventManager : MonoBehaviour
         if (p != null) p.PlayerHealth += 10;
         ShowPanel("DrawCard", true);
     }
+
+    private void LavaEffect(GameObject target)
+    {
+        target.GetComponent<PlayerState>()?.TakeDamage(25);
+        ShowPanel("lavapanel", true);
+    }
+
     public void TriggerRandomEvent(GameObject target) { currentEventTarget = target; StartCoroutine(RandomEventCoroutine()); }
     public void TriggerMinigameEvent(GameObject target) { currentEventTarget = target; StartCoroutine(RandomMinigameEventCoroutine()); }
 

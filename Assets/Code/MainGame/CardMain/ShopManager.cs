@@ -22,8 +22,7 @@ public class ShopManager : MonoBehaviour
     // ⭐ เพิ่มตรงนี้: ทันทีที่หน้าร้านถูกเปิด (SetActive true) มันจะสุ่มของให้เองทันที
     private void OnEnable()
     {
-        // เช็คก่อนว่ามีข้อมูลครบไหม (กัน Error ตอนเริ่มเกม)
-        if (allPossibleCards != null && allPossibleCards.Count > 0 && shopSlots != null)
+        if (shopPanel != null && shopPanel.activeInHierarchy)
         {
             RefreshShopItems();
         }
@@ -35,8 +34,19 @@ public class ShopManager : MonoBehaviour
 
     public void OpenShop()
     {
-        shopPanel.SetActive(true); 
-        // ไม่ต้องเรียก RefreshShopItems() ตรงนี้แล้ว เพราะ OnEnable จะทำงานให้เองอัตโนมัติ
+        HandleShopOpened();
+    }
+
+    public void HandleShopOpened()
+    {
+        if (shopPanel == null)
+        {
+            Debug.LogError("[Shop] shopPanel ยังไม่ได้ตั้งค่าใน ShopManager");
+            return;
+        }
+
+        shopPanel.SetActive(true);
+        RefreshShopItems();
     }
 
     public void CloseShop()
@@ -62,8 +72,43 @@ public class ShopManager : MonoBehaviour
     // Logic การทำงาน
     // ----------------------------------------------------------------
 
+    public bool TryBuyCard(DiceLockCardItem card)
+    {
+        if (card == null) return false;
+
+        if (GameTurnManager.CurrentPlayer == null)
+        {
+            Debug.LogError("[Shop] CurrentPlayer ไม่พร้อมใช้งาน");
+            return false;
+        }
+
+        if (PlayerCardInventory.Instance == null)
+        {
+            Debug.LogError("[Shop] ไม่พบ PlayerCardInventory.Instance");
+            return false;
+        }
+
+        PlayerState buyer = GameTurnManager.CurrentPlayer;
+        if (buyer.PlayerMoney < card.price)
+        {
+            Debug.Log($"[Shop] เงินไม่พอสำหรับ {card.cardName} (ต้องการ {card.price}, มี {buyer.PlayerMoney})");
+            return false;
+        }
+
+        buyer.PlayerMoney -= card.price;
+        PlayerCardInventory.Instance.ObtainCard(card);
+        Debug.Log($"[Shop] ซื้อ {card.cardName} สำเร็จ เหลือเงิน {buyer.PlayerMoney}");
+        return true;
+    }
+
     private void RefreshShopItems()
     {
+        if (allPossibleCards == null || shopSlots == null)
+        {
+            Debug.LogWarning("[Shop] ยังตั้งค่า allPossibleCards หรือ shopSlots ไม่ครบ");
+            return;
+        }
+
         Debug.Log("🔄 Shop: กำลังจัดเรียงสินค้า...");
 
         // 1. สร้าง List สำรอง
@@ -76,8 +121,7 @@ public class ShopManager : MonoBehaviour
             // ถ้าการ์ดหมดกองแล้ว
             if (tempDeck.Count == 0) 
             {
-                // สามารถเลือกที่จะปิด Slot หรือปล่อยว่างไว้
-                // shopSlots[i].gameObject.SetActive(false); 
+                shopSlots[i].ClearSlot();
                 continue; 
             }
 

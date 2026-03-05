@@ -87,6 +87,16 @@ public class GameTurnManager : MonoBehaviour
             Debug.Log($"<color=cyan>[Turn] รอ UI ประกาศเทิร์น...</color>");
             OnTurnChanged?.Invoke(CurrentPlayer.isAI);
 
+            if (CurrentPlayer.TryConsumeBurnDebuff(10))
+            {
+                Debug.Log($"<color=orange>🔥 Burn ticks on {CurrentPlayer.name} (-10 HP)</color>");
+                yield return new WaitForSeconds(0.5f);
+            }
+
+            if (CurrentPlayer.PlayerHealth <= 0)
+            {
+                yield break;
+            }
         }
         yield return new WaitForSeconds(1.0f);
 

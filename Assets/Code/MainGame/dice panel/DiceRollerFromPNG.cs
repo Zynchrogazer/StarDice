@@ -137,12 +137,21 @@ public class DiceRollerFromPNG : MonoBehaviour
         // --- ช่วงสรุปผล ---
         int finalResult = (forcedResult != -1) ? forcedResult : Random.Range(1, dicePanels.Length + 1);
 
+        PlayerState currentPlayer = GameTurnManager.CurrentPlayer;
+        if (currentPlayer != null && currentPlayer.TryConsumeIceDebuff())
+        {
+            finalResult = Mathf.Max(1, finalResult / 2);
+            Debug.Log($"<color=cyan>❄️ Ice Debuff activated! Dice result reduced to {finalResult}</color>");
+        }
+
         ShowOnlyPanel(finalResult);
         if (sfxSource != null && rollResultSound != null) sfxSource.PlayOneShot(rollResultSound, 1.0f);
 
         Debug.Log($"🎲 ลูกเต๋าออก {finalResult} (Multiplier: x{pendingMultiplier})");
         yield return new WaitForSeconds(0.5f);
         int finalnubmber = finalResult* pendingMultiplier;
+        pendingMultiplier = 1;
+
         HideAllPanels();
         isRolling = false;
 

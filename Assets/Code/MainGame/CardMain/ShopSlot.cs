@@ -12,6 +12,33 @@ public class ShopSlot : MonoBehaviour
 
     private DiceLockCardItem cardInThisSlot;
 
+    public void ClearSlot()
+    {
+        cardInThisSlot = null;
+
+        if (cardDisplayImage != null)
+        {
+            cardDisplayImage.sprite = null;
+            cardDisplayImage.color = new Color(1f, 1f, 1f, 0f);
+        }
+
+        if (cardNameText != null)
+        {
+            cardNameText.text = "Sold Out";
+        }
+
+        if (priceText != null)
+        {
+            priceText.text = "-";
+        }
+
+        if (buyButton != null)
+        {
+            buyButton.interactable = false;
+            buyButton.onClick.RemoveAllListeners();
+        }
+    }
+
     public void Setup(DiceLockCardItem card)
     {
         // เช็คก่อนว่าการ์ดว่างไหม
@@ -55,12 +82,18 @@ public class ShopSlot : MonoBehaviour
 
     void BuyThisCard()
     {
-        if (cardInThisSlot != null)
+        if (cardInThisSlot == null) return;
+
+        if (ShopManager.Instance == null)
         {
-            PlayerCardInventory.Instance.ObtainCard(cardInThisSlot);
-            
-            // (Optional) ถ้าอยากให้ซื้อแล้วปุ่มหายไป หรือขึ้นว่า Sold Out ก็เขียนเพิ่มตรงนี้
-            // buyButton.interactable = false;
+            Debug.LogError("[ShopSlot] ไม่พบ ShopManager.Instance");
+            return;
+        }
+
+        bool purchased = ShopManager.Instance.TryBuyCard(cardInThisSlot);
+        if (purchased)
+        {
+            ClearSlot();
         }
     }
 }

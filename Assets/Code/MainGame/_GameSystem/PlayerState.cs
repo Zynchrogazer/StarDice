@@ -148,6 +148,24 @@ public class PlayerState : MonoBehaviour
         }
     }
 
+    public bool TryConsumeIceDebuff()
+    {
+        if (!hasIceEffect) return false;
+        hasIceEffect = false;
+        OnStatsUpdated?.Invoke();
+        return true;
+    }
+
+    public bool TryConsumeBurnDebuff(int burnDamage)
+    {
+        if (!DebuffBurn) return false;
+
+        DebuffBurn = false;
+        TakeDamage(burnDamage);
+        OnStatsUpdated?.Invoke();
+        return true;
+    }
+
     // --- Level & EXP Logic (New) ---
 
     public void GainExp(int amount)
@@ -217,8 +235,6 @@ public class PlayerState : MonoBehaviour
         ResetInStageProgress();
     }
 
-
-
     public void ResetForNewBoardSession()
     {
         if (isAI)
@@ -248,7 +264,6 @@ public class PlayerState : MonoBehaviour
         hasIceEffect = false;
         OnStatsUpdated?.Invoke();
     }
-
 
     private void HandleDefeat()
     {
