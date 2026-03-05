@@ -29,12 +29,8 @@ public class SkillSelectUI : MonoBehaviour
     public Image skillSlot3; // ลากช่องรูปสกิล 3 มาใส่
     void Start()
     {
-        // ล็อคสกิล 3–9 เริ่มต้น
-      /*  for (int i = 3; i < playerData.allSkills.Length; i++)
-        {
-            if (playerData.allSkills[i] != null)
-                playerData.allSkills[i].isLocked = true;
-        }*/
+        // รีเซ็ตสถานะสกิลทุกครั้งที่เริ่มหน้าจอ
+        ResetSkillLocksForStageStart();
 
         // ตั้งปุ่มสกิล
 
@@ -90,6 +86,17 @@ public class SkillSelectUI : MonoBehaviour
 
         RefreshSkillButtons();
     }
+
+private void ResetSkillLocksForStageStart()
+{
+    if (playerData == null || playerData.allSkills == null) return;
+
+    for (int i = 0; i < playerData.allSkills.Length; i++)
+    {
+        if (playerData.allSkills[i] != null)
+            playerData.allSkills[i].isLocked = i >= 3;
+    }
+}
 
     public void RefreshSkillButtons()
     {

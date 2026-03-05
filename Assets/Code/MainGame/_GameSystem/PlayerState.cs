@@ -63,6 +63,7 @@ public class PlayerState : MonoBehaviour
         if (!isAI && GameData.Instance != null)
         {
             LoadFromPlayerData(GameData.Instance.selectedPlayer);
+            ResetStageSkillUnlocks(GameData.Instance.selectedPlayer);
             SetSelectedCards(GameData.Instance.selectedCards);
         }
         else if (isAI)
@@ -267,6 +268,7 @@ public class PlayerState : MonoBehaviour
         if (sourceData != null)
         {
             LoadFromPlayerData(sourceData);
+            ResetStageSkillUnlocks(sourceData);
         }
 
         PlayerStar = 0;
@@ -275,6 +277,27 @@ public class PlayerState : MonoBehaviour
         DebuffBurnTurnsRemaining = 0;
         hasIceEffect = false;
         OnStatsUpdated?.Invoke();
+    }
+
+    private void ResetStageSkillUnlocks(PlayerData sourceData)
+    {
+        if (sourceData == null || sourceData.allSkills == null) return;
+
+        for (int i = 0; i < sourceData.allSkills.Length; i++)
+        {
+            SkillData skill = sourceData.allSkills[i];
+            if (skill == null) continue;
+
+            // เริ่มด่านใหม่: สกิลพื้นฐาน 3 ช่องแรกปลดล็อก, ที่เหลือล็อกกลับ
+            skill.isLocked = i >= 3;
+        }
+
+        if (sourceData.skills != null && sourceData.skills.Length >= 3 && sourceData.allSkills.Length >= 3)
+        {
+            sourceData.skills[0] = sourceData.allSkills[0];
+            sourceData.skills[1] = sourceData.allSkills[1];
+            sourceData.skills[2] = sourceData.allSkills[2];
+        }
     }
 
     private void HandleDefeat()

@@ -44,7 +44,7 @@ public class LevelRewardUI : MonoBehaviour
 
         if (player != null)
         {
-            LoadMilestoneProgress();
+            ResetMilestoneProgress();
             player.OnStatsUpdated += HandleStatsUpdated;
             UpdateLevelText(); 
             UnlockStartingSkills(); 
@@ -165,27 +165,15 @@ public class LevelRewardUI : MonoBehaviour
         return player.selectedPlayerPreset.name.Trim();
     }
 
-    private string GetMilestonePrefKey(CharacterRewardSetup setup)
-    {
-        string active = GetActiveCharacterName();
-        string setupName = string.IsNullOrWhiteSpace(setup.characterName) ? "ANY" : setup.characterName.Trim();
-        return $"{RewardMilestoneKeyPrefix}{active}_{setupName}";
-    }
-
-    private void LoadMilestoneProgress()
+    private void ResetMilestoneProgress()
     {
         foreach (var setup in rewardSetups)
         {
-            string key = GetMilestonePrefKey(setup);
-            setup.nextMilestoneIndex = Mathf.Max(0, PlayerPrefs.GetInt(key, 0));
+            if (setup != null)
+            {
+                setup.nextMilestoneIndex = 0;
+            }
         }
-    }
-
-    private void SaveMilestoneProgress(CharacterRewardSetup setup)
-    {
-        string key = GetMilestonePrefKey(setup);
-        PlayerPrefs.SetInt(key, Mathf.Max(0, setup.nextMilestoneIndex));
-        PlayerPrefs.Save();
     }
 
     private void OnDestroy()
