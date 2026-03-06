@@ -519,8 +519,40 @@ public class GameEventManager : MonoBehaviour
         ShowPanel("lavapanel", true);
     }
 
-    public void TriggerRandomEvent(GameObject target) { currentEventTarget = target; StartCoroutine(RandomEventCoroutine()); }
-    public void TriggerMinigameEvent(GameObject target) { currentEventTarget = target; StartCoroutine(RandomMinigameEventCoroutine()); }
+    public void TriggerRandomEvent(GameObject target)
+    {
+        currentEventTarget = target;
+        if (!CanSpinRandomEvent(randomEventKeys, "RandomEvent"))
+        {
+            GameTurnManager.Instance?.RequestEndTurn();
+            return;
+        }
+
+        StartCoroutine(RandomEventCoroutine());
+    }
+
+    public void TriggerMinigameEvent(GameObject target)
+    {
+        currentEventTarget = target;
+        if (!CanSpinRandomEvent(randomMinigameEventKeys, "RandomMinigame"))
+        {
+            GameTurnManager.Instance?.RequestEndTurn();
+            return;
+        }
+
+        StartCoroutine(RandomMinigameEventCoroutine());
+    }
+
+    private bool CanSpinRandomEvent(string[] eventKeys, string source)
+    {
+        if (eventKeys == null || eventKeys.Length == 0)
+        {
+            Debug.LogWarning($"[EventManager] {source} keys ว่าง -> จบเทิร์นเพื่อกันเกมค้าง");
+            return false;
+        }
+
+        return true;
+    }
 
     // ในไฟล์ GameEventManager.cs
 
@@ -547,6 +579,7 @@ public class GameEventManager : MonoBehaviour
             {
                 // ถ้าไม่เท่ากัน ก็สุ่มรูปที่จะหยุดมั่วๆ ไปก่อน
                 finalPanelIndex = Random.Range(0, randomEventPanels.Length);
+                Debug.LogWarning("[EventManager] randomEventPanels กับ randomEventKeys จำนวนไม่เท่ากัน -> ใช้การสุ่มรูปแยก");
             }
         }
 
@@ -605,21 +638,23 @@ public class GameEventManager : MonoBehaviour
     {
         isRandomSpinning = true;
         float elapsed = 0f;
+
         while (elapsed < randomSpinDuration)
         {
-            int index = Random.Range(0, randomMinigameEventPanels.Length);
-            for (int i = 0; i < randomMinigameEventPanels.Length; i++) randomMinigameEventPanels[i]?.SetActive(i == index);
+            if (randomMinigameEventPanels != null && randomMinigameEventPanels.Length > 0)
+            {
+                int index = Random.Range(0, randomMinigameEventPanels.Length);
+                for (int i = 0; i < randomMinigameEventPanels.Length; i++) randomMinigameEventPanels[i]?.SetActive(i == index);
+            }
+
             elapsed += spinInterval;
             yield return new WaitForSeconds(spinInterval);
         }
+
         foreach (var p in randomMinigameEventPanels) p?.SetActive(false);
 
-        if (randomMinigameEventKeys.Length > 0)
-        {
-            string selected = randomMinigameEventKeys[Random.Range(0, randomMinigameEventKeys.Length)];
-            TriggerEvent(selected, currentEventTarget);
-        }
-        else { isRandomSpinning = false; GameTurnManager.Instance.RequestEndTurn(); }
+        string selected = randomMinigameEventKeys[Random.Range(0, randomMinigameEventKeys.Length)];
+        TriggerEvent(selected, currentEventTarget);
         isRandomSpinning = false;
     }
 
