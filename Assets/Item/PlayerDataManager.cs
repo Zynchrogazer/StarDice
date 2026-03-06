@@ -3,15 +3,42 @@ using System;
 
 public class PlayerDataManager : MonoBehaviour
 {
-    public static PlayerDataManager Instance;
+    public static PlayerDataManager Instance { get; private set; }
+
     public EquipmentData[] equippedItems = new EquipmentData[2];
-    public Action OnEquipmentChanged; 
+    public Action OnEquipmentChanged;
     private const string EquipSlotPrefKeyPrefix = "EquipSlot_";
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void Bootstrap()
+    {
+        if (Instance != null)
+        {
+            return;
+        }
+
+        Instance = FindFirstObjectByType<PlayerDataManager>();
+        if (Instance != null)
+        {
+            return;
+        }
+
+        GameObject managerObject = new GameObject(nameof(PlayerDataManager));
+        Instance = managerObject.AddComponent<PlayerDataManager>();
+    }
 
     private void Awake()
     {
-        if (Instance == null) { Instance = this; DontDestroyOnLoad(gameObject); }
-        else { Destroy(gameObject); return; }
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else if (Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
 
         LoadEquippedItems();
     }
@@ -59,6 +86,7 @@ public class PlayerDataManager : MonoBehaviour
         SaveEquippedItems();
         OnEquipmentChanged?.Invoke();
     }
+
     public bool IsItemEquipped(EquipmentData itemToCheck)
     {
         foreach (var equipped in equippedItems)
@@ -82,6 +110,9 @@ public class PlayerDataManager : MonoBehaviour
 
         PlayerPrefs.Save();
     }
+
+   
+
 
     private void LoadEquippedItems()
     {

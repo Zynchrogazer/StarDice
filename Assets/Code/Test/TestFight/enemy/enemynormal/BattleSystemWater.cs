@@ -198,6 +198,12 @@ public class BattleSystemWater : MonoBehaviour
 
     public void ApplyEquippedItems()
     {
+        if (PlayerDataManager.Instance == null || PlayerDataManager.Instance.equippedItems == null)
+        {
+            Debug.LogWarning("[BattleSystemWater] ไม่สามารถโหลดอุปกรณ์ได้ เพราะ PlayerDataManager/equippedItems ยังไม่พร้อม");
+            return;
+        }
+
         // 1. ดึง Array ของไอเท็ม 2 ชิ้นมาจาก Manager
         EquipmentData[] items = PlayerDataManager.Instance.equippedItems;
 
