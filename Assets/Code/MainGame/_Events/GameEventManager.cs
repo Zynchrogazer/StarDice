@@ -207,6 +207,7 @@ public class GameEventManager : MonoBehaviour
                 break;
             case "draw": Draw(target); break;
             case "lava": LavaEffect(target); break;
+            case "move": RandomMoveEffect(target); break;
             case "windteleport": WindTeleportEffect(target); break;
             case "iceeffect": ApplyIceEffect(target); break;
             default:
@@ -517,6 +518,29 @@ public class GameEventManager : MonoBehaviour
         }
 
         ShowPanel("lavapanel", true);
+    }
+
+    private void RandomMoveEffect(GameObject target)
+    {
+        if (target == null)
+        {
+            GameTurnManager.Instance?.RequestEndTurn();
+            return;
+        }
+
+        PlayerPathWalker walker = target.GetComponent<PlayerPathWalker>();
+        if (walker == null)
+        {
+            Debug.LogWarning("[EventManager] Random move event หา PlayerPathWalker ไม่เจอ -> จบเทิร์น");
+            GameTurnManager.Instance?.RequestEndTurn();
+            return;
+        }
+
+        int randomSteps = Random.Range(1, 7);
+        Debug.Log($"[EventManager] Random move event: {target.name} เดินเพิ่ม {randomSteps} ช่อง");
+
+        // ส่งต่อให้ระบบเดินหลักทำงานต่อ (เมื่อเดินจบจะไปเช็คช่องและยิง Event ต่อเอง)
+        walker.ExecuteMove(randomSteps);
     }
 
     public void TriggerRandomEvent(GameObject target)
