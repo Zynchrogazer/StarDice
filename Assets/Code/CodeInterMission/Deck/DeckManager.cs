@@ -167,7 +167,38 @@ public class DeckManager : MonoBehaviour
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
+        if (scene.name == "FirstDeck")
+        {
+            ResetDeckForFirstDeckScene();
+        }
+
         StartCoroutine(WaitAndBindUI());
+    }
+
+    void ResetDeckForFirstDeckScene()
+    {
+        // เคลียร์เด็คที่เคยจัดไว้ทั้งหมด
+        for (int i = 0; i < cardUse.Length; i++)
+        {
+            cardUse[i] = null;
+        }
+
+        // ปลดล็อกเฉพาะการ์ดระดับ Common และล็อกความหายากอื่น
+        foreach (var card in allCards)
+        {
+            if (card == null) continue;
+
+            bool shouldBeUsable = card.rarity == CardRarity.Common;
+            card.isUsable = shouldBeUsable;
+            PlayerPrefs.SetInt("CardState_" + card.cardName, shouldBeUsable ? 1 : 0);
+        }
+
+        SaveCurrentDeck();
+        PlayerPrefs.Save();
+
+        UpdateUseCardUI();
+        SortAndRefreshCards();
+        Debug.Log("♻️ Entered FirstDeck: Deck reset and only Common cards are unlocked.");
     }
 
     private IEnumerator WaitAndBindUI()
