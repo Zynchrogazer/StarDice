@@ -141,11 +141,14 @@ public class PlayerData : ScriptableObject
         return true;
     }
 
-    public void ResetSkillLocksForStageStart(int initiallyUnlockedSkillCount = 3)
+    public void ResetSkillLocksForStageStart(int initiallyUnlockedSkillCount = 3, int currentLevelOverride = -1)
     {
         if (allSkills == null) return;
 
-        int unlockedCount = Mathf.Max(0, initiallyUnlockedSkillCount);
+        int levelToUse = currentLevelOverride >= 0 ? currentLevelOverride : level;
+        int levelMilestoneUnlockCount = Mathf.Max(0, levelToUse / 10);
+        int unlockedCount = Mathf.Max(0, initiallyUnlockedSkillCount + levelMilestoneUnlockCount);
+        unlockedCount = Mathf.Min(unlockedCount, allSkills.Length);
 
         for (int i = 0; i < allSkills.Length; i++)
         {

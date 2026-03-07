@@ -426,8 +426,23 @@ public class BattleSystemEarth : MonoBehaviour
             }
         }
         attackButton.interactable = isPlayerTurn;
+        UpdateCardButtonsInteractivity();
     }
 
+    void UpdateCardButtonsInteractivity()
+    {
+        for (int i = 0; i < cardButtons.Length; i++)
+        {
+            if (cardButtons[i].gameObject.activeSelf && i < selectedCards.Count)
+            {
+                cardButtons[i].interactable = isPlayerTurn && !usedCards.Contains(selectedCards[i]);
+            }
+            else
+            {
+                cardButtons[i].interactable = false;
+            }
+        }
+    }
 
     void DoBasicAttack()
     {
@@ -441,6 +456,12 @@ public class BattleSystemEarth : MonoBehaviour
 
   void UseSkill(SkillData skill)
     {
+        if (!isPlayerTurn)
+        {
+            Debug.Log("ยังไม่ถึงเทิร์นของคุณ!");
+            return;
+        }
+
         StartCoroutine(MyDelay());
         if (!skillCooldowns.ContainsKey(skill))
             skillCooldowns[skill] = 0;
@@ -2996,6 +3017,12 @@ void DisableCardButton(int index)
 
     void UseCard(CardData card,int buttonIndex)
 {
+        if (!isPlayerTurn)
+        {
+            Debug.Log("ยังไม่ถึงเทิร์นของคุณ!");
+            return;
+        }
+
 playerturntext.gameObject.SetActive(false);
     enemyturntext.gameObject.SetActive(true);
 StartCoroutine(MyDelay());
