@@ -210,6 +210,12 @@ public class GameEventManager : MonoBehaviour
             case "move": RandomMoveEffect(target); break;
             case "windteleport": WindTeleportEffect(target); break;
             case "iceeffect": ApplyIceEffect(target); break;
+            case "minigamefappy":
+            case "level 1":
+            case "minigamespotmemory":
+            case "minigamemath":
+                StartCoroutine(LoadMinigameSceneCoroutine(eventName));
+                break;
             default:
                 if (eventPanels.ContainsKey(eventName.ToLower())) ShowPanel(eventName, true);
                 else GameTurnManager.Instance?.RequestEndTurn();
@@ -690,6 +696,35 @@ public class GameEventManager : MonoBehaviour
         string[] Scenes = { "fightDarkNormal", "fightEarthNormal", "fightLightNormal", "fightWaterNormal", "fightWindNormal", "TestFight" };
         int randomIndex = Random.Range(0, Scenes.Length);
         SceneManager.LoadScene(Scenes[randomIndex]);
+    }
+
+    private IEnumerator LoadMinigameSceneCoroutine(string minigameKey)
+    {
+        string sceneName = ResolveMinigameSceneName(minigameKey);
+        if (string.IsNullOrEmpty(sceneName))
+        {
+            Debug.LogWarning($"[EventManager] ไม่พบ Scene ของ minigame key '{minigameKey}' -> จบเทิร์น");
+            GameTurnManager.Instance?.RequestEndTurn();
+            yield break;
+        }
+
+        RememberCurrentBoardScene();
+        yield return null; // รอ 1 เฟรมให้ระบบ UI/Event เคลียร์ตัวเองก่อนย้ายซีน
+        SceneManager.LoadScene(sceneName);
+    }
+
+    private string ResolveMinigameSceneName(string minigameKey)
+    {
+        if (string.IsNullOrWhiteSpace(minigameKey)) return null;
+
+        switch (minigameKey.Trim().ToLower())
+        {
+            case "minigamefappy": return "MiniGameFappy";
+            case "level 1": return "Level 1";
+            case "minigamespotmemory": return "MiniGameSpotMemory";
+            case "minigamemath": return "MiniGameMath";
+            default: return null;
+        }
     }
 
     public int countroundbattle = 0; // ตัวนับรอบที่ตีกับศัตรู
