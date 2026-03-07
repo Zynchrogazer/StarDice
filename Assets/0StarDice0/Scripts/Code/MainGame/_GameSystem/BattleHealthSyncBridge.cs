@@ -38,6 +38,7 @@ public static class BattleHealthSyncBridge
             if (hpField == null || hpField.FieldType != typeof(int)) continue;
 
             hpField.SetValue(behaviour, syncedHealth);
+            TrySyncSelectedPlayerStats(behaviour, currentPlayer, syncedHealth);
             TryUpdateHpBar(behaviour, currentPlayer, syncedHealth);
             TryInvokeHpUiRefresh(behaviour);
         }
@@ -84,6 +85,21 @@ public static class BattleHealthSyncBridge
         return null;
     }
 
+
+    private static void TrySyncSelectedPlayerStats(MonoBehaviour behaviour, PlayerState currentPlayer, int syncedHealth)
+    {
+        FieldInfo selectedPlayerField = behaviour.GetType().GetField(SelectedPlayerFieldName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        if (selectedPlayerField == null || !typeof(PlayerData).IsAssignableFrom(selectedPlayerField.FieldType)) return;
+
+        if (!(selectedPlayerField.GetValue(behaviour) is PlayerData selectedPlayerData)) return;
+
+        int syncedMaxHealth = Mathf.Max(1, currentPlayer.MaxHealth);
+        selectedPlayerData.maxHealth = syncedMaxHealth;
+        selectedPlayerData.maxHP = syncedMaxHealth;
+        selectedPlayerData.attackDamage = Mathf.Max(0, currentPlayer.CurrentAttack);
+        selectedPlayerData.SetHealth(Mathf.Clamp(syncedHealth, 0, syncedMaxHealth));
+    }
+
     private static void TryUpdateHpBar(MonoBehaviour behaviour, PlayerState currentPlayer, int syncedHealth)
     {
         FieldInfo hpBarField = behaviour.GetType().GetField(PlayerHpBarFieldName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
@@ -93,16 +109,6 @@ public static class BattleHealthSyncBridge
         if (hpBar == null) return;
 
         int maxHp = Mathf.Max(1, currentPlayer.MaxHealth);
-
-        FieldInfo selectedPlayerField = behaviour.GetType().GetField(SelectedPlayerFieldName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-        if (selectedPlayerField != null && typeof(PlayerData).IsAssignableFrom(selectedPlayerField.FieldType))
-        {
-            if (selectedPlayerField.GetValue(behaviour) is PlayerData selectedPlayerData)
-            {
-                maxHp = Mathf.Max(1, selectedPlayerData.GetMaxHealth());
-            }
-        }
-
         hpBar.maxValue = maxHp;
         hpBar.value = Mathf.Clamp(syncedHealth, 0, maxHp);
     }
