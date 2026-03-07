@@ -2,6 +2,7 @@
 using UnityEngine;
 using System.Text.RegularExpressions;
 using System.Linq;
+using UnityEngine.UI;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -40,6 +41,18 @@ public struct TileGenSettings
     public int minCount;
 }
 
+[System.Serializable]
+public struct TileVisualSetting
+{
+    public TileType type;
+    [Tooltip("ใช้กับ SpriteRenderer/UI Image")]
+    public Sprite sprite;
+    [Tooltip("ใช้กับช่องแบบ 3D (Cube) ที่ต้องการเปลี่ยน Material ทั้งก้อน")]
+    public Material material;
+    [Tooltip("ใช้กับช่องแบบ 3D (Cube) ที่ต้องการเปลี่ยนเฉพาะ Texture")]
+    public Texture texture;
+}
+
 [ExecuteAlways]
 public class RouteManager : MonoBehaviour
 {
@@ -53,6 +66,10 @@ public class RouteManager : MonoBehaviour
     public bool autoConnectSequential = false;
     [Tooltip("หากเปิดใช้งาน จะลบการเชื่อมต่อเก่าก่อนที่จะเชื่อมต่อใหม่อัตโนมัติ")]
     public bool clearPreviousConnectionsOnAutoConnect = true;
+
+    [Header("Tile Visual Settings")]
+    [Tooltip("กำหนดภาพของแต่ละชนิดช่อง (รองรับ Sprite, Material และ Texture)")]
+    public List<TileVisualSetting> tileVisualSettings = new List<TileVisualSetting>();
 
     // Dictionary สำหรับการค้นหาข้อมูลโหนดด้วยความเร็วสูงขณะเล่นเกม
     private Dictionary<int, NodeConnection> nodeDataMap;
@@ -97,6 +114,8 @@ public class RouteManager : MonoBehaviour
             {
                 ConnectSequential();
             }
+
+            ApplyTileVisuals();
         }
     }
 
@@ -189,6 +208,87 @@ public class RouteManager : MonoBehaviour
                 }
             }
         }
+    }
+
+    public void ApplyTileVisuals()
+    {
+        foreach (var nc in nodeConnections)
+        {
+            ApplyTileVisual(nc);
+        }
+    }
+
+    void ApplyTileVisual(NodeConnection nc)
+    {
+        if (nc == null || nc.node == null) return;
+
+        TileVisualSetting? setting = GetTileVisualSetting(nc.type);
+        if (setting == null) return;
+
+        TileVisualSetting visual = setting.Value;
+
+        SpriteRenderer spriteRenderer = nc.node.GetComponent<SpriteRenderer>();
+        if (spriteRenderer != null && visual.sprite != null)
+        {
+            spriteRenderer.sprite = visual.sprite;
+        }
+
+        Image uiImage = nc.node.GetComponent<Image>();
+        if (uiImage != null && visual.sprite != null)
+        {
+            uiImage.sprite = visual.sprite;
+        }
+
+        Renderer meshRenderer = nc.node.GetComponent<Renderer>();
+        if (meshRenderer == null)
+        {
+            meshRenderer = nc.node.GetComponentInChildren<Renderer>();
+        }
+        if (meshRenderer != null)
+        {
+            if (visual.material != null)
+            {
+                meshRenderer.sharedMaterial = visual.material;
+            }
+
+            if (visual.texture != null)
+            {
+                ApplyTextureToRenderer(meshRenderer, visual.texture);
+            }
+        }
+    }
+
+    TileVisualSetting? GetTileVisualSetting(TileType type)
+    {
+        foreach (var setting in tileVisualSettings)
+        {
+            if (setting.type == type)
+            {
+                return setting;
+            }
+        }
+
+        return null;
+    }
+
+    void ApplyTextureToRenderer(Renderer renderer, Texture texture)
+    {
+        if (renderer == null || texture == null) return;
+
+        MaterialPropertyBlock propertyBlock = new MaterialPropertyBlock();
+        renderer.GetPropertyBlock(propertyBlock);
+
+        if (renderer.sharedMaterial != null && renderer.sharedMaterial.HasProperty("_BaseMap"))
+        {
+            propertyBlock.SetTexture("_BaseMap", texture);
+        }
+
+        if (renderer.sharedMaterial != null && renderer.sharedMaterial.HasProperty("_MainTex"))
+        {
+            propertyBlock.SetTexture("_MainTex", texture);
+        }
+
+        renderer.SetPropertyBlock(propertyBlock);
     }
     #endregion
     private bool isWarpModeActive = false;
@@ -374,6 +474,7 @@ public class RouteManager : MonoBehaviour
             // 👑 เปลี่ยนร่างเป็น BOSS
             targetNode.type = TileType.Boss;
             targetNode.eventName = "boss"; // บังคับให้เป็น event ต่อสู้
+            ApplyTileVisual(targetNode);
 
             Debug.Log($"🔥 Boss Spawned at Tile ID: {targetNode.tileID} (Was: {oldType})");
 
