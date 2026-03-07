@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using TMPro;
 
 public class ShopManager : MonoBehaviour
 {
@@ -11,10 +12,13 @@ public class ShopManager : MonoBehaviour
     [Header("UI")]
     public GameObject shopPanel;    
     public ShopSlot[] shopSlots;    
+    [SerializeField] private TMP_Text shopMoneyText;
+    [SerializeField] private string moneyPrefix = "Money: ";
 
     private void Awake()
     {
         Instance = this;
+        TryAutoAssignMoneyText();
         // ถ้าต้องการให้เริ่มเกมมาแล้วปิดร้านทันที ให้เอา Comment ออก
         // if (shopPanel != null) shopPanel.SetActive(false);
     }
@@ -47,6 +51,7 @@ public class ShopManager : MonoBehaviour
 
         shopPanel.SetActive(true);
         RefreshShopItems();
+        RefreshMoneyText();
     }
 
     public void CloseShop()
@@ -96,9 +101,42 @@ public class ShopManager : MonoBehaviour
         }
 
         buyer.PlayerMoney -= card.price;
+        if (GameData.Instance?.selectedPlayer != null)
+        {
+            GameData.Instance.selectedPlayer.SetMoney(buyer.PlayerMoney);
+        }
         PlayerCardInventory.Instance.ObtainCard(card);
+        RefreshMoneyText();
         Debug.Log($"[Shop] ซื้อ {card.cardName} สำเร็จ เหลือเงิน {buyer.PlayerMoney}");
         return true;
+    }
+
+    private void TryAutoAssignMoneyText()
+    {
+        if (shopMoneyText != null || shopPanel == null) return;
+
+        TMP_Text[] texts = shopPanel.GetComponentsInChildren<TMP_Text>(true);
+        foreach (var txt in texts)
+        {
+            if (txt == null) continue;
+
+            string objectName = txt.name.ToLower();
+            string textValue = txt.text.ToLower();
+
+            if (objectName.Contains("money") || textValue.Contains("money") || textValue.Contains("coin"))
+            {
+                shopMoneyText = txt;
+                break;
+            }
+        }
+    }
+
+    private void RefreshMoneyText()
+    {
+        TryAutoAssignMoneyText();
+        if (shopMoneyText == null || GameTurnManager.CurrentPlayer == null) return;
+
+        shopMoneyText.text = $"{moneyPrefix}{GameTurnManager.CurrentPlayer.PlayerMoney}";
     }
 
     private void RefreshShopItems()
