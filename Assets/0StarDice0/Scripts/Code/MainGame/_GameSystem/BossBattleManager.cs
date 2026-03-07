@@ -17,15 +17,26 @@ public class BossBattleManager : MonoBehaviour
 
     public void StartBossBattle(GameObject player)
     {
-        PlayerData playerData = player.GetComponent<PlayerData>();
-        if (playerData == null) return;
+        PlayerState currentPlayer = GameTurnManager.CurrentPlayer;
+        if (currentPlayer == null)
+        {
+            Debug.LogWarning("[BossBattleManager] CurrentPlayer is null. Cannot start boss battle.");
+            return;
+        }
 
         Debug.Log($"--- PREPARING FOR BOSS BATTLE ---");
 
         // 1. เก็บข้อมูลปัจจุบันของผู้เล่นลงใน "กระเป๋าเดินทาง"
-        GameTurnManager.CurrentPlayer.PlayerHealth = playerData.GetMaxHealth();
-        GameTurnManager.CurrentPlayer.PlayerMoney = playerData.Money;
-        Debug.Log($"Data saved: HP={playerData.GetMaxHealth()}, Money={playerData.Money}");
+        int currentHp = Mathf.Clamp(currentPlayer.PlayerHealth, 0, Mathf.Max(1, currentPlayer.MaxHealth));
+        currentPlayer.PlayerHealth = currentHp;
+
+        if (GameData.Instance?.selectedPlayer != null)
+        {
+            currentPlayer.PlayerMoney = GameData.Instance.selectedPlayer.Money;
+            GameData.Instance.selectedPlayer.SetHealth(currentHp);
+        }
+
+        Debug.Log($"Data saved: HP={currentHp}, Money={currentPlayer.PlayerMoney}");
 
         // 2. สั่งให้โหลด Scene ต่อสู้
         Debug.Log($"Loading scene: {bossBattleSceneName}");
