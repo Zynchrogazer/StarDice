@@ -112,6 +112,7 @@ public class PlayerState : MonoBehaviour
 
         CachePersistentProgressSnapshot(data);
         InitializeRuntimeSkillUnlocks(data.allSkills != null ? data.allSkills.Length : 0);
+        EnsureRuntimeSkillUnlocksMatchLevel();
 
         Debug.Log($"[PlayerState] Loaded: Level {PlayerLevel}, HP {PlayerHealth}/{MaxHealth}");
     }
@@ -191,6 +192,8 @@ public class PlayerState : MonoBehaviour
         {
             LevelUpRPG();
         }
+
+        EnsureRuntimeSkillUnlocksMatchLevel();
 
         OnStatsUpdated?.Invoke();
     }
@@ -335,6 +338,7 @@ public class PlayerState : MonoBehaviour
         if (sourceData != null && sourceData.allSkills != null)
         {
             InitializeRuntimeSkillUnlocks(sourceData.allSkills.Length);
+            EnsureRuntimeSkillUnlocksMatchLevel();
         }
         else
         {
@@ -415,6 +419,41 @@ public class PlayerState : MonoBehaviour
         unlockedIndex = lockedIndexes[UnityEngine.Random.Range(0, lockedIndexes.Count)];
         runtimeUnlockedSkillIndexes.Add(unlockedIndex);
         return true;
+    }
+
+    private void EnsureRuntimeSkillUnlocksMatchLevel(int defaultUnlockedCount = DefaultUnlockedSkillCount)
+    {
+        int totalSkills = 0;
+
+        if (selectedPlayerPreset != null && selectedPlayerPreset.allSkills != null)
+        {
+            totalSkills = selectedPlayerPreset.allSkills.Length;
+        }
+        else
+        {
+            totalSkills = runtimeSkillCount;
+        }
+
+        if (totalSkills <= 0) return;
+
+        int targetUnlockedCount = GetTargetUnlockedSkillCountByLevel(totalSkills, defaultUnlockedCount);
+
+        while (GetRuntimeUnlockedSkillCount(defaultUnlockedCount) < targetUnlockedCount)
+        {
+            bool unlocked = UnlockRandomLockedSkill(totalSkills, out int unlockedIndex, defaultUnlockedCount);
+            if (!unlocked)
+            {
+                break;
+            }
+
+            SkillData unlockedSkill =
+                selectedPlayerPreset != null && selectedPlayerPreset.allSkills != null && unlockedIndex >= 0 && unlockedIndex < selectedPlayerPreset.allSkills.Length
+                    ? selectedPlayerPreset.allSkills[unlockedIndex]
+                    : null;
+
+            string skillName = unlockedSkill != null ? unlockedSkill.skillName : $"Index {unlockedIndex}";
+            Debug.Log($"[PlayerState] Runtime skill unlocked: {skillName} (Lv.{PlayerLevel})");
+        }
     }
 
     // --- Other Methods ---
