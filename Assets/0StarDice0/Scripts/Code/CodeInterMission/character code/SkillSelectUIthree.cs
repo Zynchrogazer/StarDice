@@ -1,7 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using System.Collections.Generic;
 
 public class SkillSelectUIthree : MonoBehaviour
 {
@@ -59,7 +58,9 @@ public class SkillSelectUIthree : MonoBehaviour
             {
                 SkillData selectedSkill = playerData.allSkills[index];
 
-                if (selectedSkill.isLocked)
+                PlayerState currentPlayerState = FindObjectOfType<PlayerState>();
+                bool isUnlocked = currentPlayerState == null || currentPlayerState.IsSkillUnlocked(index);
+                if (!isUnlocked)
                 {
                     Debug.LogWarning($"สกิล {selectedSkill.skillName} ถูกล็อคอยู่");
                     return;
@@ -103,7 +104,9 @@ public class SkillSelectUIthree : MonoBehaviour
                            thisSkill == playerData.skills[1] ||
                            thisSkill == playerData.skills[2]);
 
-            btn.interactable = !thisSkill.isLocked && !isUsed;
+            PlayerState currentPlayerState = FindObjectOfType<PlayerState>();
+            bool isUnlocked = currentPlayerState == null || currentPlayerState.IsSkillUnlocked(i);
+            btn.interactable = isUnlocked && !isUsed;
 
             ColorBlock colors = btn.colors;
             colors.normalColor = (!btn.interactable) ? Color.gray : Color.white;
@@ -127,46 +130,39 @@ public class SkillSelectUIthree : MonoBehaviour
     {
         if (randomButtonClicked) return;
 
-        List<int> lockedIndexes = new List<int>();
-        for (int i = 0; i < playerData.allSkills.Length; i++)
+        if (playerData == null || playerData.allSkills == null || playerData.allSkills.Length == 0)
         {
-            if (playerData.allSkills[i] != null && playerData.allSkills[i].isLocked)
-                lockedIndexes.Add(i);
+            Debug.LogWarning("ไม่มีข้อมูลสกิลให้ปลดล็อค");
+            return;
         }
 
-        if (lockedIndexes.Count == 0)
+        PlayerState currentPlayerState = FindObjectOfType<PlayerState>();
+        if (currentPlayerState == null)
+        {
+            Debug.LogWarning("ไม่พบ PlayerState สำหรับระบบปลดล็อคสกิล");
+            return;
+        }
+
+        bool unlocked = currentPlayerState.UnlockRandomLockedSkill(playerData.allSkills.Length, out int randomIndex);
+        if (!unlocked)
         {
             Debug.Log("ไม่มีสกิลล็อคเหลือให้สุ่ม");
             return;
         }
 
-        int randomIndex = lockedIndexes[Random.Range(0, lockedIndexes.Count)];
-        playerData.allSkills[randomIndex].isLocked = false;
-
         SkillData unlockedSkill = playerData.allSkills[randomIndex];
 
-        if (randomUnlockImage != null)
-            randomUnlockImage.sprite = unlockedSkill.icon;
-
+        if (randomUnlockImage != null) randomUnlockImage.sprite = unlockedSkill.icon;
         if (randomUnlockName != null)
-            randomUnlockName.text = unlockedSkill.skillName;
-
-        randomButtonClicked = true;
-
-        if (randomUnlockButton != null)
         {
-            randomUnlockButton.interactable = false;
-            ColorBlock colors = randomUnlockButton.colors;
-            colors.normalColor = Color.green;
-            colors.highlightedColor = Color.green;
-            colors.pressedColor = Color.green;
-            colors.selectedColor = Color.green;
-            randomUnlockButton.colors = colors;
+            randomUnlockName.text = unlockedSkill.skillName;
+            randomUnlockName.gameObject.SetActive(true);
         }
 
         if (randomText != null)
             randomText.SetActive(true);
 
+        randomButtonClicked = true;
         RefreshSkillButtons();
     }
 

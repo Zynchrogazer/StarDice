@@ -42,6 +42,11 @@ public class PlayerState : MonoBehaviour
     private int persistentCurrentExpSnapshot = 0;
     private int persistentMaxExpSnapshot = 100;
 
+    // Runtime skill unlock state (ใช้เฉพาะรอบ Boardgame เท่านั้น)
+    private readonly HashSet<int> runtimeUnlockedSkillIndexes = new HashSet<int>();
+    private int runtimeSkillCount = 0;
+    private const int DefaultUnlockedSkillCount = 3;
+
     public event System.Action OnDied;
     public event Action OnStatsUpdated;
     private bool isDefeatHandling = false;
@@ -63,7 +68,6 @@ public class PlayerState : MonoBehaviour
         if (!isAI && GameData.Instance != null)
         {
             LoadFromPlayerData(GameData.Instance.selectedPlayer);
-            GameData.Instance.selectedPlayer.ResetSkillLocksForStageStart();
             SetSelectedCards(GameData.Instance.selectedCards);
         }
         else if (isAI)
@@ -107,6 +111,7 @@ public class PlayerState : MonoBehaviour
         if (MaxExp <= 0) MaxExp = 100;
 
         CachePersistentProgressSnapshot(data);
+        InitializeRuntimeSkillUnlocks(data.allSkills != null ? data.allSkills.Length : 0);
 
         Debug.Log($"[PlayerState] Loaded: Level {PlayerLevel}, HP {PlayerHealth}/{MaxHealth}");
     }
@@ -186,6 +191,7 @@ public class PlayerState : MonoBehaviour
         {
             LevelUpRPG();
         }
+
         OnStatsUpdated?.Invoke();
     }
 
@@ -268,7 +274,6 @@ public class PlayerState : MonoBehaviour
         if (sourceData != null)
         {
             LoadFromPlayerData(sourceData);
-            sourceData.ResetSkillLocksForStageStart();
         }
 
         PlayerStar = 0;
@@ -326,8 +331,92 @@ public class PlayerState : MonoBehaviour
         hasIceEffect = false;
         DebuffBurn = false;
         DebuffBurnTurnsRemaining = 0;
+
+        if (sourceData != null && sourceData.allSkills != null)
+        {
+            InitializeRuntimeSkillUnlocks(sourceData.allSkills.Length);
+        }
+        else
+        {
+            ResetRuntimeSkillUnlocks();
+        }
+
         OnStatsUpdated?.Invoke();
     }
+    public void InitializeRuntimeSkillUnlocks(int totalSkills, int defaultUnlockedCount = DefaultUnlockedSkillCount)
+    {
+        runtimeUnlockedSkillIndexes.Clear();
+        runtimeSkillCount = Mathf.Max(0, totalSkills);
+
+        int clampedDefault = Mathf.Clamp(defaultUnlockedCount, 0, runtimeSkillCount);
+        for (int i = 0; i < clampedDefault; i++)
+        {
+            runtimeUnlockedSkillIndexes.Add(i);
+        }
+    }
+
+    public void ResetRuntimeSkillUnlocks()
+    {
+        runtimeUnlockedSkillIndexes.Clear();
+        runtimeSkillCount = 0;
+    }
+
+    public bool IsSkillUnlocked(int skillIndex, int defaultUnlockedCount = DefaultUnlockedSkillCount)
+    {
+        if (skillIndex < 0) return false;
+        if (skillIndex < defaultUnlockedCount) return true;
+        return runtimeUnlockedSkillIndexes.Contains(skillIndex);
+    }
+
+    public int GetRuntimeUnlockedSkillCount(int defaultUnlockedCount = DefaultUnlockedSkillCount)
+    {
+        int baseCount = Mathf.Clamp(defaultUnlockedCount, 0, runtimeSkillCount);
+        int extraCount = 0;
+
+        foreach (int index in runtimeUnlockedSkillIndexes)
+        {
+            if (index >= defaultUnlockedCount)
+            {
+                extraCount++;
+            }
+        }
+
+        return Mathf.Clamp(baseCount + extraCount, 0, runtimeSkillCount);
+    }
+
+    public int GetTargetUnlockedSkillCountByLevel(int totalSkills, int defaultUnlockedCount = DefaultUnlockedSkillCount)
+    {
+        int target = defaultUnlockedCount + Mathf.Max(0, PlayerLevel / 10);
+        return Mathf.Clamp(target, 0, Mathf.Max(0, totalSkills));
+    }
+
+    public bool UnlockRandomLockedSkill(int totalSkills, out int unlockedIndex, int defaultUnlockedCount = DefaultUnlockedSkillCount)
+    {
+        unlockedIndex = -1;
+
+        if (totalSkills <= 0) return false;
+
+        if (runtimeSkillCount != totalSkills)
+        {
+            InitializeRuntimeSkillUnlocks(totalSkills, defaultUnlockedCount);
+        }
+
+        List<int> lockedIndexes = new List<int>();
+        for (int i = defaultUnlockedCount; i < totalSkills; i++)
+        {
+            if (!runtimeUnlockedSkillIndexes.Contains(i))
+            {
+                lockedIndexes.Add(i);
+            }
+        }
+
+        if (lockedIndexes.Count == 0) return false;
+
+        unlockedIndex = lockedIndexes[UnityEngine.Random.Range(0, lockedIndexes.Count)];
+        runtimeUnlockedSkillIndexes.Add(unlockedIndex);
+        return true;
+    }
+
     // --- Other Methods ---
 
     public void DropCard()
