@@ -29,6 +29,7 @@ public static class BattleHealthSyncBridge
         PlayerState currentPlayer = ResolveBoardPlayerState();
         if (currentPlayer == null) return;
 
+        CleanupRuntimeBattlePlayerData();
         runtimeBattlePlayerData = CreateRuntimeBattlePlayerData(currentPlayer);
         int syncedHealth = Mathf.Clamp(currentPlayer.PlayerHealth, 0, Mathf.Max(1, currentPlayer.MaxHealth));
 
@@ -52,22 +53,35 @@ public static class BattleHealthSyncBridge
     {
         if (!IsBattleScene(scene)) return;
 
-        PlayerState currentPlayer = ResolveBoardPlayerState();
-        if (currentPlayer == null) return;
-
-        int? observedBattleHp = TryReadBattleHp(scene);
-        if (!observedBattleHp.HasValue) return;
-
-        int clamped = Mathf.Clamp(observedBattleHp.Value, 0, Mathf.Max(1, currentPlayer.MaxHealth));
-        currentPlayer.PlayerHealth = clamped;
-
-        if (runtimeBattlePlayerData != null)
+        try
         {
-            Object.Destroy(runtimeBattlePlayerData);
-            runtimeBattlePlayerData = null;
-        }
+            PlayerState currentPlayer = ResolveBoardPlayerState();
+            if (currentPlayer == null) return;
 
-        Debug.Log($"[BattleHealthSyncBridge] Synced battle HP ({clamped}) back to board state from scene '{scene.name}'.");
+            int? observedBattleHp = TryReadBattleHp(scene);
+            if (!observedBattleHp.HasValue)
+            {
+                Debug.LogWarning($"[BattleHealthSyncBridge] Could not read battle HP from scene '{scene.name}'. Keeping board HP as-is.");
+                return;
+            }
+
+            int clamped = Mathf.Clamp(observedBattleHp.Value, 0, Mathf.Max(1, currentPlayer.MaxHealth));
+            currentPlayer.PlayerHealth = clamped;
+
+            Debug.Log($"[BattleHealthSyncBridge] Synced battle HP ({clamped}) back to board state from scene '{scene.name}'.");
+        }
+        finally
+        {
+            CleanupRuntimeBattlePlayerData();
+        }
+    }
+
+    private static void CleanupRuntimeBattlePlayerData()
+    {
+        if (runtimeBattlePlayerData == null) return;
+
+        Object.Destroy(runtimeBattlePlayerData);
+        runtimeBattlePlayerData = null;
     }
 
     private static int? TryReadBattleHp(Scene scene)
