@@ -192,7 +192,10 @@ public class BattleSystemDark : MonoBehaviour
             return;
         }
 
-        selectedPlayer = GameData.Instance.selectedPlayer;
+        if (selectedPlayer == null && GameData.Instance != null)
+        {
+            selectedPlayer = GameData.Instance.selectedPlayer;
+        }
         if (selectedPlayer == null)
         {
             Debug.LogWarning("[BattleSystemDark] GameData.selectedPlayer เป็นค่าว่าง ลอง fallback จาก PlayerPrefs");

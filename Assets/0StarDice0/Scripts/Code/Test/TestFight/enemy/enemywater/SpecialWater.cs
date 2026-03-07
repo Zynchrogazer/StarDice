@@ -177,7 +177,10 @@ public class SpecialWater : MonoBehaviour
         {
             Debug.LogWarning("[BattleSystem] ไม่พบการ์ดสำหรับใช้งานในฉากต่อสู้");
         }
-        selectedPlayer = GameData.Instance.selectedPlayer;
+        if (selectedPlayer == null && GameData.Instance != null)
+        {
+            selectedPlayer = GameData.Instance.selectedPlayer;
+        }
         SetupPlayer();
         SetupEnemy();
         SetupButtons();

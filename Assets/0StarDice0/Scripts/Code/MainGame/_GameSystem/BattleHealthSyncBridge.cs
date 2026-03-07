@@ -12,6 +12,7 @@ public static class BattleHealthSyncBridge
     private const string PlayerHpBarFieldName = "playerHPBar";
     private const string SelectedPlayerFieldName = "selectedPlayer";
     private static PlayerData runtimeBattlePlayerData;
+    private static PlayerData previousSelectedPlayerData;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void Initialize()
@@ -31,17 +32,26 @@ public static class BattleHealthSyncBridge
 
         CleanupRuntimeBattlePlayerData();
         runtimeBattlePlayerData = CreateRuntimeBattlePlayerData(currentPlayer);
+        OverrideGlobalSelectedPlayerForBattle();
         int syncedHealth = Mathf.Clamp(currentPlayer.PlayerHealth, 0, Mathf.Max(1, currentPlayer.MaxHealth));
 
         foreach (var behaviour in Object.FindObjectsOfType<MonoBehaviour>(true))
         {
             if (behaviour == null || behaviour.gameObject.scene != scene) continue;
 
+            // inject selectedPlayer runtime data ให้ทุกตัวที่รองรับก่อน
+            // เพื่อให้สคริปต์ที่อ่านสถานะจาก selectedPlayer โดยตรงใช้ค่าจาก PlayerState
+            TrySyncSelectedPlayerStats(behaviour);
+
             FieldInfo hpField = behaviour.GetType().GetField(PlayerHpFieldName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            if (hpField == null || hpField.FieldType != typeof(int)) continue;
+            if (hpField == null || hpField.FieldType != typeof(int))
+            {
+                // บาง battle controller อาจไม่มี playerHP field แต่มี selectedPlayer อยู่แล้ว
+                // จึงยังต้องปล่อยให้ทำงานต่อโดยไม่ถือว่าเป็น error
+                continue;
+            }
 
             hpField.SetValue(behaviour, syncedHealth);
-            TrySyncSelectedPlayerStats(behaviour);
             TryUpdateHpBar(behaviour, currentPlayer, syncedHealth);
             TryInvokeHpUiRefresh(behaviour);
         }
@@ -80,8 +90,33 @@ public static class BattleHealthSyncBridge
     {
         if (runtimeBattlePlayerData == null) return;
 
+        PlayerData runtimeDataToCleanup = runtimeBattlePlayerData;
+        RestoreGlobalSelectedPlayerAfterBattle(runtimeDataToCleanup);
+
         Object.Destroy(runtimeBattlePlayerData);
         runtimeBattlePlayerData = null;
+    }
+
+    private static void OverrideGlobalSelectedPlayerForBattle()
+    {
+        if (GameData.Instance == null || runtimeBattlePlayerData == null) return;
+
+        if (previousSelectedPlayerData == null)
+        {
+            previousSelectedPlayerData = GameData.Instance.selectedPlayer;
+        }
+
+        GameData.Instance.selectedPlayer = runtimeBattlePlayerData;
+    }
+
+    private static void RestoreGlobalSelectedPlayerAfterBattle(PlayerData runtimeData)
+    {
+        if (GameData.Instance == null) return;
+        if (runtimeData == null) return;
+        if (GameData.Instance.selectedPlayer != runtimeData) return;
+
+        GameData.Instance.selectedPlayer = previousSelectedPlayerData;
+        previousSelectedPlayerData = null;
     }
 
     private static int? TryReadBattleHp(Scene scene)
