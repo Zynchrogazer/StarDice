@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 [CreateAssetMenu(fileName = "NewPlayer", menuName = "Battle/PlayerData")]
 
@@ -22,8 +23,9 @@ public class PlayerData : ScriptableObject
 
     [Header("Player Stats")]
     public int maxHealth = 100;
-    [SerializeField]
-    private int currentHealth;
+    [FormerlySerializedAs("currentHealth")]
+    [SerializeField, HideInInspector]
+    private int legacyCurrentHealth;
 
     [Header("Level System")]
     public int level = 1;      // เลเวลเริ่มต้น
@@ -37,8 +39,9 @@ public class PlayerData : ScriptableObject
     public event Action<int> OnMoneyChanged;
     public event Action OnDied;
 
-    [Header("Status Effects")]
-    public int turnsToSkip = 0;
+    [FormerlySerializedAs("turnsToSkip")]
+    [SerializeField, HideInInspector]
+    private int legacyTurnsToSkip = 0;
 
     public int Money
     {
@@ -52,23 +55,14 @@ public class PlayerData : ScriptableObject
         }
     }
 
-    public int CurrentHealth => currentHealth;
+    [Obsolete("PlayerData no longer stores runtime HP. Use PlayerState.PlayerHealth instead.")]
+    public int CurrentHealth => GetMaxHealth();
 
     private void OnEnable()
     {
         if (maxHealth <= 0)
         {
             maxHealth = Mathf.Max(1, maxHP);
-        }
-
-        // ถ้ายังไม่เคยเซ็ตค่า (เช่น Asset ใหม่) ให้เริ่มด้วยเลือดเต็ม
-        if (currentHealth <= 0)
-        {
-            currentHealth = maxHealth;
-        }
-        else
-        {
-            currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
         }
 
         LoadMoney();
@@ -108,14 +102,10 @@ public class PlayerData : ScriptableObject
         return Mathf.Max(1, maxHealth);
     }
 
-    /// <summary>
-    /// เมธอดสำหรับตั้งค่า HP โดยตรง (ใช้ตอนโหลดข้อมูลกลับ)
-    /// </summary>
+    [Obsolete("PlayerData should not store runtime HP. Update PlayerState.PlayerHealth instead.")]
     public void SetHealth(int newHealth)
     {
-        currentHealth = Mathf.Clamp(newHealth, 0, maxHealth);
-        Debug.Log($"[PlayerData] {playerName} health set to {currentHealth}/{maxHealth}");
-        // สามารถเพิ่ม Event แจ้ง UI ให้รีเฟรชได้
+        Debug.LogWarning($"[PlayerData] Ignored SetHealth({newHealth}) on {playerName}. Runtime HP now belongs to PlayerState.");
     }
 
     /// <summary>
@@ -141,6 +131,7 @@ public class PlayerData : ScriptableObject
         return true;
     }
 
+    [Obsolete("Use PlayerState runtime unlock methods for per-run skill state.")]
     public void ResetSkillLocksForStageStart(int initiallyUnlockedSkillCount = 3, int currentLevelOverride = -1)
     {
         if (allSkills == null) return;

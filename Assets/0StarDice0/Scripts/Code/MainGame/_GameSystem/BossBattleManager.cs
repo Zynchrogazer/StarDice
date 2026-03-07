@@ -33,7 +33,6 @@ public class BossBattleManager : MonoBehaviour
         if (GameData.Instance?.selectedPlayer != null)
         {
             currentPlayer.PlayerMoney = GameData.Instance.selectedPlayer.Money;
-            GameData.Instance.selectedPlayer.SetHealth(currentHp);
         }
 
         Debug.Log($"Data saved: HP={currentHp}, Money={currentPlayer.PlayerMoney}");

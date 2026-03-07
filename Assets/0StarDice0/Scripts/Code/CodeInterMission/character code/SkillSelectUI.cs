@@ -5,6 +5,8 @@ using TMPro;
 public class SkillSelectUI : MonoBehaviour
 {
     public PlayerData playerData;
+    [Header("Runtime References")]
+    [SerializeField] private PlayerState playerState;
 
     [Header("Panel & Buttons")]
     public GameObject panel;
@@ -28,6 +30,8 @@ public class SkillSelectUI : MonoBehaviour
     public Image skillSlot3; // ลากช่องรูปสกิล 3 มาใส่
     void Start()
     {
+        ResolvePlayerState();
+
         // ล็อคสกิล 3–9 เริ่มต้น
       /*  for (int i = 3; i < playerData.allSkills.Length; i++)
         {
@@ -59,8 +63,7 @@ public class SkillSelectUI : MonoBehaviour
             {
                 SkillData selectedSkill = playerData.allSkills[index];
 
-                PlayerState currentPlayerState = FindObjectOfType<PlayerState>();
-                bool isUnlocked = currentPlayerState == null || currentPlayerState.IsSkillUnlocked(index);
+                bool isUnlocked = playerState == null || playerState.IsSkillUnlocked(index);
                 if (!isUnlocked)
                 {
                     Debug.LogWarning($"สกิล {selectedSkill.skillName} ถูกล็อคอยู่");
@@ -105,8 +108,7 @@ public class SkillSelectUI : MonoBehaviour
                            thisSkill == playerData.skills[1] ||
                            thisSkill == playerData.skills[2]);
 
-            PlayerState currentPlayerState = FindObjectOfType<PlayerState>();
-            bool isUnlocked = currentPlayerState == null || currentPlayerState.IsSkillUnlocked(i);
+            bool isUnlocked = playerState == null || playerState.IsSkillUnlocked(i);
             btn.interactable = isUnlocked && !isUsed;
 
             ColorBlock colors = btn.colors;
@@ -137,14 +139,13 @@ public class SkillSelectUI : MonoBehaviour
             return;
         }
 
-        PlayerState currentPlayerState = FindObjectOfType<PlayerState>();
-        if (currentPlayerState == null)
+        if (playerState == null)
         {
             Debug.LogWarning("ไม่พบ PlayerState สำหรับระบบปลดล็อคสกิล");
             return;
         }
 
-        bool unlocked = currentPlayerState.UnlockRandomLockedSkill(playerData.allSkills.Length, out int randomIndex);
+        bool unlocked = playerState.UnlockRandomLockedSkill(playerData.allSkills.Length, out int randomIndex);
         if (!unlocked)
         {
             Debug.Log("ไม่มีสกิลล็อคเหลือให้สุ่ม");
@@ -191,5 +192,32 @@ private void ClosePanel()
 
     RefreshSkillButtons();
 }
+
+    private void ResolvePlayerState()
+    {
+        if (playerState != null) return;
+
+        PlayerState[] allStates = FindObjectsOfType<PlayerState>();
+        PlayerState fallback = null;
+
+        for (int i = 0; i < allStates.Length; i++)
+        {
+            PlayerState candidate = allStates[i];
+            if (candidate == null || candidate.isAI) continue;
+
+            if (fallback == null)
+            {
+                fallback = candidate;
+            }
+
+            if (playerData != null && candidate.selectedPlayerPreset == playerData)
+            {
+                playerState = candidate;
+                return;
+            }
+        }
+
+        playerState = fallback;
+    }
 
 }

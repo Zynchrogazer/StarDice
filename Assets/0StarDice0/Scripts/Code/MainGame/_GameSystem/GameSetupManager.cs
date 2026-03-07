@@ -44,17 +44,13 @@ public class GameSetupManager : MonoBehaviour
     {
         if (currentData == null) return;
 
-        // ดึงค่าปัจจุบันจาก PlayerState
-        int currentHealth = GameTurnManager.CurrentPlayer.PlayerHealth;
-
         // ถ้าคุณแยก Inventory ไปแล้ว อาจต้องดึงเงินจาก PlayerInventory หรือ GameData แทน
         // แต่ถ้ายังอยู่ที่เดิม ก็ใช้บรรทัดนี้:
         int currentMoney = GameTurnManager.CurrentPlayer.PlayerMoney;
 
-        Debug.Log($"<color=lightblue>[GameSetupManager]</color> Updating {currentData.playerName}: HP={currentHealth}");
+        Debug.Log($"<color=lightblue>[GameSetupManager]</color> Updating persistent data for {currentData.playerName}: Money={currentMoney}");
 
         // บันทึกลง ScriptableObject ที่เราดึงมา (GameData.selectedPlayer)
-        currentData.SetHealth(currentHealth);
         currentData.SetMoney(currentMoney);
     }
 }

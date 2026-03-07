@@ -11,6 +11,12 @@ public class DisplayStatus : MonoBehaviour
     void Update()
     {
         if (playerState != null && hpTxt != null)
-            hpTxt.text = $"HP : {playerState.PlayerHealth}/{playerData.maxHP}";
+        {
+            int maxHp = playerState.MaxHealth > 0
+                ? playerState.MaxHealth
+                : (playerData != null ? Mathf.Max(1, playerData.maxHP) : 1);
+
+            hpTxt.text = $"HP : {playerState.PlayerHealth}/{maxHp}";
+        }
     }
 }

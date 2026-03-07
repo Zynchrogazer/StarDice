@@ -11,6 +11,7 @@ public static class BattleHealthSyncBridge
     private const string PlayerHpFieldName = "playerHP";
     private const string PlayerHpBarFieldName = "playerHPBar";
     private const string SelectedPlayerFieldName = "selectedPlayer";
+    private static PlayerData runtimeBattlePlayerData;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void Initialize()
@@ -28,6 +29,7 @@ public static class BattleHealthSyncBridge
         PlayerState currentPlayer = ResolveBoardPlayerState();
         if (currentPlayer == null) return;
 
+        runtimeBattlePlayerData = CreateRuntimeBattlePlayerData(currentPlayer);
         int syncedHealth = Mathf.Clamp(currentPlayer.PlayerHealth, 0, Mathf.Max(1, currentPlayer.MaxHealth));
 
         foreach (var behaviour in Object.FindObjectsOfType<MonoBehaviour>(true))
@@ -38,7 +40,7 @@ public static class BattleHealthSyncBridge
             if (hpField == null || hpField.FieldType != typeof(int)) continue;
 
             hpField.SetValue(behaviour, syncedHealth);
-            TrySyncSelectedPlayerStats(behaviour, currentPlayer, syncedHealth);
+            TrySyncSelectedPlayerStats(behaviour);
             TryUpdateHpBar(behaviour, currentPlayer, syncedHealth);
             TryInvokeHpUiRefresh(behaviour);
         }
@@ -59,9 +61,10 @@ public static class BattleHealthSyncBridge
         int clamped = Mathf.Clamp(observedBattleHp.Value, 0, Mathf.Max(1, currentPlayer.MaxHealth));
         currentPlayer.PlayerHealth = clamped;
 
-        if (GameData.Instance?.selectedPlayer != null)
+        if (runtimeBattlePlayerData != null)
         {
-            GameData.Instance.selectedPlayer.SetHealth(clamped);
+            Object.Destroy(runtimeBattlePlayerData);
+            runtimeBattlePlayerData = null;
         }
 
         Debug.Log($"[BattleHealthSyncBridge] Synced battle HP ({clamped}) back to board state from scene '{scene.name}'.");
@@ -86,29 +89,33 @@ public static class BattleHealthSyncBridge
     }
 
 
-    private static void TrySyncSelectedPlayerStats(MonoBehaviour behaviour, PlayerState currentPlayer, int syncedHealth)
+    private static void TrySyncSelectedPlayerStats(MonoBehaviour behaviour)
     {
         FieldInfo selectedPlayerField = behaviour.GetType().GetField(SelectedPlayerFieldName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
         if (selectedPlayerField == null || !typeof(PlayerData).IsAssignableFrom(selectedPlayerField.FieldType)) return;
 
-        PlayerData selectedPlayerData = selectedPlayerField.GetValue(behaviour) as PlayerData;
-        if (selectedPlayerData == null)
-        {
-            selectedPlayerData = GameData.Instance?.selectedPlayer;
-            if (selectedPlayerData == null) return;
-            selectedPlayerField.SetValue(behaviour, selectedPlayerData);
-        }
+        if (runtimeBattlePlayerData == null) return;
+        selectedPlayerField.SetValue(behaviour, runtimeBattlePlayerData);
+    }
+
+    private static PlayerData CreateRuntimeBattlePlayerData(PlayerState currentPlayer)
+    {
+        PlayerData persistentPlayerData = GameData.Instance?.selectedPlayer;
+        PlayerData source = persistentPlayerData != null ? persistentPlayerData : currentPlayer.selectedPlayerPreset;
+        if (source == null) return null;
+
+        PlayerData runtimeData = ScriptableObject.Instantiate(source);
+        runtimeData.name = $"{source.name}_RuntimeBattle";
 
         int syncedMaxHealth = Mathf.Max(1, currentPlayer.MaxHealth);
-        selectedPlayerData.maxHealth = syncedMaxHealth;
-        selectedPlayerData.maxHP = syncedMaxHealth;
-        selectedPlayerData.attackDamage = Mathf.Max(0, currentPlayer.CurrentAttack);
-        selectedPlayerData.def = Mathf.Max(0, selectedPlayerData.def);
-        selectedPlayerData.speed = Mathf.Max(0, selectedPlayerData.speed);
-        selectedPlayerData.level = Mathf.Max(1, currentPlayer.PlayerLevel);
-        selectedPlayerData.currentExp = Mathf.Max(0, currentPlayer.CurrentExp);
-        selectedPlayerData.maxExp = Mathf.Max(1, currentPlayer.MaxExp);
-        selectedPlayerData.SetHealth(Mathf.Clamp(syncedHealth, 0, syncedMaxHealth));
+        runtimeData.maxHealth = syncedMaxHealth;
+        runtimeData.maxHP = syncedMaxHealth;
+        runtimeData.attackDamage = Mathf.Max(0, currentPlayer.CurrentAttack);
+        runtimeData.level = Mathf.Max(1, currentPlayer.PlayerLevel);
+        runtimeData.currentExp = Mathf.Max(0, currentPlayer.CurrentExp);
+        runtimeData.maxExp = Mathf.Max(1, currentPlayer.MaxExp);
+
+        return runtimeData;
     }
 
     private static void TryUpdateHpBar(MonoBehaviour behaviour, PlayerState currentPlayer, int syncedHealth)

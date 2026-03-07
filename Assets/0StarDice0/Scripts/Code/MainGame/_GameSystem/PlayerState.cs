@@ -93,11 +93,7 @@ public class PlayerState : MonoBehaviour
 
         // 1. โหลดค่าพลังชีวิต
         MaxHealth = data.GetMaxHealth();
-        PlayerHealth = Mathf.Clamp(data.CurrentHealth, 0, MaxHealth);
-        if (PlayerHealth <= 0)
-        {
-            PlayerHealth = MaxHealth;
-        }
+        PlayerHealth = MaxHealth;
         CurrentAttack = data.attackDamage;
         // 2. โหลดเงิน (ถ้าต้องการใช้ค่าเริ่มต้นจาก Data)
         PlayerMoney = data.Money;
