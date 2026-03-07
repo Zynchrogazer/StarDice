@@ -12,7 +12,6 @@ public class SkillSelectUI : MonoBehaviour
     public Button[] changeSkillButtons = new Button[10];
     public Image[] skillImages = new Image[10];
     public TMP_Text[] skillNames = new TMP_Text[10];
-    public TMP_Text[] skillActionLabels = new TMP_Text[10];
 
     [Header("Random Unlock")]
     public Button randomUnlockButton;
@@ -23,7 +22,6 @@ public class SkillSelectUI : MonoBehaviour
     public Button closePanelButton;
 
     private bool randomButtonClicked = false;
-    private bool wasPanelActive = false;
 
  
     public Image skillSlot1; // ลากช่องรูปสกิล 1 มาใส่
@@ -31,18 +29,16 @@ public class SkillSelectUI : MonoBehaviour
     public Image skillSlot3; // ลากช่องรูปสกิล 3 มาใส่
     void Start()
     {
-        // sync จาก runtime player ก่อน แล้วค่อยรีเซ็ตล็อกสกิล
-        SyncPlayerDataFromRuntime();
-        ResetSkillLocksForStageStart();
+        // ล็อคสกิล 3–9 เริ่มต้น
+      /*  for (int i = 3; i < playerData.allSkills.Length; i++)
+        {
+            if (playerData.allSkills[i] != null)
+                playerData.allSkills[i].isLocked = true;
+        }*/
 
         // ตั้งปุ่มสกิล
-        if (playerData == null)
-        {
-            Debug.LogError($"[{GetType().Name}] playerData is null after runtime sync. Please check inspector/GameData binding.");
-            return;
-        }
 
-        if (playerData.allSkills.Length >= 3 && playerData.skills.Length >= 3)
+        if (playerData != null && playerData.allSkills.Length >= 3 && playerData.skills.Length >= 3)
         {
             // บังคับยัดข้อมูลสกิล 1, 2, 3 เข้าช่อง
             playerData.skills[0] = playerData.allSkills[0];
@@ -93,81 +89,10 @@ public class SkillSelectUI : MonoBehaviour
             closePanelButton.onClick.AddListener(ClosePanel);
 
         RefreshSkillButtons();
-        wasPanelActive = panel != null && panel.activeInHierarchy;
     }
-
-    private void Update()
-    {
-        bool isPanelActive = panel != null && panel.activeInHierarchy;
-        if (isPanelActive && !wasPanelActive)
-        {
-            SyncPlayerDataFromRuntime();
-            ResetSkillLocksForStageStart();
-            RefreshSkillButtons();
-        }
-
-        wasPanelActive = isPanelActive;
-    }
-
-private void ResetSkillLocksForStageStart()
-{
-    if (playerData == null) return;
-
-    string levelSource;
-    int currentLevel = ResolveCurrentPlayerLevel(out levelSource);
-    playerData.ResetSkillLocksForStageStart(currentLevelOverride: currentLevel);
-    Debug.Log($"[{GetType().Name}] Reset skill lock using level {currentLevel} (source: {levelSource}, playerData: {playerData.name})");
-}
-
-private void SyncPlayerDataFromRuntime()
-{
-    PlayerState currentPlayer = GameTurnManager.CurrentPlayer;
-    if (currentPlayer != null && !currentPlayer.isAI && currentPlayer.selectedPlayerPreset != null)
-    {
-        if (playerData != null && playerData != currentPlayer.selectedPlayerPreset)
-        {
-            Debug.LogWarning($"[{GetType().Name}] playerData binding mismatch ({playerData.name}) -> sync to runtime preset ({currentPlayer.selectedPlayerPreset.name})");
-        }
-
-        playerData = currentPlayer.selectedPlayerPreset;
-        return;
-    }
-
-    if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
-    {
-        if (playerData != null && playerData != GameData.Instance.selectedPlayer)
-        {
-            Debug.LogWarning($"[{GetType().Name}] playerData binding mismatch ({playerData.name}) -> sync to GameData selectedPlayer ({GameData.Instance.selectedPlayer.name})");
-        }
-
-        playerData = GameData.Instance.selectedPlayer;
-    }
-}
-
-private int ResolveCurrentPlayerLevel(out string source)
-{
-    PlayerState currentPlayer = GameTurnManager.CurrentPlayer;
-    if (currentPlayer != null && !currentPlayer.isAI)
-    {
-        source = "GameTurnManager.CurrentPlayer.PlayerLevel";
-        return Mathf.Max(1, currentPlayer.PlayerLevel);
-    }
-
-    PlayerState[] players = FindObjectsOfType<PlayerState>(true);
-    foreach (PlayerState player in players)
-    {
-        if (player == null || player.isAI) continue;
-        source = "FindObjectsOfType<PlayerState>.PlayerLevel";
-        return Mathf.Max(1, player.PlayerLevel);
-    }
-
-    source = "playerData.level (fallback)";
-    return Mathf.Max(1, playerData != null ? playerData.level : 1);
-}
 
     public void RefreshSkillButtons()
     {
-        if (playerData == null || playerData.allSkills == null || playerData.skills == null) return;
         for (int i = 0; i < changeSkillButtons.Length; i++)
         {
             Button btn = changeSkillButtons[i];
@@ -193,22 +118,6 @@ private int ResolveCurrentPlayerLevel(out string source)
 
             if (skillNames.Length > i && skillNames[i] != null)
                 skillNames[i].text = thisSkill.skillName;
-
-            TMP_Text actionLabel = null;
-            if (skillActionLabels.Length > i)
-            {
-                actionLabel = skillActionLabels[i];
-            }
-
-            if (actionLabel == null && btn != null)
-            {
-                actionLabel = btn.GetComponentInChildren<TMP_Text>(true);
-            }
-
-            if (actionLabel != null)
-            {
-                actionLabel.text = thisSkill.isLocked ? "Locked" : (isUsed ? "Selected" : "Select");
-            }
         }
 
         if (randomUnlockButton != null)
@@ -216,9 +125,8 @@ private int ResolveCurrentPlayerLevel(out string source)
     }
 
     private void RandomUnlockSkill()
-    {
-        if (randomButtonClicked) return;
-        if (playerData == null || playerData.allSkills == null) return;
+{
+    if (randomButtonClicked) return;
 
     List<int> lockedIndexes = new List<int>();
     for (int i = 0; i < playerData.allSkills.Length; i++)
