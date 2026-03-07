@@ -1,0 +1,90 @@
+﻿using UnityEngine;
+using TMPro;
+
+public class PlayerUIController : MonoBehaviour
+{
+    [Header("UI References")]
+    public TMP_Text hpText;
+    public TMP_Text moneyText;
+    public TMP_Text starText;
+    public TMP_Text winText;
+    public TMP_Text levelText;
+
+    // ตัวแปรสำหรับจำตัวละครที่เป็น "คนเล่น" (Human)
+    private PlayerState myPlayer;
+
+    private void Update()
+    {
+        TryAutoAssignUIRefs();
+
+        // 1. ถ้ายังหาตัวคนเล่นไม่เจอ ให้ลองหาดู
+        if (myPlayer == null)
+        {
+            FindHumanPlayer();
+            return; // ยังไม่มีข้อมูล ให้ข้ามไปก่อน
+        }
+
+        // 2. ถ้าเจอแล้ว ให้อัปเดตค่าจาก "คนเล่น" เท่านั้น (ไม่สนใจว่าเทิร์นใคร)
+        UpdateUI();
+    }
+
+    private void FindHumanPlayer()
+    {
+        if (GameTurnManager.Instance != null && GameTurnManager.Instance.allPlayers != null)
+        {
+            // วนหาในลิสต์ผู้เล่นทั้งหมด
+            foreach (var p in GameTurnManager.Instance.allPlayers)
+            {
+                // เงื่อนไข: เอาตัวที่ไม่ใช่ null และ ไม่ใช่ AI
+                if (p != null && !p.isAI)
+                {
+                    myPlayer = p;
+                    Debug.Log($"[UI] 🔒 ล็อคการแสดงผลที่ผู้เล่น: {myPlayer.name}");
+                    break; // เจอแล้วหยุดหาเลย
+                }
+            }
+        }
+    }
+
+    private void UpdateUI()
+    {
+        // ใช้ข้อมูลจาก myPlayer ที่เราล็อคไว้ แทน GameTurnManager.CurrentPlayer
+        if (hpText != null)
+            hpText.text = $"HP: {myPlayer.PlayerHealth}";
+
+        if (moneyText != null)
+            moneyText.text = $"Money: {myPlayer.PlayerMoney}";
+
+        if (starText != null)
+            starText.text = $"{myPlayer.PlayerStar}";
+
+        if (winText != null)
+            winText.text = $"{myPlayer.WinCount}";
+
+        if (levelText != null)
+            levelText.text = $"Lv. {myPlayer.PlayerLevel}";
+    }
+
+    /// <summary>
+    /// กันกรณีลืมผูก UI ใน Inspector ของแต่ละ Board Scene
+    /// จะพยายามหา Text จากชื่อวัตถุอัตโนมัติแบบครั้งต่อครั้งจนกว่าจะครบ
+    /// </summary>
+    private void TryAutoAssignUIRefs()
+    {
+        if (hpText != null && moneyText != null && starText != null && winText != null && levelText != null)
+            return;
+
+        TMP_Text[] texts = FindObjectsByType<TMP_Text>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        foreach (var txt in texts)
+        {
+            if (txt == null) continue;
+            string n = txt.name.ToLower();
+
+            if (hpText == null && n.Contains("hp")) hpText = txt;
+            else if (moneyText == null && n.Contains("money")) moneyText = txt;
+            else if (starText == null && n.Contains("star")) starText = txt;
+            else if (winText == null && n.Contains("win")) winText = txt;
+            else if (levelText == null && (n.Contains("level") || n.Contains("lv"))) levelText = txt;
+        }
+    }
+}
