@@ -25,7 +25,7 @@ public static class BattleHealthSyncBridge
     {
         if (!IsBattleScene(scene)) return;
 
-        PlayerState currentPlayer = GameTurnManager.CurrentPlayer;
+        PlayerState currentPlayer = ResolveBoardPlayerState();
         if (currentPlayer == null) return;
 
         int syncedHealth = Mathf.Clamp(currentPlayer.PlayerHealth, 0, Mathf.Max(1, currentPlayer.MaxHealth));
@@ -50,7 +50,7 @@ public static class BattleHealthSyncBridge
     {
         if (!IsBattleScene(scene)) return;
 
-        PlayerState currentPlayer = GameTurnManager.CurrentPlayer;
+        PlayerState currentPlayer = ResolveBoardPlayerState();
         if (currentPlayer == null) return;
 
         int? observedBattleHp = TryReadBattleHp(scene);
@@ -91,12 +91,23 @@ public static class BattleHealthSyncBridge
         FieldInfo selectedPlayerField = behaviour.GetType().GetField(SelectedPlayerFieldName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
         if (selectedPlayerField == null || !typeof(PlayerData).IsAssignableFrom(selectedPlayerField.FieldType)) return;
 
-        if (!(selectedPlayerField.GetValue(behaviour) is PlayerData selectedPlayerData)) return;
+        PlayerData selectedPlayerData = selectedPlayerField.GetValue(behaviour) as PlayerData;
+        if (selectedPlayerData == null)
+        {
+            selectedPlayerData = GameData.Instance?.selectedPlayer;
+            if (selectedPlayerData == null) return;
+            selectedPlayerField.SetValue(behaviour, selectedPlayerData);
+        }
 
         int syncedMaxHealth = Mathf.Max(1, currentPlayer.MaxHealth);
         selectedPlayerData.maxHealth = syncedMaxHealth;
         selectedPlayerData.maxHP = syncedMaxHealth;
         selectedPlayerData.attackDamage = Mathf.Max(0, currentPlayer.CurrentAttack);
+        selectedPlayerData.def = Mathf.Max(0, selectedPlayerData.def);
+        selectedPlayerData.speed = Mathf.Max(0, selectedPlayerData.speed);
+        selectedPlayerData.level = Mathf.Max(1, currentPlayer.PlayerLevel);
+        selectedPlayerData.currentExp = Mathf.Max(0, currentPlayer.CurrentExp);
+        selectedPlayerData.maxExp = Mathf.Max(1, currentPlayer.MaxExp);
         selectedPlayerData.SetHealth(Mathf.Clamp(syncedHealth, 0, syncedMaxHealth));
     }
 
@@ -123,5 +134,28 @@ public static class BattleHealthSyncBridge
     {
         string sceneName = scene.name.ToLowerInvariant();
         return sceneName.Contains("fight") || sceneName.Contains("boss");
+    }
+
+    private static PlayerState ResolveBoardPlayerState()
+    {
+        PlayerState currentPlayer = GameTurnManager.CurrentPlayer;
+        if (currentPlayer != null && !currentPlayer.isAI)
+        {
+            return currentPlayer;
+        }
+
+        PlayerState[] allPlayers = Object.FindObjectsOfType<PlayerState>(true);
+        foreach (PlayerState player in allPlayers)
+        {
+            if (player == null || player.isAI) continue;
+
+            // ผู้เล่นบนบอร์ดที่ DontDestroyOnLoad จะมี buildIndex == -1
+            if (player.gameObject.scene.buildIndex == -1)
+            {
+                return player;
+            }
+        }
+
+        return null;
     }
 }
