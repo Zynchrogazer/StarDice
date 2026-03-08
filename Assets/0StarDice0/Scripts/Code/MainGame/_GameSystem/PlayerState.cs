@@ -16,7 +16,7 @@ public class PlayerState : MonoBehaviour
     [Header("Player Stats")]
     public int PlayerHealth;   // เปลี่ยนจาก Property เป็น Field เพื่อให้เห็นใน Inspector
     public int MaxHealth;      // ✅ เพิ่ม: เพื่อใช้คุมเพดานเลือด
-    public int PlayerMoney = 0;
+    public int PlayerCredit = 0;
     public int PlayerStar = 0;
     public int CurrentAttack;
     public bool DebuffBurn = false;
@@ -95,8 +95,8 @@ public class PlayerState : MonoBehaviour
         MaxHealth = data.GetMaxHealth();
         PlayerHealth = MaxHealth;
         CurrentAttack = data.attackDamage;
-        // 2. โหลดเงิน (ถ้าต้องการใช้ค่าเริ่มต้นจาก Data)
-        PlayerMoney = data.Money;
+        // 2. โหลดเครดิต (ถ้าต้องการใช้ค่าเริ่มต้นจาก Data)
+        PlayerCredit = data.Credit;
 
         // 3. ✅ โหลดข้อมูล Level จาก PlayerData
         PlayerLevel = data.level;
@@ -240,10 +240,10 @@ public class PlayerState : MonoBehaviour
     {
         if (isAI || scene.name != IntermissionSceneName) return;
 
-        // เงินเป็นค่าถาวร -> sync กลับข้อมูลหลัก
+        // เครดิตเป็นค่าถาวร -> sync กลับข้อมูลหลัก
         if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
         {
-            GameData.Instance.selectedPlayer.SetMoney(PlayerMoney);
+            GameData.Instance.selectedPlayer.SetCredit(PlayerCredit);
         }
 
         // เลเวล/EXP ในบอร์ดเป็นค่าชั่วคราว -> รีเซ็ตและย้ำข้อมูลใน PlayerData
@@ -288,10 +288,10 @@ public class PlayerState : MonoBehaviour
         if (isDefeatHandling || isAI) return;
         isDefeatHandling = true;
 
-        // ✅ เก็บเงินสะสมทั้งหมดกลับข้อมูลหลัก เพื่อให้คงอยู่หลังออกจากด่าน
+        // ✅ เก็บเครดิตสะสมทั้งหมดกลับข้อมูลหลัก เพื่อให้คงอยู่หลังออกจากด่าน
         if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
         {
-            GameData.Instance.selectedPlayer.SetMoney(PlayerMoney);
+            GameData.Instance.selectedPlayer.SetCredit(PlayerCredit);
         }
 
         // ✅ รีเซ็ตความก้าวหน้าภายในด่าน (เลเวล/EXP/Win) เมื่อแพ้

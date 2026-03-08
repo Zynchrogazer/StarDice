@@ -21,13 +21,13 @@ public class ShopPackManager : MonoBehaviour
 
     private void OnEnable()
     {
-        RegisterMoneyListener();
+        RegisterCreditListener();
         RefreshPackButtonsState();
     }
 
     private void OnDisable()
     {
-        UnregisterMoneyListener();
+        UnregisterCreditListener();
     }
 
     void Start()
@@ -55,14 +55,14 @@ public class ShopPackManager : MonoBehaviour
         }
 
         int price = GetPackPrice(packIndex);
-        if (!TrySpendIntermissionMoney(price, out int remainingMoney))
+        if (!TrySpendIntermissionCredit(price, out int remainingCredit))
         {
-            Debug.Log($"เงินไม่พอสำหรับเปิดซอง {packIndex + 1}. ต้องใช้ {price} แต่มี {GetCurrentMoney()}");
+            Debug.Log($"เครดิตไม่พอสำหรับเปิดซอง {packIndex + 1}. ต้องใช้ {price} แต่มี {GetCurrentCredit()}");
             RefreshPackButtonsState();
             return;
         }
 
-        Debug.Log($"เปิดซอง {packIndex + 1} (จ่าย {price}, เงินคงเหลือ {remainingMoney})");
+        Debug.Log($"เปิดซอง {packIndex + 1} (จ่าย {price}, เครดิตคงเหลือ {remainingCredit})");
 
         // เปิด Panel
         packResultPanel.SetActive(true);
@@ -92,47 +92,47 @@ public class ShopPackManager : MonoBehaviour
         RefreshPackButtonsState();
     }
 
-    private void RegisterMoneyListener()
+    private void RegisterCreditListener()
     {
         if (GameData.Instance == null || GameData.Instance.selectedPlayer == null) return;
-        GameData.Instance.selectedPlayer.OnMoneyChanged += HandleMoneyChanged;
+        GameData.Instance.selectedPlayer.OnCreditChanged += HandleCreditChanged;
     }
 
-    private void UnregisterMoneyListener()
+    private void UnregisterCreditListener()
     {
         if (GameData.Instance == null || GameData.Instance.selectedPlayer == null) return;
-        GameData.Instance.selectedPlayer.OnMoneyChanged -= HandleMoneyChanged;
+        GameData.Instance.selectedPlayer.OnCreditChanged -= HandleCreditChanged;
     }
 
-    private void HandleMoneyChanged(int _)
+    private void HandleCreditChanged(int _)
     {
         RefreshPackButtonsState();
     }
 
     private void RefreshPackButtonsState()
     {
-        int currentMoney = GetCurrentMoney();
+        int currentCredit = GetCurrentCredit();
 
         for (int i = 0; i < packButtons.Length; i++)
         {
             if (packButtons[i] == null) continue;
-            packButtons[i].interactable = currentMoney >= GetPackPrice(i);
+            packButtons[i].interactable = currentCredit >= GetPackPrice(i);
         }
     }
 
-    private int GetCurrentMoney()
+    private int GetCurrentCredit()
     {
         if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
         {
-            return Mathf.Max(0, GameData.Instance.selectedPlayer.Money);
+            return Mathf.Max(0, GameData.Instance.selectedPlayer.Credit);
         }
 
         return 0;
     }
 
-    private bool TrySpendIntermissionMoney(int amount, out int remainingMoney)
+    private bool TrySpendIntermissionCredit(int amount, out int remainingCredit)
     {
-        remainingMoney = GetCurrentMoney();
+        remainingCredit = GetCurrentCredit();
         if (amount <= 0)
         {
             Debug.LogWarning($"[ShopPackManager] ราคา pack ไม่ถูกต้อง ({amount}) จึงไม่อนุญาตให้ซื้อ");
@@ -144,12 +144,12 @@ public class ShopPackManager : MonoBehaviour
             return false;
         }
 
-        if (!GameData.Instance.selectedPlayer.TrySpendMoney(amount))
+        if (!GameData.Instance.selectedPlayer.TrySpendCredit(amount))
         {
             return false;
         }
 
-        remainingMoney = GameData.Instance.selectedPlayer.Money;
+        remainingCredit = GameData.Instance.selectedPlayer.Credit;
         return true;
     }
 

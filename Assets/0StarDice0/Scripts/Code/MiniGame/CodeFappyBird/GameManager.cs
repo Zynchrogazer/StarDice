@@ -66,7 +66,7 @@ public class GameManager : MonoBehaviour
         isGameOver = true;  // ตั้งค่าเกมให้จบ
         gameOverPanel.SetActive(true);  // แสดง Game Over Panel
         UpdateScoreText();  // อัปเดตคะแนนใน Game Over
-        MiniGameRewardService.TryGrantMoneyReward(score, "FlappyBird");
+        MiniGameRewardService.TryGrantCreditReward(score, "FlappyBird");
         Time.timeScale = 0f;  // หยุดเวลา (เกมหยุด)
         
     }

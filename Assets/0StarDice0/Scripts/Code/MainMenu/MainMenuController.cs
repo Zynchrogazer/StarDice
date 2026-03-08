@@ -11,7 +11,7 @@ public class MainMenuController : MonoBehaviour
     { 
         "MonsterWater", "MonsterEarth", "MonsterWind", "MonsterLight", "MonsterDark",
         "CurrentDeckData" 
-        // ถ้ามี Level หรือ Money ก็ใส่เพิ่มตรงนี้
+        // ถ้ามี Level หรือ Credit ก็ใส่เพิ่มตรงนี้
     };
 
     public void OnNewGameClicked()

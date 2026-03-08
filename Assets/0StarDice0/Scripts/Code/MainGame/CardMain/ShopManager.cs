@@ -12,13 +12,13 @@ public class ShopManager : MonoBehaviour
     [Header("UI")]
     public GameObject shopPanel;    
     public ShopSlot[] shopSlots;    
-    [SerializeField] private TMP_Text shopMoneyText;
-    [SerializeField] private string moneyPrefix = "Money: ";
+    [SerializeField] private TMP_Text shopCreditText;
+    [SerializeField] private string creditPrefix = "Credit: ";
 
     private void Awake()
     {
         Instance = this;
-        TryAutoAssignMoneyText();
+        TryAutoAssignCreditText();
         // ถ้าต้องการให้เริ่มเกมมาแล้วปิดร้านทันที ให้เอา Comment ออก
         // if (shopPanel != null) shopPanel.SetActive(false);
     }
@@ -51,7 +51,7 @@ public class ShopManager : MonoBehaviour
 
         shopPanel.SetActive(true);
         RefreshShopItems();
-        RefreshMoneyText();
+        RefreshCreditText();
     }
 
     public void CloseShop()
@@ -94,26 +94,26 @@ public class ShopManager : MonoBehaviour
         }
 
         PlayerState buyer = GameTurnManager.CurrentPlayer;
-        if (buyer.PlayerMoney < card.price)
+        if (buyer.PlayerCredit < card.price)
         {
-            Debug.Log($"[Shop] เงินไม่พอสำหรับ {card.cardName} (ต้องการ {card.price}, มี {buyer.PlayerMoney})");
+            Debug.Log($"[Shop] เครดิตไม่พอสำหรับ {card.cardName} (ต้องการ {card.price}, มี {buyer.PlayerCredit})");
             return false;
         }
 
-        buyer.PlayerMoney -= card.price;
+        buyer.PlayerCredit -= card.price;
         if (GameData.Instance?.selectedPlayer != null)
         {
-            GameData.Instance.selectedPlayer.SetMoney(buyer.PlayerMoney);
+            GameData.Instance.selectedPlayer.SetCredit(buyer.PlayerCredit);
         }
         PlayerCardInventory.Instance.ObtainCard(card);
-        RefreshMoneyText();
-        Debug.Log($"[Shop] ซื้อ {card.cardName} สำเร็จ เหลือเงิน {buyer.PlayerMoney}");
+        RefreshCreditText();
+        Debug.Log($"[Shop] ซื้อ {card.cardName} สำเร็จ เหลือเครดิต {buyer.PlayerCredit}");
         return true;
     }
 
-    private void TryAutoAssignMoneyText()
+    private void TryAutoAssignCreditText()
     {
-        if (shopMoneyText != null || shopPanel == null) return;
+        if (shopCreditText != null || shopPanel == null) return;
 
         TMP_Text[] texts = shopPanel.GetComponentsInChildren<TMP_Text>(true);
         foreach (var txt in texts)
@@ -123,20 +123,20 @@ public class ShopManager : MonoBehaviour
             string objectName = txt.name.ToLower();
             string textValue = txt.text.ToLower();
 
-            if (objectName.Contains("money") || textValue.Contains("money") || textValue.Contains("coin"))
+            if (objectName.Contains("credit") || textValue.Contains("credit") || textValue.Contains("coin"))
             {
-                shopMoneyText = txt;
+                shopCreditText = txt;
                 break;
             }
         }
     }
 
-    private void RefreshMoneyText()
+    private void RefreshCreditText()
     {
-        TryAutoAssignMoneyText();
-        if (shopMoneyText == null || GameTurnManager.CurrentPlayer == null) return;
+        TryAutoAssignCreditText();
+        if (shopCreditText == null || GameTurnManager.CurrentPlayer == null) return;
 
-        shopMoneyText.text = $"{moneyPrefix}{GameTurnManager.CurrentPlayer.PlayerMoney}";
+        shopCreditText.text = $"{creditPrefix}{GameTurnManager.CurrentPlayer.PlayerCredit}";
     }
 
     private void RefreshShopItems()

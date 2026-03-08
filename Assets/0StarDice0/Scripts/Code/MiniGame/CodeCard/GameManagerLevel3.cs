@@ -178,7 +178,7 @@ void EndGame(bool won)
     gameEnded = true;
     resultPanel.SetActive(true);
 
-    MiniGameRewardService.TryGrantMoneyReward(ScoreManager.Instance != null ? ScoreManager.Instance.totalScore : score, "CardMemory");
+    MiniGameRewardService.TryGrantCreditReward(ScoreManager.Instance != null ? ScoreManager.Instance.totalScore : score, "CardMemory");
 
     if (won)
         resultText.text = "You matched all cards!\nMistakes: " + mistakes;

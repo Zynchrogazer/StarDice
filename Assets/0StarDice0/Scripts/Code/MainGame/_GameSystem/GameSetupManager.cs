@@ -44,13 +44,13 @@ public class GameSetupManager : MonoBehaviour
     {
         if (currentData == null) return;
 
-        // ถ้าคุณแยก Inventory ไปแล้ว อาจต้องดึงเงินจาก PlayerInventory หรือ GameData แทน
+        // ถ้าคุณแยก Inventory ไปแล้ว อาจต้องดึงเครดิตจาก PlayerInventory หรือ GameData แทน
         // แต่ถ้ายังอยู่ที่เดิม ก็ใช้บรรทัดนี้:
-        int currentMoney = GameTurnManager.CurrentPlayer.PlayerMoney;
+        int currentCredit = GameTurnManager.CurrentPlayer.PlayerCredit;
 
-        Debug.Log($"<color=lightblue>[GameSetupManager]</color> Updating persistent data for {currentData.playerName}: Money={currentMoney}");
+        Debug.Log($"<color=lightblue>[GameSetupManager]</color> Updating persistent data for {currentData.playerName}: Credit={currentCredit}");
 
         // บันทึกลง ScriptableObject ที่เราดึงมา (GameData.selectedPlayer)
-        currentData.SetMoney(currentMoney);
+        currentData.SetCredit(currentCredit);
     }
 }

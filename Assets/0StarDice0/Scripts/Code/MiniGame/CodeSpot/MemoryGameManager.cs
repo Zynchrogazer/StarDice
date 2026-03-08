@@ -192,7 +192,7 @@ IEnumerator GameLoop()
 
          gameOverPanel.SetActive(true);
     finalScoreText.text = "Your Score: " + score.ToString();
-    MiniGameRewardService.TryGrantMoneyReward(score, "MemoryGame");
+    MiniGameRewardService.TryGrantCreditReward(score, "MemoryGame");
 
     // เพิ่ม EventListener ให้ปุ่ม
     nextSceneButton.onClick.RemoveAllListeners();

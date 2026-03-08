@@ -3,15 +3,15 @@ using UnityEngine.SceneManagement;
 
 public static class MiniGameRewardService
 {
-    public static int CalculateMoneyReward(int score)
+    public static int CalculateCreditReward(int score)
     {
         if (score <= 0) return 0;
         return Mathf.Clamp(score / 100, 10, 250);
     }
 
-    public static bool TryGrantMoneyReward(int score, string sourceTag)
+    public static bool TryGrantCreditReward(int score, string sourceTag)
     {
-        int reward = CalculateMoneyReward(score);
+        int reward = CalculateCreditReward(score);
         if (reward <= 0) return false;
 
         GameObject[] taggedObjects = GameObject.FindGameObjectsWithTag("Player");
@@ -22,14 +22,14 @@ public static class MiniGameRewardService
             PlayerState player = obj.GetComponent<PlayerState>();
             if (player == null || player.isAI) continue;
 
-            player.PlayerMoney += reward;
+            player.PlayerCredit += reward;
 
             if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
             {
-                GameData.Instance.selectedPlayer.AddMoney(reward);
+                GameData.Instance.selectedPlayer.AddCredit(reward);
             }
 
-            Debug.Log($"[MiniGameReward] {sourceTag}: Reward +{reward} money (score={score})");
+            Debug.Log($"[MiniGameReward] {sourceTag}: Reward +{reward} credit (score={score})");
             return true;
         }
 

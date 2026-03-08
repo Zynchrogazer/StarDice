@@ -5,7 +5,7 @@ public class PlayerUIController : MonoBehaviour
 {
     [Header("UI References")]
     public TMP_Text hpText;
-    public TMP_Text moneyText;
+    public TMP_Text creditText;
     public TMP_Text starText;
     public TMP_Text winText;
     public TMP_Text levelText;
@@ -52,8 +52,8 @@ public class PlayerUIController : MonoBehaviour
         if (hpText != null)
             hpText.text = $"HP: {myPlayer.PlayerHealth}";
 
-        if (moneyText != null)
-            moneyText.text = $"Money: {myPlayer.PlayerMoney}";
+        if (creditText != null)
+            creditText.text = $"Credit: {myPlayer.PlayerCredit}";
 
         if (starText != null)
             starText.text = $"{myPlayer.PlayerStar}";
@@ -71,7 +71,7 @@ public class PlayerUIController : MonoBehaviour
     /// </summary>
     private void TryAutoAssignUIRefs()
     {
-        if (hpText != null && moneyText != null && starText != null && winText != null && levelText != null)
+        if (hpText != null && creditText != null && starText != null && winText != null && levelText != null)
             return;
 
         TMP_Text[] texts = FindObjectsByType<TMP_Text>(FindObjectsInactive.Include, FindObjectsSortMode.None);
@@ -81,7 +81,7 @@ public class PlayerUIController : MonoBehaviour
             string n = txt.name.ToLower();
 
             if (hpText == null && n.Contains("hp")) hpText = txt;
-            else if (moneyText == null && n.Contains("money")) moneyText = txt;
+            else if (creditText == null && n.Contains("credit")) creditText = txt;
             else if (starText == null && n.Contains("star")) starText = txt;
             else if (winText == null && n.Contains("win")) winText = txt;
             else if (levelText == null && (n.Contains("level") || n.Contains("lv"))) levelText = txt;

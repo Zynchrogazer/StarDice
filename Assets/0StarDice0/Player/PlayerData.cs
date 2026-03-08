@@ -6,7 +6,7 @@ using UnityEngine.Serialization;
 
 public class PlayerData : ScriptableObject
 {
-    private const string MoneySaveKeyPrefix = "PLAYER_MONEY_";
+    private const string CreditSaveKeyPrefix = "PLAYER_CREDIT_";
 
     public string playerName;
     public ElementType element;
@@ -33,25 +33,25 @@ public class PlayerData : ScriptableObject
     public int maxExp = 100;   // EXP ที่ต้องใช้ในการอัปเวลครั้งแรก
     // ------------------------------------
 
-    [SerializeField] private int money = 50;
-    private int star = 55; // ถ้าคุณใช้ star ด้วย ก็ควรเพิ่ม Property ให้มันเหมือน Money
+    [SerializeField] private int credit = 50;
+    private int star = 55; // ถ้าคุณใช้ star ด้วย ก็ควรเพิ่ม Property ให้มันเหมือน Credit
 
-    public event Action<int> OnMoneyChanged;
+    public event Action<int> OnCreditChanged;
     public event Action OnDied;
 
     [FormerlySerializedAs("turnsToSkip")]
     [SerializeField, HideInInspector]
     private int legacyTurnsToSkip = 0;
 
-    public int Money
+    public int Credit
     {
-        get => money;
+        get => credit;
         set
         {
-            if (money == value) return;
-            money = Mathf.Max(0, value);
-            SaveMoney();
-            OnMoneyChanged?.Invoke(money);
+            if (credit == value) return;
+            credit = Mathf.Max(0, value);
+            SaveCredit();
+            OnCreditChanged?.Invoke(credit);
         }
     }
 
@@ -65,29 +65,29 @@ public class PlayerData : ScriptableObject
             maxHealth = Mathf.Max(1, maxHP);
         }
 
-        LoadMoney();
+        LoadCredit();
     }
 
-    private string GetMoneySaveKey()
+    private string GetCreditSaveKey()
     {
         string playerKey = string.IsNullOrEmpty(playerName) ? name : playerName;
-        return $"{MoneySaveKeyPrefix}{playerKey}";
+        return $"{CreditSaveKeyPrefix}{playerKey}";
     }
 
-    private void LoadMoney()
+    private void LoadCredit()
     {
-        string saveKey = GetMoneySaveKey();
+        string saveKey = GetCreditSaveKey();
         if (!PlayerPrefs.HasKey(saveKey))
         {
             return;
         }
 
-        money = Mathf.Max(0, PlayerPrefs.GetInt(saveKey, money));
+        credit = Mathf.Max(0, PlayerPrefs.GetInt(saveKey, credit));
     }
 
-    private void SaveMoney()
+    private void SaveCredit()
     {
-        PlayerPrefs.SetInt(GetMoneySaveKey(), money);
+        PlayerPrefs.SetInt(GetCreditSaveKey(), credit);
         PlayerPrefs.Save();
     }
 
@@ -109,25 +109,25 @@ public class PlayerData : ScriptableObject
     }
 
     /// <summary>
-    /// เมธอดสำหรับตั้งค่าเงินโดยตรง และเรียก Event
+    /// เมธอดสำหรับตั้งค่าเครดิตโดยตรง และเรียก Event
     /// </summary>
-    public void SetMoney(int newAmount)
+    public void SetCredit(int newAmount)
     {
-        this.Money = newAmount; // ใช้ Property เพื่อให้ Event OnMoneyChanged ทำงาน
+        this.Credit = newAmount; // ใช้ Property เพื่อให้ Event OnCreditChanged ทำงาน
     }
 
-    public void AddMoney(int amount)
+    public void AddCredit(int amount)
     {
         if (amount <= 0) return;
-        Money += amount;
+        Credit += amount;
     }
 
-    public bool TrySpendMoney(int amount)
+    public bool TrySpendCredit(int amount)
     {
         if (amount <= 0) return true;
-        if (Money < amount) return false;
+        if (Credit < amount) return false;
 
-        Money -= amount;
+        Credit -= amount;
         return true;
     }
 

@@ -131,7 +131,7 @@ void GenerateQuestion()
         isGameActive = false;
         gameOverPanel.SetActive(true);
         finalScoreText.text = "Your Score: " + score;
-        MiniGameRewardService.TryGrantMoneyReward(score, "QuickMath");
+        MiniGameRewardService.TryGrantCreditReward(score, "QuickMath");
     }
 
     public void ReturnToBoardAfterGame()

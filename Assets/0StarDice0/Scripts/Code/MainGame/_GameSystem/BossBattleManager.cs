@@ -32,10 +32,10 @@ public class BossBattleManager : MonoBehaviour
 
         if (GameData.Instance?.selectedPlayer != null)
         {
-            currentPlayer.PlayerMoney = GameData.Instance.selectedPlayer.Money;
+            currentPlayer.PlayerCredit = GameData.Instance.selectedPlayer.Credit;
         }
 
-        Debug.Log($"Data saved: HP={currentHp}, Money={currentPlayer.PlayerMoney}");
+        Debug.Log($"Data saved: HP={currentHp}, Credit={currentPlayer.PlayerCredit}");
 
         // 2. สั่งให้โหลด Scene ต่อสู้
         Debug.Log($"Loading scene: {bossBattleSceneName}");

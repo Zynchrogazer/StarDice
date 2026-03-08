@@ -34,7 +34,7 @@ public class PassiveSkillManager : MonoBehaviour
     public bool TryUpgradeStarSkill()
     {
         int cost = GetStarUpgradeCost();
-        return TrySpendCurrentPlayerMoney(cost, () =>
+        return TrySpendCurrentPlayerCredit(cost, () =>
         {
             starSkillLevel++;
             ApplyPassiveBonusToCurrentPlayer();
@@ -45,7 +45,7 @@ public class PassiveSkillManager : MonoBehaviour
     public bool TryUpgradeAttackSkill()
     {
         int cost = GetAttackUpgradeCost();
-        return TrySpendCurrentPlayerMoney(cost, () =>
+        return TrySpendCurrentPlayerCredit(cost, () =>
         {
             attackSkillLevel++;
             ApplyPassiveBonusToCurrentPlayer();
@@ -105,7 +105,7 @@ public class PassiveSkillManager : MonoBehaviour
         }
     }
 
-    private bool TrySpendCurrentPlayerMoney(int amount, System.Action onSuccess)
+    private bool TrySpendCurrentPlayerCredit(int amount, System.Action onSuccess)
     {
         if (amount < 0)
         {
@@ -119,13 +119,13 @@ public class PassiveSkillManager : MonoBehaviour
         }
 
         PlayerState player = GameTurnManager.CurrentPlayer;
-        if (player.PlayerMoney < amount)
+        if (player.PlayerCredit < amount)
         {
             return false;
         }
 
-        player.PlayerMoney -= amount;
-        GameData.Instance.selectedPlayer.SetMoney(player.PlayerMoney);
+        player.PlayerCredit -= amount;
+        GameData.Instance.selectedPlayer.SetCredit(player.PlayerCredit);
         onSuccess?.Invoke();
         return true;
     }

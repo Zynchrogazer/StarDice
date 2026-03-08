@@ -12,11 +12,11 @@ public class BossSceneController : MonoBehaviour
     [Header("Player Battle Data (Simulated)")]
     // นี่คือค่าจำลองสำหรับใช้ใน Scene นี้
     private int currentPlayerHealth;
-    private int currentPlayerMoney;
+    private int currentPlayerCredit;
 
     [Header("UI References")]
     public TextMeshProUGUI playerHealthText;
-    public TextMeshProUGUI playerMoneyText;
+    public TextMeshProUGUI playerCreditText;
     public Button returnButton; // << ปุ่มสำหรับจำลองการจบการต่อสู้
 
     void Start()
@@ -25,7 +25,7 @@ public class BossSceneController : MonoBehaviour
         {
             // 1. แกะข้อมูลออกจากกระเป๋าตอนเริ่ม
             currentPlayerHealth = GameTurnManager.CurrentPlayer.PlayerHealth;
-            currentPlayerMoney = GameTurnManager.CurrentPlayer.PlayerMoney;
+            currentPlayerCredit = GameTurnManager.CurrentPlayer.PlayerCredit;
 
             UpdateUI();
         }
@@ -61,10 +61,10 @@ public class BossSceneController : MonoBehaviour
         // ตรวจสอบว่ามี Persistence Instance อยู่หรือไม่
         if (GameTurnManager.CurrentPlayer != null)
         {
-            // 1. บันทึกข้อมูลล่าสุด (HP, Money) กลับลงใน "กระเป๋าเดินทาง"
+            // 1. บันทึกข้อมูลล่าสุด (HP, Credit) กลับลงใน "กระเป๋าเดินทาง"
             GameTurnManager.CurrentPlayer.PlayerHealth = currentPlayerHealth;
-            GameTurnManager.CurrentPlayer.PlayerMoney = currentPlayerMoney;
-            Debug.Log($"Data saved for return: HP={currentPlayerHealth}, Money={currentPlayerMoney}");
+            GameTurnManager.CurrentPlayer.PlayerCredit = currentPlayerCredit;
+            Debug.Log($"Data saved for return: HP={currentPlayerHealth}, Credit={currentPlayerCredit}");
         }
 
         // 2. สั่งให้โหลด Scene บอร์ดเกมกลับไป
@@ -77,7 +77,7 @@ public class BossSceneController : MonoBehaviour
         if (playerHealthText != null)
             playerHealthText.text = $"HP: {currentPlayerHealth}";
 
-        if (playerMoneyText != null)
-            playerMoneyText.text = $"Money: {currentPlayerMoney}";
+        if (playerCreditText != null)
+            playerCreditText.text = $"Credit: {currentPlayerCredit}";
     }
 }

@@ -37,7 +37,7 @@ public class SkillManager : MonoBehaviour
         if (skill == null) return false;
         if (IsUnlocked(skill)) return false;
 
-        if (GetAvailableMoney() < skill.costPoint) return false;
+        if (GetAvailableCredit() < skill.costPoint) return false;
 
         if (skill.requiredSkills != null)
         {
@@ -60,7 +60,7 @@ public class SkillManager : MonoBehaviour
             return false;
         }
 
-        if (!TrySpendMoney(skill.costPoint))
+        if (!TrySpendCredit(skill.costPoint))
         {
             return false;
         }
@@ -110,22 +110,22 @@ public class SkillManager : MonoBehaviour
         player.PlayerHealth = Mathf.Clamp(player.PlayerHealth + hpDelta, 0, player.MaxHealth);
     }
 
-    private int GetAvailableMoney()
+    private int GetAvailableCredit()
     {
         if (GameTurnManager.CurrentPlayer != null)
         {
-            return GameTurnManager.CurrentPlayer.PlayerMoney;
+            return GameTurnManager.CurrentPlayer.PlayerCredit;
         }
 
         if (GameData.Instance?.selectedPlayer != null)
         {
-            return GameData.Instance.selectedPlayer.Money;
+            return GameData.Instance.selectedPlayer.Credit;
         }
 
         return 0;
     }
 
-    private bool TrySpendMoney(int amount)
+    private bool TrySpendCredit(int amount)
     {
         if (amount < 0)
         {
@@ -135,15 +135,15 @@ public class SkillManager : MonoBehaviour
         if (GameTurnManager.CurrentPlayer != null)
         {
             PlayerState player = GameTurnManager.CurrentPlayer;
-            if (player.PlayerMoney < amount)
+            if (player.PlayerCredit < amount)
             {
                 return false;
             }
 
-            player.PlayerMoney -= amount;
+            player.PlayerCredit -= amount;
             if (GameData.Instance?.selectedPlayer != null)
             {
-                GameData.Instance.selectedPlayer.SetMoney(player.PlayerMoney);
+                GameData.Instance.selectedPlayer.SetCredit(player.PlayerCredit);
             }
             return true;
         }
@@ -151,12 +151,12 @@ public class SkillManager : MonoBehaviour
         if (GameData.Instance?.selectedPlayer != null)
         {
             PlayerData selectedPlayer = GameData.Instance.selectedPlayer;
-            if (selectedPlayer.Money < amount)
+            if (selectedPlayer.Credit < amount)
             {
                 return false;
             }
 
-            selectedPlayer.SetMoney(selectedPlayer.Money - amount);
+            selectedPlayer.SetCredit(selectedPlayer.Credit - amount);
             return true;
         }
 

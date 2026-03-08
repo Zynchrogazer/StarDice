@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 public class SkillTreeUI : MonoBehaviour
 {
     [Header("UI References")]
-    public TextMeshProUGUI moneyText;
+    public TextMeshProUGUI creditText;
     public TextMeshProUGUI goldText; // backward compatibility
 
     [Header("Star Skill")]
@@ -47,24 +47,24 @@ public class SkillTreeUI : MonoBehaviour
     {
         if (PassiveSkillManager.Instance == null) return;
 
-        int playerMoney = GameTurnManager.CurrentPlayer != null
-            ? GameTurnManager.CurrentPlayer.PlayerMoney
-            : (GameData.Instance?.selectedPlayer != null ? GameData.Instance.selectedPlayer.Money : 0);
+        int playerCredit = GameTurnManager.CurrentPlayer != null
+            ? GameTurnManager.CurrentPlayer.PlayerCredit
+            : (GameData.Instance?.selectedPlayer != null ? GameData.Instance.selectedPlayer.Credit : 0);
 
-        if (moneyText != null) moneyText.text = $"Money: {playerMoney}";
-        if (goldText != null) goldText.text = $"Money: {playerMoney}";
+        if (creditText != null) creditText.text = $"Credit: {playerCredit}";
+        if (goldText != null) goldText.text = $"Credit: {playerCredit}";
 
         int starLv = PassiveSkillManager.Instance.starSkillLevel;
         int starCost = PassiveSkillManager.Instance.GetStarUpgradeCost();
         starLevelText.text = $"Lv. {starLv} (+{PassiveSkillManager.Instance.GetStarBonusAmount()} MaxHP)";
         starCostText.text = $"Cost: {starCost}";
-        upgradeStarBtn.interactable = playerMoney >= starCost;
+        upgradeStarBtn.interactable = playerCredit >= starCost;
 
         int atkLv = PassiveSkillManager.Instance.attackSkillLevel;
         int atkCost = PassiveSkillManager.Instance.GetAttackUpgradeCost();
         attackLevelText.text = $"Lv. {atkLv} (+{PassiveSkillManager.Instance.GetAttackBonusAmount()} Dmg)";
         attackCostText.text = $"Cost: {atkCost}";
-        upgradeAttackBtn.interactable = playerMoney >= atkCost;
+        upgradeAttackBtn.interactable = playerCredit >= atkCost;
     }
 
     public void OnBackButtonClicked()

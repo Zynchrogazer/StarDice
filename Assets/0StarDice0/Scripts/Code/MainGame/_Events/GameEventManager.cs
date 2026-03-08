@@ -33,7 +33,7 @@ public class GameEventManager : MonoBehaviour
     public string windTeleportPanelName = "windteleportpanel";
     // ✅ ตัวแปรเช็คสถานะการเล่น (เชื่อมกับ State Machine)
 
-    public Sprite moneySprite; // 🖼️ ลากรูปเหรียญมาใส่ตรงนี้
+    public Sprite creditSprite; // 🖼️ ลากรูปเหรียญมาใส่ตรงนี้
     
     public bool isEventProcessing => isRandomSpinning || (GameTurnManager.Instance != null && GameTurnManager.Instance.currentState == GameState.EventProcessing);
 
@@ -327,10 +327,10 @@ public class GameEventManager : MonoBehaviour
         Sprite resultSprite = null;
 
         
-            // 💰 ได้เงิน
-            p.PlayerMoney += 100;
-            resultSprite = moneySprite;
-            Debug.Log("Treasure: Got Money");
+            // 💰 ได้เครดิต
+            p.PlayerCredit += 100;
+            resultSprite = creditSprite;
+            Debug.Log("Treasure: Got Credit");
 
              int roll = Random.Range(1, 101);
             
