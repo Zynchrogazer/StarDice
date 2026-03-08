@@ -172,9 +172,18 @@ public class GameTurnManager : MonoBehaviour
 
         PlayerStartSpawner.LastKnownPositions.Clear();
         PlayerStartSpawner spawner = FindObjectOfType<PlayerStartSpawner>(true);
-        if (spawner != null)
+        bool canRespawnPlayers = spawner != null
+                                 && spawner.routeManager != null
+                                 && spawner.routeManager.nodeConnections != null
+                                 && spawner.routeManager.nodeConnections.Count > 0;
+
+        if (canRespawnPlayers)
         {
             spawner.SpawnAllPlayers();
+        }
+        else
+        {
+            Debug.Log("[Manager] Skip SpawnAllPlayers: board scene/spawner is not ready yet.");
         }
 
         if (GameEventManager.Instance != null)
@@ -182,7 +191,10 @@ public class GameTurnManager : MonoBehaviour
             GameEventManager.Instance.ResetEventStatus();
         }
 
-        StartCoroutine(StartTurnRoutine());
+        if (canRespawnPlayers)
+        {
+            StartCoroutine(StartTurnRoutine());
+        }
     }
 
     // ===== ⭐ 핵심: RETURN FROM BATTLE =====

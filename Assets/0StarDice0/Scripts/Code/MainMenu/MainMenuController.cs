@@ -1,5 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement; // จำเป็นต้องมีเพื่อสั่งเปลี่ยน Scene
+using System;
+using System.Collections.Generic;
 
 public class MainMenuController : MonoBehaviour
 {
@@ -18,6 +20,9 @@ public class MainMenuController : MonoBehaviour
     {
         Debug.Log("🗑️ Clearing Active Data for New Game...");
 
+        // เคลียร์ state runtime ที่ติดมาจากรอบก่อน (DontDestroyOnLoad / Singleton)
+        ResetRuntimeState();
+
         // 1. วนลูปเพื่อลบข้อมูลการเล่นปัจจุบันทิ้ง (Reset)
         foreach (string key in keysToReset)
         {
@@ -29,6 +34,41 @@ public class MainMenuController : MonoBehaviour
 
         // 3. เปลี่ยนฉากไปเริ่มเกม
         SceneManager.LoadScene(gameSceneName);
+    }
+
+    private void ResetRuntimeState()
+    {
+        HashSet<Type> persistentTypes = new HashSet<Type>
+        {
+            typeof(GameData),
+            typeof(DeckData),
+            typeof(DeckManager),
+            typeof(GameTurnManager),
+            typeof(GameEventManager),
+            typeof(DiceRollerFromPNG),
+            typeof(CameraController),
+            typeof(SceneController),
+            typeof(NormaSystem),
+            typeof(BoardGameGroup),
+            typeof(PlayerInventory),
+            typeof(PlayerDataManager),
+            typeof(EquipmentManager),
+            typeof(PassiveSkillManager),
+            typeof(ScoreManager),
+            typeof(CharacterSelectManager)
+        };
+
+        MonoBehaviour[] allBehaviours = Resources.FindObjectsOfTypeAll<MonoBehaviour>();
+        foreach (MonoBehaviour behaviour in allBehaviours)
+        {
+            if (behaviour == null) continue;
+            if (!persistentTypes.Contains(behaviour.GetType())) continue;
+            if (behaviour.gameObject.scene.buildIndex != -1) continue; // เฉพาะ DontDestroyOnLoad
+
+            Destroy(behaviour.gameObject);
+        }
+
+        PlayerStartSpawner.LastKnownPositions.Clear();
     }
 
     // (แถม) ปุ่ม Continue: โหลดฉากเกมเลยโดยไม่ลบค่า (เล่นต่อจากล่าสุด)
