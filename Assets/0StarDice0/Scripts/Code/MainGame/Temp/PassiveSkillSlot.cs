@@ -6,22 +6,42 @@ public class PassiveSkillSlot : MonoBehaviour, IPointerEnterHandler, IPointerExi
 {
     public PassiveSkillData passiveSkillData;
     public Image iconImage;
-    //public Image frameImage; // กรอบ (ถ้าอยากเปลี่ยนสีเลเวลกรอบด้วย)
+    public Image frameImage;
 
     [Header("Colors")]
-    public Color lockedColor = new Color(0.3f, 0.3f, 0.3f, 1f); // สีมืดๆ (ยังอัปไม่ได้)
-    public Color unlockableColor = new Color(0.7f, 0.7f, 0.7f, 1f); // สีเทาๆ (เงื่อนไขครบ แต่อัปได้)
-    public Color unlockedColor = Color.white; // สีสว่าง (อัปแล้ว)
+    public Color lockedColor = new Color(0.2f, 0.2f, 0.2f, 0.9f);
+    public Color unlockableColor = new Color(1f, 0.92f, 0.3f, 1f);
+    public Color unlockedColor = Color.white;
+
+    [Header("Frame Colors")]
+    public Color lockedFrameColor = new Color(0.35f, 0.15f, 0.15f, 1f);
+    public Color unlockableFrameColor = new Color(0.95f, 0.8f, 0.2f, 1f);
+    public Color unlockedFrameColor = new Color(0.25f, 0.95f, 0.4f, 1f);
+
+    [Header("Locked Overlay")]
+    [Range(0f, 1f)] public float lockedOverlayAlpha = 0.5f;
+    public GameObject lockedOverlayObject;
+
+    private Image lockedOverlayImage;
+
+    private void Awake()
+    {
+        if (frameImage == null)
+        {
+            frameImage = GetComponent<Image>();
+        }
+
+        EnsureLockedOverlay();
+    }
 
     private void Start()
     {
-        if (passiveSkillData != null)
+        if (passiveSkillData != null && iconImage != null)
         {
             iconImage.sprite = passiveSkillData.icon;
-            UpdateUI(); // เช็คสถานะตอนเริ่ม
+            UpdateUI();
         }
 
-        // สมัครรับข่าวสาร: ถ้ามีการอัปสกิลที่อื่น ให้ฉันเช็คตัวเองใหม่ด้วย
         if (SkillManager.Instance != null)
             SkillManager.Instance.OnSkillTreeUpdated += UpdateUI;
     }
@@ -34,37 +54,38 @@ public class PassiveSkillSlot : MonoBehaviour, IPointerEnterHandler, IPointerExi
 
     public void UpdateUI()
     {
-        if (passiveSkillData == null) return;
+        if (passiveSkillData == null || iconImage == null || SkillManager.Instance == null) return;
 
         bool isUnlocked = SkillManager.Instance.IsUnlocked(passiveSkillData);
         bool canUnlock = SkillManager.Instance.CanUnlock(passiveSkillData);
 
         if (isUnlocked)
         {
-            // ✅ ปลดแล้ว: สว่างเต็มที่
             iconImage.color = unlockedColor;
+            if (frameImage != null) frameImage.color = unlockedFrameColor;
+            SetLockedOverlay(false);
         }
         else if (canUnlock)
         {
-            // 🟡 ยังไม่ปลด แต่เงื่อนไขครบ: สีกลางๆ (รอให้กด)
             iconImage.color = unlockableColor;
+            if (frameImage != null) frameImage.color = unlockableFrameColor;
+            SetLockedOverlay(true, lockedOverlayAlpha * 0.5f);
         }
         else
         {
-            // 🔒 ล็อค: มืดตึ๊ดตื๋อ
             iconImage.color = lockedColor;
+            if (frameImage != null) frameImage.color = lockedFrameColor;
+            SetLockedOverlay(true, lockedOverlayAlpha);
         }
     }
 
-    // กดคลิกเพื่ออัปเกรด
     public void OnPointerClick(PointerEventData eventData)
     {
-        if (passiveSkillData != null)
+        if (passiveSkillData != null && SkillManager.Instance != null)
         {
             if (SkillManager.Instance.TryUnlockSkill(passiveSkillData))
             {
                 Debug.Log($"Upgrade {passiveSkillData.skillName} Success!");
-                // (ใส่เสียง Effect ตรงนี้ได้)
             }
             else
             {
@@ -73,13 +94,68 @@ public class PassiveSkillSlot : MonoBehaviour, IPointerEnterHandler, IPointerExi
         }
     }
 
-    // (ส่วน Tooltip เหมือนเดิม)
     public void OnPointerEnter(PointerEventData eventData)
     {
-        if (passiveSkillData != null)
+        if (passiveSkillData != null && PassiveSkillTooltip.Instance != null)
             PassiveSkillTooltip.Instance.ShowTooltip(passiveSkillData.skillName, passiveSkillData.description);
     }
 
     public void OnPointerExit(PointerEventData eventData)
-        => PassiveSkillTooltip.Instance.HideTooltip();
+    {
+        if (PassiveSkillTooltip.Instance != null)
+            PassiveSkillTooltip.Instance.HideTooltip();
+    }
+
+    private void EnsureLockedOverlay()
+    {
+        if (lockedOverlayObject == null)
+        {
+            Transform existing = transform.Find("LockedOverlay");
+            if (existing != null)
+            {
+                lockedOverlayObject = existing.gameObject;
+            }
+            else
+            {
+                GameObject overlay = new GameObject("LockedOverlay", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+                overlay.transform.SetParent(transform, false);
+
+                RectTransform rect = overlay.GetComponent<RectTransform>();
+                rect.anchorMin = Vector2.zero;
+                rect.anchorMax = Vector2.one;
+                rect.offsetMin = Vector2.zero;
+                rect.offsetMax = Vector2.zero;
+
+                lockedOverlayObject = overlay;
+            }
+        }
+
+        if (lockedOverlayObject != null)
+        {
+            lockedOverlayImage = lockedOverlayObject.GetComponent<Image>();
+            if (lockedOverlayImage != null)
+            {
+                lockedOverlayImage.raycastTarget = false;
+                lockedOverlayImage.color = new Color(0f, 0f, 0f, lockedOverlayAlpha);
+            }
+        }
+    }
+
+    private void SetLockedOverlay(bool visible, float alphaOverride = -1f)
+    {
+        if (lockedOverlayObject == null)
+        {
+            EnsureLockedOverlay();
+        }
+
+        if (lockedOverlayObject == null) return;
+
+        if (lockedOverlayImage != null)
+        {
+            float useAlpha = alphaOverride >= 0f ? alphaOverride : lockedOverlayAlpha;
+            lockedOverlayImage.color = new Color(0f, 0f, 0f, Mathf.Clamp01(useAlpha));
+        }
+
+        lockedOverlayObject.SetActive(visible);
+    }
 }

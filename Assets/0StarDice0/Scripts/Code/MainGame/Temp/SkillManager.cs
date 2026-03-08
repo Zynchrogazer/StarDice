@@ -10,10 +10,14 @@ public class SkillManager : MonoBehaviour
     public int defaultSkillPoints = 5; // เก็บไว้เผื่อระบบเก่า
     private int appliedPassiveStarBonus = 0;
 
+    private const string UnlockedSkillsSaveKey = "PassiveUnlockedSkills";
+
     private void Awake()
     {
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
+
+        LoadUnlockedSkills();
     }
 
 
@@ -33,8 +37,7 @@ public class SkillManager : MonoBehaviour
         if (skill == null) return false;
         if (IsUnlocked(skill)) return false;
 
-        PlayerState player = GameTurnManager.CurrentPlayer;
-        if (player == null || player.PlayerMoney < skill.costPoint) return false;
+        if (GetAvailableMoney() < skill.costPoint) return false;
 
         if (skill.requiredSkills != null)
         {
@@ -57,15 +60,13 @@ public class SkillManager : MonoBehaviour
             return false;
         }
 
-        PlayerState player = GameTurnManager.CurrentPlayer;
-        player.PlayerMoney -= skill.costPoint;
-
-        if (GameData.Instance?.selectedPlayer != null)
+        if (!TrySpendMoney(skill.costPoint))
         {
-            GameData.Instance.selectedPlayer.SetMoney(player.PlayerMoney);
+            return false;
         }
 
         unlockedSkillIDs.Add(skill.skillID);
+        SaveUnlockedSkills();
 
         ApplyAllPassiveBonusesToCurrentPlayer();
 
@@ -107,6 +108,86 @@ public class SkillManager : MonoBehaviour
 
         int hpDelta = player.MaxHealth - oldMaxHp;
         player.PlayerHealth = Mathf.Clamp(player.PlayerHealth + hpDelta, 0, player.MaxHealth);
+    }
+
+    private int GetAvailableMoney()
+    {
+        if (GameTurnManager.CurrentPlayer != null)
+        {
+            return GameTurnManager.CurrentPlayer.PlayerMoney;
+        }
+
+        if (GameData.Instance?.selectedPlayer != null)
+        {
+            return GameData.Instance.selectedPlayer.Money;
+        }
+
+        return 0;
+    }
+
+    private bool TrySpendMoney(int amount)
+    {
+        if (amount < 0)
+        {
+            return false;
+        }
+
+        if (GameTurnManager.CurrentPlayer != null)
+        {
+            PlayerState player = GameTurnManager.CurrentPlayer;
+            if (player.PlayerMoney < amount)
+            {
+                return false;
+            }
+
+            player.PlayerMoney -= amount;
+            if (GameData.Instance?.selectedPlayer != null)
+            {
+                GameData.Instance.selectedPlayer.SetMoney(player.PlayerMoney);
+            }
+            return true;
+        }
+
+        if (GameData.Instance?.selectedPlayer != null)
+        {
+            PlayerData selectedPlayer = GameData.Instance.selectedPlayer;
+            if (selectedPlayer.Money < amount)
+            {
+                return false;
+            }
+
+            selectedPlayer.SetMoney(selectedPlayer.Money - amount);
+            return true;
+        }
+
+        return false;
+    }
+
+    private void SaveUnlockedSkills()
+    {
+        string serializedSkills = string.Join("|", unlockedSkillIDs);
+        PlayerPrefs.SetString(UnlockedSkillsSaveKey, serializedSkills);
+        PlayerPrefs.Save();
+    }
+
+    private void LoadUnlockedSkills()
+    {
+        unlockedSkillIDs.Clear();
+
+        string serializedSkills = PlayerPrefs.GetString(UnlockedSkillsSaveKey, string.Empty);
+        if (string.IsNullOrEmpty(serializedSkills))
+        {
+            return;
+        }
+
+        string[] split = serializedSkills.Split('|');
+        foreach (string skillID in split)
+        {
+            if (!string.IsNullOrWhiteSpace(skillID))
+            {
+                unlockedSkillIDs.Add(skillID);
+            }
+        }
     }
 
     public System.Action OnSkillTreeUpdated;
