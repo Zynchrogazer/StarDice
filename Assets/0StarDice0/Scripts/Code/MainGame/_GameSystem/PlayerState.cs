@@ -19,6 +19,10 @@ public class PlayerState : MonoBehaviour
     public int PlayerCredit = 0;
     public int PlayerStar = 0;
     public int CurrentAttack;
+    public int RuntimeAttackModifier = 0;
+    public int RuntimeMaxHealthModifier = 0;
+    public int RuntimeStarModifier = 0;
+    public int AppliedStarBonusTotal = 0;
     public bool DebuffBurn = false;
     public int DebuffBurnTurnsRemaining = 0;
     public bool hasIceEffect = false;
@@ -95,6 +99,10 @@ public class PlayerState : MonoBehaviour
         MaxHealth = data.GetMaxHealth();
         PlayerHealth = MaxHealth;
         CurrentAttack = data.attackDamage;
+        RuntimeAttackModifier = 0;
+        RuntimeMaxHealthModifier = 0;
+        RuntimeStarModifier = 0;
+        AppliedStarBonusTotal = 0;
         // 2. โหลดเครดิต (ถ้าต้องการใช้ค่าเริ่มต้นจาก Data)
         PlayerCredit = data.Credit;
 
@@ -109,6 +117,11 @@ public class PlayerState : MonoBehaviour
         CachePersistentProgressSnapshot(data);
         InitializeRuntimeSkillUnlocks(data.allSkills != null ? data.allSkills.Length : 0);
         EnsureRuntimeSkillUnlocksMatchLevel();
+
+        if (PlayerStatAggregator.Instance != null)
+        {
+            PlayerStatAggregator.Instance.RefreshCurrentPlayerStats();
+        }
 
         Debug.Log($"[PlayerState] Loaded: Level {PlayerLevel}, HP {PlayerHealth}/{MaxHealth}");
     }
@@ -330,6 +343,10 @@ public class PlayerState : MonoBehaviour
         hasIceEffect = false;
         DebuffBurn = false;
         DebuffBurnTurnsRemaining = 0;
+        RuntimeAttackModifier = 0;
+        RuntimeMaxHealthModifier = 0;
+        RuntimeStarModifier = 0;
+        AppliedStarBonusTotal = 0;
 
         if (sourceData != null && sourceData.allSkills != null)
         {
@@ -339,6 +356,11 @@ public class PlayerState : MonoBehaviour
         else
         {
             ResetRuntimeSkillUnlocks();
+        }
+
+        if (PlayerStatAggregator.Instance != null)
+        {
+            PlayerStatAggregator.Instance.RefreshCurrentPlayerStats();
         }
 
         OnStatsUpdated?.Invoke();
@@ -359,6 +381,11 @@ public class PlayerState : MonoBehaviour
     {
         runtimeUnlockedSkillIndexes.Clear();
         runtimeSkillCount = 0;
+    }
+
+    public void NotifyStatsUpdated()
+    {
+        OnStatsUpdated?.Invoke();
     }
 
     public bool IsSkillUnlocked(int skillIndex, int defaultUnlockedCount = DefaultUnlockedSkillCount)

@@ -8,32 +8,36 @@ public class SkillManager : MonoBehaviour
     public HashSet<string> unlockedSkillIDs = new HashSet<string>();
 
     public int defaultSkillPoints = 5; // เก็บไว้เผื่อระบบเก่า
-    private int appliedPassiveStarBonus = 0;
+    private int fallbackAppliedStarBonus = 0;
 
-    private const string UnlockedSkillsSaveKey = "PassiveUnlockedSkills";
+    private const string UnlockedSkillsSaveKeyPrefix = "PassiveUnlockedSkills";
+    private string loadedSaveKey = string.Empty;
 
     private void Awake()
     {
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
 
-        LoadUnlockedSkills();
+        EnsureLoadedForCurrentPlayer();
     }
 
 
     private void Start()
     {
+        EnsureLoadedForCurrentPlayer();
         ApplyAllPassiveBonusesToCurrentPlayer();
         OnSkillTreeUpdated?.Invoke();
     }
 
     public bool IsUnlocked(PassiveSkillData skill)
     {
+        EnsureLoadedForCurrentPlayer();
         return skill != null && unlockedSkillIDs.Contains(skill.skillID);
     }
 
     public bool CanUnlock(PassiveSkillData skill)
     {
+        EnsureLoadedForCurrentPlayer();
         if (skill == null) return false;
         if (IsUnlocked(skill)) return false;
 
@@ -55,6 +59,7 @@ public class SkillManager : MonoBehaviour
 
     public bool TryUnlockSkill(PassiveSkillData skill)
     {
+        EnsureLoadedForCurrentPlayer();
         if (!CanUnlock(skill))
         {
             return false;
@@ -76,6 +81,12 @@ public class SkillManager : MonoBehaviour
 
     public void ApplyAllPassiveBonusesToCurrentPlayer()
     {
+        if (PlayerStatAggregator.Instance != null)
+        {
+            PlayerStatAggregator.Instance.RefreshCurrentPlayerStats();
+            return;
+        }
+
         if (GameTurnManager.CurrentPlayer == null || GameData.Instance?.selectedPlayer == null)
         {
             return;
@@ -83,31 +94,35 @@ public class SkillManager : MonoBehaviour
 
         PlayerState player = GameTurnManager.CurrentPlayer;
         PlayerData data = GameData.Instance.selectedPlayer;
+        SkillPassiveTotals totals = GetUnlockedPassiveTotals();
 
-        int bonusAtk = 0;
-        int bonusHp = 0;
-        int bonusStar = 0;
+        int oldMaxHp = player.MaxHealth;
 
+        player.CurrentAttack = data.attackDamage + totals.attackBonus;
+        player.MaxHealth = data.maxHP + totals.maxHpBonus;
+        int starDelta = totals.starBonus - fallbackAppliedStarBonus;
+        player.PlayerStar = Mathf.Max(0, player.PlayerStar + starDelta);
+        fallbackAppliedStarBonus = totals.starBonus;
+
+        int hpDelta = player.MaxHealth - oldMaxHp;
+        player.PlayerHealth = Mathf.Clamp(player.PlayerHealth + hpDelta, 0, player.MaxHealth);
+    }
+
+    public SkillPassiveTotals GetUnlockedPassiveTotals()
+    {
+        EnsureLoadedForCurrentPlayer();
+
+        SkillPassiveTotals totals = new SkillPassiveTotals();
         PassiveSkillData[] allSkills = Resources.LoadAll<PassiveSkillData>("");
         foreach (var passive in allSkills)
         {
             if (passive == null || !IsUnlocked(passive)) continue;
-            bonusAtk += passive.bonusAttack;
-            bonusHp += passive.bonusMaxHP;
-            bonusStar += passive.bonusStar;
+            totals.attackBonus += passive.bonusAttack;
+            totals.maxHpBonus += passive.bonusMaxHP;
+            totals.starBonus += passive.bonusStar;
         }
 
-        int oldMaxHp = player.MaxHealth;
-        int oldAppliedStarBonus = appliedPassiveStarBonus;
-
-        player.CurrentAttack = data.attackDamage + bonusAtk;
-        player.MaxHealth = data.maxHP + bonusHp;
-        int starDelta = bonusStar - oldAppliedStarBonus;
-        player.PlayerStar = Mathf.Max(0, player.PlayerStar + starDelta);
-        appliedPassiveStarBonus = bonusStar;
-
-        int hpDelta = player.MaxHealth - oldMaxHp;
-        player.PlayerHealth = Mathf.Clamp(player.PlayerHealth + hpDelta, 0, player.MaxHealth);
+        return totals;
     }
 
     private int GetAvailableCredit()
@@ -165,8 +180,9 @@ public class SkillManager : MonoBehaviour
 
     private void SaveUnlockedSkills()
     {
+        loadedSaveKey = GetUnlockedSkillsSaveKey();
         string serializedSkills = string.Join("|", unlockedSkillIDs);
-        PlayerPrefs.SetString(UnlockedSkillsSaveKey, serializedSkills);
+        PlayerPrefs.SetString(loadedSaveKey, serializedSkills);
         PlayerPrefs.Save();
     }
 
@@ -174,7 +190,8 @@ public class SkillManager : MonoBehaviour
     {
         unlockedSkillIDs.Clear();
 
-        string serializedSkills = PlayerPrefs.GetString(UnlockedSkillsSaveKey, string.Empty);
+        loadedSaveKey = GetUnlockedSkillsSaveKey();
+        string serializedSkills = PlayerPrefs.GetString(loadedSaveKey, string.Empty);
         if (string.IsNullOrEmpty(serializedSkills))
         {
             return;
@@ -188,6 +205,25 @@ public class SkillManager : MonoBehaviour
                 unlockedSkillIDs.Add(skillID);
             }
         }
+    }
+
+    private void EnsureLoadedForCurrentPlayer()
+    {
+        string targetKey = GetUnlockedSkillsSaveKey();
+        if (targetKey == loadedSaveKey) return;
+        LoadUnlockedSkills();
+    }
+
+    private string GetUnlockedSkillsSaveKey()
+    {
+        string fallback = "default";
+        string playerKey = GameData.Instance?.selectedPlayer != null
+            ? (!string.IsNullOrWhiteSpace(GameData.Instance.selectedPlayer.playerName)
+                ? GameData.Instance.selectedPlayer.playerName
+                : GameData.Instance.selectedPlayer.name)
+            : fallback;
+
+        return $"{UnlockedSkillsSaveKeyPrefix}_{playerKey}";
     }
 
     public System.Action OnSkillTreeUpdated;

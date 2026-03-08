@@ -15,8 +15,9 @@ public class PassiveSkillManager : MonoBehaviour
     public int starBonusPerLevel = 1;
     public int attackBonusPerLevel = 5;
 
-    private const string StarSkillLvKey = "StarSkillLv";
-    private const string AtkSkillLvKey = "AtkSkillLv";
+    private const string StarSkillLvKeyPrefix = "StarSkillLv";
+    private const string AtkSkillLvKeyPrefix = "AtkSkillLv";
+    private string loadedSaveKeySuffix = string.Empty;
 
     private void Awake()
     {
@@ -28,11 +29,12 @@ public class PassiveSkillManager : MonoBehaviour
 
         Instance = this;
         DontDestroyOnLoad(gameObject);
-        LoadData();
+        EnsureLoadedForCurrentPlayer();
     }
 
     public bool TryUpgradeStarSkill()
     {
+        EnsureLoadedForCurrentPlayer();
         int cost = GetStarUpgradeCost();
         return TrySpendCurrentPlayerCredit(cost, () =>
         {
@@ -44,6 +46,7 @@ public class PassiveSkillManager : MonoBehaviour
 
     public bool TryUpgradeAttackSkill()
     {
+        EnsureLoadedForCurrentPlayer();
         int cost = GetAttackUpgradeCost();
         return TrySpendCurrentPlayerCredit(cost, () =>
         {
@@ -55,26 +58,36 @@ public class PassiveSkillManager : MonoBehaviour
 
     public int GetStarUpgradeCost()
     {
+        EnsureLoadedForCurrentPlayer();
         return baseUpgradeCost + (starSkillLevel * starCostStep);
     }
 
     public int GetAttackUpgradeCost()
     {
+        EnsureLoadedForCurrentPlayer();
         return baseUpgradeCost + 20 + (attackSkillLevel * attackCostStep);
     }
 
     public int GetStarBonusAmount()
     {
+        EnsureLoadedForCurrentPlayer();
         return starSkillLevel * starBonusPerLevel;
     }
 
     public int GetAttackBonusAmount()
     {
+        EnsureLoadedForCurrentPlayer();
         return attackSkillLevel * attackBonusPerLevel;
     }
 
     public void ApplyPassiveBonusToCurrentPlayer()
     {
+        if (PlayerStatAggregator.Instance != null)
+        {
+            PlayerStatAggregator.Instance.RefreshCurrentPlayerStats();
+            return;
+        }
+
         if (GameTurnManager.CurrentPlayer == null || GameData.Instance?.selectedPlayer == null)
         {
             return;
@@ -83,26 +96,12 @@ public class PassiveSkillManager : MonoBehaviour
         PlayerState player = GameTurnManager.CurrentPlayer;
         PlayerData data = GameData.Instance.selectedPlayer;
 
-        int baseAttack = data.attackDamage;
-        int baseMaxHp = data.maxHP;
-
-        int bonusAttack = GetAttackBonusAmount();
-        int bonusMaxHp = GetStarBonusAmount();
-
         int oldMaxHp = player.MaxHealth;
+        player.CurrentAttack = data.attackDamage + GetAttackBonusAmount();
+        player.MaxHealth = data.maxHP + GetStarBonusAmount();
 
-        player.CurrentAttack = baseAttack + bonusAttack;
-        player.MaxHealth = baseMaxHp + bonusMaxHp;
-
-        if (player.MaxHealth != oldMaxHp)
-        {
-            int hpDelta = player.MaxHealth - oldMaxHp;
-            player.PlayerHealth = Mathf.Clamp(player.PlayerHealth + hpDelta, 0, player.MaxHealth);
-        }
-        else
-        {
-            player.PlayerHealth = Mathf.Clamp(player.PlayerHealth, 0, player.MaxHealth);
-        }
+        int hpDelta = player.MaxHealth - oldMaxHp;
+        player.PlayerHealth = Mathf.Clamp(player.PlayerHealth + hpDelta, 0, player.MaxHealth);
     }
 
     private bool TrySpendCurrentPlayerCredit(int amount, System.Action onSuccess)
@@ -112,43 +111,94 @@ public class PassiveSkillManager : MonoBehaviour
             return false;
         }
 
-        if (GameTurnManager.CurrentPlayer == null || GameData.Instance?.selectedPlayer == null)
+        if (GameData.Instance?.selectedPlayer == null)
         {
-            Debug.LogWarning("[PassiveSkillManager] Current player or GameData is missing.");
+            Debug.LogWarning("[PassiveSkillManager] Selected player data is missing.");
             return false;
         }
 
-        PlayerState player = GameTurnManager.CurrentPlayer;
-        if (player.PlayerCredit < amount)
+        if (GameTurnManager.CurrentPlayer != null)
+        {
+            PlayerState player = GameTurnManager.CurrentPlayer;
+            if (player.PlayerCredit < amount)
+            {
+                return false;
+            }
+
+            player.PlayerCredit -= amount;
+            GameData.Instance.selectedPlayer.SetCredit(player.PlayerCredit);
+            onSuccess?.Invoke();
+            return true;
+        }
+
+        PlayerData selectedPlayer = GameData.Instance.selectedPlayer;
+        if (selectedPlayer.Credit < amount)
         {
             return false;
         }
 
-        player.PlayerCredit -= amount;
-        GameData.Instance.selectedPlayer.SetCredit(player.PlayerCredit);
+        selectedPlayer.SetCredit(selectedPlayer.Credit - amount);
         onSuccess?.Invoke();
         return true;
     }
 
     private void SaveData()
     {
-        PlayerPrefs.SetInt(StarSkillLvKey, starSkillLevel);
-        PlayerPrefs.SetInt(AtkSkillLvKey, attackSkillLevel);
+        EnsureLoadedForCurrentPlayer();
+        PlayerPrefs.SetInt(GetStarSkillSaveKey(), starSkillLevel);
+        PlayerPrefs.SetInt(GetAttackSkillSaveKey(), attackSkillLevel);
         PlayerPrefs.Save();
     }
 
     private void LoadData()
     {
-        starSkillLevel = PlayerPrefs.GetInt(StarSkillLvKey, 0);
-        attackSkillLevel = PlayerPrefs.GetInt(AtkSkillLvKey, 0);
+        starSkillLevel = PlayerPrefs.GetInt(GetStarSkillSaveKey(), 0);
+        attackSkillLevel = PlayerPrefs.GetInt(GetAttackSkillSaveKey(), 0);
+        loadedSaveKeySuffix = GetPlayerScopeSuffix();
     }
 
     [ContextMenu("Reset Save")]
     public void ResetSave()
     {
-        PlayerPrefs.DeleteKey(StarSkillLvKey);
-        PlayerPrefs.DeleteKey(AtkSkillLvKey);
+        EnsureLoadedForCurrentPlayer();
+        PlayerPrefs.DeleteKey(GetStarSkillSaveKey());
+        PlayerPrefs.DeleteKey(GetAttackSkillSaveKey());
         LoadData();
         ApplyPassiveBonusToCurrentPlayer();
+    }
+
+    private void EnsureLoadedForCurrentPlayer()
+    {
+        string suffix = GetPlayerScopeSuffix();
+        if (suffix == loadedSaveKeySuffix) return;
+        LoadData();
+    }
+
+    private string GetStarSkillSaveKey()
+    {
+        return BuildPlayerScopedKey(StarSkillLvKeyPrefix);
+    }
+
+    private string GetAttackSkillSaveKey()
+    {
+        return BuildPlayerScopedKey(AtkSkillLvKeyPrefix);
+    }
+
+    private string BuildPlayerScopedKey(string prefix)
+    {
+        return $"{prefix}_{GetPlayerScopeSuffix()}";
+    }
+
+    private string GetPlayerScopeSuffix()
+    {
+        string fallback = "default";
+        if (GameData.Instance?.selectedPlayer == null)
+        {
+            return fallback;
+        }
+
+        return !string.IsNullOrWhiteSpace(GameData.Instance.selectedPlayer.playerName)
+            ? GameData.Instance.selectedPlayer.playerName
+            : GameData.Instance.selectedPlayer.name;
     }
 }
