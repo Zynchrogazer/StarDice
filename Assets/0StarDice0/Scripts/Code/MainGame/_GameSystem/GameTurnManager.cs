@@ -157,6 +157,28 @@ public class GameTurnManager : MonoBehaviour
     }
 
 
+
+    public void ResetForSceneExit()
+    {
+        StopAllCoroutines();
+        RefreshPlayers();
+
+        foreach (var player in allPlayers)
+        {
+            player?.ResetForNewBoardSession();
+        }
+
+        currentPlayerIndex = 0;
+        SetState(GameState.Idle);
+
+        PlayerStartSpawner.LastKnownPositions.Clear();
+
+        if (GameEventManager.Instance != null)
+        {
+            GameEventManager.Instance.ResetEventStatus();
+        }
+    }
+
     public void ResetForNewBoardSession()
     {
         StopAllCoroutines();

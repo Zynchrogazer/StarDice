@@ -38,7 +38,12 @@ public class ChangeSceneButton : MonoBehaviour
 
         if (GameTurnManager.Instance != null)
         {
+<<<<<<< ours
             GameTurnManager.Instance.ResetForNewBoardSession();
+=======
+            GameTurnManager.Instance.ResetForSceneExit();
+            return;
+>>>>>>> theirs
         }
 
         PlayerState[] players = FindObjectsOfType<PlayerState>(true);
