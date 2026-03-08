@@ -17,6 +17,7 @@ public enum GameState
 public class GameTurnManager : MonoBehaviour
 {
     public static GameTurnManager Instance { get; private set; }
+    public const string PendingBattleReturnKey = "PendingBattleReturn";
 
     [Header("State Machine")]
     public GameState currentState = GameState.Idle;
@@ -193,6 +194,8 @@ public class GameTurnManager : MonoBehaviour
         SetState(GameState.Idle);
 
         PlayerStartSpawner.LastKnownPositions.Clear();
+        PlayerPrefs.SetInt(PendingBattleReturnKey, 0);
+
         PlayerStartSpawner spawner = FindObjectOfType<PlayerStartSpawner>(true);
         bool canRespawnPlayers = spawner != null
                                  && spawner.routeManager != null
@@ -223,6 +226,15 @@ public class GameTurnManager : MonoBehaviour
     // เปลี่ยนจาก private void HandleReturnFromBattle() เป็น public
     public void HandleReturnFromBattle()
     {
+        // ทำงานเฉพาะกรณีกลับจากฉาก Battle จริง ๆ เท่านั้น
+        if (PlayerPrefs.GetInt(PendingBattleReturnKey, 0) != 1)
+        {
+            return;
+        }
+
+        PlayerPrefs.SetInt(PendingBattleReturnKey, 0);
+        PlayerPrefs.Save();
+
         Debug.Log("<color=magenta>[Manager] 📻 โดนปลุกโดยตรง! กำลังกู้คืนระบบ...</color>");
 
         RefreshPlayers();
@@ -240,8 +252,8 @@ public class GameTurnManager : MonoBehaviour
         StopAllCoroutines();
         if (GameEventManager.Instance != null) GameEventManager.Instance.ResetEventStatus();
 
-        Debug.Log("[Manager] ⏩ ข้ามการ Roll ของคน -> ส่งไม้ต่อให้ Bot");
-        RequestEndTurn();
+        Debug.Log("[Manager] ✅ กลับจาก Battle แล้ว เริ่มเทิร์นที่ผู้เล่นคนแรก");
+        StartCoroutine(StartTurnRoutine());
     }
 
     // (และอย่าลืมฟังก์ชันจัดแถวที่ผมให้ไปคราวก่อน ถ้ายังไม่มีให้เติมลงไปครับ)
