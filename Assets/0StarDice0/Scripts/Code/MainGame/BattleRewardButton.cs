@@ -48,6 +48,8 @@ public class BattleRewardButton : MonoBehaviour
 
         // 3. 🏠 ย้ายกลับบ้าน (กลับฉากบอร์ดล่าสุดที่จำไว้)
         string targetBoardScene = PlayerPrefs.GetString(GameEventManager.LastBoardSceneKey, "TestMain");
+        PlayerPrefs.SetInt(GameTurnManager.PendingBattleReturnKey, 1);
+        PlayerPrefs.Save();
         SceneManager.LoadScene(targetBoardScene);
     }
 }

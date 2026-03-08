@@ -62,6 +62,12 @@ public class PlayerStartSpawner : MonoBehaviour
 
     public void SpawnAllPlayers()
     {
+        if (routeManager == null || routeManager.nodeConnections == null || routeManager.nodeConnections.Count == 0)
+        {
+            Debug.LogWarning("[Spawner] SpawnAllPlayers skipped: RouteManager is not ready.");
+            return;
+        }
+
         // หาจุด Start ทั้งหมดเตรียมไว้สำหรับ Player
         List<NodeConnection> startNodes = routeManager.nodeConnections
             .Where(n => n.type == TileType.Start).ToList();
