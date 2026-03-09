@@ -9,6 +9,7 @@ public class BoardCameraController : MonoBehaviour
     [Header("Pan")]
     public float panSpeed = 10f;      // ความเร็วการเลื่อนกล้อง
     public float panBorder = 30f;     // ขอบหน้าจอที่ trigger pan
+    public bool enableRightMouseDrag = true;
 
     [Header("Zoom")]
     public float zoomSpeed = 30f;
@@ -24,6 +25,7 @@ public class BoardCameraController : MonoBehaviour
 
     private Vector3 dragOrigin;
     private bool isDragging = false;
+    private int activeDragMouseButton = -1;
 
     void Update()
     {
@@ -36,13 +38,22 @@ public class BoardCameraController : MonoBehaviour
     {
         Vector3 pos = transform.position;
 
-        // ลากด้วยเมาส์กลาง (หรือขวา)
-        if (Input.GetMouseButtonDown(2))
+        // ลากด้วยเมาส์กลาง หรือคลิกขวาค้าง (ตั้งค่าได้)
+        bool middleMouseDown = Input.GetMouseButtonDown(2);
+        bool rightMouseDown = enableRightMouseDrag && Input.GetMouseButtonDown(1);
+
+        if (middleMouseDown || rightMouseDown)
         {
             dragOrigin = Input.mousePosition;
             isDragging = true;
+            activeDragMouseButton = middleMouseDown ? 2 : 1;
         }
-        if (Input.GetMouseButtonUp(2)) isDragging = false;
+
+        if (isDragging && activeDragMouseButton >= 0 && Input.GetMouseButtonUp(activeDragMouseButton))
+        {
+            isDragging = false;
+            activeDragMouseButton = -1;
+        }
 
         if (isDragging)
         {
