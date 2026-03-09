@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+﻿﻿using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
@@ -107,6 +107,50 @@ public class GameEventManager : MonoBehaviour
         }
     }
 
+    private static void SafeSetActive(GameObject target, bool active)
+    {
+        if (target == null)
+        {
+            return;
+        }
+
+        try
+        {
+            target.SetActive(active);
+        }
+        catch (MissingReferenceException)
+        {
+            // object ถูก Destroy ระหว่างเฟรม
+        }
+        catch (System.NullReferenceException)
+        {
+            // safety เพิ่มเติมสำหรับ object ที่หายระหว่าง native/managed bridge
+        }
+    }
+
+    private static bool TryGetComponentInChildrenSafe<T>(GameObject target, out T component) where T : Component
+    {
+        component = null;
+        if (target == null)
+        {
+            return false;
+        }
+
+        try
+        {
+            component = target.GetComponentInChildren<T>(true);
+            return component != null;
+        }
+        catch (MissingReferenceException)
+        {
+            return false;
+        }
+        catch (System.NullReferenceException)
+        {
+            return false;
+        }
+    }
+
    
 
     #endregion
@@ -126,7 +170,7 @@ public class GameEventManager : MonoBehaviour
         foreach (Transform child in panelParent)
         {
             eventPanels[child.name.ToLower()] = child.gameObject;
-            child.gameObject.SetActive(false);
+            SafeSetActive(child.gameObject, false);
         }
     }
 
@@ -139,7 +183,7 @@ public class GameEventManager : MonoBehaviour
             for (int i = 0; i < container.transform.childCount; i++)
             {
                 randomEventPanels[i] = container.transform.GetChild(i).gameObject;
-                randomEventPanels[i].SetActive(false);
+                SafeSetActive(randomEventPanels[i], false);
             }
         }
 
@@ -150,7 +194,7 @@ public class GameEventManager : MonoBehaviour
             for (int i = 0; i < minigameContainer.transform.childCount; i++)
             {
                 randomMinigameEventPanels[i] = minigameContainer.transform.GetChild(i).gameObject;
-                randomMinigameEventPanels[i].SetActive(false);
+                SafeSetActive(randomMinigameEventPanels[i], false);
             }
         }
     }
@@ -171,7 +215,7 @@ public class GameEventManager : MonoBehaviour
 
     public void TriggerEvent(string eventName, GameObject player)
     {
-        // ✅ ล็อค State ทันทีที่เกิด Event
+        // ✅ ล็อค State ทันทีที่กิด Event
         if (GameTurnManager.Instance != null) GameTurnManager.Instance.SetState(GameState.EventProcessing);
 
         GameObject target = player != null ? player : currentEventTarget;
@@ -198,7 +242,7 @@ public class GameEventManager : MonoBehaviour
                 }
                 else if (shopPanel != null)
                 {
-                    shopPanel.SetActive(true);
+                    SafeSetActive(shopPanel, true);
                 }
                 else
                 {
@@ -312,158 +356,141 @@ public class GameEventManager : MonoBehaviour
             return;
         }
 
-        panel.SetActive(true);
+        SafeSetActive(panel, true);
 
         // 2. หาตัว BoxOpener ใน Panel นั้น
-        BoxOpener boxScript = panel.GetComponentInChildren<BoxOpener>();
-        if (boxScript == null)
+        if (!TryGetComponentInChildrenSafe(panel, out BoxOpener boxScript))
         {
-            Debug.LogError("ใน Panel ไม่มีสคริปต์ BoxOpener!");
-            StartCoroutine(HidePanelAfterDelay(panel)); // กันตาย: ใช้ระบบเดิมไปก่อน
+            Debug.LogError("ใน Panel ไม่มีสคริปต์ BoxOpener หรือ panel ถูกทำลายระหว่างทาง!");
+            StartCoroutine(WaitAndEndTurn());
             return;
         }
 
         // 3. คำนวณรางวัล และเลือกรูป
         Sprite resultSprite = null;
+        p.PlayerCredit += 100;
+        resultSprite = creditSprite;
+        Debug.Log("Treasure: Got Credit");
 
-        
-            // 💰 ได้เครดิต
-            p.PlayerCredit += 100;
-            resultSprite = creditSprite;
-            Debug.Log("Treasure: Got Credit");
-
-             int roll = Random.Range(1, 101);
-            
-            if (roll < 51)
-            {
-                int randomItem = Random.Range(0, 6); 
+        int roll = Random.Range(1, 101);
+        if (roll < 51)
+        {
+            int randomItem = Random.Range(0, 6); 
 
             if (randomItem == 0)
-                {
-                    EquipmentManager.Instance.UnlockItem(Sword);
-                    showImage.sprite = itemImages[0]; 
-                    showImage.gameObject.SetActive(true);
-                    Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
-                }
+            {
+                EquipmentManager.Instance.UnlockItem(Sword);
+                showImage.sprite = itemImages[0]; 
+                SafeSetActive(showImage != null ? showImage.gameObject : null, true);
+                Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
+            }
             else if(randomItem == 1){
                 EquipmentManager.Instance.UnlockItem(Armor);
                 showImage.sprite = itemImages[1]; 
-                 showImage.gameObject.SetActive(true);
-                 Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
+                SafeSetActive(showImage != null ? showImage.gameObject : null, true);
+                Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
             }
-             else if(randomItem == 2){
+            else if(randomItem == 2){
                 EquipmentManager.Instance.UnlockItem(DawnRing);
                 showImage.sprite = itemImages[2]; 
-                 showImage.gameObject.SetActive(true);
-                 Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
+                SafeSetActive(showImage != null ? showImage.gameObject : null, true);
+                Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
             }
-             else if(randomItem == 3){
+            else if(randomItem == 3){
                 EquipmentManager.Instance.UnlockItem(WhiteFeather);
                 showImage.sprite = itemImages[3]; 
-                 showImage.gameObject.SetActive(true);
-                 Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
+                SafeSetActive(showImage != null ? showImage.gameObject : null, true);
+                Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
             }
-             else if(randomItem == 4){
+            else if(randomItem == 4){
                 EquipmentManager.Instance.UnlockItem(RecoverRing);
                 showImage.sprite = itemImages[4]; 
-                 showImage.gameObject.SetActive(true);
-                 Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
+                SafeSetActive(showImage != null ? showImage.gameObject : null, true);
+                Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
             }
-             else if(randomItem == 5){
+            else if(randomItem == 5){
                 EquipmentManager.Instance.UnlockItem(HearthNeckless);
                 showImage.sprite = itemImages[5]; 
-                 showImage.gameObject.SetActive(true);
-                 Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
+                SafeSetActive(showImage != null ? showImage.gameObject : null, true);
+                Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
             }
-                 
-    
-            }
-            
-            else if (roll < 71 && roll > 50)
+        }
+        else if (roll < 71 && roll > 50)
         {
-                            int randomItem = Random.Range(0, 3); 
+            int randomItem = Random.Range(0, 3); 
 
             if (randomItem == 0)
-                {
-                    EquipmentManager.Instance.UnlockItem(KnightSword);
-                    showImage.sprite = itemImages[6]; 
-                    showImage.gameObject.SetActive(true);
-                    Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
-                }
+            {
+                EquipmentManager.Instance.UnlockItem(KnightSword);
+                showImage.sprite = itemImages[6]; 
+                SafeSetActive(showImage != null ? showImage.gameObject : null, true);
+                Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
+            }
             else if(randomItem == 1){
                 EquipmentManager.Instance.UnlockItem(KnightArmor);
                 showImage.sprite = itemImages[7]; 
-                 showImage.gameObject.SetActive(true);
-                 Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
+                SafeSetActive(showImage != null ? showImage.gameObject : null, true);
+                Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
             }
-             else if(randomItem == 2){
+            else if(randomItem == 2){
                 EquipmentManager.Instance.UnlockItem(DawnRing);
                 showImage.sprite = itemImages[8]; 
-                 showImage.gameObject.SetActive(true);
-                 Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
+                SafeSetActive(showImage != null ? showImage.gameObject : null, true);
+                Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
             }
         }
-
         else if (roll > 99)
         {
-                            int randomItem = Random.Range(0, 6); 
+            int randomItem = Random.Range(0, 6); 
 
             if (randomItem == 0)
-                {
-                    EquipmentManager.Instance.UnlockItem(LightSpear);
-                    showImage.sprite = itemImages[9]; 
-                    showImage.gameObject.SetActive(true);
-                    Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
-                }
+            {
+                EquipmentManager.Instance.UnlockItem(LightSpear);
+                showImage.sprite = itemImages[9]; 
+                SafeSetActive(showImage != null ? showImage.gameObject : null, true);
+                Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
+            }
             else if(randomItem == 1){
                 EquipmentManager.Instance.UnlockItem(FireLegendarySword);
                 showImage.sprite = itemImages[10]; 
-                 showImage.gameObject.SetActive(true);
-                 Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
+                SafeSetActive(showImage != null ? showImage.gameObject : null, true);
+                Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
             }
-             else if(randomItem == 2){
+            else if(randomItem == 2){
                 EquipmentManager.Instance.UnlockItem(WaterLegendaryArmor);
                 showImage.sprite = itemImages[11]; 
-                 showImage.gameObject.SetActive(true);
-                 Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
+                SafeSetActive(showImage != null ? showImage.gameObject : null, true);
+                Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
             }
-             else if(randomItem == 3){
+            else if(randomItem == 3){
                 EquipmentManager.Instance.UnlockItem(WindSpear);
                 showImage.sprite = itemImages[12]; 
-                 showImage.gameObject.SetActive(true);
-                 Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
+                SafeSetActive(showImage != null ? showImage.gameObject : null, true);
+                Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
             }
-             else if(randomItem == 4){
+            else if(randomItem == 4){
                 EquipmentManager.Instance.UnlockItem(EarthLegendaryArmor);
                 showImage.sprite = itemImages[13]; 
-                 showImage.gameObject.SetActive(true);
-                 Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
+                SafeSetActive(showImage != null ? showImage.gameObject : null, true);
+                Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
             }
-             else if(randomItem == 5){
+            else if(randomItem == 5){
                 EquipmentManager.Instance.UnlockItem(DarkLegendaryRing);
                 showImage.sprite = itemImages[14]; 
-                 showImage.gameObject.SetActive(true);
-                 Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
+                SafeSetActive(showImage != null ? showImage.gameObject : null, true);
+                Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
             }
-
             else
             {
                 showImage.sprite = itemImages[15]; 
-                 showImage.gameObject.SetActive(true);
-                 Debug.Log("ผู้เล่นไม่ได้ไอเท็ม");
-                
+                SafeSetActive(showImage != null ? showImage.gameObject : null, true);
+                Debug.Log("ผู้เล่นไม่ได้ไอเท็ม");
             }
         }
 
-          
-        
-        
-
-        // 4. สั่งให้กล่องเปิด! (พร้อมส่ง Callback ว่าถ้าเสร็จแล้วให้ทำอะไร)
         boxScript.OpenBox(resultSprite, () =>
         {
-            // สิ่งที่จะทำเมื่อกล่องเปิดเสร็จแล้ว (3 วิหลังจากโชว์ของ)
-            panel.SetActive(false); // ปิดหน้าต่าง
+            SafeSetActive(panel, false); // ปิดหน้าต่าง
             GameTurnManager.Instance.RequestEndTurn(); // จบเทิร์น
         });
     }
@@ -544,8 +571,6 @@ public class GameEventManager : MonoBehaviour
 
         int randomSteps = Random.Range(1, 7);
         Debug.Log($"[EventManager] Random move event: {target.name} เดินเพิ่ม {randomSteps} ช่อง");
-
-        // ส่งต่อให้ระบบเดินหลักทำงานต่อ (เมื่อเดินจบจะไปเช็คช่องและยิง Event ต่อเอง)
         walker.ExecuteMove(randomSteps);
     }
 
@@ -584,108 +609,151 @@ public class GameEventManager : MonoBehaviour
         return true;
     }
 
-    // ในไฟล์ GameEventManager.cs
+    private static bool HasAnyValidPanels(GameObject[] panels)
+    {
+        if (panels == null || panels.Length == 0)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < panels.Length; i++)
+        {
+            if (panels[i] != null)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     private IEnumerator RandomEventCoroutine()
     {
         isRandomSpinning = true;
 
-        // 1. 🎯 ล็อกผลล่วงหน้า (สุ่ม Index ไว้ก่อนเลย)
-        // เงื่อนไข: จำนวน Panel (รูปในวงล้อ) กับ Keys (ชื่อ Event) ควรมีจำนวนเท่ากันและเรียงตรงกัน
-        // ถ้าไม่เท่ากัน เราจะสุ่ม Key แยกต่างหาก
-        int resultIndex = Random.Range(0, randomEventKeys.Length);
-        string selectedKey = randomEventKeys[resultIndex];
-
-        // ตรวจสอบความปลอดภัย: ถ้ามีรูปวงล้อ ให้พยายามหยุดที่รูปที่ตรงกับ Index
-        int finalPanelIndex = -1;
-        if (randomEventPanels.Length > 0)
+        try
         {
-            // ถ้าจำนวนรูป = จำนวน Event -> หยุดที่รูปนั้นเลย
+            int resultIndex = Random.Range(0, randomEventKeys.Length);
+            string selectedKey = randomEventKeys[resultIndex];
+
+            if (string.IsNullOrEmpty(selectedKey))
+            {
+                Debug.LogWarning("[EventManager] RandomEvent ได้ key ว่าง -> จบเทิร์น");
+                GameTurnManager.Instance?.RequestEndTurn();
+                yield break;
+            }
+
+            if (!HasAnyValidPanels(randomEventPanels))
+            {
+                Debug.LogWarning("[EventManager] RandomEvent ไม่มี panel ที่ใช้งานได้ -> ข้ามแอนิเมชันแล้วยิง event ทันที");
+                yield return null;
+                TriggerEvent(selectedKey, currentEventTarget);
+                yield break;
+            }
+
+            int finalPanelIndex = -1;
             if (randomEventPanels.Length == randomEventKeys.Length)
             {
                 finalPanelIndex = resultIndex;
             }
             else
             {
-                // ถ้าไม่เท่ากัน ก็สุ่มรูปที่จะหยุดมั่วๆ ไปก่อน
                 finalPanelIndex = Random.Range(0, randomEventPanels.Length);
                 Debug.LogWarning("[EventManager] randomEventPanels กับ randomEventKeys จำนวนไม่เท่ากัน -> ใช้การสุ่มรูปแยก");
             }
-        }
 
-        // 2. 🌀 เริ่มหมุน! (แบบช้าลงเรื่อยๆ)
-        float currentInterval = 0.05f; // เริ่มต้นหมุนเร็วมาก (0.05วิ)
-        float slowDownFactor = 1.1f;   // ช้าลงทีละ 10%
-        int totalSpins = 20;           // จำนวนครั้งที่จะสลับภาพก่อนหยุด (ปรับได้)
+            float currentInterval = 0.05f;
+            float slowDownFactor = 1.1f;
+            int totalSpins = 20;
+            int currentPanelIdx = 0;
 
-        int currentPanelIdx = 0;
-
-        for (int i = 0; i < totalSpins; i++)
-        {
-            // สลับรูป
-            if (randomEventPanels.Length > 0)
+            for (int i = 0; i < totalSpins; i++)
             {
-                // ถ้าเป็นรอบสุดท้าย ต้องบังคับให้ไปตกที่ finalPanelIndex
-                if (i == totalSpins - 1 && finalPanelIndex != -1)
+                if (randomEventPanels != null && randomEventPanels.Length > 0)
                 {
-                    currentPanelIdx = finalPanelIndex;
-                }
-                else
-                {
-                    // รอบปกติ: ขยับไปรูปถัดไปเรื่อยๆ (Loop)
-                    currentPanelIdx = (currentPanelIdx + 1) % randomEventPanels.Length;
+                    if (i == totalSpins - 1 && finalPanelIndex != -1)
+                    {
+                        currentPanelIdx = finalPanelIndex;
+                    }
+                    else
+                    {
+                        currentPanelIdx = (currentPanelIdx + 1) % randomEventPanels.Length;
+                    }
+
+                    for (int p = 0; p < randomEventPanels.Length; p++)
+                    {
+                        SafeSetActive(randomEventPanels[p], p == currentPanelIdx);
+                    }
                 }
 
-                // แสดงผล
-                for (int p = 0; p < randomEventPanels.Length; p++)
+                yield return new WaitForSeconds(currentInterval);
+                currentInterval = Mathf.Min(currentInterval * slowDownFactor, 0.5f);
+            }
+
+            Debug.Log($"[EventManager] หยุดที่: {selectedKey} (รอ 3 วินาที)");
+            yield return new WaitForSeconds(3f);
+
+            if (randomEventPanels != null)
+            {
+                foreach (var panel in randomEventPanels)
                 {
-                    randomEventPanels[p]?.SetActive(p == currentPanelIdx);
+                    SafeSetActive(panel, false);
                 }
             }
 
-            // รอเวลา (ยิ่งรอบหลังๆ currentInterval จะยิ่งเยอะขึ้น = ช้าลง)
-            yield return new WaitForSeconds(currentInterval);
-
-            // เพิ่มเวลาหน่วงสำหรับรอบถัดไป (แต่ไม่ให้ช้าเกิน 0.5 วิ)
-            currentInterval = Mathf.Min(currentInterval * slowDownFactor, 0.5f);
+            TriggerEvent(selectedKey, currentEventTarget);
         }
-
-        // 3. ✋ หยุดค้างไว้ (Hold) เพื่อให้คนดูรู้ว่า "ได้อันนี้แหละ!"
-        Debug.Log($"[EventManager] หยุดที่: {selectedKey} (รอ 3 วินาที)");
-        yield return new WaitForSeconds(3f); // ค้างที่ผลลัพธ์ประมาณ 3 วินาที
-
-        // 4. 🧹 ซ่อนวงล้อ
-        foreach (var p in randomEventPanels) p?.SetActive(false);
-
-        // 5. 🎉 ส่ง Event จริง
-        TriggerEvent(selectedKey, currentEventTarget);
-
-        // (หมายเหตุ: isRandomSpinning จะถูกเคลียร์ใน TriggerEvent > ShowPanel หรือ ResetEventStatus)
-        isRandomSpinning = false;
+        finally
+        {
+            isRandomSpinning = false;
+        }
     }
 
     private IEnumerator RandomMinigameEventCoroutine()
     {
         isRandomSpinning = true;
-        float elapsed = 0f;
 
-        while (elapsed < randomSpinDuration)
+        try
         {
-            if (randomMinigameEventPanels != null && randomMinigameEventPanels.Length > 0)
+            float elapsed = 0f;
+
+            while (elapsed < randomSpinDuration)
             {
-                int index = Random.Range(0, randomMinigameEventPanels.Length);
-                for (int i = 0; i < randomMinigameEventPanels.Length; i++) randomMinigameEventPanels[i]?.SetActive(i == index);
+                if (HasAnyValidPanels(randomMinigameEventPanels))
+                {
+                    int index = Random.Range(0, randomMinigameEventPanels.Length);
+                    for (int i = 0; i < randomMinigameEventPanels.Length; i++)
+                    {
+                        SafeSetActive(randomMinigameEventPanels[i], i == index);
+                    }
+                }
+
+                elapsed += spinInterval;
+                yield return new WaitForSeconds(spinInterval);
             }
 
-            elapsed += spinInterval;
-            yield return new WaitForSeconds(spinInterval);
+            if (randomMinigameEventPanels != null)
+            {
+                foreach (var panel in randomMinigameEventPanels)
+                {
+                    SafeSetActive(panel, false);
+                }
+            }
+
+            string selected = randomMinigameEventKeys[Random.Range(0, randomMinigameEventKeys.Length)];
+            if (string.IsNullOrEmpty(selected))
+            {
+                Debug.LogWarning("[EventManager] RandomMinigame ได้ key ว่าง -> จบเทิร์น");
+                GameTurnManager.Instance?.RequestEndTurn();
+                yield break;
+            }
+
+            TriggerEvent(selected, currentEventTarget);
         }
-
-        foreach (var p in randomMinigameEventPanels) p?.SetActive(false);
-
-        string selected = randomMinigameEventKeys[Random.Range(0, randomMinigameEventKeys.Length)];
-        TriggerEvent(selected, currentEventTarget);
-        isRandomSpinning = false;
+        finally
+        {
+            isRandomSpinning = false;
+        }
     }
 
     private IEnumerator MonsterBattleCoroutine()
@@ -709,7 +777,7 @@ public class GameEventManager : MonoBehaviour
         }
 
         RememberCurrentBoardScene();
-        yield return null; // รอ 1 เฟรมให้ระบบ UI/Event เคลียร์ตัวเองก่อนย้ายซีน
+        yield return null;
         SceneManager.LoadScene(sceneName);
     }
 
@@ -727,8 +795,8 @@ public class GameEventManager : MonoBehaviour
         }
     }
 
-    public int countroundbattle = 0; // ตัวนับรอบที่ตีกับศัตรู
-    public int countbattle = 0; // ตัวนับการเจอศัตรู
+    public int countroundbattle = 0;
+    public int countbattle = 0;
 
     public void ResetForNewBoardSession()
     {
@@ -754,201 +822,168 @@ public class GameEventManager : MonoBehaviour
     {
        RememberCurrentBoardScene();
        ShowPanel("boss", false);
-    yield return new WaitForSeconds(1f);
-    int bosslevel = 0;
+       yield return new WaitForSeconds(1f);
+       int bosslevel = 0;
 
-    if(countbattle > 0){
-     bosslevel = countroundbattle/countbattle ;
-    }
-    // 1. ดึงชื่อ Scene ปัจจุบันออกมาเช็ค
-    string currentSceneName = SceneManager.GetActiveScene().name;
+       if(countbattle > 0){
+         bosslevel = countroundbattle/countbattle ;
+       }
 
+       string currentSceneName = SceneManager.GetActiveScene().name;
 
-    // 2. สร้างเงื่อนไข (if-else)
+       if (currentSceneName == "MainLight") 
+       {
+           if(bosslevel < 11) SceneManager.LoadScene("FinalBoss hard"); 
+           else if(bosslevel >=11  && bosslevel <= 15) SceneManager.LoadScene("FianlBoss medium");
+           else SceneManager.LoadScene("FinalBoss");
+       }
+       else if (currentSceneName == "TestMain") 
+       {
+           if(bosslevel < 11) SceneManager.LoadScene("bossfire hard"); 
+           else if(bosslevel >=11  && bosslevel <= 15) SceneManager.LoadScene("bossfire medium");
+           else SceneManager.LoadScene("bossfire");
+       }
+       else if (currentSceneName == "MainWater") 
+       {
+           if(bosslevel < 11) SceneManager.LoadScene("boss water hard"); 
+           else if(bosslevel >=11  && bosslevel <= 15) SceneManager.LoadScene("boss water medium");
+           else SceneManager.LoadScene("boss water");
+       }
+       else if (currentSceneName == "MainWind")
+       {
+           if(bosslevel < 11) SceneManager.LoadScene("boss wind hard"); 
+           else if(bosslevel >=11  && bosslevel <= 15) SceneManager.LoadScene("boss wind medium");
+           else SceneManager.LoadScene("boss wind");
+       }
+       else if (currentSceneName == "MainEarth")
+       {
+           if(bosslevel < 11) SceneManager.LoadScene("boss earth hard"); 
+           else if(bosslevel >=11  && bosslevel <= 15) SceneManager.LoadScene("boss earth medium");
+           else SceneManager.LoadScene("boss earth");
+       }
+       else if (currentSceneName == "MainDark")
+       {
+           if(bosslevel < 11) SceneManager.LoadScene("boss dark hard");
+           else if(bosslevel >=11  && bosslevel <= 15) SceneManager.LoadScene("boss dark medium");
+           else SceneManager.LoadScene("boss dark");
+       }
 
-    if (currentSceneName == "MainLight") 
-    {
-
-        if(bosslevel < 11)
-            {
-        SceneManager.LoadScene("FinalBoss hard"); 
-            }
-        else if(bosslevel >=11  && bosslevel <= 15)
-            {
-                SceneManager.LoadScene("FianlBoss medium");
-            }
-         else 
-            {
-                SceneManager.LoadScene("FinalBoss");
-            }
-
-        
-    }
-
-   else if (currentSceneName == "TestMain") 
-    {
-
-        if(bosslevel < 11)
-            {
-        SceneManager.LoadScene("bossfire hard"); 
-            }
-        else if(bosslevel >=11  && bosslevel <= 15)
-            {
-                SceneManager.LoadScene("bossfire medium");
-            }
-         else 
-            {
-                SceneManager.LoadScene("bossfire");
-            }
-    }
-
-    
-    else if (currentSceneName == "MainWater") 
-    {
-        if(bosslevel < 11)
-            {
-        SceneManager.LoadScene("boss water hard"); 
-            }
-        else if(bosslevel >=11  && bosslevel <= 15)
-            {
-                SceneManager.LoadScene("boss water medium");
-            }
-         else 
-            {
-                SceneManager.LoadScene("boss water");
-            }
-    }
-    
-    else if (currentSceneName == "MainWind")
-    {
-          if(bosslevel < 11)
-            {
-        SceneManager.LoadScene("boss wind hard"); 
-            }
-        else if(bosslevel >=11  && bosslevel <= 15)
-            {
-                SceneManager.LoadScene("boss wind medium");
-            }
-         else 
-            {
-                SceneManager.LoadScene("boss wind");
-            }
-    }
-        
-
-     else if (currentSceneName == "MainEarth")
-    {
-          if(bosslevel < 11)
-            {
-        SceneManager.LoadScene("boss earth hard"); 
-            }
-        else if(bosslevel >=11  && bosslevel <= 15)
-            {
-                SceneManager.LoadScene("boss earth medium");
-            }
-         else 
-            {
-                SceneManager.LoadScene("boss earth");
-            }
-    }
-         
-
-     else if (currentSceneName == "MainDark")
-    {
-          if(bosslevel < 11)
-            {
-        SceneManager.LoadScene("boss dark hard");
-            }
-        else if(bosslevel >=11  && bosslevel <= 15)
-            {
-                SceneManager.LoadScene("boss dark medium");
-            }
-         else 
-            {
-                SceneManager.LoadScene("boss dark");
-            }
-
-    }
-
-countbattle = 0;
-countroundbattle = 0;
-
+       countbattle = 0;
+       countroundbattle = 0;
     }
 
     private IEnumerator SpecialBossBattleCoroutine()
     {
          RememberCurrentBoardScene();
          string currentSceneName = SceneManager.GetActiveScene().name;
-        ShowPanel("specialboss", false);
-    yield return new WaitForSeconds(1f);
+         ShowPanel("specialboss", false);
+         yield return new WaitForSeconds(1f);
 
-    if(currentSceneName == "MainLight")
-        {
-            SceneManager.LoadScene("SpecialBoss"); 
-        }
-           
-        else if (currentSceneName == "TestMain") 
-    {
-        SceneManager.LoadScene("specialbossfire"); 
-            
-    }
-    else if (currentSceneName == "MainWater") 
-    {
-        SceneManager.LoadScene("Special boss water"); 
-            
-    }
-     else if (currentSceneName == "MainWind") 
-    {
-        SceneManager.LoadScene("special boss wind"); 
-            
-    }
-     else if (currentSceneName == "MainEarth") 
-    {
-        SceneManager.LoadScene("specialboss earth"); 
-            
-    }
-     else if (currentSceneName == "MainDark") 
-    {
-        SceneManager.LoadScene("special boss dark"); 
-            
-    }
+         if(currentSceneName == "MainLight") SceneManager.LoadScene("SpecialBoss"); 
+         else if (currentSceneName == "TestMain") SceneManager.LoadScene("specialbossfire"); 
+         else if (currentSceneName == "MainWater") SceneManager.LoadScene("Special boss water"); 
+         else if (currentSceneName == "MainWind") SceneManager.LoadScene("special boss wind"); 
+         else if (currentSceneName == "MainEarth") SceneManager.LoadScene("specialboss earth"); 
+         else if (currentSceneName == "MainDark") SceneManager.LoadScene("special boss dark"); 
     }
 
     private void ShowPanel(string panelKey, bool autoClose)
     {
-        foreach (var p in eventPanels.Values) p?.SetActive(false);
-        if (eventPanels.TryGetValue(panelKey.ToLower(), out var panel))
+        if (string.IsNullOrEmpty(panelKey))
         {
-            panel.SetActive(true);
-            if (autoClose) StartCoroutine(HidePanelAfterDelay(panel));
+            if (autoClose)
+            {
+                StartCoroutine(WaitAndEndTurn());
+            }
+
+            return;
         }
-        else if (autoClose) StartCoroutine(WaitAndEndTurn());
+
+        CleanupMissingEventPanelReferences();
+
+        foreach (var panelEntry in eventPanels)
+        {
+            GameObject panelObject = panelEntry.Value;
+            if (panelObject != null)
+            {
+                SafeSetActive(panelObject, false);
+            }
+        }
+
+        if (eventPanels.TryGetValue(panelKey.ToLower(), out var panel) && panel != null)
+        {
+            SafeSetActive(panel, true);
+            if (autoClose)
+            {
+                StartCoroutine(HidePanelAfterDelay(panel));
+            }
+        }
+        else if (autoClose)
+        {
+            StartCoroutine(WaitAndEndTurn());
+        }
+    }
+
+    private void CleanupMissingEventPanelReferences()
+    {
+        if (eventPanels == null || eventPanels.Count == 0)
+        {
+            return;
+        }
+
+        List<string> keysToRemove = null;
+        foreach (var panelEntry in eventPanels)
+        {
+            if (panelEntry.Value == null)
+            {
+                if (keysToRemove == null)
+                {
+                    keysToRemove = new List<string>();
+                }
+
+                keysToRemove.Add(panelEntry.Key);
+            }
+        }
+
+        if (keysToRemove == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < keysToRemove.Count; i++)
+        {
+            eventPanels.Remove(keysToRemove[i]);
+        }
     }
 
     private IEnumerator HidePanelAfterDelay(GameObject panel)
     {
         yield return new WaitForSeconds(2f);
-        panel.SetActive(false);
-        // ✅ จบ Event แล้วเรียก RequestEndTurn
-        GameTurnManager.Instance.RequestEndTurn();
+
+        if (panel != null)
+        {
+            SafeSetActive(panel, false);
+        }
+
+        GameTurnManager.Instance?.RequestEndTurn();
     }
 
     private IEnumerator WaitAndEndTurn()
     {
         yield return new WaitForSeconds(1.5f);
-        GameTurnManager.Instance.RequestEndTurn();
+        GameTurnManager.Instance?.RequestEndTurn();
     }
 
     public void ForceResetEventStatus()
     {
-        StopAllCoroutines(); // หยุด Coroutine การสุ่มที่อาจค้างอยู่
-        isRandomSpinning = false; // ✅ ปลดล็อคตัวแปร
+        StopAllCoroutines();
+        isRandomSpinning = false;
         Debug.Log("<color=orange>[EventManager] 🧹 ล้างสถานะ Event ค้างเรียบร้อย</color>");
     }
     public void ResetEventStatus()
     {
         StopAllCoroutines();
-        isRandomSpinning = false; // ✅ ปลดล็อคกำแพงตัวที่ 1
+        isRandomSpinning = false;
         Debug.Log("<color=orange>[EventManager] 🧹 ล้างสถานะสุ่มค้างเรียบร้อย</color>");
     }
 
