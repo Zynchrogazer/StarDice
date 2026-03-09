@@ -45,6 +45,15 @@ public struct TileRandomLimit
 }
 
 [System.Serializable]
+public struct TileInvariantRule
+{
+    public TileType type;
+    [Min(0)]
+    public int minCount;
+    public int maxCount; // -1 = ไม่จำกัด
+}
+
+[System.Serializable]
 public struct TileGenSettings
 {
     public string name;
@@ -92,6 +101,27 @@ public class RouteManager : MonoBehaviour
     public List<TileRandomLimit> tileRandomLimits = new List<TileRandomLimit>();
     [Tooltip("ประเภทช่องที่จะใช้เติมเมื่อประเภทที่ถูกจำกัดเต็มทั้งหมดแล้ว")]
     public TileType fallbackTileType = TileType.Normal;
+    [Tooltip("ใช้ seed คงที่เพื่อให้สุ่มได้ผลลัพธ์เดิมทุกครั้ง")]
+    public bool useDeterministicSeed = true;
+    [Tooltip("seed สำหรับสุ่มช่อง (ค่าเดียวกัน = ผลลัพธ์เดิม)")]
+    public int randomSeed = 12345;
+
+    [Header("Limit Mode Controls")]
+    [Tooltip("ถ้าเปิด จะสุ่มเฉพาะประเภทที่อยู่ใน allow list เท่านั้น")]
+    public bool useLimitAllowList = false;
+    [Tooltip("รายการประเภทที่อนุญาตให้สุ่มในโหมด LimitByType")]
+    public List<TileType> limitAllowedTypes = new List<TileType>();
+    [Tooltip("ถ้าเปิด ช่องที่ lockRandomType จะไม่ถูกนับรวมกับโควตา tileRandomLimits")]
+    public bool excludeLockedTilesFromLimitCounts = true;
+
+    [Header("Tile Invariant Validation")]
+    [Tooltip("ตรวจ invariant หลังสุ่ม ถ้าไม่ผ่านจะสุ่มใหม่ตามจำนวนครั้งที่กำหนด")]
+    public bool validateInvariantsAfterRandom = true;
+    [Min(1)]
+    [Tooltip("จำนวนครั้งสูงสุดที่พยายามสุ่มใหม่เมื่อ invariant ไม่ผ่าน")]
+    public int maxRandomizeAttempts = 10;
+    [Tooltip("กฎ min/max ของประเภทช่องสำคัญ (max = -1 คือไม่จำกัด)")]
+    public List<TileInvariantRule> tileInvariantRules = new List<TileInvariantRule>();
 
     // Dictionary สำหรับการค้นหาข้อมูลโหนดด้วยความเร็วสูงขณะเล่นเกม
     private Dictionary<int, NodeConnection> nodeDataMap;
@@ -204,26 +234,59 @@ public class RouteManager : MonoBehaviour
             return;
         }
 
-        if (tileRandomMode == TileRandomMode.FullShuffle)
+        var originalUnlockedTypes = unlockedNodes.Select(nc => nc.type).ToList();
+        int seedToUse = useDeterministicSeed ? randomSeed : UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+        System.Random rng = new System.Random(seedToUse);
+
+        int attempts = Mathf.Max(1, maxRandomizeAttempts);
+        bool success = false;
+
+        for (int attempt = 1; attempt <= attempts; attempt++)
         {
-            ApplyFullShuffle(unlockedNodes);
+            RestoreUnlockedTypes(unlockedNodes, originalUnlockedTypes);
+
+            if (tileRandomMode == TileRandomMode.FullShuffle)
+            {
+                ApplyFullShuffle(unlockedNodes, rng);
+            }
+            else
+            {
+                ApplyLimitShuffle(unlockedNodes, rng);
+            }
+
+            if (!validateInvariantsAfterRandom || ValidateTileInvariants())
+            {
+                success = true;
+                break;
+            }
         }
-        else
+
+        if (!success)
         {
-            ApplyLimitShuffle(unlockedNodes);
+            Debug.LogWarning("[RouteManager] สุ่มครบจำนวนครั้งแล้วแต่ invariant ไม่ผ่าน -> revert เป็นค่าก่อนสุ่ม");
+            RestoreUnlockedTypes(unlockedNodes, originalUnlockedTypes);
         }
 
         ApplyTileVisuals();
         RebuildNodeDataMap();
     }
 
-    void ApplyFullShuffle(List<NodeConnection> unlockedNodes)
+    void RestoreUnlockedTypes(List<NodeConnection> unlockedNodes, List<TileType> originalUnlockedTypes)
+    {
+        for (int i = 0; i < unlockedNodes.Count && i < originalUnlockedTypes.Count; i++)
+        {
+            unlockedNodes[i].type = originalUnlockedTypes[i];
+            unlockedNodes[i].eventName = GetDefaultEventName(originalUnlockedTypes[i]);
+        }
+    }
+
+    void ApplyFullShuffle(List<NodeConnection> unlockedNodes, System.Random rng)
     {
         List<TileType> types = unlockedNodes.Select(nc => nc.type).ToList();
 
         for (int i = types.Count - 1; i > 0; i--)
         {
-            int randomIndex = UnityEngine.Random.Range(0, i + 1);
+            int randomIndex = rng.Next(0, i + 1);
             TileType temp = types[i];
             types[i] = types[randomIndex];
             types[randomIndex] = temp;
@@ -236,7 +299,7 @@ public class RouteManager : MonoBehaviour
         }
     }
 
-    void ApplyLimitShuffle(List<NodeConnection> unlockedNodes)
+    void ApplyLimitShuffle(List<NodeConnection> unlockedNodes, System.Random rng)
     {
         Dictionary<TileType, int> maxByType = new Dictionary<TileType, int>();
         foreach (var limit in tileRandomLimits)
@@ -244,19 +307,36 @@ public class RouteManager : MonoBehaviour
             maxByType[limit.type] = limit.maxCount;
         }
 
-        Dictionary<TileType, int> currentCounts = nodeConnections
-            .Where(nc => nc != null && nc.node != null)
+        IEnumerable<NodeConnection> countedNodes = excludeLockedTilesFromLimitCounts
+            ? unlockedNodes
+            : nodeConnections.Where(nc => nc != null && nc.node != null);
+
+        Dictionary<TileType, int> currentCounts = countedNodes
             .GroupBy(nc => nc.type)
             .ToDictionary(g => g.Key, g => g.Count());
 
-        var randomOrderNodes = unlockedNodes.OrderBy(_ => UnityEngine.Random.value).ToList();
+        var randomOrderNodes = unlockedNodes.OrderBy(_ => rng.Next()).ToList();
         System.Array allTypes = System.Enum.GetValues(typeof(TileType));
+
+        HashSet<TileType> allowSet = new HashSet<TileType>();
+        if (useLimitAllowList)
+        {
+            foreach (var type in limitAllowedTypes)
+            {
+                allowSet.Add(type);
+            }
+        }
 
         foreach (var node in randomOrderNodes)
         {
             List<TileType> allowedTypes = new List<TileType>();
             foreach (TileType tileType in allTypes)
             {
+                if (useLimitAllowList && !allowSet.Contains(tileType))
+                {
+                    continue;
+                }
+
                 int currentCount = currentCounts.ContainsKey(tileType) ? currentCounts[tileType] : 0;
                 if (!maxByType.TryGetValue(tileType, out int maxCount) || currentCount < maxCount)
                 {
@@ -265,7 +345,7 @@ public class RouteManager : MonoBehaviour
             }
 
             TileType selectedType = allowedTypes.Count > 0
-                ? allowedTypes[UnityEngine.Random.Range(0, allowedTypes.Count)]
+                ? allowedTypes[rng.Next(0, allowedTypes.Count)]
                 : fallbackTileType;
 
             if (currentCounts.ContainsKey(node.type))
@@ -279,26 +359,57 @@ public class RouteManager : MonoBehaviour
         }
     }
 
+    bool ValidateTileInvariants()
+    {
+        if (tileInvariantRules == null || tileInvariantRules.Count == 0)
+        {
+            return true;
+        }
+
+        Dictionary<TileType, int> counts = nodeConnections
+            .Where(nc => nc != null && nc.node != null)
+            .GroupBy(nc => nc.type)
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        foreach (var rule in tileInvariantRules)
+        {
+            int current = counts.ContainsKey(rule.type) ? counts[rule.type] : 0;
+            int max = rule.maxCount < 0 ? int.MaxValue : rule.maxCount;
+            if (current < rule.minCount || current > max)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    static readonly Dictionary<TileType, string> DefaultEventNames = new Dictionary<TileType, string>
+    {
+        { TileType.Star, "star" },
+        { TileType.Monster, "battle" },
+        { TileType.Event, "randomevent" },
+        { TileType.Boss, "boss" },
+        { TileType.Trap, "trap" },
+        { TileType.Heal, "heal" },
+        { TileType.Teleport, "warp" },
+        { TileType.Minigame, "randomminigame" },
+        { TileType.SpecialBoss, "specialboss" },
+        { TileType.Draw, "draw" },
+        { TileType.Shop, "shop" },
+        { TileType.Start, "start" },
+        { TileType.Treasure, "treasurebox" },
+        { TileType.Lava, "lava" }
+    };
+
     string GetDefaultEventName(TileType type)
     {
-        switch (type)
+        if (DefaultEventNames.TryGetValue(type, out string eventName))
         {
-            case TileType.Star: return "star";
-            case TileType.Monster: return "battle";
-            case TileType.Event: return "randomevent";
-            case TileType.Boss: return "boss";
-            case TileType.Trap: return "trap";
-            case TileType.Heal: return "heal";
-            case TileType.Teleport: return "warp";
-            case TileType.Minigame: return "randomminigame";
-            case TileType.SpecialBoss: return "specialboss";
-            case TileType.Draw: return "draw";
-            case TileType.Shop: return "shop";
-            case TileType.Start: return "start";
-            case TileType.Treasure: return "treasurebox";
-            case TileType.Lava: return "lava";
-            default: return string.Empty;
+            return eventName;
         }
+
+        return string.Empty;
     }
 
     void RebuildNodeDataMap()
