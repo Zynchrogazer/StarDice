@@ -3,8 +3,6 @@ using UnityEngine.SceneManagement;
 
 public class CameraController : MonoBehaviour
 {
-    public static CameraController Instance { get; private set; }
-
     [Header("Settings (Isometric View)")]
     // ค่ามาตรฐาน: X=-8, Y=12, Z=-8
     public Vector3 offset = new Vector3(-8f, 12f, -8f);
@@ -35,12 +33,12 @@ public class CameraController : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance != null && Instance != this)
+        if (FindObjectsOfType<CameraController>().Length > 1)
         {
             Destroy(gameObject);
             return;
         }
-        Instance = this;
+
         DontDestroyOnLoad(gameObject);
     }
 

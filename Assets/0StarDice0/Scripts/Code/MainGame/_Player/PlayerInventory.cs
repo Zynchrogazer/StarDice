@@ -17,8 +17,6 @@ public class InventoryCard
 
 public class PlayerInventory : MonoBehaviour
 {
-    public static PlayerInventory Instance { get; private set; }
-
     // รายการของในกระเป๋า
     public List<InventoryCard> items = new List<InventoryCard>();
 
@@ -27,16 +25,13 @@ public class PlayerInventory : MonoBehaviour
 
     private void Awake()
     {
-        // ทำ Singleton เหมือนกัน เพราะ Inventory ก็ควรติดตัวผู้เล่นไปตลอด
-        if (Instance != null && Instance != this)
+        if (FindObjectsOfType<PlayerInventory>().Length > 1)
         {
             Destroy(gameObject);
+            return;
         }
-        else
-        {
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
+
+        DontDestroyOnLoad(gameObject);
     }
 
     // --- Logic การจัดการของ (ย้ายมาจาก PlayerState) ---

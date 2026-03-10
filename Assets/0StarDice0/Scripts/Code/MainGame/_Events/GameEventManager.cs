@@ -236,9 +236,10 @@ public class GameEventManager : MonoBehaviour
             case "boss":StartCoroutine(BossBattleCoroutine());break;
             case "specialboss":StartCoroutine(SpecialBossBattleCoroutine());break;
             case "shop":
-                if (ShopManager.Instance != null)
+                ShopManager shopManager = FindObjectOfType<ShopManager>();
+                if (shopManager != null)
                 {
-                    ShopManager.Instance.HandleShopOpened();
+                    shopManager.HandleShopOpened();
                 }
                 else if (shopPanel != null)
                 {

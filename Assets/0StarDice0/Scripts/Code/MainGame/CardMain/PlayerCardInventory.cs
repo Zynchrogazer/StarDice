@@ -3,8 +3,6 @@ using UnityEngine.UI;
 
 public class PlayerCardInventory : MonoBehaviour
 {
-    public static PlayerCardInventory Instance { get; private set; }
-
     [Header("UI References (On Main Screen)")]
     public Button useCardButton; // ปุ่มกดใช้การ์ดบนหน้าจอ
     public Image useCardImage;   // รูปการ์ดบนปุ่ม
@@ -14,7 +12,12 @@ public class PlayerCardInventory : MonoBehaviour
 
     private void Awake()
     {
-        Instance = this;
+        if (FindObjectsOfType<PlayerCardInventory>().Length > 1)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
         UpdateUI(); // เริ่มเกมมาอัปเดต UI ให้ว่างเปล่า
     }
 

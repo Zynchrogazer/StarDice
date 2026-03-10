@@ -2,19 +2,16 @@ using UnityEngine;
 
 public class CharacterSelectManager : MonoBehaviour
 {
-    public static CharacterSelectManager Instance;
-
     public PlayerData selectedPlayer; // ตัวละครที่เลือกตอนนี้
 
     void Awake()
     {
-        if (Instance != null && Instance != this)
+        if (FindObjectsOfType<CharacterSelectManager>().Length > 1)
         {
             Destroy(gameObject);
             return;
         }
 
-        Instance = this;
         DontDestroyOnLoad(gameObject); // เก็บข้าม Scene
     }
 

@@ -5,9 +5,21 @@ public class CharacterSelectUI : MonoBehaviour
 {
     public PlayerData[] allCharacters;   // ตัวละครทั้งหมด
     public Button[] characterButtons;    // ปุ่มที่วางใน Scene
+    [SerializeField] private CharacterSelectManager characterSelectManager;
 
     void Start()
     {
+        if (characterSelectManager == null)
+        {
+            characterSelectManager = FindObjectOfType<CharacterSelectManager>();
+        }
+
+        if (characterSelectManager == null)
+        {
+            Debug.LogError("[CharacterSelectUI] ไม่พบ CharacterSelectManager ใน scene");
+            return;
+        }
+
         SetupButtons();
     }
 
@@ -22,7 +34,7 @@ public class CharacterSelectUI : MonoBehaviour
             characterButtons[i].onClick.AddListener(() => OnButtonClick(index));
 
             // ตั้งสีปุ่มตาม Data
-            if (CharacterSelectManager.Instance.selectedPlayer == allCharacters[i])
+            if (characterSelectManager.selectedPlayer == allCharacters[i])
                 characterButtons[i].image.color = Color.gray; // ปุ่มถูกเลือก
             else
                 characterButtons[i].image.color = Color.white; // ปุ่มไม่ถูกเลือก
@@ -32,7 +44,13 @@ public class CharacterSelectUI : MonoBehaviour
     void OnButtonClick(int index)
     {
         // อัปเดต Data
-        CharacterSelectManager.Instance.SelectCharacter(allCharacters[index]);
+        if (characterSelectManager == null)
+        {
+            Debug.LogError("[CharacterSelectUI] CharacterSelectManager หายไประหว่างทำงาน");
+            return;
+        }
+
+        characterSelectManager.SelectCharacter(allCharacters[index]);
 
         // Refresh UI สีปุ่ม
         SetupButtons();

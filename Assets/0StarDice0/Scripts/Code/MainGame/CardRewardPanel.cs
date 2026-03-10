@@ -91,11 +91,13 @@ public class CardRewardPanel : MonoBehaviour
     public void OnKeepButtonClicked()
     {
         Debug.Log("🖱️ กด Keep");
-        if (finalCard != null && PlayerCardInventory.Instance != null)
+        PlayerCardInventory playerCardInventory = FindObjectOfType<PlayerCardInventory>();
+
+        if (finalCard != null && playerCardInventory != null)
         {
-            PlayerCardInventory.Instance.ObtainCard(finalCard);
+            playerCardInventory.ObtainCard(finalCard);
         }
-        else if (PlayerCardInventory.Instance == null)
+        else if (playerCardInventory == null)
         {
             Debug.LogWarning("⚠️ หา PlayerCardInventory ไม่เจอ (แต่จะปิด Panel ให้นะ)");
         }
