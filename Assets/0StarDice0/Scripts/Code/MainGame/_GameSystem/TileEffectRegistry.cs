@@ -7,8 +7,6 @@ using System.Collections.Generic;
 /// </summary>
 public class TileEffectRegistry : MonoBehaviour
 {
-    // Singleton Instance สำหรับให้คลาสอื่นเรียกใช้
-    public static TileEffectRegistry Instance { get; private set; }
 
     [Tooltip("ลาก Effect Scriptable Objects ทั้งหมด (เช่น TrapEffectSO, ShopEffectSO) มาใส่ที่นี่")]
     public List<TileEffectSO> registeredEffects;
@@ -18,14 +16,6 @@ public class TileEffectRegistry : MonoBehaviour
 
     private void Awake()
     {
-        // ตั้งค่า Singleton
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-        Instance = this;
-
         // เรียกเมธอดเพื่อเตรียมฐานข้อมูล Effect ให้พร้อมใช้งาน
         Initialize();
     }

@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 
 // ===== ENUM =====
 public enum GameState
@@ -267,32 +268,64 @@ public class GameTurnManager : MonoBehaviour
     {
         allPlayers.Clear();
 
-        // 1. หาผู้เล่น (ใช้วิธี Tag ที่เราคุยกันล่าสุด)
-        GameObject[] taggedObjects = GameObject.FindGameObjectsWithTag("Player");
+        PlayerState[] discoveredPlayers = FindObjectsByType<PlayerState>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         List<PlayerState> validPlayers = new List<PlayerState>();
 
         // 2. 🗺️ หาแผนที่ของฉากปัจจุบันเตรียมไว้
         RouteManager currentMap = FindObjectOfType<RouteManager>();
+        Scene activeScene = SceneManager.GetActiveScene();
 
         if (currentMap == null) Debug.LogError("😱 [Manager] ไม่เจอ RouteManager ในฉากนี้!");
 
-        foreach (GameObject obj in taggedObjects)
+        bool hasPersistentPlayers = false;
+        for (int i = 0; i < discoveredPlayers.Length; i++)
         {
-            // กรองเอาเฉพาะตัวจริง (ที่ข้ามฉากมา)
-            if (obj.scene.buildIndex == -1)
+            PlayerState candidate = discoveredPlayers[i];
+            if (candidate != null && candidate.gameObject.scene.buildIndex == -1)
             {
-                PlayerState p = obj.GetComponent<PlayerState>();
-                if (p != null)
-                {
-                    validPlayers.Add(p);
+                hasPersistentPlayers = true;
+                break;
+            }
+        }
 
-                    // ✅ หัวใจสำคัญ: ยัดแผนที่ใหม่ใส่มือเดี๋ยวนี้!
-                    PlayerPathWalker walker = p.GetComponent<PlayerPathWalker>();
-                    if (walker != null && currentMap != null)
-                    {
-                        walker.ReconnectReferences(currentMap); // สั่งเชื่อมต่อใหม่ทันที
-                    }
+        for (int i = 0; i < discoveredPlayers.Length; i++)
+        {
+            PlayerState p = discoveredPlayers[i];
+            if (p == null)
+            {
+                continue;
+            }
+
+            GameObject obj = p.gameObject;
+            if (obj == null)
+            {
+                continue;
+            }
+
+            bool isPersistentPlayer = obj.scene.buildIndex == -1;
+            bool isInActiveScene = obj.scene == activeScene;
+
+            // โหมดปกติ: ถ้ามีผู้เล่นข้ามฉาก ให้เลือกเฉพาะชุดนั้นก่อน
+            // โหมด fallback: ถ้าไม่พบผู้เล่นข้ามฉากเลย ให้ใช้ผู้เล่นจาก active scene เท่านั้น
+            if (hasPersistentPlayers)
+            {
+                if (!isPersistentPlayer)
+                {
+                    continue;
                 }
+            }
+            else if (!isInActiveScene)
+            {
+                continue;
+            }
+
+            validPlayers.Add(p);
+
+            // ✅ หัวใจสำคัญ: ยัดแผนที่ใหม่ใส่มือเดี๋ยวนี้!
+            PlayerPathWalker walker = p.GetComponent<PlayerPathWalker>();
+            if (walker != null && currentMap != null)
+            {
+                walker.ReconnectReferences(currentMap); // สั่งเชื่อมต่อใหม่ทันที
             }
         }
 
@@ -306,6 +339,7 @@ public class GameTurnManager : MonoBehaviour
 
         allPlayers.AddRange(validPlayers);
 
-        Debug.Log($"<color=green>[Manager] ♻️ Refresh Players & Map: อัปเดตแผนที่ให้ผู้เล่น {allPlayers.Count} คนเรียบร้อย</color>");
+        string sourceMode = hasPersistentPlayers ? "persistent players" : "active-scene players (fallback)";
+        Debug.Log($"<color=green>[Manager] ♻️ Refresh Players & Map: {allPlayers.Count} players from {sourceMode}</color>");
     }
 }

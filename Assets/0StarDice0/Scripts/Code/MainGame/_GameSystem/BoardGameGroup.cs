@@ -3,8 +3,6 @@ using UnityEngine.SceneManagement;
 
 public class BoardGameGroup : MonoBehaviour
 {
-    public static BoardGameGroup Instance { get; private set; }
-
     private bool shouldResetOnNextBoardEntry = false;
 
     [Header("Legacy fallback")]
@@ -24,13 +22,16 @@ public class BoardGameGroup : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance != null && Instance != this)
+        BoardGameGroup[] groups = FindObjectsByType<BoardGameGroup>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        for (int i = 0; i < groups.Length; i++)
         {
-            Destroy(gameObject);
-            return;
+            if (groups[i] != null && groups[i] != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
         }
 
-        Instance = this;
         DontDestroyOnLoad(gameObject);
     }
 
