@@ -9,6 +9,12 @@ public class DeckManager : MonoBehaviour
 {
     public static DeckManager Instance;
 
+    public static bool TryGet(out DeckManager manager)
+    {
+        manager = Instance;
+        return manager != null;
+    }
+
     [Header("Deck Data")]
     public List<CardData> allCards;       // การ์ดทั้งหมดในเกม (Database)
     public CardData[] cardUse = new CardData[20]; // เด็คปัจจุบัน

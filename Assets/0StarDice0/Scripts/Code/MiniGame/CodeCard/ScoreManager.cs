@@ -2,21 +2,18 @@ using UnityEngine;
 
 public class ScoreManager : MonoBehaviour
 {
-    public static ScoreManager Instance;
-
     public int totalScore = 0;
 
     void Awake()
     {
-        if (Instance == null)
-        {
-            Instance = this;
-            DontDestroyOnLoad(gameObject); // เก็บข้าม scene
-        }
-        else
+        ScoreManager[] managers = FindObjectsByType<ScoreManager>(FindObjectsSortMode.None);
+        if (managers.Length > 1)
         {
             Destroy(gameObject);
+            return;
         }
+
+        DontDestroyOnLoad(gameObject); // เก็บข้าม scene
     }
 
     public void AddScore(int amount)

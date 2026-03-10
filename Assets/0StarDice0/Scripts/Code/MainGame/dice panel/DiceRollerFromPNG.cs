@@ -5,6 +5,12 @@ using UnityEngine.SceneManagement;
 
 public class DiceRollerFromPNG : MonoBehaviour
 {
+    public static bool TryGet(out DiceRollerFromPNG manager)
+    {
+        manager = Instance;
+        return manager != null;
+    }
+
     public static DiceRollerFromPNG Instance { get; private set; }
 
     [Header("UI References (Optional)")]

@@ -17,6 +17,12 @@ public enum GameState
 
 public class GameTurnManager : MonoBehaviour
 {
+    public static bool TryGet(out GameTurnManager manager)
+    {
+        manager = Instance;
+        return manager != null;
+    }
+
     public static GameTurnManager Instance { get; private set; }
     public const string PendingBattleReturnKey = "PendingBattleReturn";
 
@@ -27,6 +33,10 @@ public class GameTurnManager : MonoBehaviour
     public List<PlayerState> allPlayers = new List<PlayerState>();
     public int currentPlayerIndex = 0;
 
+    [Header("References (Refactor Prep)")]
+    [SerializeField] private DiceRollerFromPNG diceRoller;
+    [SerializeField] private GameEventManager gameEventManager;
+
     
     public event System.Action<bool> OnTurnChanged;
     // ===== Current Player =====
@@ -34,6 +44,12 @@ public class GameTurnManager : MonoBehaviour
         (Instance != null && Instance.allPlayers.Count > 0)
             ? Instance.allPlayers[Instance.currentPlayerIndex]
             : null;
+
+    public static bool TryGetCurrentPlayer(out PlayerState player)
+    {
+        player = CurrentPlayer;
+        return player != null;
+    }
 
     // ===== UNITY =====
     private void Awake()
@@ -110,13 +126,13 @@ public class GameTurnManager : MonoBehaviour
             yield return new WaitForSeconds(0.8f);
             SetState(GameState.Rolling);
 
-            if (DiceRollerFromPNG.Instance != null)
-                DiceRollerFromPNG.Instance.RollDiceForAI();
+            if (ResolveDiceRoller() != null)
+                ResolveDiceRoller().RollDiceForAI();
         }
         else
         {
-            if (DiceRollerFromPNG.Instance != null)
-                DiceRollerFromPNG.Instance.ForceEnableButton();
+            if (ResolveDiceRoller() != null)
+                ResolveDiceRoller().ForceEnableButton();
         }
     }
 
@@ -160,6 +176,22 @@ public class GameTurnManager : MonoBehaviour
 
 
 
+    private DiceRollerFromPNG ResolveDiceRoller()
+    {
+        if (diceRoller == null)
+            diceRoller = FindFirstObjectByType<DiceRollerFromPNG>();
+
+        return diceRoller;
+    }
+
+    private GameEventManager ResolveGameEventManager()
+    {
+        if (gameEventManager == null)
+            gameEventManager = FindFirstObjectByType<GameEventManager>();
+
+        return gameEventManager;
+    }
+
     public void ResetForSceneExit()
     {
         StopAllCoroutines();
@@ -175,9 +207,9 @@ public class GameTurnManager : MonoBehaviour
 
         PlayerStartSpawner.LastKnownPositions.Clear();
 
-        if (GameEventManager.Instance != null)
+        if (ResolveGameEventManager() != null)
         {
-            GameEventManager.Instance.ResetEventStatus();
+            ResolveGameEventManager().ResetEventStatus();
         }
     }
 
@@ -212,9 +244,9 @@ public class GameTurnManager : MonoBehaviour
             Debug.Log("[Manager] Skip SpawnAllPlayers: board scene/spawner is not ready yet.");
         }
 
-        if (GameEventManager.Instance != null)
+        if (ResolveGameEventManager() != null)
         {
-            GameEventManager.Instance.ResetEventStatus();
+            ResolveGameEventManager().ResetEventStatus();
         }
 
         if (canRespawnPlayers)
@@ -251,7 +283,7 @@ public class GameTurnManager : MonoBehaviour
 
         SetState(GameState.Idle);
         StopAllCoroutines();
-        if (GameEventManager.Instance != null) GameEventManager.Instance.ResetEventStatus();
+        if (ResolveGameEventManager() != null) ResolveGameEventManager().ResetEventStatus();
 
         Debug.Log("[Manager] ✅ กลับจาก Battle แล้ว เริ่มเทิร์นที่ผู้เล่นคนแรก");
         StartCoroutine(StartTurnRoutine());

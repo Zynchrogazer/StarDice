@@ -8,6 +8,7 @@ using UnityEngine.SceneManagement;
 
 public class PlayerState : MonoBehaviour
 {
+    [SerializeField] private PlayerStatAggregator playerStatAggregator;
     private const string IntermissionSceneName = "InterMission";
 
     //public static PlayerState Instance { get; private set; }
@@ -118,9 +119,9 @@ public class PlayerState : MonoBehaviour
         InitializeRuntimeSkillUnlocks(data.allSkills != null ? data.allSkills.Length : 0);
         EnsureRuntimeSkillUnlocksMatchLevel();
 
-        if (PlayerStatAggregator.Instance != null)
+        if (ResolvePlayerStatAggregator() != null)
         {
-            PlayerStatAggregator.Instance.RefreshCurrentPlayerStats();
+            ResolvePlayerStatAggregator().RefreshCurrentPlayerStats();
         }
 
         Debug.Log($"[PlayerState] Loaded: Level {PlayerLevel}, HP {PlayerHealth}/{MaxHealth}");
@@ -296,6 +297,14 @@ public class PlayerState : MonoBehaviour
         OnStatsUpdated?.Invoke();
     }
 
+    private PlayerStatAggregator ResolvePlayerStatAggregator()
+    {
+        if (playerStatAggregator == null)
+            playerStatAggregator = FindFirstObjectByType<PlayerStatAggregator>();
+
+        return playerStatAggregator;
+    }
+
     private void HandleDefeat()
     {
         if (isDefeatHandling || isAI) return;
@@ -358,9 +367,9 @@ public class PlayerState : MonoBehaviour
             ResetRuntimeSkillUnlocks();
         }
 
-        if (PlayerStatAggregator.Instance != null)
+        if (ResolvePlayerStatAggregator() != null)
         {
-            PlayerStatAggregator.Instance.RefreshCurrentPlayerStats();
+            ResolvePlayerStatAggregator().RefreshCurrentPlayerStats();
         }
 
         OnStatsUpdated?.Invoke();

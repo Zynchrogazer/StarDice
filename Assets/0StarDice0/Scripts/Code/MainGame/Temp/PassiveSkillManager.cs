@@ -2,7 +2,7 @@
 
 public class PassiveSkillManager : MonoBehaviour
 {
-    public static PassiveSkillManager Instance { get; private set; }
+    [SerializeField] private PlayerStatAggregator playerStatAggregator;
 
     [Header("Save Data")]
     public int starSkillLevel = 0;      // เลเวลสกิล: เก็บดาวเพิ่ม
@@ -21,14 +21,15 @@ public class PassiveSkillManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance != null && Instance != this)
+        PassiveSkillManager[] managers = FindObjectsByType<PassiveSkillManager>(FindObjectsSortMode.None);
+        if (managers.Length > 1)
         {
             Destroy(gameObject);
             return;
         }
 
-        Instance = this;
         DontDestroyOnLoad(gameObject);
+        ResolvePlayerStatAggregator();
         EnsureLoadedForCurrentPlayer();
     }
 
@@ -82,9 +83,9 @@ public class PassiveSkillManager : MonoBehaviour
 
     public void ApplyPassiveBonusToCurrentPlayer()
     {
-        if (PlayerStatAggregator.Instance != null)
+        if (ResolvePlayerStatAggregator() != null)
         {
-            PlayerStatAggregator.Instance.RefreshCurrentPlayerStats();
+            ResolvePlayerStatAggregator().RefreshCurrentPlayerStats();
             return;
         }
 
@@ -187,6 +188,14 @@ public class PassiveSkillManager : MonoBehaviour
     private string BuildPlayerScopedKey(string prefix)
     {
         return $"{prefix}_{GetPlayerScopeSuffix()}";
+    }
+
+    private PlayerStatAggregator ResolvePlayerStatAggregator()
+    {
+        if (playerStatAggregator == null)
+            playerStatAggregator = FindFirstObjectByType<PlayerStatAggregator>();
+
+        return playerStatAggregator;
     }
 
     private string GetPlayerScopeSuffix()

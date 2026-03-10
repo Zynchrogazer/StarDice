@@ -7,9 +7,13 @@ public class BoardManager : MonoBehaviour
     // 🆔 บัตรประชาชน: สุ่มเลขประจำตัวให้ BoardManager ตัวนี้
     private int myID;
 
+    [Header("References")]
+    [SerializeField] private EventManager eventManager;
+
     private void Awake()
     {
         myID = Random.Range(1000, 9999); // สุ่มเลข 4 หลัก
+        ResolveEventManager();
     }
     // ✅ 1. ใช้ Start เพื่อเชื่อมต่อ "ตอนเริ่มเกมครั้งแรก" (แก้ปัญหา Event ไม่ติดตอนเริ่ม)
     private void Start()
@@ -59,25 +63,38 @@ public class BoardManager : MonoBehaviour
     // ✅ 3. ใช้ OnDisable เพื่อถอดสายตอนไปฉากอื่น
     private void OnDisable()
     {
-        if (EventManager.Instance != null)
+        if (eventManager != null)
         {
-            EventManager.Instance.OnPlayerLandedOnNode -= HandleTileEffect;
+            eventManager.OnPlayerLandedOnNode -= HandleTileEffect;
         }
     }
 
     // ฟังก์ชันสำหรับเชื่อมต่อ (เขียนแยกออกมาจะได้เรียกใช้ซ้ำได้)
     private void ConnectToEvent()
     {
-        if (EventManager.Instance != null)
+        ResolveEventManager();
+        if (eventManager != null)
         {
             // 🛡️ เทคนิคสำคัญ: สั่ง "ถอดสายเก่าออกก่อน" เสมอ (ถึงไม่มีก็ไม่ error)
             // เพื่อป้องกันการเชื่อมซ้ำ 2 รอบ ซึ่งจะทำให้ Event เบิ้ล
-            EventManager.Instance.OnPlayerLandedOnNode -= HandleTileEffect;
+            eventManager.OnPlayerLandedOnNode -= HandleTileEffect;
 
             // แล้วค่อยเสียบสายใหม่
-            EventManager.Instance.OnPlayerLandedOnNode += HandleTileEffect;
+            eventManager.OnPlayerLandedOnNode += HandleTileEffect;
 
             // Debug.Log("[BoardManager] 🟢 Connected to EventManager");
+        }
+        else
+        {
+            Debug.LogWarning("[BoardManager] EventManager not found in scene.");
+        }
+    }
+
+    private void ResolveEventManager()
+    {
+        if (eventManager == null)
+        {
+            eventManager = FindFirstObjectByType<EventManager>();
         }
     }
 

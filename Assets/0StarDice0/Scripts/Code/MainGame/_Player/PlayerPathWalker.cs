@@ -16,6 +16,7 @@ public class PlayerPathWalker : MonoBehaviour
     private AudioSource audioSource;
 
     [Range(0f, 1f)] public float soundVolume = 0.8f;
+    [SerializeField] private EventManager eventManager;
 
     [Header("State")]
     public int currentNodeID;
@@ -58,6 +59,7 @@ public class PlayerPathWalker : MonoBehaviour
     private void Start()
     {
         if (routeManager == null) routeManager = RouteManager.Instance;
+        if (eventManager == null) eventManager = FindFirstObjectByType<EventManager>();
     }
 
     public void ExecuteMove(int steps)
@@ -151,9 +153,9 @@ public class PlayerPathWalker : MonoBehaviour
                 GameTurnManager.Instance.SetState(GameState.EventProcessing);
 
             // ✅ 2. ส่งไม้ต่อให้ EventManager (ใช้สคริปต์ EventManager ตัวเดิมของคุณ)
-            if (EventManager.Instance != null)
+            if (eventManager != null)
             {
-                EventManager.Instance.RaisePlayerLandedOnNode(finalNodeData, this.gameObject);
+                eventManager.RaisePlayerLandedOnNode(finalNodeData, this.gameObject);
             }
             else
             {

@@ -77,6 +77,12 @@ public struct TileVisualSetting
 [ExecuteAlways]
 public class RouteManager : MonoBehaviour
 {
+    public static bool TryGet(out RouteManager manager)
+    {
+        manager = Instance;
+        return manager != null;
+    }
+
     [Tooltip("List ของ NodeConnection ทั้งหมดในบอร์ด")]
     public List<NodeConnection> nodeConnections = new List<NodeConnection>();
 

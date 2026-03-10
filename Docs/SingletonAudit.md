@@ -15,7 +15,17 @@ Scope: `Assets/0StarDice0/Scripts`
   - `PlayerCardInventory`
   - `ShopManager`
   - `CharacterSelectManager`
-- Remaining singleton-style `Instance` declarations: **16** (excluding commented code).
+  - `NormaUIManager`
+  - `EventManager`
+  - `GameManagerLevel1`
+  - `GameManagerLevel2`
+  - `GameManagerLevel3`
+  - `PassiveSkillTooltip`
+  - `ScoreManager`
+  - `PlayerStatAggregator`
+  - `PassiveSkillManager`
+  - `SkillManager`
+- Remaining singleton-style `Instance` declarations: **6** (excluding commented code).
 ## Singleton list (initial snapshot)
 
 | Class | File | `Class.Instance` refs in `.cs` | Referenced from other files | Notes |
@@ -50,3 +60,32 @@ Scope: `Assets/0StarDice0/Scripts`
 2. **Low-coupling singletons**: `NormaUIManager`, `EventManager`, `PlayerCardInventory`, `ShopManager`, `GameManagerLevel1/2/3`, `CharacterSelectManager`.
 
 3. **Core high-coupling (last)**: `GameEventManager`, `GameTurnManager`, `DeckManager`, `RouteManager`, `DiceRollerFromPNG`, `NormaSystem`, `PlayerStatAggregator`, `SkillManager`, `PassiveSkillManager`, `ScoreManager`.
+
+## Next singleton targets (scene-migration focused)
+
+Based on the progress update (already removed: `DeckData`, `CameraController`, `PlayerInventory`, `PlayerCardInventory`, `ShopManager`, `CharacterSelectManager`), the next best removals to reduce scene-move complexity are:
+
+1. **`NormaUIManager`** (`6` refs, `1` external file)
+   - Why next: mostly UI-facing + low fan-out, so converting to scene-local reference (serialized field or context injection) should have low blast radius.
+2. **`EventManager`** (`7` refs, `2` external files)
+   - Why next: small dependency surface; helps remove hidden global event dependency between scenes.
+3. **`GameManagerLevel1/2/3`** (`2` refs each, `1` external file each)
+   - Why next: isolated mini-game managers; can be migrated to per-scene ownership with minimal impact.
+4. **`PassiveSkillTooltip`** (`4` refs, `1` external file)
+   - Why next: lightweight presentation singleton; easy to swap to explicit object references.
+
+### Keep for later (still relatively central)
+
+- `PassiveSkillManager`, `NormaSystem`, `PlayerStatAggregator` (moderate coupling, gameplay flow).
+- `GameEventManager`, `GameTurnManager`, `DeckManager`, `RouteManager`, `DiceRollerFromPNG`, `SkillManager`, `ScoreManager` (core orchestration / higher coupling).
+
+### Practical rule for "next to remove"
+
+Prefer singletons with **small external reference count** and **UI or scene-local responsibility** first; postpone singletons that coordinate turn flow, deck lifecycle, or global game state.
+
+
+## Refactor readiness improvements (high-risk singleton phase)
+
+- Added `TryGet(out manager)` helpers on remaining high-risk singletons (`DeckManager`, `RouteManager`, `GameEventManager`, `NormaSystem`, `GameTurnManager`, `DiceRollerFromPNG`) to standardize call-site migration away from direct static access.
+- Added/expanded resolver-based references in core flow scripts (`GameTurnManager`, `GameEventManager`, `NormaSystem`, `BoardGameGroup`, `ChangeSceneButton`) so future singleton removal can be done per-system with lower blast radius.
+- Goal of this phase: **prepare dependency seams first**, then remove high-risk singleton declarations in later PRs with less gameplay-flow risk.

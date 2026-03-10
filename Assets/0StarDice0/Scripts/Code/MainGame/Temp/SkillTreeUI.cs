@@ -5,6 +5,7 @@ using UnityEngine.SceneManagement;
 
 public class SkillTreeUI : MonoBehaviour
 {
+    [SerializeField] private PassiveSkillManager passiveSkillManager;
     [Header("UI References")]
     public TextMeshProUGUI creditText;
     public TextMeshProUGUI goldText; // backward compatibility
@@ -21,31 +22,39 @@ public class SkillTreeUI : MonoBehaviour
 
     private void Start()
     {
-        if (PassiveSkillManager.Instance != null)
+        if (ResolvePassiveSkillManager() != null)
         {
-            PassiveSkillManager.Instance.ApplyPassiveBonusToCurrentPlayer();
+            ResolvePassiveSkillManager().ApplyPassiveBonusToCurrentPlayer();
         }
 
         UpdateUI();
 
         upgradeStarBtn.onClick.AddListener(() => {
-            if (PassiveSkillManager.Instance != null && PassiveSkillManager.Instance.TryUpgradeStarSkill())
+            if (ResolvePassiveSkillManager() != null && ResolvePassiveSkillManager().TryUpgradeStarSkill())
             {
                 UpdateUI();
             }
         });
 
         upgradeAttackBtn.onClick.AddListener(() => {
-            if (PassiveSkillManager.Instance != null && PassiveSkillManager.Instance.TryUpgradeAttackSkill())
+            if (ResolvePassiveSkillManager() != null && ResolvePassiveSkillManager().TryUpgradeAttackSkill())
             {
                 UpdateUI();
             }
         });
     }
 
+    private PassiveSkillManager ResolvePassiveSkillManager()
+    {
+        if (passiveSkillManager == null)
+            passiveSkillManager = FindFirstObjectByType<PassiveSkillManager>();
+
+        return passiveSkillManager;
+    }
+
     private void UpdateUI()
     {
-        if (PassiveSkillManager.Instance == null) return;
+        if (ResolvePassiveSkillManager() == null) return;
 
         int playerCredit = GameTurnManager.CurrentPlayer != null
             ? GameTurnManager.CurrentPlayer.PlayerCredit
@@ -54,15 +63,15 @@ public class SkillTreeUI : MonoBehaviour
         if (creditText != null) creditText.text = $"Credit: {playerCredit}";
         if (goldText != null) goldText.text = $"Credit: {playerCredit}";
 
-        int starLv = PassiveSkillManager.Instance.starSkillLevel;
-        int starCost = PassiveSkillManager.Instance.GetStarUpgradeCost();
-        starLevelText.text = $"Lv. {starLv} (+{PassiveSkillManager.Instance.GetStarBonusAmount()} MaxHP)";
+        int starLv = ResolvePassiveSkillManager().starSkillLevel;
+        int starCost = ResolvePassiveSkillManager().GetStarUpgradeCost();
+        starLevelText.text = $"Lv. {starLv} (+{ResolvePassiveSkillManager().GetStarBonusAmount()} MaxHP)";
         starCostText.text = $"Cost: {starCost}";
         upgradeStarBtn.interactable = playerCredit >= starCost;
 
-        int atkLv = PassiveSkillManager.Instance.attackSkillLevel;
-        int atkCost = PassiveSkillManager.Instance.GetAttackUpgradeCost();
-        attackLevelText.text = $"Lv. {atkLv} (+{PassiveSkillManager.Instance.GetAttackBonusAmount()} Dmg)";
+        int atkLv = ResolvePassiveSkillManager().attackSkillLevel;
+        int atkCost = ResolvePassiveSkillManager().GetAttackUpgradeCost();
+        attackLevelText.text = $"Lv. {atkLv} (+{ResolvePassiveSkillManager().GetAttackBonusAmount()} Dmg)";
         attackCostText.text = $"Cost: {atkCost}";
         upgradeAttackBtn.interactable = playerCredit >= atkCost;
     }

@@ -2,18 +2,42 @@
 
 public class PlayerStatAggregator : MonoBehaviour
 {
-    public static PlayerStatAggregator Instance { get; private set; }
+    [SerializeField] private PassiveSkillManager passiveSkillManager;
+    [SerializeField] private SkillManager skillManager;
 
     private void Awake()
     {
-        if (Instance != null && Instance != this)
+        PlayerStatAggregator[] aggregators = FindObjectsByType<PlayerStatAggregator>(FindObjectsSortMode.None);
+        if (aggregators.Length > 1)
         {
             Destroy(gameObject);
             return;
         }
 
-        Instance = this;
         DontDestroyOnLoad(gameObject);
+        ResolveManagers();
+    }
+
+    private void ResolveManagers()
+    {
+        ResolvePassiveSkillManager();
+        ResolveSkillManager();
+    }
+
+    private PassiveSkillManager ResolvePassiveSkillManager()
+    {
+        if (passiveSkillManager == null)
+            passiveSkillManager = FindFirstObjectByType<PassiveSkillManager>();
+
+        return passiveSkillManager;
+    }
+
+    private SkillManager ResolveSkillManager()
+    {
+        if (skillManager == null)
+            skillManager = FindFirstObjectByType<SkillManager>();
+
+        return skillManager;
     }
 
     public void RefreshCurrentPlayerStats()
@@ -30,15 +54,17 @@ public class PlayerStatAggregator : MonoBehaviour
         int passiveMaxHealthBonus = 0;
         int passiveStarBonus = 0;
 
-        if (PassiveSkillManager.Instance != null)
+        PassiveSkillManager passiveManager = ResolvePassiveSkillManager();
+        if (passiveManager != null)
         {
-            passiveAttackBonus += PassiveSkillManager.Instance.GetAttackBonusAmount();
-            passiveMaxHealthBonus += PassiveSkillManager.Instance.GetStarBonusAmount();
+            passiveAttackBonus += passiveManager.GetAttackBonusAmount();
+            passiveMaxHealthBonus += passiveManager.GetStarBonusAmount();
         }
 
-        if (SkillManager.Instance != null)
+        SkillManager resolvedSkillManager = ResolveSkillManager();
+        if (resolvedSkillManager != null)
         {
-            SkillPassiveTotals totals = SkillManager.Instance.GetUnlockedPassiveTotals();
+            SkillPassiveTotals totals = resolvedSkillManager.GetUnlockedPassiveTotals();
             passiveAttackBonus += totals.attackBonus;
             passiveMaxHealthBonus += totals.maxHpBonus;
             passiveStarBonus += totals.starBonus;

@@ -4,8 +4,6 @@ using TMPro;
 
 public class NormaUIManager : MonoBehaviour
 {
-    public static NormaUIManager Instance;
-
     [Header("Selection Panel (Popup)")]
     public GameObject selectionPanel;
     public TextMeshProUGUI titleText;
@@ -17,12 +15,6 @@ public class NormaUIManager : MonoBehaviour
     [Header("Info Display (On Screen HUD)")]
     public TextMeshProUGUI currentRankText;   // ลาก Text ที่มุมจอมาใส่ตรงนี้
     public TextMeshProUGUI currentGoalText;   // ลาก Text ที่มุมจอมาใส่ตรงนี้
-
-    private void Awake()
-    {
-        // ไม่ต้องมี DontDestroyOnLoad ตรงนี้! ปล่อยให้มันตายไปกับฉาก
-        Instance = this;
-    }
 
     private void Start()
     {

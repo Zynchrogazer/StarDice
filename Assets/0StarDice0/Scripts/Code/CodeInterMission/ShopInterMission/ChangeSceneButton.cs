@@ -136,19 +136,19 @@ public class ChangeSceneButton : MonoBehaviour
 
     private void ResetAllRuntimeState()
     {
-        if (NormaSystem.Instance != null)
+        if (NormaSystem.TryGet(out var normaSystem))
         {
-            NormaSystem.Instance.ResetForNewBoardSession();
+            normaSystem.ResetForNewBoardSession();
         }
 
-        if (GameEventManager.Instance != null)
+        if (GameEventManager.TryGet(out var gameEventManager))
         {
-            GameEventManager.Instance.ResetForNewBoardSession();
+            gameEventManager.ResetForNewBoardSession();
         }
 
-        if (GameTurnManager.Instance != null)
+        if (GameTurnManager.TryGet(out var gameTurnManager))
         {
-            GameTurnManager.Instance.ResetForNewBoardSession();
+            gameTurnManager.ResetForNewBoardSession();
         }
 
         PlayerState[] players = FindObjectsOfType<PlayerState>(true);
