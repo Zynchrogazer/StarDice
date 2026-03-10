@@ -72,10 +72,10 @@ public class NormaUIManager : MonoBehaviour
 
         if (NormaSystem.Instance != null)
         {
-            int starReq = NormaSystem.Instance.GetRequirement(nextLevel, NormaType.Stars);
-            int winReq = NormaSystem.Instance.GetRequirement(nextLevel, NormaType.Wins);
-            if (starBtnText != null) starBtnText.text = $"Collect {starReq} Stars";
-            if (winBtnText != null) winBtnText.text = $"Win {winReq} Battles";
+            string starReqText = NormaSystem.Instance.GetRequirementText(nextLevel, NormaType.Stars);
+            string winReqText = NormaSystem.Instance.GetRequirementText(nextLevel, NormaType.Wins);
+            if (starBtnText != null) starBtnText.text = $"Collect {starReqText} Stars";
+            if (winBtnText != null) winBtnText.text = $"Win {winReqText} Battles";
         }
     }
 
