@@ -77,9 +77,21 @@ public struct TileVisualSetting
 [ExecuteAlways]
 public class RouteManager : MonoBehaviour
 {
+    private static RouteManager cachedManager;
+
     public static bool TryGet(out RouteManager manager)
     {
-        manager = Instance;
+        if (cachedManager != null)
+        {
+            manager = cachedManager;
+            return true;
+        }
+
+        manager = FindFirstObjectByType<RouteManager>();
+        if (manager != null)
+        {
+            cachedManager = manager;
+        }
         return manager != null;
     }
 
@@ -141,8 +153,6 @@ public class RouteManager : MonoBehaviour
     private Dictionary<int, NodeConnection> nodeDataMap;
 
     #region Unity Lifecycle & Editor
-    public static RouteManager Instance { get; private set; }
-
     private void Awake()
     {
         // ส่วนนี้สามารถทำงานได้ทั้งใน Editor และ Play Mode
@@ -160,17 +170,27 @@ public class RouteManager : MonoBehaviour
         if (Application.isPlaying)
         {
             // โค้ดส่วนนี้จะทำงาน "เฉพาะตอนกด Play" เท่านั้น
-            if (Instance != null && Instance != this)
+            RouteManager[] managers = FindObjectsByType<RouteManager>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            if (managers.Length > 1)
             {
                 Destroy(gameObject);
                 return;
             }
-            Instance = this;
+
+            cachedManager = this;
 
             if (randomizeTilesOnGameStart)
             {
                 RandomizeTilesAtGameStart();
             }
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (cachedManager == this)
+        {
+            cachedManager = null;
         }
     }
 

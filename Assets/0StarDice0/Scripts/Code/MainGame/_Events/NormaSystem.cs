@@ -7,13 +7,23 @@ public enum NormaType { Stars, Wins }
 
 public class NormaSystem : MonoBehaviour
 {
+    private static NormaSystem cachedManager;
+
     public static bool TryGet(out NormaSystem manager)
     {
-        manager = Instance;
+        if (cachedManager != null)
+        {
+            manager = cachedManager;
+            return true;
+        }
+
+        manager = FindFirstObjectByType<NormaSystem>();
+        if (manager != null)
+        {
+            cachedManager = manager;
+        }
         return manager != null;
     }
-
-    public static NormaSystem Instance { get; private set; }
 
     [Header("Game Progression")]
     public int currentNormaRank = 1;
@@ -30,14 +40,24 @@ public class NormaSystem : MonoBehaviour
 
     private void Awake()
     {
-        // 🛡️ ระบบป้องกันตัวซ้ำ + ทำให้เป็นอมตะ
-        if (Instance != null && Instance != this)
+        // 🛡️ ป้องกันตัวซ้ำโดยตรวจจำนวนในฉาก แทนการพึ่ง static Instance
+        NormaSystem[] systems = FindObjectsByType<NormaSystem>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        if (systems.Length > 1)
         {
             Destroy(gameObject);
             return;
         }
-        Instance = this;
-        DontDestroyOnLoad(gameObject); // อยู่ยงคงกระพัน
+
+        cachedManager = this;
+        DontDestroyOnLoad(gameObject);
+    }
+
+    private void OnDestroy()
+    {
+        if (cachedManager == this)
+        {
+            cachedManager = null;
+        }
     }
 
     private IEnumerator Start()

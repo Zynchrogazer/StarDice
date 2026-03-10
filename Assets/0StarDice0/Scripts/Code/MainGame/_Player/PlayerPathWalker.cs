@@ -52,13 +52,13 @@ public class PlayerPathWalker : MonoBehaviour
     {
         if (scene.name == "TestFight" || scene.name == "Shop" || scene.name.Contains("Minigame")) return;
 
-        routeManager = RouteManager.Instance;
+        RouteManager.TryGet(out routeManager);
         choiceUIManager = FindObjectOfType<ChoiceUIManager>();
     }
 
     private void Start()
     {
-        if (routeManager == null) routeManager = RouteManager.Instance;
+        if (routeManager == null) RouteManager.TryGet(out routeManager);
         if (eventManager == null) eventManager = FindFirstObjectByType<EventManager>();
     }
 
@@ -136,6 +136,7 @@ public class PlayerPathWalker : MonoBehaviour
     private void CheckFinalNodeEvent()
     {
         NodeConnection finalNodeData = routeManager?.GetNodeData(currentNodeID);
+        bool hasGameTurnManager = GameTurnManager.TryGet(out var gameTurnManager);
 
         if (finalNodeData != null)
         {
@@ -149,8 +150,8 @@ public class PlayerPathWalker : MonoBehaviour
             }
 
             // ✅ 1. บอก Manager ให้ล็อค State ไว้ที่ EventProcessing (กัน AI วิ่งแซง)
-            if (GameTurnManager.Instance != null)
-                GameTurnManager.Instance.SetState(GameState.EventProcessing);
+            if (hasGameTurnManager)
+                gameTurnManager.SetState(GameState.EventProcessing);
 
             // ✅ 2. ส่งไม้ต่อให้ EventManager (ใช้สคริปต์ EventManager ตัวเดิมของคุณ)
             if (eventManager != null)
@@ -160,12 +161,12 @@ public class PlayerPathWalker : MonoBehaviour
             else
             {
                 // ถ้าไม่มี EventManager ให้จบเทิร์นเลย
-                GameTurnManager.Instance?.RequestEndTurn();
+                if (hasGameTurnManager) gameTurnManager.RequestEndTurn();
             }
         }
         else
         {
-            GameTurnManager.Instance?.RequestEndTurn();
+            if (hasGameTurnManager) gameTurnManager.RequestEndTurn();
         }
     }
 
@@ -218,7 +219,7 @@ public class PlayerPathWalker : MonoBehaviour
 
     public void WarpByCard(Transform targetNode)
     {
-        if (RouteManager.Instance == null) return;
+        if (!RouteManager.TryGet(out var routeManagerRef)) return;
 
         Debug.Log($"[Card Effect] กำลังวาร์ปผู้เล่นไปยัง: {targetNode.name}");
 
@@ -228,15 +229,15 @@ public class PlayerPathWalker : MonoBehaviour
         // 2. อัปเดต Logic ว่าตอนนี้เรายืนอยู่ที่ Node ไหน (แก้ตรงนี้!)
         bool found = false;
 
-        for (int i = 0; i < RouteManager.Instance.nodeConnections.Count; i++)
+        for (int i = 0; i < routeManagerRef.nodeConnections.Count; i++)
         {
             // เช็คว่า Node ในลิสต์ ตรงกับ Node ที่เราเลือกไหม
-            if (RouteManager.Instance.nodeConnections[i].node == targetNode)
+            if (routeManagerRef.nodeConnections[i].node == targetNode)
             {
                 // ---------------------------------------------------------
                 // 🔴 จุดที่แก้ไข: ใช้ currentNodeID และดึงค่า tileID มาใส่
                 // ---------------------------------------------------------
-                currentNodeID = RouteManager.Instance.nodeConnections[i].tileID;
+                currentNodeID = routeManagerRef.nodeConnections[i].tileID;
 
                 Debug.Log($"[Card Effect] อัปเดตตำแหน่งเป็น Node ID: {currentNodeID}");
                 found = true;

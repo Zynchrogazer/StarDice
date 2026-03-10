@@ -6,17 +6,53 @@ using UnityEngine.SceneManagement;
 
 public class GameEventManager : MonoBehaviour
 {
+    private static GameEventManager cachedManager;
+
     public static bool TryGet(out GameEventManager manager)
     {
-        manager = Instance;
+        if (cachedManager != null)
+        {
+            manager = cachedManager;
+            return true;
+        }
+
+        manager = FindFirstObjectByType<GameEventManager>();
+        if (manager != null)
+        {
+            cachedManager = manager;
+        }
+
         return manager != null;
+    }
+
+    public static void TryAddCount1(int amount)
+    {
+        if (TryGet(out var manager))
+            manager.AddCount1(amount);
+    }
+
+    public static void TryAddCount2(int amount)
+    {
+        if (TryGet(out var manager))
+            manager.AddCount2(amount);
+    }
+
+    public static void TryTriggerEvent(string eventName, GameObject target)
+    {
+        if (TryGet(out var manager))
+            manager.TriggerEvent(eventName, target);
+    }
+
+    public static void SetRandomSpinning(bool value)
+    {
+        if (TryGet(out var manager))
+            manager.isRandomSpinning = value;
     }
 
     public const string LastBoardSceneKey = "LastBoardSceneName";
 
     [Header("Scene Settings")]
     public string boardGameSceneName = "TestMain";
-    public static GameEventManager Instance { get; private set; }
 
     [Header("Random Event Settings")]
     public string[] randomEventKeys;
@@ -66,9 +102,17 @@ public class GameEventManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
-        Instance = this;
+        GameEventManager[] managers = FindObjectsByType<GameEventManager>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        if (managers.Length > 1) { Destroy(gameObject); return; }
+
+        cachedManager = this;
         DontDestroyOnLoad(gameObject);
+    }
+
+    private void OnDestroy()
+    {
+        if (cachedManager == this)
+            cachedManager = null;
     }
 
     private void Start()

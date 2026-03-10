@@ -5,13 +5,23 @@ using UnityEngine.SceneManagement;
 
 public class DiceRollerFromPNG : MonoBehaviour
 {
+    private static DiceRollerFromPNG cachedManager;
+
     public static bool TryGet(out DiceRollerFromPNG manager)
     {
-        manager = Instance;
+        if (cachedManager != null)
+        {
+            manager = cachedManager;
+            return true;
+        }
+
+        manager = FindFirstObjectByType<DiceRollerFromPNG>();
+        if (manager != null)
+        {
+            cachedManager = manager;
+        }
         return manager != null;
     }
-
-    public static DiceRollerFromPNG Instance { get; private set; }
 
     [Header("UI References (Optional)")]
     public Image diceImage;
@@ -31,8 +41,10 @@ public class DiceRollerFromPNG : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
-        Instance = this;
+        DiceRollerFromPNG[] rollers = FindObjectsByType<DiceRollerFromPNG>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        if (rollers.Length > 1) { Destroy(gameObject); return; }
+
+        cachedManager = this;
         DontDestroyOnLoad(gameObject);
 
         if (sfxSource == null) sfxSource = GetComponent<AudioSource>();
@@ -59,6 +71,14 @@ public class DiceRollerFromPNG : MonoBehaviour
         GameEventManager.OnBoardSceneReady -= RefreshReferences;
     }
 
+    private void OnDestroy()
+    {
+        if (cachedManager == this)
+        {
+            cachedManager = null;
+        }
+    }
+
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         if (scene.name == "TestFight" || scene.name == "Shop" || scene.name.Contains("Minigame")) return;
@@ -68,8 +88,8 @@ public class DiceRollerFromPNG : MonoBehaviour
     private IEnumerator CheckStateOnEnable()
     {
         yield return new WaitForSeconds(0.2f); // รอให้ Manager ตั้งสติแป๊บนึง
-        if (GameTurnManager.Instance != null &&
-            GameTurnManager.Instance.currentState == GameState.WaitingForRoll &&
+        if (GameTurnManager.TryGet(out var gameTurnManager) &&
+            gameTurnManager.currentState == GameState.WaitingForRoll &&
             !GameTurnManager.CurrentPlayer.isAI)
         {
             SetRollButtonActive(true);
@@ -98,7 +118,7 @@ public class DiceRollerFromPNG : MonoBehaviour
     public void RollDice()
     {   
         // ✅ เช็ค State: ต้องเป็นตาคนเล่น (WaitingForRoll) เท่านั้นถึงจะกดได้
-        if (isRolling || GameTurnManager.Instance.currentState != GameState.WaitingForRoll) return;
+        if (!GameTurnManager.TryGet(out var gameTurnManager) || isRolling || gameTurnManager.currentState != GameState.WaitingForRoll) return;
         StartCoroutine(RollCoroutine());
         
     }
@@ -106,7 +126,7 @@ public class DiceRollerFromPNG : MonoBehaviour
     public void RollDiceForAI()
     {
         // ✅ เช็ค State: ต้องเป็นตา AI (Rolling) เท่านั้น
-        if (isRolling || GameTurnManager.Instance.currentState != GameState.Rolling) return;
+        if (!GameTurnManager.TryGet(out var gameTurnManager) || isRolling || gameTurnManager.currentState != GameState.Rolling) return;
         StartCoroutine(RollCoroutine());
     }
 
@@ -162,9 +182,9 @@ public class DiceRollerFromPNG : MonoBehaviour
         isRolling = false;
 
         // ✅ จุดสำคัญ: ส่งไม้ต่อให้ GameTurnManager เพื่อเปลี่ยน State เป็น Moving
-        if (GameTurnManager.Instance != null)
+        if (GameTurnManager.TryGet(out var gameTurnManager))
         {
-            GameTurnManager.Instance.OnDiceRolled(finalnubmber);
+            gameTurnManager.OnDiceRolled(finalnubmber);
         }
     }
 
@@ -294,8 +314,8 @@ public class DiceRollerFromPNG : MonoBehaviour
     {
         yield return new WaitForSeconds(0.3f); // รอให้การค้นหาปุ่มใน Retry เสร็จก่อน
 
-        if (GameTurnManager.Instance != null &&
-            GameTurnManager.Instance.currentState == GameState.WaitingForRoll &&
+        if (GameTurnManager.TryGet(out var gameTurnManager) &&
+            gameTurnManager.currentState == GameState.WaitingForRoll &&
             !GameTurnManager.CurrentPlayer.isAI)
         {
             SetRollButtonActive(true);

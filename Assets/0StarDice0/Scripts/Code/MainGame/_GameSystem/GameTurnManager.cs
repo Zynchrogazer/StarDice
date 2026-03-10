@@ -17,13 +17,25 @@ public enum GameState
 
 public class GameTurnManager : MonoBehaviour
 {
+    private static GameTurnManager cachedManager;
+
     public static bool TryGet(out GameTurnManager manager)
     {
-        manager = Instance;
+        if (cachedManager != null)
+        {
+            manager = cachedManager;
+            return true;
+        }
+
+        manager = FindFirstObjectByType<GameTurnManager>();
+        if (manager != null)
+        {
+            cachedManager = manager;
+        }
+
         return manager != null;
     }
 
-    public static GameTurnManager Instance { get; private set; }
     public const string PendingBattleReturnKey = "PendingBattleReturn";
 
     [Header("State Machine")]
@@ -40,10 +52,19 @@ public class GameTurnManager : MonoBehaviour
     
     public event System.Action<bool> OnTurnChanged;
     // ===== Current Player =====
-    public static PlayerState CurrentPlayer =>
-        (Instance != null && Instance.allPlayers.Count > 0)
-            ? Instance.allPlayers[Instance.currentPlayerIndex]
-            : null;
+    public static PlayerState CurrentPlayer
+    {
+        get
+        {
+            if (!TryGet(out var manager) || manager.allPlayers.Count == 0)
+                return null;
+
+            if (manager.currentPlayerIndex < 0 || manager.currentPlayerIndex >= manager.allPlayers.Count)
+                return null;
+
+            return manager.allPlayers[manager.currentPlayerIndex];
+        }
+    }
 
     public static bool TryGetCurrentPlayer(out PlayerState player)
     {
@@ -54,17 +75,25 @@ public class GameTurnManager : MonoBehaviour
     // ===== UNITY =====
     private void Awake()
     {
-        // เช็ค Singleton
-        if (Instance != null && Instance != this)
+        GameTurnManager[] managers = FindObjectsByType<GameTurnManager>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        if (managers.Length > 1)
         {
             Destroy(gameObject);
             return;
         }
 
-        Instance = this;
+        cachedManager = this;
 
         // ✅ บรรทัดนี้สำคัญที่สุด! ทำให้ Manager ไม่ตายเมื่อเปลี่ยนฉาก
         DontDestroyOnLoad(gameObject);
+    }
+
+    private void OnDestroy()
+    {
+        if (cachedManager == this)
+        {
+            cachedManager = null;
+        }
     }
 
     private void Start()
@@ -99,19 +128,20 @@ public class GameTurnManager : MonoBehaviour
         yield return null;
 
         SetState(GameState.Preparing);
-        if (CurrentPlayer != null)
+        PlayerState currentPlayer = CurrentPlayer;
+        if (currentPlayer != null)
         {
             yield return new WaitForSeconds(0.5f);
             Debug.Log($"<color=cyan>[Turn] รอ UI ประกาศเทิร์น...</color>");
-            OnTurnChanged?.Invoke(CurrentPlayer.isAI);
+            OnTurnChanged?.Invoke(currentPlayer.isAI);
 
-            if (!CurrentPlayer.isAI && CurrentPlayer.TryConsumeBurnDebuff(10))
+            if (!currentPlayer.isAI && currentPlayer.TryConsumeBurnDebuff(10))
             {
-                Debug.Log($"<color=orange>🔥 Burn ticks on {CurrentPlayer.name} (-10 HP)</color>");
+                Debug.Log($"<color=orange>🔥 Burn ticks on {currentPlayer.name} (-10 HP)</color>");
                 yield return new WaitForSeconds(0.5f);
             }
 
-            if (CurrentPlayer.PlayerHealth <= 0)
+            if (currentPlayer.PlayerHealth <= 0)
             {
                 yield break;
             }
@@ -119,9 +149,13 @@ public class GameTurnManager : MonoBehaviour
         yield return new WaitForSeconds(1.0f);
 
         SetState(GameState.WaitingForRoll);
-        Debug.Log($"<color=yellow>⭐ Turn Start: {CurrentPlayer.name} (AI: {CurrentPlayer.isAI})</color>");
+        currentPlayer = CurrentPlayer;
+        if (currentPlayer == null)
+            yield break;
 
-        if (CurrentPlayer.isAI)
+        Debug.Log($"<color=yellow>⭐ Turn Start: {currentPlayer.name} (AI: {currentPlayer.isAI})</color>");
+
+        if (currentPlayer.isAI)
         {
             yield return new WaitForSeconds(0.8f);
             SetState(GameState.Rolling);
@@ -145,9 +179,13 @@ public class GameTurnManager : MonoBehaviour
 
         SetState(GameState.Moving);
 
-        Debug.Log($"🎲 {CurrentPlayer.name} rolled {steps}");
+        PlayerState currentPlayer = CurrentPlayer;
+        if (currentPlayer == null)
+            return;
 
-        PlayerPathWalker walker = CurrentPlayer.GetComponent<PlayerPathWalker>();
+        Debug.Log($"🎲 {currentPlayer.name} rolled {steps}");
+
+        PlayerPathWalker walker = currentPlayer.GetComponent<PlayerPathWalker>();
         if (walker != null)
         {
             walker.ExecuteMove(steps);
@@ -165,7 +203,9 @@ public class GameTurnManager : MonoBehaviour
             return;
 
         SetState(GameState.Ending);
-        Debug.Log($"❌ End Turn: {CurrentPlayer.name}");
+        PlayerState currentPlayer = CurrentPlayer;
+        if (currentPlayer != null)
+            Debug.Log($"❌ End Turn: {currentPlayer.name}");
 
         currentPlayerIndex++;
         if (currentPlayerIndex >= allPlayers.Count)

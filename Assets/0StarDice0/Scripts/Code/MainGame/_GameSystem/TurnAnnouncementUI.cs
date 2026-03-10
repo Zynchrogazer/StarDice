@@ -18,18 +18,18 @@ public class TurnAnnouncementUI : MonoBehaviour
         if (panelObj != null) panelObj.SetActive(false);
 
         // 👂 ดักฟัง GameTurnManager
-        if (GameTurnManager.Instance != null)
+        if (GameTurnManager.TryGet(out var gameTurnManager))
         {
-            GameTurnManager.Instance.OnTurnChanged += ShowTurnAnnouncement;
+            gameTurnManager.OnTurnChanged += ShowTurnAnnouncement;
         }
     }
 
     private void OnDestroy()
     {
         // เลิกฟังเมื่อถูกทำลาย (สำคัญมาก ป้องกัน Error)
-        if (GameTurnManager.Instance != null)
+        if (GameTurnManager.TryGet(out var gameTurnManager))
         {
-            GameTurnManager.Instance.OnTurnChanged -= ShowTurnAnnouncement;
+            gameTurnManager.OnTurnChanged -= ShowTurnAnnouncement;
         }
     }
 

@@ -11,9 +11,9 @@ public static class BattleCardHandResolver
         {
             sourceCards.AddRange(GameData.Instance.selectedCards);
         }
-        else if (DeckManager.Instance != null && DeckManager.Instance.cardUse != null)
+        else if (DeckManager.TryGet(out _) && DeckManager.CurrentCardUse != null)
         {
-            foreach (var card in DeckManager.Instance.cardUse)
+            foreach (var card in DeckManager.CurrentCardUse)
             {
                 if (card != null)
                 {

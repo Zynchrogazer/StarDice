@@ -73,7 +73,7 @@ public class TileClickable : MonoBehaviour
     {
         if (isSelectable)
         {
-            RouteManager.Instance.OnTileClicked(this.transform);
+            if (RouteManager.TryGet(out var routeManager)) routeManager.OnTileClicked(this.transform);
         }
     }
 }

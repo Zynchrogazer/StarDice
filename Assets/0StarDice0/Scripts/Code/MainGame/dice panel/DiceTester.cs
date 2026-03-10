@@ -13,31 +13,19 @@ public class DiceTester : MonoBehaviour
         GUILayout.BeginArea(new Rect(10, 10, 150, 300));
         GUILayout.Label("--- Dice Test ---");
 
-        if (GUILayout.Button("Roll 1"))
-        {
-            DiceRollerFromPNG.Instance.RollDiceWithResult(1);
-        }
-        if (GUILayout.Button("Roll 2"))
-        {
-            DiceRollerFromPNG.Instance.RollDiceWithResult(2);
-        }
-        if (GUILayout.Button("Roll 3"))
-        {
-            DiceRollerFromPNG.Instance.RollDiceWithResult(3);
-        }
-        if (GUILayout.Button("Roll 4"))
-        {
-            DiceRollerFromPNG.Instance.RollDiceWithResult(4);
-        }
-        if (GUILayout.Button("Roll 5"))
-        {
-            DiceRollerFromPNG.Instance.RollDiceWithResult(5);
-        }
-        if (GUILayout.Button("Roll 6"))
-        {
-            DiceRollerFromPNG.Instance.RollDiceWithResult(6);
-        }
+        if (GUILayout.Button("Roll 1")) RollForced(1);
+        if (GUILayout.Button("Roll 2")) RollForced(2);
+        if (GUILayout.Button("Roll 3")) RollForced(3);
+        if (GUILayout.Button("Roll 4")) RollForced(4);
+        if (GUILayout.Button("Roll 5")) RollForced(5);
+        if (GUILayout.Button("Roll 6")) RollForced(6);
 
         GUILayout.EndArea();
+    }
+
+    private void RollForced(int value)
+    {
+        if (DiceRollerFromPNG.TryGet(out var diceRoller))
+            diceRoller.RollDiceWithResult(value);
     }
 }

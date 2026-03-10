@@ -40,18 +40,17 @@ public class NormaUIManager : MonoBehaviour
 
     public void UpdateInfoUI()
     {
-        // ถ้า System ยังไม่พร้อม (เผื่อไว้) ก็ไม่ต้องทำ
-        if (NormaSystem.Instance == null) return;
+        if (!NormaSystem.TryGet(out var normaSystem)) return;
 
         // อัปเดต Rank
         if (currentRankText != null)
-            currentRankText.text = $"Rank: {NormaSystem.Instance.currentNormaRank}";
+            currentRankText.text = $"Rank: {normaSystem.currentNormaRank}";
 
         // อัปเดต Goal
         if (currentGoalText != null)
         {
-            string typeStr = (NormaSystem.Instance.selectedNorma == NormaType.Stars) ? "Stars" : "Wins";
-            currentGoalText.text = $"Goal: {NormaSystem.Instance.targetAmount} {typeStr}";
+            string typeStr = (normaSystem.selectedNorma == NormaType.Stars) ? "Stars" : "Wins";
+            currentGoalText.text = $"Goal: {normaSystem.targetAmount} {typeStr}";
         }
     }
 
@@ -62,10 +61,10 @@ public class NormaUIManager : MonoBehaviour
         selectionPanel.SetActive(true);
         if (titleText != null) titleText.text = $"Select your quest!";
 
-        if (NormaSystem.Instance != null)
+        if (NormaSystem.TryGet(out var normaSystem))
         {
-            string starReqText = NormaSystem.Instance.GetRequirementText(nextLevel, NormaType.Stars);
-            string winReqText = NormaSystem.Instance.GetRequirementText(nextLevel, NormaType.Wins);
+            string starReqText = normaSystem.GetRequirementText(nextLevel, NormaType.Stars);
+            string winReqText = normaSystem.GetRequirementText(nextLevel, NormaType.Wins);
             if (starBtnText != null) starBtnText.text = $"Collect {starReqText} Stars";
             if (winBtnText != null) winBtnText.text = $"Win {winReqText} Battles";
         }
@@ -73,7 +72,7 @@ public class NormaUIManager : MonoBehaviour
 
     private void OnChoose(NormaType type)
     {
-        if (NormaSystem.Instance != null) NormaSystem.Instance.SelectNorma(type);
+        if (NormaSystem.TryGet(out var normaSystem)) normaSystem.SelectNorma(type);
         if (selectionPanel != null) selectionPanel.SetActive(false);
     }
 }

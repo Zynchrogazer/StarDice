@@ -170,7 +170,7 @@ public class CameraController : MonoBehaviour
 
     public void FindTarget()
     {
-        if (GameTurnManager.Instance != null && GameTurnManager.CurrentPlayer != null)
+        if (GameTurnManager.CurrentPlayer != null)
         {
             target = GameTurnManager.CurrentPlayer.transform;
         }

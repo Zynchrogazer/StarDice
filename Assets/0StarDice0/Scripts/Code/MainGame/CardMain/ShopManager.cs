@@ -63,10 +63,10 @@ public class ShopManager : MonoBehaviour
         shopPanel.SetActive(false);
 
         // 2. ✅ สำคัญมาก: บอกเกมว่า "ซื้อเสร็จแล้ว จบเทิร์นได้"
-        if (GameTurnManager.Instance != null)
+        if (GameTurnManager.TryGet(out var gameTurnManager))
         {
             Debug.Log("[Shop] ซื้อของเสร็จสิ้น -> จบเทิร์น");
-            GameTurnManager.Instance.RequestEndTurn();
+            gameTurnManager.RequestEndTurn();
         }
     }
 

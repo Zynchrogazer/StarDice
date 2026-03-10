@@ -7,12 +7,47 @@ using System.Linq;
 
 public class DeckManager : MonoBehaviour
 {
-    public static DeckManager Instance;
+    private static DeckManager cachedManager;
+    private static readonly CardData[] EmptyDeck = new CardData[0];
 
     public static bool TryGet(out DeckManager manager)
     {
-        manager = Instance;
+        if (cachedManager != null)
+        {
+            manager = cachedManager;
+            return true;
+        }
+
+        manager = FindFirstObjectByType<DeckManager>();
+        if (manager != null)
+        {
+            cachedManager = manager;
+        }
+
         return manager != null;
+    }
+
+    public static CardData[] CurrentCardUse
+    {
+        get
+        {
+            if (TryGet(out var manager) && manager.cardUse != null)
+                return manager.cardUse;
+
+            return EmptyDeck;
+        }
+    }
+
+    public static void TryLockCard(CardData card)
+    {
+        if (TryGet(out var manager))
+            manager.LockCard(card);
+    }
+
+    public static void TryRemoveCard(int slotIndex)
+    {
+        if (TryGet(out var manager))
+            manager.RemoveCard(slotIndex);
     }
 
     [Header("Deck Data")]
@@ -27,15 +62,22 @@ public class DeckManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance == null)
-        {
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
-        else
+        DeckManager[] managers = FindObjectsByType<DeckManager>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        if (managers.Length > 1)
         {
             Destroy(gameObject);
             return;
+        }
+
+        cachedManager = this;
+        DontDestroyOnLoad(gameObject);
+    }
+
+    private void OnDestroy()
+    {
+        if (cachedManager == this)
+        {
+            cachedManager = null;
         }
     }
 
