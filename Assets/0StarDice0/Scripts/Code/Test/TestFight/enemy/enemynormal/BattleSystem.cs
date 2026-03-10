@@ -157,55 +157,40 @@ public class BattleSystem : MonoBehaviour
 
     private List<CardData> selectedCards = new List<CardData>();
     void Start()
-    {
-        Debug.Log(">>> BattleSystem เริ่มทำงานแล้วนะ! <<<");
+    { Debug.Log(">>> BattleSystem เริ่มทำงานแล้วนะ! <<<");
+ GameEventManager.Instance.AddCount2(1);
+       ApplyEquippedItems();
 
-        if (GameEventManager.Instance != null)
+        if (GameData.Instance != null && GameData.Instance.selectedCards.Count > 0)
         {
-            GameEventManager.Instance.AddCount2(1);
+            List<CardData> myHand = new List<CardData>();
+
+        // 2. วนลูปหยิบการ์ดจาก DeckManager (cardUse คือเด็คที่เราจัดไว้)
+        foreach (var card in DeckManager.Instance.cardUse)
+        {
+            if (card != null) // เช็คกันเหนียว เผื่อเป็นช่องว่าง
+            {
+                myHand.Add(card);
+            }
         }
 
-        if (PlayerDataManager.Instance != null)
+        // 3. (Optional) ถ้าอยากให้เริ่มเกมจั่วแค่ 3 ใบแรก
+        if (myHand.Count > 4)
         {
-            ApplyEquippedItems();
+            // ตัดให้เหลือแค่ 3 ใบแรก
+            myHand = myHand.GetRange(0, 4);
         }
 
-        List<CardData> myHand = BattleCardHandResolver.GetOpeningHand(4);
+        Debug.Log($"[BattleSystem] เจอการ์ดจาก DeckManager จำนวน {myHand.Count} ใบ");
 
-        if (myHand.Count > 0)
-        {
-            Debug.Log($"[BattleSystem] เจอการ์ดสำหรับเริ่มต่อสู้ {myHand.Count} ใบ");
-            LoadSelectedCards(myHand);
+        // 4. ส่งการ์ดเข้าสู่ระบบ UI ของ BattleSystem
+        LoadSelectedCards(myHand);
         }
         else
         {
-            Debug.LogWarning("[BattleSystem] ไม่พบการ์ดสำหรับแสดงในฉากต่อสู้");
+            Debug.LogWarning("ไม่มีการ์ดที่สุ่มไว้ใน GameData");
         }
-
-        if (GameData.Instance == null)
-        {
-            Debug.LogError("[BattleSystem] ไม่พบ GameData ในฉาก ทำให้ไม่สามารถโหลดตัวละครผู้เล่นได้");
-            enabled = false;
-            return;
-        }
-
-        if (selectedPlayer == null && GameData.Instance != null)
-        {
-            selectedPlayer = GameData.Instance.selectedPlayer;
-        }
-        if (selectedPlayer == null)
-        {
-            Debug.LogWarning("[BattleSystem] GameData.selectedPlayer เป็นค่าว่าง ลอง fallback จาก PlayerPrefs");
-            LoadSelectedCharacter();
-        }
-
-        if (selectedPlayer == null)
-        {
-            Debug.LogError("[BattleSystem] ยังไม่พบข้อมูลตัวละครผู้เล่น ทำให้ตัวละครไม่โผล่");
-            enabled = false;
-            return;
-        }
-
+        selectedPlayer = GameData.Instance.selectedPlayer;
         SetupPlayer();
         SetupEnemy();
         SetupButtons();
@@ -264,7 +249,7 @@ public class BattleSystem : MonoBehaviour
     // เช็คทีเดียวตรงนี้เลย ปลอดภัย ไม่ต้องเขียนซ้ำ
     if (index < sfxList.Length && sfxList[index] != null)
     {
-        BattleAudioUtility.PlaySfx(this, sfxList, index);
+        GetComponent<AudioSource>().PlayOneShot(sfxList[index]);
     }
 }
 
@@ -464,23 +449,8 @@ public class BattleSystem : MonoBehaviour
             }
         }
         attackButton.interactable = isPlayerTurn;
-        UpdateCardButtonsInteractivity();
     }
 
-    void UpdateCardButtonsInteractivity()
-    {
-        for (int i = 0; i < cardButtons.Length; i++)
-        {
-            if (cardButtons[i].gameObject.activeSelf && i < selectedCards.Count)
-            {
-                cardButtons[i].interactable = isPlayerTurn && !usedCards.Contains(selectedCards[i]);
-            }
-            else
-            {
-                cardButtons[i].interactable = false;
-            }
-        }
-    }
 
     void DoBasicAttack()
     {
@@ -494,12 +464,6 @@ public class BattleSystem : MonoBehaviour
 
    void UseSkill(SkillData skill)
     {
-        if (!isPlayerTurn)
-        {
-            Debug.Log("ยังไม่ถึงเทิร์นของคุณ!");
-            return;
-        }
-
         StartCoroutine(MyDelay());
         if (!skillCooldowns.ContainsKey(skill))
             skillCooldowns[skill] = 0;
@@ -3056,12 +3020,6 @@ void DisableCardButton(int index)
 
      void UseCard(CardData card,int buttonIndex)
 {
-        if (!isPlayerTurn)
-        {
-            Debug.Log("ยังไม่ถึงเทิร์นของคุณ!");
-            return;
-        }
-
 playerturntext.gameObject.SetActive(false);
     enemyturntext.gameObject.SetActive(true);
 StartCoroutine(MyDelay());
@@ -4041,6 +3999,7 @@ void ApplyEffect(ItemID id)
 
 
 }
+
 
 
 

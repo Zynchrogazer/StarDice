@@ -114,6 +114,14 @@ public class RouteManager : MonoBehaviour
     [Tooltip("ถ้าเปิด ช่องที่ lockRandomType จะไม่ถูกนับรวมกับโควตา tileRandomLimits")]
     public bool excludeLockedTilesFromLimitCounts = true;
 
+    [Header("Lock Tools")]
+    [Tooltip("ถ้าเปิด จะ apply lockRandomType ตาม lockTileIDs อัตโนมัติใน Editor")]
+    public bool autoApplyLockByTileIds = false;
+    [Tooltip("รายการ tileID ที่ต้องการล็อกเป็น lockRandomType")]
+    public List<int> lockTileIDs = new List<int>();
+    [Tooltip("ถ้าเปิด ตอน apply lock list จะล้าง lockRandomType ของช่องอื่นก่อน")]
+    public bool clearOtherLocksWhenApplyingList = false;
+
     [Header("Tile Invariant Validation")]
     [Tooltip("ตรวจ invariant หลังสุ่ม ถ้าไม่ผ่านจะสุ่มใหม่ตามจำนวนครั้งที่กำหนด")]
     public bool validateInvariantsAfterRandom = true;
@@ -171,6 +179,11 @@ public class RouteManager : MonoBehaviour
                 ConnectSequential();
             }
 
+            if (autoApplyLockByTileIds)
+            {
+                ApplyLockFlagsFromTileIdList();
+            }
+
             ApplyTileVisuals();
         }
     }
@@ -218,6 +231,46 @@ public class RouteManager : MonoBehaviour
             }
             nodeConnections.Add(nc);
         }
+    }
+
+
+    [ContextMenu("Apply LockRandomType From lockTileIDs")]
+    public void ApplyLockFlagsFromTileIdList()
+    {
+        HashSet<int> lockSet = new HashSet<int>(lockTileIDs);
+        foreach (var nc in nodeConnections)
+        {
+            if (nc == null || nc.node == null)
+            {
+                continue;
+            }
+
+            if (clearOtherLocksWhenApplyingList)
+            {
+                nc.lockRandomType = false;
+            }
+
+            if (lockSet.Contains(nc.tileID))
+            {
+                nc.lockRandomType = true;
+            }
+        }
+    }
+
+    [ContextMenu("Log Locked Tile IDs")]
+    public void LogLockedTileIds()
+    {
+        List<int> lockedIds = nodeConnections
+            .Where(nc => nc != null && nc.node != null && nc.lockRandomType)
+            .Select(nc => nc.tileID)
+            .OrderBy(id => id)
+            .ToList();
+
+        string message = lockedIds.Count > 0
+            ? string.Join(", ", lockedIds)
+            : "(none)";
+
+        Debug.Log($"[RouteManager] Locked tile IDs: {message}");
     }
 
 

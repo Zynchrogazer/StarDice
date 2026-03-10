@@ -11484,6 +11484,12 @@ MonoBehaviour:
   maxZoom: 2
   rotationX: 45
   rotationY: 45
+  rotateSpeed: 120
+  minRotationX: 25
+  maxRotationX: 70
+  middleMousePanSpeed: 0.03
+  keyboardPanSpeed: 8
+  maxPanDistance: 10
   target: {fileID: 0}
 --- !u!114 &431640236
 MonoBehaviour:
@@ -16868,6 +16874,8 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
+  allowToggleOffWhenTargetAlreadyOpen: 0
+  closeOnOutsideClick: 1
 --- !u!4 &675290199
 Transform:
   m_ObjectHideFlags: 0
@@ -33299,6 +33307,103 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1333969179}
   m_CullTransparentMesh: 1
+--- !u!1001 &1335574641
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 4103645063926362689, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_Name
+      value: Canvas (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 5126310704233951623, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_Pivot.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5126310704233951623, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_Pivot.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5126310704233951623, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5126310704233951623, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5126310704233951623, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_AnchorMin.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5126310704233951623, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5126310704233951623, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5126310704233951623, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5126310704233951623, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5126310704233951623, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5126310704233951623, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5126310704233951623, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5126310704233951623, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5126310704233951623, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5126310704233951623, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5126310704233951623, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5126310704233951623, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5126310704233951623, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5126310704233951623, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5126310704233951623, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
 --- !u!1 &1342807350
 GameObject:
   m_ObjectHideFlags: 0
@@ -41929,36 +42034,42 @@ MonoBehaviour:
     tileID: 1
     type: 8
     eventName: start
+    lockRandomType: 0
   - node: {fileID: 1802168117}
     connectedNodes:
     - {fileID: 74729857}
     tileID: 2
     type: 4
     eventName: draw
+    lockRandomType: 0
   - node: {fileID: 74729857}
     connectedNodes:
     - {fileID: 1896962446}
     tileID: 3
     type: 1
     eventName: randomevent
+    lockRandomType: 0
   - node: {fileID: 1896962446}
     connectedNodes:
     - {fileID: 1498962864}
     tileID: 4
     type: 1
     eventName: randomevent
+    lockRandomType: 0
   - node: {fileID: 1498962864}
     connectedNodes:
     - {fileID: 952821622}
     tileID: 5
     type: 16
     eventName: 
+    lockRandomType: 0
   - node: {fileID: 952821622}
     connectedNodes:
     - {fileID: 1504020130}
     tileID: 6
     type: 1
     eventName: randomevent
+    lockRandomType: 0
   - node: {fileID: 1504020130}
     connectedNodes:
     - {fileID: 459698418}
@@ -41966,72 +42077,84 @@ MonoBehaviour:
     tileID: 7
     type: 0
     eventName: 
+    lockRandomType: 0
   - node: {fileID: 459698418}
     connectedNodes:
     - {fileID: 1576501404}
     tileID: 8
     type: 0
     eventName: 
+    lockRandomType: 0
   - node: {fileID: 1576501404}
     connectedNodes:
     - {fileID: 933942421}
     tileID: 9
     type: 3
     eventName: trap
+    lockRandomType: 0
   - node: {fileID: 933942421}
     connectedNodes:
     - {fileID: 1604559961}
     tileID: 10
     type: 11
     eventName: shop
+    lockRandomType: 0
   - node: {fileID: 1604559961}
     connectedNodes:
     - {fileID: 1160805609}
     tileID: 11
     type: 1
     eventName: randomevent
+    lockRandomType: 0
   - node: {fileID: 1160805609}
     connectedNodes:
     - {fileID: 308223264}
     tileID: 12
     type: 0
     eventName: 
+    lockRandomType: 0
   - node: {fileID: 308223264}
     connectedNodes:
     - {fileID: 1747978787}
     tileID: 13
     type: 6
     eventName: warp
+    lockRandomType: 0
   - node: {fileID: 1747978787}
     connectedNodes:
     - {fileID: 596062688}
     tileID: 14
     type: 3
     eventName: trap
+    lockRandomType: 0
   - node: {fileID: 596062688}
     connectedNodes:
     - {fileID: 1218700136}
     tileID: 15
     type: 0
     eventName: 
+    lockRandomType: 0
   - node: {fileID: 1218700136}
     connectedNodes:
     - {fileID: 1063829413}
     tileID: 16
     type: 0
     eventName: 
+    lockRandomType: 0
   - node: {fileID: 1063829413}
     connectedNodes:
     - {fileID: 2061902687}
     tileID: 17
     type: 1
     eventName: randomevent
+    lockRandomType: 0
   - node: {fileID: 2061902687}
     connectedNodes:
     - {fileID: 493798441}
     tileID: 18
     type: 7
     eventName: heal
+    lockRandomType: 0
   - node: {fileID: 493798441}
     connectedNodes:
     - {fileID: 1715617754}
@@ -42039,72 +42162,84 @@ MonoBehaviour:
     tileID: 19
     type: 0
     eventName: 
+    lockRandomType: 0
   - node: {fileID: 1715617754}
     connectedNodes:
     - {fileID: 67643519}
     tileID: 20
     type: 1
     eventName: randomevent
+    lockRandomType: 0
   - node: {fileID: 67643519}
     connectedNodes:
     - {fileID: 1806797777}
     tileID: 21
     type: 0
     eventName: 
+    lockRandomType: 0
   - node: {fileID: 1806797777}
     connectedNodes:
     - {fileID: 1611884698}
     tileID: 22
     type: 1
     eventName: randomevent
+    lockRandomType: 0
   - node: {fileID: 1611884698}
     connectedNodes:
     - {fileID: 1167386506}
     tileID: 23
     type: 3
     eventName: trap
+    lockRandomType: 0
   - node: {fileID: 1167386506}
     connectedNodes:
     - {fileID: 1888741553}
     tileID: 24
     type: 0
     eventName: 
+    lockRandomType: 0
   - node: {fileID: 1888741553}
     connectedNodes:
     - {fileID: 1180286494}
     tileID: 25
     type: 3
     eventName: trap
+    lockRandomType: 0
   - node: {fileID: 1180286494}
     connectedNodes:
     - {fileID: 1909103880}
     tileID: 26
     type: 1
     eventName: randomevent
+    lockRandomType: 0
   - node: {fileID: 1909103880}
     connectedNodes:
     - {fileID: 1118757769}
     tileID: 27
     type: 1
     eventName: randomevent
+    lockRandomType: 0
   - node: {fileID: 1118757769}
     connectedNodes:
     - {fileID: 494559966}
     tileID: 28
     type: 0
     eventName: 
+    lockRandomType: 0
   - node: {fileID: 1718227669}
     connectedNodes:
     - {fileID: 609647674}
     tileID: 29
     type: 0
     eventName: 
+    lockRandomType: 0
   - node: {fileID: 2112440763}
     connectedNodes:
     - {fileID: 1972929503}
     tileID: 30
     type: 0
     eventName: 
+    lockRandomType: 0
   - node: {fileID: 1880648172}
     connectedNodes:
     - {fileID: 1669922061}
@@ -42112,6 +42247,7 @@ MonoBehaviour:
     tileID: 31
     type: 0
     eventName: 
+    lockRandomType: 0
   - node: {fileID: 1669922061}
     connectedNodes:
     - {fileID: 1513632800}
@@ -42119,66 +42255,77 @@ MonoBehaviour:
     tileID: 32
     type: 3
     eventName: trap
+    lockRandomType: 0
   - node: {fileID: 1513632800}
     connectedNodes:
     - {fileID: 1802289681}
     tileID: 33
     type: 0
     eventName: 
+    lockRandomType: 0
   - node: {fileID: 1802289681}
     connectedNodes:
     - {fileID: 1822417822}
     tileID: 34
     type: 0
     eventName: 
+    lockRandomType: 0
   - node: {fileID: 1822417822}
     connectedNodes:
     - {fileID: 814818064}
     tileID: 35
     type: 0
     eventName: 
+    lockRandomType: 0
   - node: {fileID: 814818064}
     connectedNodes:
     - {fileID: 638775021}
     tileID: 36
     type: 0
     eventName: 
+    lockRandomType: 0
   - node: {fileID: 638775021}
     connectedNodes:
     - {fileID: 338852055}
     tileID: 37
     type: 6
     eventName: warp
+    lockRandomType: 0
   - node: {fileID: 338852055}
     connectedNodes:
     - {fileID: 1232249861}
     tileID: 38
     type: 0
     eventName: 
+    lockRandomType: 0
   - node: {fileID: 1232249861}
     connectedNodes:
     - {fileID: 666248302}
     tileID: 39
     type: 0
     eventName: 
+    lockRandomType: 0
   - node: {fileID: 666248302}
     connectedNodes:
     - {fileID: 740541995}
     tileID: 40
     type: 3
     eventName: trap
+    lockRandomType: 0
   - node: {fileID: 740541995}
     connectedNodes:
     - {fileID: 987559973}
     tileID: 41
     type: 12
     eventName: treasurebox
+    lockRandomType: 0
   - node: {fileID: 987559973}
     connectedNodes:
     - {fileID: 387921570}
     tileID: 42
     type: 1
     eventName: randomevent
+    lockRandomType: 0
   - node: {fileID: 387921570}
     connectedNodes:
     - {fileID: 0}
@@ -42188,6 +42335,7 @@ MonoBehaviour:
     tileID: 43
     type: 0
     eventName: 
+    lockRandomType: 0
   - node: {fileID: 844572987}
     connectedNodes:
     - {fileID: 1495918614}
@@ -42195,12 +42343,14 @@ MonoBehaviour:
     tileID: 44
     type: 0
     eventName: 
+    lockRandomType: 0
   - node: {fileID: 1495918614}
     connectedNodes:
     - {fileID: 1232900693}
     tileID: 45
     type: 3
     eventName: trap
+    lockRandomType: 0
   - node: {fileID: 1232900693}
     connectedNodes:
     - {fileID: 1124916262}
@@ -42208,6 +42358,7 @@ MonoBehaviour:
     tileID: 46
     type: 5
     eventName: star
+    lockRandomType: 0
   - node: {fileID: 1124916262}
     connectedNodes:
     - {fileID: 279930694}
@@ -42215,12 +42366,14 @@ MonoBehaviour:
     tileID: 47
     type: 3
     eventName: trap
+    lockRandomType: 0
   - node: {fileID: 279930694}
     connectedNodes:
     - {fileID: 734642257}
     tileID: 48
     type: 0
     eventName: 
+    lockRandomType: 0
   - node: {fileID: 729245257}
     connectedNodes:
     - {fileID: 1411107901}
@@ -42228,6 +42381,7 @@ MonoBehaviour:
     tileID: 49
     type: 16
     eventName: 
+    lockRandomType: 0
   - node: {fileID: 1411107901}
     connectedNodes:
     - {fileID: 80069518}
@@ -42235,6 +42389,7 @@ MonoBehaviour:
     tileID: 50
     type: 2
     eventName: battle
+    lockRandomType: 0
   - node: {fileID: 439957805}
     connectedNodes:
     - {fileID: 1096767381}
@@ -42242,6 +42397,7 @@ MonoBehaviour:
     tileID: 51
     type: 3
     eventName: trap
+    lockRandomType: 0
   - node: {fileID: 1096767381}
     connectedNodes:
     - {fileID: 1942554557}
@@ -42249,6 +42405,7 @@ MonoBehaviour:
     tileID: 52
     type: 3
     eventName: trap
+    lockRandomType: 0
   - node: {fileID: 923337557}
     connectedNodes:
     - {fileID: 494559966}
@@ -42256,6 +42413,7 @@ MonoBehaviour:
     tileID: 53
     type: 16
     eventName: 
+    lockRandomType: 0
   - node: {fileID: 494559966}
     connectedNodes:
     - {fileID: 923337557}
@@ -42263,6 +42421,7 @@ MonoBehaviour:
     tileID: 54
     type: 2
     eventName: battle
+    lockRandomType: 0
   - node: {fileID: 1197706201}
     connectedNodes:
     - {fileID: 387921570}
@@ -42270,6 +42429,7 @@ MonoBehaviour:
     tileID: 55
     type: 1
     eventName: randomevent
+    lockRandomType: 0
   - node: {fileID: 1173777108}
     connectedNodes:
     - {fileID: 1972929503}
@@ -42278,6 +42438,7 @@ MonoBehaviour:
     tileID: 56
     type: 0
     eventName: 
+    lockRandomType: 0
   - node: {fileID: 80069518}
     connectedNodes:
     - {fileID: 1411107901}
@@ -42286,36 +42447,42 @@ MonoBehaviour:
     tileID: 57
     type: 0
     eventName: 
+    lockRandomType: 0
   - node: {fileID: 1897233100}
     connectedNodes:
     - {fileID: 1942554557}
     tileID: 58
     type: 1
     eventName: randomevent
+    lockRandomType: 0
   - node: {fileID: 195110604}
     connectedNodes:
     - {fileID: 820913038}
     tileID: 59
     type: 0
     eventName: 
+    lockRandomType: 0
   - node: {fileID: 820913038}
     connectedNodes:
     - {fileID: 1681007351}
     tileID: 60
     type: 7
     eventName: heal
+    lockRandomType: 0
   - node: {fileID: 1681007351}
     connectedNodes:
     - {fileID: 2006035432}
     tileID: 61
     type: 1
     eventName: randomevent
+    lockRandomType: 0
   - node: {fileID: 2006035432}
     connectedNodes:
     - {fileID: 1942554557}
     tileID: 62
     type: 1
     eventName: randomevent
+    lockRandomType: 0
   - node: {fileID: 1942554557}
     connectedNodes:
     - {fileID: 1096767381}
@@ -42324,36 +42491,42 @@ MonoBehaviour:
     tileID: 63
     type: 1
     eventName: randomevent
+    lockRandomType: 0
   - node: {fileID: 1780991481}
     connectedNodes:
     - {fileID: 1191872325}
     tileID: 64
     type: 4
     eventName: draw
+    lockRandomType: 0
   - node: {fileID: 1191872325}
     connectedNodes:
     - {fileID: 1344966349}
     tileID: 65
     type: 3
     eventName: trap
+    lockRandomType: 0
   - node: {fileID: 1344966349}
     connectedNodes:
     - {fileID: 716597289}
     tileID: 66
     type: 7
     eventName: heal
+    lockRandomType: 0
   - node: {fileID: 716597289}
     connectedNodes:
     - {fileID: 772825608}
     tileID: 67
     type: 0
     eventName: 
+    lockRandomType: 0
   - node: {fileID: 772825608}
     connectedNodes:
     - {fileID: 609647674}
     tileID: 68
     type: 16
     eventName: 
+    lockRandomType: 0
   - node: {fileID: 609647674}
     connectedNodes:
     - {fileID: 494559966}
@@ -42362,36 +42535,42 @@ MonoBehaviour:
     tileID: 69
     type: 0
     eventName: 
+    lockRandomType: 0
   - node: {fileID: 118467880}
     connectedNodes:
     - {fileID: 1162362193}
     tileID: 70
     type: 0
     eventName: 
+    lockRandomType: 0
   - node: {fileID: 1162362193}
     connectedNodes:
     - {fileID: 1962919523}
     tileID: 71
     type: 0
     eventName: 
+    lockRandomType: 0
   - node: {fileID: 1962919523}
     connectedNodes:
     - {fileID: 52698053}
     tileID: 72
     type: 0
     eventName: 
+    lockRandomType: 0
   - node: {fileID: 52698053}
     connectedNodes:
     - {fileID: 447415748}
     tileID: 73
     type: 1
     eventName: randomevent
+    lockRandomType: 0
   - node: {fileID: 447415748}
     connectedNodes:
     - {fileID: 1173777108}
     tileID: 74
     type: 5
     eventName: star
+    lockRandomType: 0
   - node: {fileID: 1972929503}
     connectedNodes:
     - {fileID: 1197706201}
@@ -42399,36 +42578,42 @@ MonoBehaviour:
     tileID: 75
     type: 13
     eventName: specialboss
+    lockRandomType: 0
   - node: {fileID: 1491466532}
     connectedNodes:
     - {fileID: 1594414026}
     tileID: 76
     type: 1
     eventName: randomevent
+    lockRandomType: 0
   - node: {fileID: 1594414026}
     connectedNodes:
     - {fileID: 335516779}
     tileID: 77
     type: 4
     eventName: draw
+    lockRandomType: 0
   - node: {fileID: 335516779}
     connectedNodes:
     - {fileID: 1490989521}
     tileID: 78
     type: 7
     eventName: heal
+    lockRandomType: 0
   - node: {fileID: 1490989521}
     connectedNodes:
     - {fileID: 87051073}
     tileID: 79
     type: 10
     eventName: randomminigame
+    lockRandomType: 0
   - node: {fileID: 87051073}
     connectedNodes:
     - {fileID: 80069518}
     tileID: 80
     type: 5
     eventName: star
+    lockRandomType: 0
   - node: {fileID: 1003421363}
     connectedNodes:
     - {fileID: 80069518}
@@ -42436,6 +42621,7 @@ MonoBehaviour:
     tileID: 81
     type: 2
     eventName: battle
+    lockRandomType: 0
   - node: {fileID: 613285110}
     connectedNodes:
     - {fileID: 1003421363}
@@ -42443,6 +42629,7 @@ MonoBehaviour:
     tileID: 82
     type: 3
     eventName: trap
+    lockRandomType: 0
   - node: {fileID: 1018966528}
     connectedNodes:
     - {fileID: 1942554557}
@@ -42450,6 +42637,7 @@ MonoBehaviour:
     tileID: 83
     type: 2
     eventName: battle
+    lockRandomType: 0
   - node: {fileID: 588491370}
     connectedNodes:
     - {fileID: 1018966528}
@@ -42457,6 +42645,7 @@ MonoBehaviour:
     tileID: 84
     type: 12
     eventName: treasurebox
+    lockRandomType: 0
   - node: {fileID: 2047654413}
     connectedNodes:
     - {fileID: 609647674}
@@ -42464,6 +42653,7 @@ MonoBehaviour:
     tileID: 85
     type: 2
     eventName: battle
+    lockRandomType: 0
   - node: {fileID: 145888127}
     connectedNodes:
     - {fileID: 2047654413}
@@ -42471,6 +42661,7 @@ MonoBehaviour:
     tileID: 86
     type: 3
     eventName: trap
+    lockRandomType: 0
   - node: {fileID: 1745811420}
     connectedNodes:
     - {fileID: 1173777108}
@@ -42478,6 +42669,7 @@ MonoBehaviour:
     tileID: 87
     type: 2
     eventName: battle
+    lockRandomType: 0
   - node: {fileID: 348758510}
     connectedNodes:
     - {fileID: 1745811420}
@@ -42485,6 +42677,7 @@ MonoBehaviour:
     tileID: 88
     type: 12
     eventName: treasurebox
+    lockRandomType: 0
   - node: {fileID: 359461905}
     connectedNodes:
     - {fileID: 613285110}
@@ -42494,10 +42687,26 @@ MonoBehaviour:
     tileID: 90
     type: 5
     eventName: star
+    lockRandomType: 0
   showGizmos: 1
   autoConnectSequential: 0
   clearPreviousConnectionsOnAutoConnect: 1
   tileVisualSettings: []
+  randomizeTilesOnGameStart: 0
+  tileRandomMode: 0
+  tileRandomLimits: []
+  fallbackTileType: 0
+  useDeterministicSeed: 1
+  randomSeed: 12345
+  useLimitAllowList: 0
+  limitAllowedTypes: 
+  excludeLockedTilesFromLimitCounts: 1
+  autoApplyLockByTileIds: 0
+  lockTileIDs: 
+  clearOtherLocksWhenApplyingList: 0
+  validateInvariantsAfterRandom: 1
+  maxRandomizeAttempts: 10
+  tileInvariantRules: []
   bossPrefab: {fileID: 761355516}
 --- !u!1 &1642344421
 GameObject:
@@ -42664,7 +42873,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1652087020
 RectTransform:
   m_ObjectHideFlags: 0
@@ -56220,3 +56429,4 @@ SceneRoots:
   - {fileID: 1771902529}
   - {fileID: 1366814910}
   - {fileID: 1395016622}
+  - {fileID: 1335574641}

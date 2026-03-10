@@ -161,19 +161,37 @@ public class EnemyFirebalance : MonoBehaviour
     { Debug.Log(">>> BattleSystem เริ่มทำงานแล้วนะ! <<<");
       GameEventManager.Instance.AddCount2(1);
        ApplyEquippedItems();
-        List<CardData> myHand = BattleCardHandResolver.GetOpeningHand(4);
-        if (myHand.Count > 0)
+
+        if (GameData.Instance != null && GameData.Instance.selectedCards.Count > 0)
         {
-            LoadSelectedCards(myHand);
+            List<CardData> myHand = new List<CardData>();
+
+        // 2. วนลูปหยิบการ์ดจาก DeckManager (cardUse คือเด็คที่เราจัดไว้)
+        foreach (var card in DeckManager.Instance.cardUse)
+        {
+            if (card != null) // เช็คกันเหนียว เผื่อเป็นช่องว่าง
+            {
+                myHand.Add(card);
+            }
+        }
+
+        // 3. (Optional) ถ้าอยากให้เริ่มเกมจั่วแค่ 3 ใบแรก
+        if (myHand.Count > 4)
+        {
+            // ตัดให้เหลือแค่ 3 ใบแรก
+            myHand = myHand.GetRange(0, 4);
+        }
+
+        Debug.Log($"[BattleSystem] เจอการ์ดจาก DeckManager จำนวน {myHand.Count} ใบ");
+
+        // 4. ส่งการ์ดเข้าสู่ระบบ UI ของ BattleSystem
+        LoadSelectedCards(myHand);
         }
         else
         {
-            Debug.LogWarning("[BattleSystem] ไม่พบการ์ดสำหรับใช้งานในฉากต่อสู้");
+            Debug.LogWarning("ไม่มีการ์ดที่สุ่มไว้ใน GameData");
         }
-        if (selectedPlayer == null && GameData.Instance != null)
-        {
-            selectedPlayer = GameData.Instance.selectedPlayer;
-        }
+        selectedPlayer = GameData.Instance.selectedPlayer;
         SetupPlayer();
         SetupEnemy();
         SetupButtons();
@@ -231,7 +249,7 @@ public class EnemyFirebalance : MonoBehaviour
     // เช็คทีเดียวตรงนี้เลย ปลอดภัย ไม่ต้องเขียนซ้ำ
     if (index < sfxList.Length && sfxList[index] != null)
     {
-        BattleAudioUtility.PlaySfx(this, sfxList, index);
+        GetComponent<AudioSource>().PlayOneShot(sfxList[index]);
     }
 }
 
