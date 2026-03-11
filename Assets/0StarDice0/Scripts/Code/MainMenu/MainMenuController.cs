@@ -8,7 +8,7 @@ public class MainMenuController : MonoBehaviour
 {
     [Header("Settings")]
     public string gameSceneName = "FirstMonsterSelect"; // ใส่ชื่อ Scene เกมของคุณตรงนี้ (เช่น "MainGame" หรือ "DeckBuilding")
-    [SerializeField] private string bootstrapSceneName = "Bootstrap";
+    [SerializeField] private string bootstrapSceneName = "RuntimeHub";
     [SerializeField] private GameObject confirmExitPanel;
 
     private bool isRequestingFlowScene;
@@ -69,8 +69,11 @@ public class MainMenuController : MonoBehaviour
             runSessionStore.ClearRunState();
         }
 
-        // 3. เปลี่ยนฉากไปเริ่มเกม
-        StartCoroutine(RequestFlowScene(gameSceneName));
+        // 3. เปิด panel เลือกมอนสเตอร์ใน RuntimeHub (fallback ไป scene เดิมถ้า panel ยังไม่ถูก bind)
+        if (!TryOpenFirstMonsterPanel())
+        {
+            StartCoroutine(RequestFlowScene(gameSceneName));
+        }
     }
 
     private void ResetRuntimeState()
@@ -111,7 +114,20 @@ public class MainMenuController : MonoBehaviour
     // (แถม) ปุ่ม Continue: โหลดฉากเกมเลยโดยไม่ลบค่า (เล่นต่อจากล่าสุด)
     public void OnContinueClicked()
     {
-        StartCoroutine(RequestFlowScene(gameSceneName));
+        if (!TryOpenFirstMonsterPanel())
+        {
+            StartCoroutine(RequestFlowScene(gameSceneName));
+        }
+    }
+
+    private bool TryOpenFirstMonsterPanel()
+    {
+        if (!RuntimeHubUIPanelController.TryGet(out var panelController))
+        {
+            return false;
+        }
+
+        return panelController.OpenFirstMonsterSelectPanel();
     }
 
     private IEnumerator RequestFlowScene(string targetSceneName)
@@ -135,7 +151,7 @@ public class MainMenuController : MonoBehaviour
             yield break;
         }
 
-        // กรณีเริ่มจาก Menu โดยยังไม่มี controller: โหลด Bootstrap แบบ additive ก่อน
+        // กรณีเริ่มจาก Menu โดยยังไม่มี controller: โหลด RuntimeHub แบบ additive ก่อน
         if (!string.IsNullOrEmpty(bootstrapSceneName) &&
             Application.CanStreamedLevelBeLoaded(bootstrapSceneName) &&
             !SceneManager.GetSceneByName(bootstrapSceneName).isLoaded)

@@ -4,8 +4,8 @@ using UnityEngine.SceneManagement;
 
 public class SceneFlowController : MonoBehaviour
 {
-    [Header("Bootstrap")]
-    [SerializeField] private string persistentSceneName = "Bootstrap";
+    [Header("RuntimeHub")]
+    [SerializeField] private string persistentSceneName = "RuntimeHub";
     [SerializeField] private bool autoLoadFirstGameplayScene = true;
     [SerializeField] private string firstGameplaySceneName = "Menu";
 
@@ -128,6 +128,7 @@ public class SceneFlowController : MonoBehaviour
         {
             return;
         }
+
 
         if (!TryResolveSceneName(sceneName, out string resolvedSceneName))
         {

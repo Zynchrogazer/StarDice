@@ -25,7 +25,7 @@ public class CharacterSelectMenu : MonoBehaviour
     private const string HAS_CHOSEN_KEY = "HasChosenMainCharacter";
 
     [Header("Flow")]
-    [SerializeField] private string bootstrapSceneName = "Bootstrap";
+    [SerializeField] private string bootstrapSceneName = "RuntimeHub";
 
     void Start()
     {
