@@ -11,10 +11,10 @@ public class DeckSlotRightClick : MonoBehaviour, IPointerClickHandler
         if (eventData.button == PointerEventData.InputButton.Right)
         {
             // เรียกฟังก์ชัน RemoveCard ใน DeckManager
-            if (DeckManager.Instance != null)
+            if (DeckManager.TryGet(out _))
             {
                 Debug.Log($"🖱️ Right Clicked on Slot {slotIndex}");
-                DeckManager.Instance.RemoveCard(slotIndex);
+                DeckManager.TryRemoveCard(slotIndex);
             }
         }
     }

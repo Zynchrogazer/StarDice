@@ -30,10 +30,10 @@ public class PlayerUIController : MonoBehaviour
 
     private void FindHumanPlayer()
     {
-        if (GameTurnManager.Instance != null && GameTurnManager.Instance.allPlayers != null)
+        if (GameTurnManager.TryGet(out var gameTurnManager) && gameTurnManager.allPlayers != null)
         {
             // วนหาในลิสต์ผู้เล่นทั้งหมด
-            foreach (var p in GameTurnManager.Instance.allPlayers)
+            foreach (var p in gameTurnManager.allPlayers)
             {
                 // เงื่อนไข: เอาตัวที่ไม่ใช่ null และ ไม่ใช่ AI
                 if (p != null && !p.isAI)

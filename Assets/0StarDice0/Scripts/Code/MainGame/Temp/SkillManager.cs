@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 public class SkillManager : MonoBehaviour
 {
-    public static SkillManager Instance;
+    [SerializeField] private PlayerStatAggregator playerStatAggregator;
 
     public HashSet<string> unlockedSkillIDs = new HashSet<string>();
 
@@ -15,9 +15,7 @@ public class SkillManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance == null) Instance = this;
-        else Destroy(gameObject);
-
+        ResolvePlayerStatAggregator();
         EnsureLoadedForCurrentPlayer();
     }
 
@@ -81,9 +79,9 @@ public class SkillManager : MonoBehaviour
 
     public void ApplyAllPassiveBonusesToCurrentPlayer()
     {
-        if (PlayerStatAggregator.Instance != null)
+        if (ResolvePlayerStatAggregator() != null)
         {
-            PlayerStatAggregator.Instance.RefreshCurrentPlayerStats();
+            ResolvePlayerStatAggregator().RefreshCurrentPlayerStats();
             return;
         }
 
@@ -224,6 +222,14 @@ public class SkillManager : MonoBehaviour
             : fallback;
 
         return $"{UnlockedSkillsSaveKeyPrefix}_{playerKey}";
+    }
+
+    private PlayerStatAggregator ResolvePlayerStatAggregator()
+    {
+        if (playerStatAggregator == null)
+            playerStatAggregator = FindFirstObjectByType<PlayerStatAggregator>();
+
+        return playerStatAggregator;
     }
 
     public System.Action OnSkillTreeUpdated;

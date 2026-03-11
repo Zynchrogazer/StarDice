@@ -165,21 +165,39 @@ public class SpecialEarth : MonoBehaviour
     private List<CardData> selectedCards = new List<CardData>();
     void Start()
     { Debug.Log(">>> BattleSystem เริ่มทำงานแล้วนะ! <<<");
- GameEventManager.Instance.AddCount2(1);
+ GameEventManager.TryAddCount2(1);
        ApplyEquippedItems();
-        List<CardData> myHand = BattleCardHandResolver.GetOpeningHand(4);
-        if (myHand.Count > 0)
+
+        if (GameData.Instance != null && GameData.Instance.selectedCards.Count > 0)
         {
-            LoadSelectedCards(myHand);
+            List<CardData> myHand = new List<CardData>();
+
+        // 2. วนลูปหยิบการ์ดจาก DeckManager (cardUse คือเด็คที่เราจัดไว้)
+        foreach (var card in DeckManager.CurrentCardUse)
+        {
+            if (card != null) // เช็คกันเหนียว เผื่อเป็นช่องว่าง
+            {
+                myHand.Add(card);
+            }
+        }
+
+        // 3. (Optional) ถ้าอยากให้เริ่มเกมจั่วแค่ 3 ใบแรก
+        if (myHand.Count > 4)
+        {
+            // ตัดให้เหลือแค่ 3 ใบแรก
+            myHand = myHand.GetRange(0, 4);
+        }
+
+        Debug.Log($"[BattleSystem] เจอการ์ดจาก DeckManager จำนวน {myHand.Count} ใบ");
+
+        // 4. ส่งการ์ดเข้าสู่ระบบ UI ของ BattleSystem
+        LoadSelectedCards(myHand);
         }
         else
         {
-            Debug.LogWarning("[BattleSystem] ไม่พบการ์ดสำหรับใช้งานในฉากต่อสู้");
+            Debug.LogWarning("ไม่มีการ์ดที่สุ่มไว้ใน GameData");
         }
-        if (selectedPlayer == null && GameData.Instance != null)
-        {
-            selectedPlayer = GameData.Instance.selectedPlayer;
-        }
+        selectedPlayer = GameData.Instance.selectedPlayer;
         SetupPlayer();
         SetupEnemy();
         SetupButtons();
@@ -236,7 +254,7 @@ public class SpecialEarth : MonoBehaviour
     // เช็คทีเดียวตรงนี้เลย ปลอดภัย ไม่ต้องเขียนซ้ำ
     if (index < sfxList.Length && sfxList[index] != null)
     {
-        BattleAudioUtility.PlaySfx(this, sfxList, index);
+        GetComponent<AudioSource>().PlayOneShot(sfxList[index]);
     }
 }
 
@@ -2411,7 +2429,7 @@ StartCoroutine(DelayedEnemyTurn());
 
     void EnemyTurn()
     {
- GameEventManager.Instance.AddCount1(1);
+ GameEventManager.TryAddCount1(1);
         playerturntext.gameObject.SetActive(false);
         enemyturntext.gameObject.SetActive(true);
 
@@ -3136,9 +3154,9 @@ StartCoroutine(MyDelay());
             img.color = Color.gray; // เปลี่ยนเป็นสีมืด (เทา)
         }
     }
-                if (DeckManager.Instance != null)
+                if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                  isPlayerTurn = false;
                 break;
@@ -3147,17 +3165,17 @@ StartCoroutine(MyDelay());
                 Debug.Log($"ศัตรูถูกผนึกสกิล {card.value} เทิร์น");
                ShowCardEffectOnce(1); 
                PlaySoundEffect(5);
-               if (DeckManager.Instance != null)
+               if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                  isPlayerTurn = false;
                 break;
             case CardEffectType.ReflectDamage:
                 reflectNextAttack = true;
-                if (DeckManager.Instance != null)
+                if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                 Debug.Log("เปิดการ์ดสะท้อนดาเมจ ศัตรูจะโดนดาเมจ x2 และเราไม่เสียเลือดในครั้งต่อไป");
                  isPlayerTurn = false;
@@ -3165,9 +3183,9 @@ StartCoroutine(MyDelay());
                 break;
             case CardEffectType.IgnoreElement:
                 isIgnoreElementCardActive = true;
-                if (DeckManager.Instance != null)
+                if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                 Debug.Log("ใช้การ์ด Ignore Element — การโจมตีครั้งถัดไปจะไม่สนธาตุศัตรู!");
                  isPlayerTurn = false;
@@ -3175,9 +3193,9 @@ StartCoroutine(MyDelay());
             case CardEffectType.PermanentAttackBoost:
                 int bonus = Random.Range(5, 21); // สุ่ม 5-20
                 selectedPlayer.attackDamage += bonus;
-                if (DeckManager.Instance != null)
+                if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                 Debug.Log($"เพิ่มพลังโจมตีปกติถาวร +{bonus}. พลังใหม่ = {selectedPlayer.attackDamage}");
                 
@@ -3188,9 +3206,9 @@ StartCoroutine(MyDelay());
                 break;
             case CardEffectType.PermanentAttackBoost05:
                 selectedPlayer.attackDamage *= 1 / 2;
-                if (DeckManager.Instance != null)
+                if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                  isPlayerTurn = false;
                  ShowCardEffectOnce(3);
@@ -3200,9 +3218,9 @@ StartCoroutine(MyDelay());
                 doubleAttackTurnsLeft = card.value;
                 selectedPlayer.attackDamage = Mathf.RoundToInt(selectedPlayer.attackDamage * 2 );
                 Debug.Log($"เปิดบัฟโจมตีธรรมดาคูณ 2 เป็นเวลา {card.value} เทิร์น");
-                if (DeckManager.Instance != null)
+                if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                  isPlayerTurn = false;
                  ShowCardEffectOnce(3);
@@ -3212,9 +3230,9 @@ StartCoroutine(MyDelay());
                 float bonusRandom = Random.Range(0.5f, 3.5f);
                 selectedPlayer.attackDamage = Mathf.RoundToInt(selectedPlayer.attackDamage * bonusRandom);
                 Debug.Log($"เพิ่มพลังโจมตีปกติถาวร +{bonusRandom}. พลังใหม่ = {selectedPlayer.attackDamage}");
-                if (DeckManager.Instance != null)
+                if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                  isPlayerTurn = false;
                  ShowCardEffectOnce(3);
@@ -3228,9 +3246,9 @@ StartCoroutine(MyDelay());
                  playerHP = Mathf.Clamp(playerHP, 0, selectedPlayer.maxHP);
                  UpdatePlayerHPUI();
                 Debug.Log($"ฟื้นฟู HP แบบสุ่ม: +{healAmount} หน่วย (HP ปัจจุบัน: {playerHP})");
-                if (DeckManager.Instance != null)
+                if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                  isPlayerTurn = false;
                    break;
@@ -3244,9 +3262,9 @@ StartCoroutine(MyDelay());
                 delayedHealPercent = 0.3f; // 30%
                  isDelayedHealActive = true;
                 Debug.Log("ฟื้นฟู 30% ของ HP ในอีก 3 เทิร์น");
-                if (DeckManager.Instance != null)
+                if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                  isPlayerTurn = false;
                 break;
@@ -3255,9 +3273,9 @@ StartCoroutine(MyDelay());
                 Debug.Log("เปิดการ์ดลดดาเมจศัตรูถาวร 30%");
                 ShowCardEffectOnce(0);
                 PlaySoundEffect(5);
-                if (DeckManager.Instance != null)
+                if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                 isPlayerTurn = false;
                 break;
@@ -3268,9 +3286,9 @@ StartCoroutine(MyDelay());
                  playerHP = selectedPlayer.maxHP;
                 UpdatePlayerHPUI();
                 Debug.Log($"ฟื้นฟูเลือดจนเต็ม (+{healedAmount} HP)");
-                if (DeckManager.Instance != null)
+                if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                  isPlayerTurn = false;
                 break;
@@ -3279,9 +3297,9 @@ StartCoroutine(MyDelay());
                 regenAmountPerTurn = 10;
                 PlaySoundEffect(2);
                 Debug.Log("เปิดการ์ดฟื้นฟู HP 10 ต่อเทิร์น นาน 10 เทิร์น");
-                if (DeckManager.Instance != null)
+                if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                  isPlayerTurn = false;
                 break;
@@ -3290,9 +3308,9 @@ StartCoroutine(MyDelay());
                 PlaySoundEffect(3);
                 Debug.Log("การ์ดเปิดใช้งาน: +1 พลังโจมตีปกติทุกเทิร์น (ถาวร)");
                 ShowCardEffectOnce(3);
-                if (DeckManager.Instance != null)
+                if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                  isPlayerTurn = false;
                 break;
@@ -3301,9 +3319,9 @@ StartCoroutine(MyDelay());
                 healPerTurnAmount = 1;
                 PlaySoundEffect(2);
                 Debug.Log("เปิดการ์ดฮีล: จะฟื้น 1 HP ทุกเทิร์น");
-                if (DeckManager.Instance != null)
+                if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                  isPlayerTurn = false;
                 break;
@@ -3313,9 +3331,9 @@ StartCoroutine(MyDelay());
                 Debug.Log("การ์ดหลบหลีกเปิดใช้งาน: หลบได้ 10% ตลอดทั้งเกม");
                 ShowCardEffectOnce(3);
                 PlaySoundEffect(6);
-                if (DeckManager.Instance != null)
+                if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                  isPlayerTurn = false;
                 break;
@@ -3334,9 +3352,9 @@ StartCoroutine(MyDelay());
                 Debug.Log($"ดูดเลือดศัตรู {drainAmount} หน่วย (คิดเป็น {Mathf.RoundToInt(drainPercent * 100)}%)");
                 ShowCardEffectOnce(4);
                 PlaySoundEffect(5);
-                if (DeckManager.Instance != null)
+                if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                 UpdateEnemyHPUI();
                 UpdatePlayerHPUI();
@@ -3350,9 +3368,9 @@ StartCoroutine(MyDelay());
                 enemyHP = Mathf.Clamp(enemyHP, 0, enemyMaxHP);
 
                 Debug.Log($"ศัตรูเสียเลือดทันที {damageAmount} หน่วย (30% ของ max HP)");
-                if (DeckManager.Instance != null)
+                if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                 ShowCardEffectOnce(5);
                 PlaySoundEffect(0);
@@ -3361,9 +3379,9 @@ StartCoroutine(MyDelay());
                 break;
             case CardEffectType.PermanentElementalBoost:
                  isElementalAttackBoosted = true;
-                 if (DeckManager.Instance != null)
+                 if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                   isPlayerTurn = false;
                   ShowCardEffectOnce(3);
@@ -3371,9 +3389,9 @@ StartCoroutine(MyDelay());
                 break;
             case CardEffectType.PermanentElementalBoostx2:
                  isElementalAttackBoostedx2 = 2;
-                 if (DeckManager.Instance != null)
+                 if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                   isPlayerTurn = false;
                   ShowCardEffectOnce(3);
@@ -3383,9 +3401,9 @@ StartCoroutine(MyDelay());
              float BootElementPercent = Random.Range(0.5f, 3.5f);
                 ElementalAttackBoostedRandom = 3;
                  isElementalAttackBoostedRandom = BootElementPercent;
-                 if (DeckManager.Instance != null)
+                 if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                   isPlayerTurn = false;
                   ShowCardEffectOnce(3);PlaySoundEffect(3);
@@ -3394,18 +3412,18 @@ StartCoroutine(MyDelay());
              SuperBoostAttackTurn = card.value;
              int BootAttackDamage = Random.Range(3 ,5);
                  AttackBoosted = BootAttackDamage;
-                 if (DeckManager.Instance != null)
+                 if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                   isPlayerTurn = false;
                   ShowCardEffectOnce(3);PlaySoundEffect(3);
                 break;
              case CardEffectType.AttackBoostTurnRandom:
              RandomBootDamageTurn = Random.Range(1 ,5);
-             if (DeckManager.Instance != null)
+             if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
               isPlayerTurn = false;
               ShowCardEffectOnce(3);PlaySoundEffect(3);
@@ -3413,9 +3431,9 @@ StartCoroutine(MyDelay());
             case CardEffectType.DamageBuffIncreaseEachTurn:
                 isElementalBuffPerTurnActive = true;
                 Debug.Log("เปิดการ์ดเพิ่มพลังโจมตี +0.5 ทุกเทิร์น");
-                if (DeckManager.Instance != null)
+                if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                 isPlayerTurn = false;
                 ShowCardEffectOnce(3);PlaySoundEffect(3);
@@ -3423,9 +3441,9 @@ StartCoroutine(MyDelay());
             case CardEffectType.DoubleAttackAndLoseHP3Turns:
                 doubleAttackandloseTurnsLeft = 3;
                 Debug.Log("เปิดการ์ด บัฟโจมตี x2 และเสีย HP 10% ต่อเทิร์น เป็นเวลา 3 เทิร์น");
-                if (DeckManager.Instance != null)
+                if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                 isPlayerTurn = false;
                 ShowCardEffectOnce(3);PlaySoundEffect(3);
@@ -3441,9 +3459,9 @@ StartCoroutine(MyDelay());
 
                 Debug.Log("เปิดการ์ด ลดดาเมจทุกอย่างครึ่งนึง และเพิ่ม Max HP x2 พร้อมฟื้นเต็ม");
                 ShowSkillEffectOnce(2);PlaySoundEffect(2);
-                if (DeckManager.Instance != null)
+                if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                 isPlayerTurn = false;
                 break;
@@ -3462,9 +3480,9 @@ StartCoroutine(MyDelay());
                 PlaySoundEffect(3);
                 UpdatePlayerHPUI();
                 attackMultiplierTurn = true;
-                if (DeckManager.Instance != null)
+                if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                  isPlayerTurn = false;
                 break;
@@ -3476,9 +3494,9 @@ StartCoroutine(MyDelay());
                 playerHP = Mathf.Clamp(playerHP, 0, selectedPlayer.maxHP);
 
                 Debug.Log($"ฟื้นฟู HP {healAmount20Percent} (20% ของ Max HP)");
-                if (DeckManager.Instance != null)
+                if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                 UpdatePlayerHPUI();
                 isPlayerTurn = false;
@@ -3488,9 +3506,9 @@ StartCoroutine(MyDelay());
                 ShowSkillEffectOnce(2);
                 PlaySoundEffect(2);
                 checkReduceAttackHealFull = true;
-                if (DeckManager.Instance != null)
+                if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                 UpdatePlayerHPUI(); isPlayerTurn = false;
                 break;
@@ -3498,9 +3516,9 @@ StartCoroutine(MyDelay());
                 poisonEnemyTurnsLeft = Random.Range(2, 6); // สุ่ม 2–5 เทิร์น
                 isPoisonEnemy = true;
                 Debug.Log($"ศัตรูติดพิษ {poisonEnemyTurnsLeft} เทิร์น ลดเลือด 5% ของ Max HP ต่อเทิร์น");
-                if (DeckManager.Instance != null)
+                if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                 isPlayerTurn = false;
                 ShowCardEffectOnce(6);
@@ -3511,9 +3529,9 @@ StartCoroutine(MyDelay());
                 isHealingOverTime = true;
                 PlaySoundEffect(2);
                 Debug.Log($"เพิ่มเลือด 10% ของ Max HP ทุกเทิร์น เป็นเวลา {healOverTimeTurnsLeft} เทิร์น");
-                if (DeckManager.Instance != null)
+                if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                 isPlayerTurn = false;
                 break;
@@ -3521,18 +3539,18 @@ StartCoroutine(MyDelay());
                  healOnAttackTurnsLeft = Random.Range(1, 6); // 1–5 เทิร์น
                  PlaySoundEffect(3);
                Debug.Log($"ดาเมจผู้เล่นถูกลดครึ่ง และจะฟื้น HP 10% ทุกครั้งที่โจมตีศัตรู เป็นเวลา {healOnAttackTurnsLeft} เทิร์น");
-               if (DeckManager.Instance != null)
+               if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                 isPlayerTurn = false;
                 break;
             case CardEffectType.ConfuseEnemy:
                 confuseEnemyTurns = 2;
                 Debug.Log("ศัตรูติดสถานะมึนงง: โจมตีเบาลงครึ่ง และโดนดาเมจแรงขึ้น 2 เท่า เป็นเวลา 2 เทิร์น");
-                if (DeckManager.Instance != null)
+                if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                 ShowCardEffectOnce(7);
                 PlaySoundEffect(5);
@@ -3541,9 +3559,9 @@ StartCoroutine(MyDelay());
             case CardEffectType.ConfuseEnemyHitSelf:
                 confuseHitSelfTurns = 4;
                 Debug.Log("ศัตรูติดสถานะสับสน 4 เทิร์น — อาจโจมตีตัวเองหรือโจมตีเราแรงขึ้น");
-                if (DeckManager.Instance != null)
+                if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                  isPlayerTurn = false;
                 ShowCardEffectOnce(8);
@@ -3551,9 +3569,9 @@ StartCoroutine(MyDelay());
                 break;
             case CardEffectType.ReduceEnemyDamageHalf:
                 isEnemyDamageReducedHalf = 3;
-                if (DeckManager.Instance != null)
+                if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                  isPlayerTurn = false;
                   ShowCardEffectOnce(0);
@@ -3561,9 +3579,9 @@ StartCoroutine(MyDelay());
                 break;
             case CardEffectType.AttackBoostRandomRange:
                 AttackBoostRandomRange = true;
-                if (DeckManager.Instance != null)
+                if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                  isPlayerTurn = false;
                   ShowCardEffectOnce(3);
@@ -3580,9 +3598,9 @@ StartCoroutine(MyDelay());
                   ShowPlayerDamageNumber($"-{hpLost}");
                 Debug.Log($"เสียเลือด {hpLost} HP เพื่อบัฟดาเมจ x5 เป็นเวลา 3 เทิร์น");
                 ultraDamageTurns = 3;
-                if (DeckManager.Instance != null)
+                if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                  isPlayerTurn = false;
                 break;
@@ -3597,9 +3615,9 @@ StartCoroutine(MyDelay());
                  StartCoroutine(ShakeEnemy());
                 ShowDamageNumber($"-{damageAmounttwenty}");
                Debug.Log($"ใช้การ์ดลด HP ศัตรูทันที {damageAmounttwenty} หน่วย (20% ของ Max HP)");
-               if (DeckManager.Instance != null)
+               if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                 isPlayerTurn = false;
                 break;
@@ -3614,9 +3632,9 @@ StartCoroutine(MyDelay());
                  StartCoroutine(ShakeEnemy());
                 ShowDamageNumber($"-{damageAmountfifty}");
                Debug.Log($"ใช้การ์ดลด HP ศัตรูทันที {damageAmountfifty} หน่วย (15% ของ Max HP)");
-               if (DeckManager.Instance != null)
+               if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                 isPlayerTurn = false;
                 break;
@@ -3624,9 +3642,9 @@ StartCoroutine(MyDelay());
                 isCursedAttack = true;
                 PlaySoundEffect(5);
                 Debug.Log("คำสาปพลังคลั่ง: เพิ่มดาเมจ 2 เท่า ถาวร แต่จะเสีย HP 5% ของ Max ทุกเทิร์น");
-                if (DeckManager.Instance != null)
+                if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                  isPlayerTurn = false;
                 ShowCardEffectOnce(9);
@@ -3634,9 +3652,9 @@ StartCoroutine(MyDelay());
             case CardEffectType.PreventDeathOnce:
                 hasPreventDeathEffect = true;
                 Debug.Log("ใช้การ์ดหัวใจที่ไม่ยอมแพ้! ถ้า HP หมด จะรอดตาย 1 ครั้งด้วย HP 1");
-                if (DeckManager.Instance != null)
+                if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                 ShowCardEffectOnce(10);
                 PlaySoundEffect(2);
@@ -3662,9 +3680,9 @@ StartCoroutine(MyDelay());
                     ShowSkillEffectOnce(0);
                     PlaySoundEffect(7);
                     Debug.Log($"ใช้การ์ดโจมตีไฟ ดาเมจ: {damage}");
-                    if (DeckManager.Instance != null)
+                    if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                     isPlayerTurn = false;
                     break;
@@ -3687,9 +3705,9 @@ StartCoroutine(MyDelay());
                     ShowSkillEffectOnce(27);
                     PlaySoundEffect(8);
                     Debug.Log($"ใช้การ์ดโจมตีน้ำ ดาเมจ: {damage}");
-                    if (DeckManager.Instance != null)
+                    if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                     isPlayerTurn = false;
                     break;
@@ -3712,9 +3730,9 @@ StartCoroutine(MyDelay());
                       ShowSkillEffectOnce(19);
                       PlaySoundEffect(9);
                     Debug.Log($"ใช้การ์ดโจมตีลม ดาเมจ: {damage}");
-                    if (DeckManager.Instance != null)
+                    if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                     isPlayerTurn = false;
                     break;
@@ -3737,9 +3755,9 @@ StartCoroutine(MyDelay());
                      ShowSkillEffectOnce(22);
                      PlaySoundEffect(10);
                     Debug.Log($"ใช้การ์ดโจมตีดิน ดาเมจ: {damage}");
-                    if (DeckManager.Instance != null)
+                    if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                     isPlayerTurn = false;
                     break;
@@ -3757,9 +3775,9 @@ StartCoroutine(MyDelay());
                     ShowSkillEffectOnce(15);
                     PlaySoundEffect(11);
                     Debug.Log($"ใช้การ์ดโจมตีมืด ดาเมจ: {damage}");
-                    if (DeckManager.Instance != null)
+                    if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                     isPlayerTurn = false;
                     break;
@@ -3777,9 +3795,9 @@ StartCoroutine(MyDelay());
                     ShowSkillEffectOnce(44);
                     PlaySoundEffect(12);
                     Debug.Log($"ใช้การ์ดโจมตีแสง ดาเมจ: {damage}");
-                    if (DeckManager.Instance != null)
+                    if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                     isPlayerTurn = false;
                     break;
@@ -3790,9 +3808,9 @@ StartCoroutine(MyDelay());
                     DamageEnemy(damage);
                     PlaySoundEffect(0);
                     Debug.Log($"ใช้การ์ดโจมตีกายภาพ ดาเมจ: {damage}");
-                    if (DeckManager.Instance != null)
+                    if (DeckManager.TryGet(out _))
             {
-                DeckManager.Instance.LockCard(card);
+                DeckManager.TryLockCard(card);
             }
                     isPlayerTurn = false;
                     ShowSkillEffectOnce(8);

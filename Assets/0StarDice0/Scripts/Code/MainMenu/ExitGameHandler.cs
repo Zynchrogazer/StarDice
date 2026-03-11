@@ -2,17 +2,56 @@ using UnityEngine;
 
 public class ExitGameHandler : MonoBehaviour
 {
-    // เอาฟังก์ชันนี้ไปผูกกับปุ่ม Exit
-    public void QuitGame()
-    {
-        Debug.Log("👋 Quit Game Called!"); // เช็คใน Console ว่าปุ่มทำงานไหม
+    [Header("Confirm Exit UI")]
+    [SerializeField] private GameObject confirmExitPanel;
 
-        // สำหรับ Build จริง (เกมที่ Compile แล้ว)
+    private void Awake()
+    {
+        HideConfirmPanel();
+    }
+
+    // ผูกกับปุ่ม Exit หลัก
+    public void OnExitButtonClicked()
+    {
+        ShowConfirmPanel();
+    }
+
+    // ผูกกับปุ่ม Yes ใน panel
+    public void OnConfirmExitYes()
+    {
+        Debug.Log("👋 Quit Game Confirmed");
         Application.Quit();
 
-        // สำหรับตอนเทสใน Unity Editor (สั่งหยุดเล่น)
         #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
         #endif
+    }
+
+    // ผูกกับปุ่ม No ใน panel
+    public void OnConfirmExitNo()
+    {
+        HideConfirmPanel();
+    }
+
+    // backward compatible สำหรับปุ่มเดิมที่ผูก QuitGame ไว้
+    public void QuitGame()
+    {
+        OnExitButtonClicked();
+    }
+
+    private void ShowConfirmPanel()
+    {
+        if (confirmExitPanel != null)
+        {
+            confirmExitPanel.SetActive(true);
+        }
+    }
+
+    private void HideConfirmPanel()
+    {
+        if (confirmExitPanel != null)
+        {
+            confirmExitPanel.SetActive(false);
+        }
     }
 }

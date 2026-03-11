@@ -4,8 +4,6 @@ using TMPro;
 
 public class NormaUIManager : MonoBehaviour
 {
-    public static NormaUIManager Instance;
-
     [Header("Selection Panel (Popup)")]
     public GameObject selectionPanel;
     public TextMeshProUGUI titleText;
@@ -17,12 +15,6 @@ public class NormaUIManager : MonoBehaviour
     [Header("Info Display (On Screen HUD)")]
     public TextMeshProUGUI currentRankText;   // ลาก Text ที่มุมจอมาใส่ตรงนี้
     public TextMeshProUGUI currentGoalText;   // ลาก Text ที่มุมจอมาใส่ตรงนี้
-
-    private void Awake()
-    {
-        // ไม่ต้องมี DontDestroyOnLoad ตรงนี้! ปล่อยให้มันตายไปกับฉาก
-        Instance = this;
-    }
 
     private void Start()
     {
@@ -48,18 +40,17 @@ public class NormaUIManager : MonoBehaviour
 
     public void UpdateInfoUI()
     {
-        // ถ้า System ยังไม่พร้อม (เผื่อไว้) ก็ไม่ต้องทำ
-        if (NormaSystem.Instance == null) return;
+        if (!NormaSystem.TryGet(out var normaSystem)) return;
 
         // อัปเดต Rank
         if (currentRankText != null)
-            currentRankText.text = $"Rank: {NormaSystem.Instance.currentNormaRank}";
+            currentRankText.text = $"Rank: {normaSystem.currentNormaRank}";
 
         // อัปเดต Goal
         if (currentGoalText != null)
         {
-            string typeStr = (NormaSystem.Instance.selectedNorma == NormaType.Stars) ? "Stars" : "Wins";
-            currentGoalText.text = $"Goal: {NormaSystem.Instance.targetAmount} {typeStr}";
+            string typeStr = (normaSystem.selectedNorma == NormaType.Stars) ? "Stars" : "Wins";
+            currentGoalText.text = $"Goal: {normaSystem.targetAmount} {typeStr}";
         }
     }
 
@@ -70,18 +61,18 @@ public class NormaUIManager : MonoBehaviour
         selectionPanel.SetActive(true);
         if (titleText != null) titleText.text = $"Select your quest!";
 
-        if (NormaSystem.Instance != null)
+        if (NormaSystem.TryGet(out var normaSystem))
         {
-            int starReq = NormaSystem.Instance.GetRequirement(nextLevel, NormaType.Stars);
-            int winReq = NormaSystem.Instance.GetRequirement(nextLevel, NormaType.Wins);
-            if (starBtnText != null) starBtnText.text = $"Collect {starReq} Stars";
-            if (winBtnText != null) winBtnText.text = $"Win {winReq} Battles";
+            string starReqText = normaSystem.GetRequirementText(nextLevel, NormaType.Stars);
+            string winReqText = normaSystem.GetRequirementText(nextLevel, NormaType.Wins);
+            if (starBtnText != null) starBtnText.text = $"Collect {starReqText} Stars";
+            if (winBtnText != null) winBtnText.text = $"Win {winReqText} Battles";
         }
     }
 
     private void OnChoose(NormaType type)
     {
-        if (NormaSystem.Instance != null) NormaSystem.Instance.SelectNorma(type);
+        if (NormaSystem.TryGet(out var normaSystem)) normaSystem.SelectNorma(type);
         if (selectionPanel != null) selectionPanel.SetActive(false);
     }
 }

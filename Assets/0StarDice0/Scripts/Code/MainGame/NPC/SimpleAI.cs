@@ -18,6 +18,7 @@ public class SimpleAI : MonoBehaviour
 
         // สั่งทอยเต๋าเหมือนที่คนกดปุ่ม (ใช้ระบบเดิมเลย)
         // แต่ต้องแน่ใจว่าตอนนี้เป็นตาของ AI จริงๆ เพื่อไม่ให้ DiceRoller บล็อก
-        DiceRollerFromPNG.Instance.RollDice();
+        if (DiceRollerFromPNG.TryGet(out var diceRoller))
+            diceRoller.RollDice();
     }
 }

@@ -77,6 +77,24 @@ public struct TileVisualSetting
 [ExecuteAlways]
 public class RouteManager : MonoBehaviour
 {
+    private static RouteManager cachedManager;
+
+    public static bool TryGet(out RouteManager manager)
+    {
+        if (cachedManager != null)
+        {
+            manager = cachedManager;
+            return true;
+        }
+
+        manager = FindFirstObjectByType<RouteManager>();
+        if (manager != null)
+        {
+            cachedManager = manager;
+        }
+        return manager != null;
+    }
+
     [Tooltip("List ของ NodeConnection ทั้งหมดในบอร์ด")]
     public List<NodeConnection> nodeConnections = new List<NodeConnection>();
 
@@ -114,6 +132,14 @@ public class RouteManager : MonoBehaviour
     [Tooltip("ถ้าเปิด ช่องที่ lockRandomType จะไม่ถูกนับรวมกับโควตา tileRandomLimits")]
     public bool excludeLockedTilesFromLimitCounts = true;
 
+    [Header("Lock Tools")]
+    [Tooltip("ถ้าเปิด จะ apply lockRandomType ตาม lockTileIDs อัตโนมัติใน Editor")]
+    public bool autoApplyLockByTileIds = false;
+    [Tooltip("รายการ tileID ที่ต้องการล็อกเป็น lockRandomType")]
+    public List<int> lockTileIDs = new List<int>();
+    [Tooltip("ถ้าเปิด ตอน apply lock list จะล้าง lockRandomType ของช่องอื่นก่อน")]
+    public bool clearOtherLocksWhenApplyingList = false;
+
     [Header("Tile Invariant Validation")]
     [Tooltip("ตรวจ invariant หลังสุ่ม ถ้าไม่ผ่านจะสุ่มใหม่ตามจำนวนครั้งที่กำหนด")]
     public bool validateInvariantsAfterRandom = true;
@@ -127,8 +153,6 @@ public class RouteManager : MonoBehaviour
     private Dictionary<int, NodeConnection> nodeDataMap;
 
     #region Unity Lifecycle & Editor
-    public static RouteManager Instance { get; private set; }
-
     private void Awake()
     {
         // ส่วนนี้สามารถทำงานได้ทั้งใน Editor และ Play Mode
@@ -146,17 +170,27 @@ public class RouteManager : MonoBehaviour
         if (Application.isPlaying)
         {
             // โค้ดส่วนนี้จะทำงาน "เฉพาะตอนกด Play" เท่านั้น
-            if (Instance != null && Instance != this)
+            RouteManager[] managers = FindObjectsByType<RouteManager>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            if (managers.Length > 1)
             {
                 Destroy(gameObject);
                 return;
             }
-            Instance = this;
+
+            cachedManager = this;
 
             if (randomizeTilesOnGameStart)
             {
                 RandomizeTilesAtGameStart();
             }
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (cachedManager == this)
+        {
+            cachedManager = null;
         }
     }
 
@@ -169,6 +203,11 @@ public class RouteManager : MonoBehaviour
             if (autoConnectSequential)
             {
                 ConnectSequential();
+            }
+
+            if (autoApplyLockByTileIds)
+            {
+                ApplyLockFlagsFromTileIdList();
             }
 
             ApplyTileVisuals();
@@ -218,6 +257,46 @@ public class RouteManager : MonoBehaviour
             }
             nodeConnections.Add(nc);
         }
+    }
+
+
+    [ContextMenu("Apply LockRandomType From lockTileIDs")]
+    public void ApplyLockFlagsFromTileIdList()
+    {
+        HashSet<int> lockSet = new HashSet<int>(lockTileIDs);
+        foreach (var nc in nodeConnections)
+        {
+            if (nc == null || nc.node == null)
+            {
+                continue;
+            }
+
+            if (clearOtherLocksWhenApplyingList)
+            {
+                nc.lockRandomType = false;
+            }
+
+            if (lockSet.Contains(nc.tileID))
+            {
+                nc.lockRandomType = true;
+            }
+        }
+    }
+
+    [ContextMenu("Log Locked Tile IDs")]
+    public void LogLockedTileIds()
+    {
+        List<int> lockedIds = nodeConnections
+            .Where(nc => nc != null && nc.node != null && nc.lockRandomType)
+            .Select(nc => nc.tileID)
+            .OrderBy(id => id)
+            .ToList();
+
+        string message = lockedIds.Count > 0
+            ? string.Join(", ", lockedIds)
+            : "(none)";
+
+        Debug.Log($"[RouteManager] Locked tile IDs: {message}");
     }
 
 

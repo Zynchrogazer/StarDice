@@ -3,9 +3,12 @@ using UnityEngine.SceneManagement;
 
 public class BoardGameGroup : MonoBehaviour
 {
-    public static BoardGameGroup Instance { get; private set; }
-
     private bool shouldResetOnNextBoardEntry = false;
+
+    [Header("Core system references (preferred)")]
+    [SerializeField] private NormaSystem normaSystem;
+    [SerializeField] private GameEventManager gameEventManager;
+    [SerializeField] private GameTurnManager gameTurnManager;
 
     [Header("Legacy fallback")]
     public string boardSceneName = "MainGame";
@@ -24,13 +27,16 @@ public class BoardGameGroup : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance != null && Instance != this)
+        BoardGameGroup[] groups = FindObjectsByType<BoardGameGroup>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        for (int i = 0; i < groups.Length; i++)
         {
-            Destroy(gameObject);
-            return;
+            if (groups[i] != null && groups[i] != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
         }
 
-        Instance = this;
         DontDestroyOnLoad(gameObject);
     }
 
@@ -121,20 +127,71 @@ public class BoardGameGroup : MonoBehaviour
     {
         Debug.Log("[BoardSystem] ♻️ Reset board session state for fresh run.");
 
-        if (NormaSystem.Instance != null)
+        if (ResolveNormaSystem(out var resolvedNormaSystem))
         {
-            NormaSystem.Instance.ResetForNewBoardSession();
+            resolvedNormaSystem.ResetForNewBoardSession();
         }
 
-        if (GameEventManager.Instance != null)
+        if (ResolveGameEventManager(out var resolvedGameEventManager))
         {
-            GameEventManager.Instance.ResetForNewBoardSession();
+            resolvedGameEventManager.ResetForNewBoardSession();
         }
 
-        if (GameTurnManager.Instance != null)
+        if (ResolveGameTurnManager(out var resolvedGameTurnManager))
         {
-            GameTurnManager.Instance.ResetForNewBoardSession();
+            resolvedGameTurnManager.ResetForNewBoardSession();
         }
+    }
+
+    private bool ResolveNormaSystem(out NormaSystem resolved)
+    {
+        if (normaSystem != null)
+        {
+            resolved = normaSystem;
+            return true;
+        }
+
+        if (NormaSystem.TryGet(out resolved))
+        {
+            normaSystem = resolved;
+            return true;
+        }
+
+        return false;
+    }
+
+    private bool ResolveGameEventManager(out GameEventManager resolved)
+    {
+        if (gameEventManager != null)
+        {
+            resolved = gameEventManager;
+            return true;
+        }
+
+        if (GameEventManager.TryGet(out resolved))
+        {
+            gameEventManager = resolved;
+            return true;
+        }
+
+        return false;
+    }
+
+    private bool ResolveGameTurnManager(out GameTurnManager resolved)
+    {
+        if (gameTurnManager != null)
+        {
+            resolved = gameTurnManager;
+            return true;
+        }
+
+        if (GameTurnManager.TryGet(out resolved))
+        {
+            gameTurnManager = resolved;
+            return true;
+        }
+
+        return false;
     }
 
     public void ShowBoard(bool show)

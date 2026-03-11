@@ -7,9 +7,13 @@ public class BoardManager : MonoBehaviour
     // 🆔 บัตรประชาชน: สุ่มเลขประจำตัวให้ BoardManager ตัวนี้
     private int myID;
 
+    [Header("References")]
+    [SerializeField] private EventManager eventManager;
+
     private void Awake()
     {
         myID = Random.Range(1000, 9999); // สุ่มเลข 4 หลัก
+        ResolveEventManager();
     }
     // ✅ 1. ใช้ Start เพื่อเชื่อมต่อ "ตอนเริ่มเกมครั้งแรก" (แก้ปัญหา Event ไม่ติดตอนเริ่ม)
     private void Start()
@@ -20,7 +24,7 @@ public class BoardManager : MonoBehaviour
         // --- 🕵️‍♂️ โซนนักสืบ: ตรวจสอบสถานะ Manager ---
 
         // 1. เช็คว่า GameTurnManager มีชีวิตอยู่ไหม?
-        if (GameTurnManager.Instance == null)
+        if (!GameTurnManager.TryGet(out var gameTurnManager))
         {
             Debug.LogError("😱 [CRITICAL] GameTurnManager หายสาบสูญ! (Instance is NULL)");
             Debug.LogError("👉 สาเหตุที่เป็นไปได้: ลืมใส่ DontDestroyOnLoad หรือถูกทำลายซ้ำซ้อน");
@@ -28,25 +32,25 @@ public class BoardManager : MonoBehaviour
         }
         else
         {
-            Debug.Log($"✅ พบ GameTurnManager (State: {GameTurnManager.Instance.currentState})");
+            Debug.Log($"✅ พบ GameTurnManager (State: {gameTurnManager.currentState})");
         }
 
         // 2. เช็คว่า GameEventManager มีชีวิตอยู่ไหม?
-        if (GameEventManager.Instance == null)
+        if (!GameEventManager.TryGet(out _))
         {
             Debug.LogError("😱 [CRITICAL] GameEventManager หายสาบสูญ! (Instance is NULL)");
         }
         else
         {
             // สั่งล้างค่าสุ่มค้างไว้ก่อนเลย
-            GameEventManager.Instance.isRandomSpinning = false;
+            GameEventManager.SetRandomSpinning(false);
         }
 
         // --- ⚡ โซนเครื่องปั๊มหัวใจ: ปลุกเดี๋ยวนี้! ---
 
         // เรียกใช้ฟังก์ชันที่เราเพิ่งแก้เป็น public เมื่อกี้
         Debug.Log("⚡ [BoardManager] กำลังสั่ง GameTurnManager.HandleReturnFromBattle() แบบ Direct Call");
-        GameTurnManager.Instance.HandleReturnFromBattle();
+        gameTurnManager.HandleReturnFromBattle();
     }
 
     // ✅ 2. ใช้ OnEnable เพื่อเชื่อมต่อ "ตอนกลับมาจาก Battle"
@@ -59,25 +63,38 @@ public class BoardManager : MonoBehaviour
     // ✅ 3. ใช้ OnDisable เพื่อถอดสายตอนไปฉากอื่น
     private void OnDisable()
     {
-        if (EventManager.Instance != null)
+        if (eventManager != null)
         {
-            EventManager.Instance.OnPlayerLandedOnNode -= HandleTileEffect;
+            eventManager.OnPlayerLandedOnNode -= HandleTileEffect;
         }
     }
 
     // ฟังก์ชันสำหรับเชื่อมต่อ (เขียนแยกออกมาจะได้เรียกใช้ซ้ำได้)
     private void ConnectToEvent()
     {
-        if (EventManager.Instance != null)
+        ResolveEventManager();
+        if (eventManager != null)
         {
             // 🛡️ เทคนิคสำคัญ: สั่ง "ถอดสายเก่าออกก่อน" เสมอ (ถึงไม่มีก็ไม่ error)
             // เพื่อป้องกันการเชื่อมซ้ำ 2 รอบ ซึ่งจะทำให้ Event เบิ้ล
-            EventManager.Instance.OnPlayerLandedOnNode -= HandleTileEffect;
+            eventManager.OnPlayerLandedOnNode -= HandleTileEffect;
 
             // แล้วค่อยเสียบสายใหม่
-            EventManager.Instance.OnPlayerLandedOnNode += HandleTileEffect;
+            eventManager.OnPlayerLandedOnNode += HandleTileEffect;
 
             // Debug.Log("[BoardManager] 🟢 Connected to EventManager");
+        }
+        else
+        {
+            Debug.LogWarning("[BoardManager] EventManager not found in scene.");
+        }
+    }
+
+    private void ResolveEventManager()
+    {
+        if (eventManager == null)
+        {
+            eventManager = FindFirstObjectByType<EventManager>();
         }
     }
 
@@ -112,10 +129,10 @@ public class BoardManager : MonoBehaviour
                 break;
             case TileType.Start:
                 // ถ้าเป็นคน (ไม่ใช่ AI) ให้เช็ค Norma ก่อน
-                if (!isAI && NormaSystem.Instance != null)
+                if (!isAI && NormaSystem.TryGet(out var normaSystem))
                 {
                     // เรียกฟังก์ชันที่เราเพิ่งแก้เป็น bool
-                    bool leveledUp = NormaSystem.Instance.CheckNormaCondition();
+                    bool leveledUp = normaSystem.CheckNormaCondition();
 
                     if (leveledUp)
                     {
@@ -129,10 +146,10 @@ public class BoardManager : MonoBehaviour
             // 🌀 เงื่อนไขที่ 2: ช่อง Teleport (AI ต้องวาร์ปได้)
             case TileType.Teleport:
                 Debug.Log($"[BoardManager] 🌀 Teleport Tile! Triggering Warp Event.");
-                if (GameEventManager.Instance != null)
+                if (GameEventManager.TryGet(out _))
                 {
                     // สั่งวาร์ปทั้งคนทั้ง AI
-                    GameEventManager.Instance.TriggerEvent("warp", playerObject);
+                    GameEventManager.TryTriggerEvent("warp", playerObject);
                 }
                 else
                 {
@@ -162,7 +179,7 @@ public class BoardManager : MonoBehaviour
     // ฟังก์ชันช่วย Trigger Event สำหรับคนเล่น (แยกออกมาให้อ่านง่าย)
     private void TriggerEventForHuman(NodeConnection nodeData, GameObject playerObject)
     {
-        if (GameEventManager.Instance == null)
+        if (!GameEventManager.TryGet(out _))
         {
             StartCoroutine(FinishTurnRoutine());
             return;
@@ -173,7 +190,7 @@ public class BoardManager : MonoBehaviour
             // 1. มอนสเตอร์ทั่วไป -> ไป TestFight
             case TileType.Monster:
                 Debug.Log($"[BoardManager] ⚔️ Monster Encounter!");
-                GameEventManager.Instance.TriggerEvent("battle", playerObject);
+                GameEventManager.TryTriggerEvent("battle", playerObject);
                 break;
 
             // 2. บอส -> ไป bossfire (ต้องแยกออกมา!)
@@ -181,13 +198,13 @@ public class BoardManager : MonoBehaviour
             case TileType.SpecialBoss: // รวม SpecialBoss ไว้ด้วยก็ได้ถ้าอยากให้ไปฉากบอสเหมือนกัน
                 Debug.Log($"[BoardManager] 👿 BOSS FIGHT! Triggering Boss Event.");
                 // ✅ ส่ง Event ชื่อ "boss" เพื่อให้ GameEventManager โหลดฉาก bossfire
-                GameEventManager.Instance.TriggerEvent("boss", playerObject);
+                GameEventManager.TryTriggerEvent("boss", playerObject);
                 break;
 
             // 3. กรณีอื่นๆ -> ใช้ชื่อ Event ตามที่ตั้งไว้ใน RouteManager
             default:
                 Debug.Log($"[BoardManager] ✨ Triggering Event: {nodeData.eventName}");
-                GameEventManager.Instance.TriggerEvent(nodeData.eventName, playerObject);
+                GameEventManager.TryTriggerEvent(nodeData.eventName, playerObject);
                 break;
         }
     }
@@ -196,9 +213,9 @@ public class BoardManager : MonoBehaviour
     {
         yield return new WaitForSeconds(2.0f);
 
-        if (GameTurnManager.Instance != null)
+        if (GameTurnManager.TryGet(out var gameTurnManager))
         {
-            GameTurnManager.Instance.RequestEndTurn();
+            gameTurnManager.RequestEndTurn();
         }
     }
 

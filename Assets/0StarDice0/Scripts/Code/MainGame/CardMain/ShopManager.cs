@@ -4,8 +4,6 @@ using TMPro;
 
 public class ShopManager : MonoBehaviour
 {
-    public static ShopManager Instance { get; private set; }
-
     [Header("Data")]
     public List<DiceLockCardItem> allPossibleCards; 
 
@@ -17,7 +15,12 @@ public class ShopManager : MonoBehaviour
 
     private void Awake()
     {
-        Instance = this;
+        if (FindObjectsOfType<ShopManager>().Length > 1)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
         TryAutoAssignCreditText();
         // ถ้าต้องการให้เริ่มเกมมาแล้วปิดร้านทันที ให้เอา Comment ออก
         // if (shopPanel != null) shopPanel.SetActive(false);
@@ -60,10 +63,10 @@ public class ShopManager : MonoBehaviour
         shopPanel.SetActive(false);
 
         // 2. ✅ สำคัญมาก: บอกเกมว่า "ซื้อเสร็จแล้ว จบเทิร์นได้"
-        if (GameTurnManager.Instance != null)
+        if (GameTurnManager.TryGet(out var gameTurnManager))
         {
             Debug.Log("[Shop] ซื้อของเสร็จสิ้น -> จบเทิร์น");
-            GameTurnManager.Instance.RequestEndTurn();
+            gameTurnManager.RequestEndTurn();
         }
     }
 
@@ -87,9 +90,10 @@ public class ShopManager : MonoBehaviour
             return false;
         }
 
-        if (PlayerCardInventory.Instance == null)
+        PlayerCardInventory playerCardInventory = FindObjectOfType<PlayerCardInventory>();
+        if (playerCardInventory == null)
         {
-            Debug.LogError("[Shop] ไม่พบ PlayerCardInventory.Instance");
+            Debug.LogError("[Shop] ไม่พบ PlayerCardInventory ใน scene");
             return false;
         }
 
@@ -105,7 +109,7 @@ public class ShopManager : MonoBehaviour
         {
             GameData.Instance.selectedPlayer.SetCredit(buyer.PlayerCredit);
         }
-        PlayerCardInventory.Instance.ObtainCard(card);
+        playerCardInventory.ObtainCard(card);
         RefreshCreditText();
         Debug.Log($"[Shop] ซื้อ {card.cardName} สำเร็จ เหลือเครดิต {buyer.PlayerCredit}");
         return true;

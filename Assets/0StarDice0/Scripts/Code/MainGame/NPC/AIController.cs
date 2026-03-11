@@ -31,7 +31,8 @@ public class AIController : MonoBehaviour
 
         // 2. สั่งทอยลูกเต๋า
         Debug.Log("🤖 AI is rolling dice!");
-        DiceRollerFromPNG.Instance.RollDice();
+        if (DiceRollerFromPNG.TryGet(out var diceRoller))
+            diceRoller.RollDice();
     }
 
     // --- 2. ฟังก์ชันตัดสินใจเลือกทางแยก (ถูกเรียกจาก PlayerPathWalker) ---

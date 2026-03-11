@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 
 // ===== ENUM =====
 public enum GameState
@@ -16,7 +17,25 @@ public enum GameState
 
 public class GameTurnManager : MonoBehaviour
 {
-    public static GameTurnManager Instance { get; private set; }
+    private static GameTurnManager cachedManager;
+
+    public static bool TryGet(out GameTurnManager manager)
+    {
+        if (cachedManager != null)
+        {
+            manager = cachedManager;
+            return true;
+        }
+
+        manager = FindFirstObjectByType<GameTurnManager>();
+        if (manager != null)
+        {
+            cachedManager = manager;
+        }
+
+        return manager != null;
+    }
+
     public const string PendingBattleReturnKey = "PendingBattleReturn";
 
     [Header("State Machine")]
@@ -26,28 +45,55 @@ public class GameTurnManager : MonoBehaviour
     public List<PlayerState> allPlayers = new List<PlayerState>();
     public int currentPlayerIndex = 0;
 
+    [Header("References (Refactor Prep)")]
+    [SerializeField] private DiceRollerFromPNG diceRoller;
+    [SerializeField] private GameEventManager gameEventManager;
+
     
     public event System.Action<bool> OnTurnChanged;
     // ===== Current Player =====
-    public static PlayerState CurrentPlayer =>
-        (Instance != null && Instance.allPlayers.Count > 0)
-            ? Instance.allPlayers[Instance.currentPlayerIndex]
-            : null;
+    public static PlayerState CurrentPlayer
+    {
+        get
+        {
+            if (!TryGet(out var manager) || manager.allPlayers.Count == 0)
+                return null;
+
+            if (manager.currentPlayerIndex < 0 || manager.currentPlayerIndex >= manager.allPlayers.Count)
+                return null;
+
+            return manager.allPlayers[manager.currentPlayerIndex];
+        }
+    }
+
+    public static bool TryGetCurrentPlayer(out PlayerState player)
+    {
+        player = CurrentPlayer;
+        return player != null;
+    }
 
     // ===== UNITY =====
     private void Awake()
     {
-        // เช็ค Singleton
-        if (Instance != null && Instance != this)
+        GameTurnManager[] managers = FindObjectsByType<GameTurnManager>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        if (managers.Length > 1)
         {
             Destroy(gameObject);
             return;
         }
 
-        Instance = this;
+        cachedManager = this;
 
         // ✅ บรรทัดนี้สำคัญที่สุด! ทำให้ Manager ไม่ตายเมื่อเปลี่ยนฉาก
         DontDestroyOnLoad(gameObject);
+    }
+
+    private void OnDestroy()
+    {
+        if (cachedManager == this)
+        {
+            cachedManager = null;
+        }
     }
 
     private void Start()
@@ -82,19 +128,20 @@ public class GameTurnManager : MonoBehaviour
         yield return null;
 
         SetState(GameState.Preparing);
-        if (CurrentPlayer != null)
+        PlayerState currentPlayer = CurrentPlayer;
+        if (currentPlayer != null)
         {
             yield return new WaitForSeconds(0.5f);
             Debug.Log($"<color=cyan>[Turn] รอ UI ประกาศเทิร์น...</color>");
-            OnTurnChanged?.Invoke(CurrentPlayer.isAI);
+            OnTurnChanged?.Invoke(currentPlayer.isAI);
 
-            if (!CurrentPlayer.isAI && CurrentPlayer.TryConsumeBurnDebuff(10))
+            if (!currentPlayer.isAI && currentPlayer.TryConsumeBurnDebuff(10))
             {
-                Debug.Log($"<color=orange>🔥 Burn ticks on {CurrentPlayer.name} (-10 HP)</color>");
+                Debug.Log($"<color=orange>🔥 Burn ticks on {currentPlayer.name} (-10 HP)</color>");
                 yield return new WaitForSeconds(0.5f);
             }
 
-            if (CurrentPlayer.PlayerHealth <= 0)
+            if (currentPlayer.PlayerHealth <= 0)
             {
                 yield break;
             }
@@ -102,20 +149,24 @@ public class GameTurnManager : MonoBehaviour
         yield return new WaitForSeconds(1.0f);
 
         SetState(GameState.WaitingForRoll);
-        Debug.Log($"<color=yellow>⭐ Turn Start: {CurrentPlayer.name} (AI: {CurrentPlayer.isAI})</color>");
+        currentPlayer = CurrentPlayer;
+        if (currentPlayer == null)
+            yield break;
 
-        if (CurrentPlayer.isAI)
+        Debug.Log($"<color=yellow>⭐ Turn Start: {currentPlayer.name} (AI: {currentPlayer.isAI})</color>");
+
+        if (currentPlayer.isAI)
         {
             yield return new WaitForSeconds(0.8f);
             SetState(GameState.Rolling);
 
-            if (DiceRollerFromPNG.Instance != null)
-                DiceRollerFromPNG.Instance.RollDiceForAI();
+            if (ResolveDiceRoller() != null)
+                ResolveDiceRoller().RollDiceForAI();
         }
         else
         {
-            if (DiceRollerFromPNG.Instance != null)
-                DiceRollerFromPNG.Instance.ForceEnableButton();
+            if (ResolveDiceRoller() != null)
+                ResolveDiceRoller().ForceEnableButton();
         }
     }
 
@@ -128,9 +179,13 @@ public class GameTurnManager : MonoBehaviour
 
         SetState(GameState.Moving);
 
-        Debug.Log($"🎲 {CurrentPlayer.name} rolled {steps}");
+        PlayerState currentPlayer = CurrentPlayer;
+        if (currentPlayer == null)
+            return;
 
-        PlayerPathWalker walker = CurrentPlayer.GetComponent<PlayerPathWalker>();
+        Debug.Log($"🎲 {currentPlayer.name} rolled {steps}");
+
+        PlayerPathWalker walker = currentPlayer.GetComponent<PlayerPathWalker>();
         if (walker != null)
         {
             walker.ExecuteMove(steps);
@@ -148,7 +203,9 @@ public class GameTurnManager : MonoBehaviour
             return;
 
         SetState(GameState.Ending);
-        Debug.Log($"❌ End Turn: {CurrentPlayer.name}");
+        PlayerState currentPlayer = CurrentPlayer;
+        if (currentPlayer != null)
+            Debug.Log($"❌ End Turn: {currentPlayer.name}");
 
         currentPlayerIndex++;
         if (currentPlayerIndex >= allPlayers.Count)
@@ -158,6 +215,22 @@ public class GameTurnManager : MonoBehaviour
     }
 
 
+
+    private DiceRollerFromPNG ResolveDiceRoller()
+    {
+        if (diceRoller == null)
+            diceRoller = FindFirstObjectByType<DiceRollerFromPNG>();
+
+        return diceRoller;
+    }
+
+    private GameEventManager ResolveGameEventManager()
+    {
+        if (gameEventManager == null)
+            gameEventManager = FindFirstObjectByType<GameEventManager>();
+
+        return gameEventManager;
+    }
 
     public void ResetForSceneExit()
     {
@@ -174,9 +247,9 @@ public class GameTurnManager : MonoBehaviour
 
         PlayerStartSpawner.LastKnownPositions.Clear();
 
-        if (GameEventManager.Instance != null)
+        if (ResolveGameEventManager() != null)
         {
-            GameEventManager.Instance.ResetEventStatus();
+            ResolveGameEventManager().ResetEventStatus();
         }
     }
 
@@ -211,9 +284,9 @@ public class GameTurnManager : MonoBehaviour
             Debug.Log("[Manager] Skip SpawnAllPlayers: board scene/spawner is not ready yet.");
         }
 
-        if (GameEventManager.Instance != null)
+        if (ResolveGameEventManager() != null)
         {
-            GameEventManager.Instance.ResetEventStatus();
+            ResolveGameEventManager().ResetEventStatus();
         }
 
         if (canRespawnPlayers)
@@ -250,7 +323,7 @@ public class GameTurnManager : MonoBehaviour
 
         SetState(GameState.Idle);
         StopAllCoroutines();
-        if (GameEventManager.Instance != null) GameEventManager.Instance.ResetEventStatus();
+        if (ResolveGameEventManager() != null) ResolveGameEventManager().ResetEventStatus();
 
         Debug.Log("[Manager] ✅ กลับจาก Battle แล้ว เริ่มเทิร์นที่ผู้เล่นคนแรก");
         StartCoroutine(StartTurnRoutine());
@@ -267,32 +340,64 @@ public class GameTurnManager : MonoBehaviour
     {
         allPlayers.Clear();
 
-        // 1. หาผู้เล่น (ใช้วิธี Tag ที่เราคุยกันล่าสุด)
-        GameObject[] taggedObjects = GameObject.FindGameObjectsWithTag("Player");
+        PlayerState[] discoveredPlayers = FindObjectsByType<PlayerState>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         List<PlayerState> validPlayers = new List<PlayerState>();
 
         // 2. 🗺️ หาแผนที่ของฉากปัจจุบันเตรียมไว้
         RouteManager currentMap = FindObjectOfType<RouteManager>();
+        Scene activeScene = SceneManager.GetActiveScene();
 
         if (currentMap == null) Debug.LogError("😱 [Manager] ไม่เจอ RouteManager ในฉากนี้!");
 
-        foreach (GameObject obj in taggedObjects)
+        bool hasPersistentPlayers = false;
+        for (int i = 0; i < discoveredPlayers.Length; i++)
         {
-            // กรองเอาเฉพาะตัวจริง (ที่ข้ามฉากมา)
-            if (obj.scene.buildIndex == -1)
+            PlayerState candidate = discoveredPlayers[i];
+            if (candidate != null && candidate.gameObject.scene.buildIndex == -1)
             {
-                PlayerState p = obj.GetComponent<PlayerState>();
-                if (p != null)
-                {
-                    validPlayers.Add(p);
+                hasPersistentPlayers = true;
+                break;
+            }
+        }
 
-                    // ✅ หัวใจสำคัญ: ยัดแผนที่ใหม่ใส่มือเดี๋ยวนี้!
-                    PlayerPathWalker walker = p.GetComponent<PlayerPathWalker>();
-                    if (walker != null && currentMap != null)
-                    {
-                        walker.ReconnectReferences(currentMap); // สั่งเชื่อมต่อใหม่ทันที
-                    }
+        for (int i = 0; i < discoveredPlayers.Length; i++)
+        {
+            PlayerState p = discoveredPlayers[i];
+            if (p == null)
+            {
+                continue;
+            }
+
+            GameObject obj = p.gameObject;
+            if (obj == null)
+            {
+                continue;
+            }
+
+            bool isPersistentPlayer = obj.scene.buildIndex == -1;
+            bool isInActiveScene = obj.scene == activeScene;
+
+            // โหมดปกติ: ถ้ามีผู้เล่นข้ามฉาก ให้เลือกเฉพาะชุดนั้นก่อน
+            // โหมด fallback: ถ้าไม่พบผู้เล่นข้ามฉากเลย ให้ใช้ผู้เล่นจาก active scene เท่านั้น
+            if (hasPersistentPlayers)
+            {
+                if (!isPersistentPlayer)
+                {
+                    continue;
                 }
+            }
+            else if (!isInActiveScene)
+            {
+                continue;
+            }
+
+            validPlayers.Add(p);
+
+            // ✅ หัวใจสำคัญ: ยัดแผนที่ใหม่ใส่มือเดี๋ยวนี้!
+            PlayerPathWalker walker = p.GetComponent<PlayerPathWalker>();
+            if (walker != null && currentMap != null)
+            {
+                walker.ReconnectReferences(currentMap); // สั่งเชื่อมต่อใหม่ทันที
             }
         }
 
@@ -306,6 +411,7 @@ public class GameTurnManager : MonoBehaviour
 
         allPlayers.AddRange(validPlayers);
 
-        Debug.Log($"<color=green>[Manager] ♻️ Refresh Players & Map: อัปเดตแผนที่ให้ผู้เล่น {allPlayers.Count} คนเรียบร้อย</color>");
+        string sourceMode = hasPersistentPlayers ? "persistent players" : "active-scene players (fallback)";
+        Debug.Log($"<color=green>[Manager] ♻️ Refresh Players & Map: {allPlayers.Count} players from {sourceMode}</color>");
     }
 }

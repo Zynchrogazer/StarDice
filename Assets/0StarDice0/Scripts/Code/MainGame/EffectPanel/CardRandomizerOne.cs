@@ -18,7 +18,7 @@ public class CardRandomizerOne : MonoBehaviour
     private IEnumerator RandomizeCardWithAnimation()
     {
         // ดึงการ์ดจาก DeckManager
-        CardData[] playerDeck = DeckManager.Instance.cardUse;
+        CardData[] playerDeck = DeckManager.CurrentCardUse;
 
         // เอาเฉพาะการ์ดที่ไม่ null
         List<CardData> tempList = new List<CardData>();

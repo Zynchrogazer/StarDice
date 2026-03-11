@@ -23,6 +23,8 @@ public class PassiveSkillSlot : MonoBehaviour, IPointerEnterHandler, IPointerExi
     public GameObject lockedOverlayObject;
 
     private Image lockedOverlayImage;
+    [SerializeField] private PassiveSkillTooltip tooltip;
+    [SerializeField] private SkillManager skillManager;
 
     private void Awake()
     {
@@ -36,28 +38,32 @@ public class PassiveSkillSlot : MonoBehaviour, IPointerEnterHandler, IPointerExi
 
     private void Start()
     {
+        if (tooltip == null)
+            tooltip = FindFirstObjectByType<PassiveSkillTooltip>();
+        if (skillManager == null)
+            skillManager = FindFirstObjectByType<SkillManager>();
         if (passiveSkillData != null && iconImage != null)
         {
             iconImage.sprite = passiveSkillData.icon;
             UpdateUI();
         }
 
-        if (SkillManager.Instance != null)
-            SkillManager.Instance.OnSkillTreeUpdated += UpdateUI;
+        if (ResolveSkillManager() != null)
+            ResolveSkillManager().OnSkillTreeUpdated += UpdateUI;
     }
 
     private void OnDestroy()
     {
-        if (SkillManager.Instance != null)
-            SkillManager.Instance.OnSkillTreeUpdated -= UpdateUI;
+        if (ResolveSkillManager() != null)
+            ResolveSkillManager().OnSkillTreeUpdated -= UpdateUI;
     }
 
     public void UpdateUI()
     {
-        if (passiveSkillData == null || iconImage == null || SkillManager.Instance == null) return;
+        if (passiveSkillData == null || iconImage == null || ResolveSkillManager() == null) return;
 
-        bool isUnlocked = SkillManager.Instance.IsUnlocked(passiveSkillData);
-        bool canUnlock = SkillManager.Instance.CanUnlock(passiveSkillData);
+        bool isUnlocked = ResolveSkillManager().IsUnlocked(passiveSkillData);
+        bool canUnlock = ResolveSkillManager().CanUnlock(passiveSkillData);
 
         if (isUnlocked)
         {
@@ -81,9 +87,9 @@ public class PassiveSkillSlot : MonoBehaviour, IPointerEnterHandler, IPointerExi
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        if (passiveSkillData != null && SkillManager.Instance != null)
+        if (passiveSkillData != null && ResolveSkillManager() != null)
         {
-            if (SkillManager.Instance.TryUnlockSkill(passiveSkillData))
+            if (ResolveSkillManager().TryUnlockSkill(passiveSkillData))
             {
                 Debug.Log($"Upgrade {passiveSkillData.skillName} Success!");
             }
@@ -96,14 +102,32 @@ public class PassiveSkillSlot : MonoBehaviour, IPointerEnterHandler, IPointerExi
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        if (passiveSkillData != null && PassiveSkillTooltip.Instance != null)
-            PassiveSkillTooltip.Instance.ShowTooltip(passiveSkillData.skillName, passiveSkillData.description);
+        if (tooltip == null)
+            tooltip = FindFirstObjectByType<PassiveSkillTooltip>();
+        if (skillManager == null)
+            skillManager = FindFirstObjectByType<SkillManager>();
+
+        if (passiveSkillData != null && tooltip != null)
+            tooltip.ShowTooltip(passiveSkillData.skillName, passiveSkillData.description);
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        if (PassiveSkillTooltip.Instance != null)
-            PassiveSkillTooltip.Instance.HideTooltip();
+        if (tooltip == null)
+            tooltip = FindFirstObjectByType<PassiveSkillTooltip>();
+        if (skillManager == null)
+            skillManager = FindFirstObjectByType<SkillManager>();
+
+        if (tooltip != null)
+            tooltip.HideTooltip();
+    }
+
+    private SkillManager ResolveSkillManager()
+    {
+        if (skillManager == null)
+            skillManager = FindFirstObjectByType<SkillManager>();
+
+        return skillManager;
     }
 
     private void EnsureLockedOverlay()

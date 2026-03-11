@@ -84,13 +84,14 @@ public class ShopSlot : MonoBehaviour
     {
         if (cardInThisSlot == null) return;
 
-        if (ShopManager.Instance == null)
+        ShopManager shopManager = FindObjectOfType<ShopManager>();
+        if (shopManager == null)
         {
-            Debug.LogError("[ShopSlot] ไม่พบ ShopManager.Instance");
+            Debug.LogError("[ShopSlot] ไม่พบ ShopManager ใน scene");
             return;
         }
 
-        bool purchased = ShopManager.Instance.TryBuyCard(cardInThisSlot);
+        bool purchased = shopManager.TryBuyCard(cardInThisSlot);
         if (purchased)
         {
             ClearSlot();

@@ -3,8 +3,6 @@ using UnityEngine.SceneManagement;
 
 public class CameraController : MonoBehaviour
 {
-    public static CameraController Instance { get; private set; }
-
     [Header("Settings (Isometric View)")]
     // ค่ามาตรฐาน: X=-8, Y=12, Z=-8
     public Vector3 offset = new Vector3(-8f, 12f, -8f);
@@ -19,19 +17,28 @@ public class CameraController : MonoBehaviour
     [Header("Angle Settings")]
     [Range(0, 90)] public float rotationX = 45f; // มุมก้ม
     [Range(0, 360)] public float rotationY = 45f; // มุมหันข้าง
+    public float rotateSpeed = 120f; // ความไวตอนคลิกขวาค้างเพื่อหมุนกล้อง
+    [Range(15, 85)] public float minRotationX = 25f;
+    [Range(15, 85)] public float maxRotationX = 70f;
+
+    [Header("Pan Settings")]
+    public float middleMousePanSpeed = 0.03f; // ความไวลากกล้องด้วยเมาส์กลาง
+    public float keyboardPanSpeed = 8f; // ความไวเลื่อนกล้องด้วยปุ่มลูกศร
+    public float maxPanDistance = 10f; // ระยะที่เลื่อนได้สูงสุดจากตัวละครที่กำลังเล่น
 
     [Header("State")]
     public Transform target;
     private bool isBattleScene = false;
+    private Vector3 panOffset = Vector3.zero;
 
     private void Awake()
     {
-        if (Instance != null && Instance != this)
+        if (FindObjectsOfType<CameraController>().Length > 1)
         {
             Destroy(gameObject);
             return;
         }
-        Instance = this;
+
         DontDestroyOnLoad(gameObject);
     }
 
@@ -49,6 +56,7 @@ public class CameraController : MonoBehaviour
         if (isBoardGameScene)
         {
             isBattleScene = false;
+            panOffset = Vector3.zero;
             if (myCam != null) myCam.enabled = true;
             if (myAudio != null) myAudio.enabled = true;
             FindTarget();
@@ -57,6 +65,7 @@ public class CameraController : MonoBehaviour
         {
             isBattleScene = true;
             target = null;
+            panOffset = Vector3.zero;
             if (myCam != null) myCam.enabled = false;
             if (myAudio != null) myAudio.enabled = false;
         }
@@ -80,6 +89,52 @@ public class CameraController : MonoBehaviour
                 // จำกัดค่าไม่ให้ซูมใกล้/ไกลเกินไป
                 currentZoomMultiplier = Mathf.Clamp(currentZoomMultiplier, minZoom, maxZoom);
             }
+
+            // คลิกขวาค้าง + ลากเมาส์เพื่อหมุนมุมกล้อง
+            if (Input.GetMouseButton(1))
+            {
+                float mouseX = Input.GetAxis("Mouse X");
+                float mouseY = Input.GetAxis("Mouse Y");
+
+                rotationY += mouseX * rotateSpeed * Time.deltaTime;
+                rotationX -= mouseY * rotateSpeed * Time.deltaTime;
+
+                rotationY = Mathf.Repeat(rotationY, 360f);
+                rotationX = Mathf.Clamp(rotationX, minRotationX, maxRotationX);
+            }
+
+            HandlePanInput();
+        }
+    }
+
+    private void HandlePanInput()
+    {
+        Quaternion yawRotation = Quaternion.Euler(0f, rotationY, 0f);
+        Vector3 right = yawRotation * Vector3.right;
+        Vector3 forward = yawRotation * Vector3.forward;
+
+        Vector3 panDelta = Vector3.zero;
+
+        // คลิกเมาส์กลางค้าง + ลากเพื่อเลื่อนมุมมอง
+        if (Input.GetMouseButton(2))
+        {
+            float mouseX = Input.GetAxis("Mouse X");
+            float mouseY = Input.GetAxis("Mouse Y");
+            panDelta += (-right * mouseX - forward * mouseY) * middleMousePanSpeed;
+        }
+
+        // ปุ่มลูกศร/WASD สำหรับเลื่อนกล้องบนระนาบบอร์ด
+        float inputX = Input.GetAxisRaw("Horizontal");
+        float inputY = Input.GetAxisRaw("Vertical");
+        if (inputX != 0f || inputY != 0f)
+        {
+            panDelta += (right * inputX + forward * inputY) * keyboardPanSpeed * Time.deltaTime;
+        }
+
+        if (panDelta != Vector3.zero)
+        {
+            panOffset += panDelta;
+            panOffset = Vector3.ClampMagnitude(panOffset, maxPanDistance);
         }
     }
 
@@ -92,6 +147,7 @@ public class CameraController : MonoBehaviour
         if (GameTurnManager.CurrentPlayer != null && target != GameTurnManager.CurrentPlayer.transform)
         {
             target = GameTurnManager.CurrentPlayer.transform;
+            panOffset = Vector3.zero;
         }
 
         if (target == null)
@@ -104,7 +160,7 @@ public class CameraController : MonoBehaviour
         // ✨ สูตร: ระยะทางเดิม * ตัวคูณ Zoom
         Vector3 finalOffset = offset * currentZoomMultiplier;
 
-        Vector3 desiredPosition = target.position + finalOffset;
+        Vector3 desiredPosition = target.position + finalOffset + panOffset;
         Vector3 smoothedPosition = Vector3.Lerp(transform.position, desiredPosition, smoothSpeed * Time.deltaTime);
         transform.position = smoothedPosition;
 
@@ -114,7 +170,7 @@ public class CameraController : MonoBehaviour
 
     public void FindTarget()
     {
-        if (GameTurnManager.Instance != null && GameTurnManager.CurrentPlayer != null)
+        if (GameTurnManager.CurrentPlayer != null)
         {
             target = GameTurnManager.CurrentPlayer.transform;
         }

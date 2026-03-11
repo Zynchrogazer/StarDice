@@ -22,6 +22,6 @@ public class GameEventEffectSO : TileEffectSO
         Debug.Log($"<color=cyan>[GameEventEffect]</color> Landing on an event tile. Triggering event: '{nodeData.eventName}'");
 
         // เรียกใช้ GameEventManager ให้ทำงานตาม eventName ที่ระบุไว้
-        GameEventManager.Instance.TriggerEvent(nodeData.eventName, playerObject);
+        GameEventManager.TryTriggerEvent(nodeData.eventName, playerObject);
     }
 }

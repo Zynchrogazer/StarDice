@@ -31,7 +31,7 @@ public class DiceLockCardItem : ScriptableObject
     {
         Debug.Log($"<color=yellow>[CardItem] กดใช้การ์ด: {cardName} (Type: {cardType})</color>");
 
-        if (DiceRollerFromPNG.Instance == null)
+        if (!DiceRollerFromPNG.TryGet(out var diceRoller))
         {
             Debug.LogError("[CardItem] ❌ ไม่เจอ DiceRollerFromPNG ในฉาก!");
             return;
@@ -43,7 +43,7 @@ public class DiceLockCardItem : ScriptableObject
             case DiceCardType.LockNumber:
                 // แบบเดิม: ล็อคเลข
                 Debug.Log($"[CardItem] สั่งล็อคเลขเป็น: {lockNumber}");
-                DiceRollerFromPNG.Instance.RollDiceWithResult(lockNumber);
+                diceRoller.RollDiceWithResult(lockNumber);
                 break;
 
             case DiceCardType.Multiplier:
@@ -51,16 +51,16 @@ public class DiceLockCardItem : ScriptableObject
                 Debug.Log($"[CardItem] เปิดใช้งานสถานะคูณ: x{lockNumber}");
                 
                 // เรียกฟังก์ชันใหม่ที่เราเพิ่งสร้าง
-                DiceRollerFromPNG.Instance.SetPendingMultiplier(lockNumber);
+                diceRoller.SetPendingMultiplier(lockNumber);
                 break;
 
             case DiceCardType.Warp:
                 Debug.Log("ใช้การ์ด Warp: กรุณาเลือกช่องบนหน้าจอ...");
                 
                 // เรียกใช้ฟังก์ชันที่เราเพิ่งเขียนใน RouteManager
-                if (RouteManager.Instance != null)
+                if (RouteManager.TryGet(out var routeManager))
                 {
-                    RouteManager.Instance.StartWarpSelection();
+                    routeManager.StartWarpSelection();
                 }
                 break;
 

@@ -6,11 +6,53 @@ using UnityEngine.SceneManagement;
 
 public class GameEventManager : MonoBehaviour
 {
+    private static GameEventManager cachedManager;
+
+    public static bool TryGet(out GameEventManager manager)
+    {
+        if (cachedManager != null)
+        {
+            manager = cachedManager;
+            return true;
+        }
+
+        manager = FindFirstObjectByType<GameEventManager>();
+        if (manager != null)
+        {
+            cachedManager = manager;
+        }
+
+        return manager != null;
+    }
+
+    public static void TryAddCount1(int amount)
+    {
+        if (TryGet(out var manager))
+            manager.AddCount1(amount);
+    }
+
+    public static void TryAddCount2(int amount)
+    {
+        if (TryGet(out var manager))
+            manager.AddCount2(amount);
+    }
+
+    public static void TryTriggerEvent(string eventName, GameObject target)
+    {
+        if (TryGet(out var manager))
+            manager.TriggerEvent(eventName, target);
+    }
+
+    public static void SetRandomSpinning(bool value)
+    {
+        if (TryGet(out var manager))
+            manager.isRandomSpinning = value;
+    }
+
     public const string LastBoardSceneKey = "LastBoardSceneName";
 
     [Header("Scene Settings")]
     public string boardGameSceneName = "TestMain";
-    public static GameEventManager Instance { get; private set; }
 
     [Header("Random Event Settings")]
     public string[] randomEventKeys;
@@ -24,6 +66,9 @@ public class GameEventManager : MonoBehaviour
     private GameObject[] randomEventPanels = new GameObject[0];
     private GameObject[] randomMinigameEventPanels = new GameObject[0];
     public bool isRandomSpinning = false;
+    [Header("References (Refactor Prep)")]
+    [SerializeField] private GameTurnManager gameTurnManager;
+    [SerializeField] private RouteManager routeManager;
     private bool isFirstLoad = true;
     private bool hasStartedGame = false;
     public GameObject shopPanel;
@@ -35,15 +80,39 @@ public class GameEventManager : MonoBehaviour
 
     public Sprite creditSprite; // 🖼️ ลากรูปเหรียญมาใส่ตรงนี้
     
-    public bool isEventProcessing => isRandomSpinning || (GameTurnManager.Instance != null && GameTurnManager.Instance.currentState == GameState.EventProcessing);
+    public bool isEventProcessing => isRandomSpinning || (ResolveGameTurnManager() != null && ResolveGameTurnManager().currentState == GameState.EventProcessing);
+
+    private GameTurnManager ResolveGameTurnManager()
+    {
+        if (gameTurnManager == null)
+            gameTurnManager = FindFirstObjectByType<GameTurnManager>();
+
+        return gameTurnManager;
+    }
+
+    private RouteManager ResolveRouteManager()
+    {
+        if (routeManager == null)
+            routeManager = FindFirstObjectByType<RouteManager>();
+
+        return routeManager;
+    }
 
     #region Unity Lifecycle & Scene Management
 
     private void Awake()
     {
-        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
-        Instance = this;
+        GameEventManager[] managers = FindObjectsByType<GameEventManager>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        if (managers.Length > 1) { Destroy(gameObject); return; }
+
+        cachedManager = this;
         DontDestroyOnLoad(gameObject);
+    }
+
+    private void OnDestroy()
+    {
+        if (cachedManager == this)
+            cachedManager = null;
     }
 
     private void Start()
@@ -64,7 +133,7 @@ public class GameEventManager : MonoBehaviour
     {
         // 1. ลองหาดูว่าในซีนนี้มีระบบแผนที่ (RouteManager) อยู่ไหม?
         // (สมมติว่า RouteManager ไม่ได้เป็น DontDestroyOnLoad หรือถ้าเป็น ก็เช็คว่ามี Node ไหม)
-        RouteManager mapSystem = FindObjectOfType<RouteManager>();
+        RouteManager mapSystem = ResolveRouteManager() ?? FindObjectOfType<RouteManager>();
 
         // ✅ ถ้าเจอ RouteManager แสดงว่าเป็นฉากบอร์ดเกมแน่นอน (ไม่สนว่าชื่ออะไร)
         if (mapSystem != null && mapSystem.nodeConnections != null && mapSystem.nodeConnections.Count > 0)
@@ -97,10 +166,12 @@ public class GameEventManager : MonoBehaviour
         FindAndSetupRandomEventPanels();
         FindAndSetupChoiceUI();
 
-        RouteManager newMap = FindObjectOfType<RouteManager>();
-        if (GameTurnManager.Instance != null && newMap != null)
+        RouteManager newMap = ResolveRouteManager() ?? FindObjectOfType<RouteManager>();
+        if (newMap != null) routeManager = newMap;
+
+        if (ResolveGameTurnManager() != null && newMap != null)
         {
-            foreach (var playerState in GameTurnManager.Instance.allPlayers)
+            foreach (var playerState in ResolveGameTurnManager().allPlayers)
             {
                 playerState?.GetComponent<PlayerPathWalker>()?.ReconnectReferences(newMap);
             }
@@ -202,9 +273,9 @@ public class GameEventManager : MonoBehaviour
     private void FindAndSetupChoiceUI()
     {
         ChoiceUIManager foundUI = FindObjectOfType<ChoiceUIManager>(true);
-        if (foundUI != null && GameTurnManager.Instance != null)
+        if (foundUI != null && ResolveGameTurnManager() != null)
         {
-            foreach (var p in GameTurnManager.Instance.allPlayers)
+            foreach (var p in ResolveGameTurnManager().allPlayers)
                 p?.GetComponent<PlayerPathWalker>()?.SetChoiceUIManager(foundUI);
         }
     }
@@ -216,11 +287,11 @@ public class GameEventManager : MonoBehaviour
     public void TriggerEvent(string eventName, GameObject player)
     {
         // ✅ ล็อค State ทันทีที่กิด Event
-        if (GameTurnManager.Instance != null) GameTurnManager.Instance.SetState(GameState.EventProcessing);
+        if (ResolveGameTurnManager() != null) ResolveGameTurnManager().SetState(GameState.EventProcessing);
 
         GameObject target = player != null ? player : currentEventTarget;
         if (target == null) target = GameTurnManager.CurrentPlayer?.gameObject;
-        if (target == null) { GameTurnManager.Instance?.RequestEndTurn(); return; }
+        if (target == null) { ResolveGameTurnManager()?.RequestEndTurn(); return; }
 
         switch (eventName.ToLower())
         {
@@ -236,9 +307,10 @@ public class GameEventManager : MonoBehaviour
             case "boss":StartCoroutine(BossBattleCoroutine());break;
             case "specialboss":StartCoroutine(SpecialBossBattleCoroutine());break;
             case "shop":
-                if (ShopManager.Instance != null)
+                ShopManager shopManager = FindObjectOfType<ShopManager>();
+                if (shopManager != null)
                 {
-                    ShopManager.Instance.HandleShopOpened();
+                    shopManager.HandleShopOpened();
                 }
                 else if (shopPanel != null)
                 {
@@ -246,7 +318,7 @@ public class GameEventManager : MonoBehaviour
                 }
                 else
                 {
-                    GameTurnManager.Instance?.RequestEndTurn();
+                    ResolveGameTurnManager()?.RequestEndTurn();
                 }
                 break;
             case "draw": Draw(target); break;
@@ -262,7 +334,7 @@ public class GameEventManager : MonoBehaviour
                 break;
             default:
                 if (eventPanels.ContainsKey(eventName.ToLower())) ShowPanel(eventName, true);
-                else GameTurnManager.Instance?.RequestEndTurn();
+                else ResolveGameTurnManager()?.RequestEndTurn();
                 break;
         }
     }
@@ -286,13 +358,13 @@ public class GameEventManager : MonoBehaviour
         if (windTeleportTargetIDs == null || windTeleportTargetIDs.Length == 0)
         {
             Debug.LogError("WindTeleport: ยังไม่ได้กำหนด ID ปลายทางใน Inspector!");
-            GameTurnManager.Instance?.RequestEndTurn(); // จบเทิร์นกันเกมค้าง
+            ResolveGameTurnManager()?.RequestEndTurn(); // จบเทิร์นกันเกมค้าง
             return;
         }
 
         PlayerPathWalker walker = target.GetComponent<PlayerPathWalker>();
 
-        if (walker != null && RouteManager.Instance != null)
+        if (walker != null && ResolveRouteManager() != null)
         {
             // 2. ✨ [สุ่ม] เลือก ID หนึ่งตัวจากรายการที่ใส่ไว้
             int randomIndex = Random.Range(0, windTeleportTargetIDs.Length);
@@ -301,7 +373,7 @@ public class GameEventManager : MonoBehaviour
             Debug.Log($"<color=cyan>WindTeleport: สุ่มได้ Node ID {chosenID} (จากทั้งหมด {windTeleportTargetIDs.Length} จุด)</color>");
 
             // 3. ค้นหา Node จาก ID ที่สุ่มได้
-            var targetConnection = RouteManager.Instance.nodeConnections.Find(x => x.tileID == chosenID);
+            var targetConnection = ResolveRouteManager().nodeConnections.Find(x => x.tileID == chosenID);
 
             if (targetConnection != null && targetConnection.node != null)
             {
@@ -352,7 +424,7 @@ public class GameEventManager : MonoBehaviour
         if (!eventPanels.TryGetValue("openchestpanel", out var panel))
         {
             Debug.LogError("หา Panel 'openchestpanel' ไม่เจอ!");
-            GameTurnManager.Instance.RequestEndTurn();
+            ResolveGameTurnManager().RequestEndTurn();
             return;
         }
 
@@ -491,7 +563,7 @@ public class GameEventManager : MonoBehaviour
         boxScript.OpenBox(resultSprite, () =>
         {
             SafeSetActive(panel, false); // ปิดหน้าต่าง
-            GameTurnManager.Instance.RequestEndTurn(); // จบเทิร์น
+            ResolveGameTurnManager().RequestEndTurn(); // จบเทิร์น
         });
     }
 
@@ -519,9 +591,9 @@ public class GameEventManager : MonoBehaviour
     private void RandomWarp(GameObject target)
     {
         PlayerPathWalker walker = target.GetComponent<PlayerPathWalker>();
-        if (walker != null && RouteManager.Instance != null)
+        if (walker != null && ResolveRouteManager() != null)
         {
-            var nodes = RouteManager.Instance.nodeConnections.FindAll(x => x.node != null && x.tileID != walker.currentNodeID);
+            var nodes = ResolveRouteManager().nodeConnections.FindAll(x => x.node != null && x.tileID != walker.currentNodeID);
             if (nodes.Count > 0) walker.TeleportToNode(nodes[Random.Range(0, nodes.Count)].node);
         }
         ShowPanel("warppanel", true);
@@ -557,7 +629,7 @@ public class GameEventManager : MonoBehaviour
     {
         if (target == null)
         {
-            GameTurnManager.Instance?.RequestEndTurn();
+            ResolveGameTurnManager()?.RequestEndTurn();
             return;
         }
 
@@ -565,7 +637,7 @@ public class GameEventManager : MonoBehaviour
         if (walker == null)
         {
             Debug.LogWarning("[EventManager] Random move event หา PlayerPathWalker ไม่เจอ -> จบเทิร์น");
-            GameTurnManager.Instance?.RequestEndTurn();
+            ResolveGameTurnManager()?.RequestEndTurn();
             return;
         }
 
@@ -579,7 +651,7 @@ public class GameEventManager : MonoBehaviour
         currentEventTarget = target;
         if (!CanSpinRandomEvent(randomEventKeys, "RandomEvent"))
         {
-            GameTurnManager.Instance?.RequestEndTurn();
+            ResolveGameTurnManager()?.RequestEndTurn();
             return;
         }
 
@@ -591,7 +663,7 @@ public class GameEventManager : MonoBehaviour
         currentEventTarget = target;
         if (!CanSpinRandomEvent(randomMinigameEventKeys, "RandomMinigame"))
         {
-            GameTurnManager.Instance?.RequestEndTurn();
+            ResolveGameTurnManager()?.RequestEndTurn();
             return;
         }
 
@@ -639,7 +711,7 @@ public class GameEventManager : MonoBehaviour
             if (string.IsNullOrEmpty(selectedKey))
             {
                 Debug.LogWarning("[EventManager] RandomEvent ได้ key ว่าง -> จบเทิร์น");
-                GameTurnManager.Instance?.RequestEndTurn();
+                ResolveGameTurnManager()?.RequestEndTurn();
                 yield break;
             }
 
@@ -744,7 +816,7 @@ public class GameEventManager : MonoBehaviour
             if (string.IsNullOrEmpty(selected))
             {
                 Debug.LogWarning("[EventManager] RandomMinigame ได้ key ว่าง -> จบเทิร์น");
-                GameTurnManager.Instance?.RequestEndTurn();
+                ResolveGameTurnManager()?.RequestEndTurn();
                 yield break;
             }
 
@@ -772,7 +844,7 @@ public class GameEventManager : MonoBehaviour
         if (string.IsNullOrEmpty(sceneName))
         {
             Debug.LogWarning($"[EventManager] ไม่พบ Scene ของ minigame key '{minigameKey}' -> จบเทิร์น");
-            GameTurnManager.Instance?.RequestEndTurn();
+            ResolveGameTurnManager()?.RequestEndTurn();
             yield break;
         }
 
@@ -965,13 +1037,13 @@ public class GameEventManager : MonoBehaviour
             SafeSetActive(panel, false);
         }
 
-        GameTurnManager.Instance?.RequestEndTurn();
+        ResolveGameTurnManager()?.RequestEndTurn();
     }
 
     private IEnumerator WaitAndEndTurn()
     {
         yield return new WaitForSeconds(1.5f);
-        GameTurnManager.Instance?.RequestEndTurn();
+        ResolveGameTurnManager()?.RequestEndTurn();
     }
 
     public void ForceResetEventStatus()

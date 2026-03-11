@@ -11,6 +11,14 @@ public class CharacterSelectMenu : MonoBehaviour
     public Button darkButton;
     public Button fireButton;
 
+    [Header("PlayerData References")]
+    public PlayerData waterPlayerData;
+    public PlayerData earthPlayerData;
+    public PlayerData windPlayerData;
+    public PlayerData lightPlayerData;
+    public PlayerData darkPlayerData;
+    public PlayerData firePlayerData;
+
     private const string SELECTED_MONSTER_KEY = "SelectedMonster";
     private const string HAS_CHOSEN_KEY = "HasChosenMainCharacter";
 
@@ -22,7 +30,7 @@ public class CharacterSelectMenu : MonoBehaviour
     public void UpdateAllButtons()
     {
         string currentSelected = PlayerPrefs.GetString(SELECTED_MONSTER_KEY, "");
-        
+
         // เช็คว่าเคยเลือกตัวเริ่มต้นไปหรือยัง? (0 = ยังไม่เคย, 1 = เคยแล้ว)
         bool isNewPlayer = PlayerPrefs.GetInt(HAS_CHOSEN_KEY, 0) == 0;
 
@@ -35,7 +43,7 @@ public class CharacterSelectMenu : MonoBehaviour
         UpdateButtonState(fireButton, "MonsterFire", currentSelected, isNewPlayer);
     }
 
-   private void UpdateButtonState(Button btn, string monsterKey, string currentSelected, bool isNewPlayer)
+    private void UpdateButtonState(Button btn, string monsterKey, string currentSelected, bool isNewPlayer)
     {
         // 1. เช็คว่ามีตัวนี้ไหม
         bool isOwned = PlayerPrefs.GetInt(monsterKey, 0) == 1;
@@ -44,19 +52,19 @@ public class CharacterSelectMenu : MonoBehaviour
         if (isOwned || isNewPlayer)
         {
             // เปิดให้กดได้ตลอด (ไม่ล็อคแล้ว)
-            btn.interactable = true; 
+            btn.interactable = true;
 
             // --- เปลี่ยนสีแทนการล็อค ---
             // ถ้าไม่ใช่ผู้เล่นใหม่ และตัวนี้ถูกเลือกอยู่ ให้เปลี่ยนสี (เช่น สีเขียว)
             if (!isNewPlayer && currentSelected == GetElementFromKey(monsterKey))
             {
                 // เปลี่ยนสีปุ่มเป็นสีเขียว (บอกว่าใส่อยู่)
-                btn.image.color = Color.green; 
+                btn.image.color = Color.green;
             }
             else
             {
                 // เปลี่ยนสีปุ่มเป็นสีขาวปกติ (ไม่ได้เลือก)
-                btn.image.color = Color.white; 
+                btn.image.color = Color.white;
             }
         }
         else
@@ -87,11 +95,46 @@ public class CharacterSelectMenu : MonoBehaviour
             Debug.Log("🎉 ได้รับ " + element + " เป็นตัวเริ่มต้น!");
         }
 
-        // --- ส่วนบันทึกการเลือก ---
-        PlayerPrefs.SetString(SELECTED_MONSTER_KEY, element);
-        PlayerPrefs.Save();
+        // --- ส่วนบันทึกการเลือก (single point of truth update path) ---
+        ApplySelectedMonsterState(element);
 
         // รีเฟรชปุ่ม
         UpdateAllButtons();
+    }
+
+    private void ApplySelectedMonsterState(string element)
+    {
+        // 1) persist สำหรับ continue/restore
+        PlayerPrefs.SetString(SELECTED_MONSTER_KEY, element);
+        PlayerPrefs.Save();
+
+        // 2) runtime additive session
+        if (RunSessionStore.TryGet(out var sessionStore))
+        {
+            sessionStore.SetSelectedMonster(element);
+        }
+
+        // 3) primary selection pointer used by current gameplay systems
+        PlayerData resolved = ResolvePlayerDataByElement(element);
+        if (resolved != null && GameData.Instance != null)
+        {
+            GameData.Instance.selectedPlayer = resolved;
+        }
+    }
+
+    private PlayerData ResolvePlayerDataByElement(string element)
+    {
+        if (string.IsNullOrEmpty(element)) return null;
+
+        switch (element.Trim().ToLowerInvariant())
+        {
+            case "water": return waterPlayerData;
+            case "earth": return earthPlayerData;
+            case "wind": return windPlayerData;
+            case "light": return lightPlayerData;
+            case "dark": return darkPlayerData;
+            case "fire": return firePlayerData;
+            default: return null;
+        }
     }
 }

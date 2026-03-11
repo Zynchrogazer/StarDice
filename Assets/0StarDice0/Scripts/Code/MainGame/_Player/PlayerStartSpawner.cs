@@ -40,9 +40,9 @@ public class PlayerStartSpawner : MonoBehaviour
         yield return new WaitForSeconds(0.1f);
 
         // อัปเดตรายชื่อคนใน GameTurnManager
-        if (GameTurnManager.Instance != null)
+        if (GameTurnManager.TryGet(out var gameTurnManager))
         {
-            GameTurnManager.Instance.allPlayers.Clear();
+            gameTurnManager.allPlayers.Clear();
             foreach (var p in allPlayers)
             {
                 if (p != null)
@@ -51,7 +51,7 @@ public class PlayerStartSpawner : MonoBehaviour
                     var state = p.GetComponent<PlayerState>();
                     if (state != null)
                     {
-                        GameTurnManager.Instance.allPlayers.Add(state);
+                        gameTurnManager.allPlayers.Add(state);
                     }
                 }
             }
