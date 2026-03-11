@@ -7,7 +7,14 @@ public class SceneLoader : MonoBehaviour
     {
         if (!SceneFlowController.TryRequestScene(sceneName))
         {
-            SceneManager.LoadScene(sceneName);
+            if (Application.CanStreamedLevelBeLoaded(sceneName))
+            {
+                SceneManager.LoadScene(sceneName);
+            }
+            else
+            {
+                Debug.LogError($"[SceneLoader] Cannot load scene '{sceneName}'. Check Build Profiles.");
+            }
         }
     }
 

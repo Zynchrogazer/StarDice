@@ -43,7 +43,14 @@ public class ChangeSceneButton : MonoBehaviour
 
         if (!SceneFlowController.TryRequestScene(sceneToLoad))
         {
-            SceneManager.LoadScene(sceneToLoad);
+            if (Application.CanStreamedLevelBeLoaded(sceneToLoad))
+            {
+                SceneManager.LoadScene(sceneToLoad);
+            }
+            else
+            {
+                Debug.LogError($"[ChangeSceneButton] Cannot load scene '{sceneToLoad}'. Check Build Profiles.");
+            }
         }
     }
 

@@ -154,14 +154,34 @@ public class DeckManager : MonoBehaviour
     public void SaveCurrentDeck()
     {
         List<string> names = new List<string>();
+        List<string> selectedIds = new List<string>();
+        List<CardData> selectedCards = new List<CardData>();
         foreach (var c in cardUse)
         {
-            names.Add(c != null ? c.cardName : "EMPTY");
+            string cardId = c != null ? c.cardName : "EMPTY";
+            names.Add(cardId);
+
+            if (c != null)
+            {
+                selectedIds.Add(c.cardName);
+                selectedCards.Add(c);
+            }
         }
-        
+
         string deckStr = string.Join(",", names);
         PlayerPrefs.SetString("CurrentDeckData", deckStr);
         PlayerPrefs.Save();
+
+        if (RunSessionStore.TryGet(out var sessionStore))
+        {
+            sessionStore.SetSelectedDeck(selectedIds);
+        }
+
+        if (GameData.Instance != null)
+        {
+            GameData.Instance.selectedCards = selectedCards;
+        }
+
         Debug.Log("💾 Deck Auto-Saved!");
     }
 
@@ -402,7 +422,7 @@ public class DeckManager : MonoBehaviour
     // ฟังก์ชันเดิม (ยังคงไว้เผื่อมีการเปลี่ยน Scene)
     public void ConfirmDeckAndGoNextScene(string nextScene)
     {
-        SaveCurrentDeck(); // เซฟก่อนเปลี่ยนฉากเพื่อความชัวร์
+        SaveCurrentDeck(); // เซฟก่อนเปลี่ยนฉากเพื่อความชัวร์ + push deck to bootstrap store
         SceneManager.LoadScene(nextScene, LoadSceneMode.Additive);
         
         var canvasList = FindObjectsOfType<Canvas>();

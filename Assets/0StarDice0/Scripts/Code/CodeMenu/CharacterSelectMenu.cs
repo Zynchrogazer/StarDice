@@ -1,5 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
+using System.Collections;
 
 public class CharacterSelectMenu : MonoBehaviour
 {
@@ -22,14 +24,65 @@ public class CharacterSelectMenu : MonoBehaviour
     private const string SELECTED_MONSTER_KEY = "SelectedMonster";
     private const string HAS_CHOSEN_KEY = "HasChosenMainCharacter";
 
+    [Header("Flow")]
+    [SerializeField] private string bootstrapSceneName = "Bootstrap";
+
     void Start()
     {
         UpdateAllButtons();
+        StartCoroutine(EnsureRuntimeSelectionSync());
+    }
+
+    private void OnEnable()
+    {
+        StartCoroutine(EnsureRuntimeSelectionSync());
+    }
+
+
+    private IEnumerator EnsureRuntimeSelectionSync()
+    {
+        if (!RunSessionStore.TryGet(out _)
+            && !string.IsNullOrEmpty(bootstrapSceneName)
+            && Application.CanStreamedLevelBeLoaded(bootstrapSceneName)
+            && !SceneManager.GetSceneByName(bootstrapSceneName).isLoaded)
+        {
+            AsyncOperation bootstrapLoad = SceneManager.LoadSceneAsync(bootstrapSceneName, LoadSceneMode.Additive);
+            while (bootstrapLoad != null && !bootstrapLoad.isDone)
+            {
+                yield return null;
+            }
+        }
+
+        SyncRuntimeSelectionFromPrefs();
+    }
+
+    private void SyncRuntimeSelectionFromPrefs()
+    {
+        string selectedFromPrefs = NormalizeElementId(PlayerPrefs.GetString(SELECTED_MONSTER_KEY, string.Empty));
+        if (string.IsNullOrEmpty(selectedFromPrefs))
+        {
+            return;
+        }
+
+        if (RunSessionStore.TryGet(out var sessionStore))
+        {
+            sessionStore.SetSelectedMonster(selectedFromPrefs);
+        }
+        else
+        {
+            Debug.LogWarning("[CharacterSelectMenu] RunSessionStore not found while syncing selected monster.");
+        }
+
+        PlayerData resolved = ResolvePlayerDataByElement(selectedFromPrefs);
+        if (resolved != null && GameData.Instance != null)
+        {
+            GameData.Instance.selectedPlayer = resolved;
+        }
     }
 
     public void UpdateAllButtons()
     {
-        string currentSelected = PlayerPrefs.GetString(SELECTED_MONSTER_KEY, "");
+        string currentSelected = NormalizeElementId(PlayerPrefs.GetString(SELECTED_MONSTER_KEY, ""));
 
         // เช็คว่าเคยเลือกตัวเริ่มต้นไปหรือยัง? (0 = ยังไม่เคย, 1 = เคยแล้ว)
         bool isNewPlayer = PlayerPrefs.GetInt(HAS_CHOSEN_KEY, 0) == 0;
@@ -83,6 +136,7 @@ public class CharacterSelectMenu : MonoBehaviour
     // ใส่ใน OnClick ของปุ่ม (ส่งค่า Water, Fire, etc.)
     public void SelectCharacter(string element)
     {
+        element = NormalizeElementId(element);
         Debug.Log("เลือก: " + element);
 
         // --- ส่วนแจกฟรี ---
@@ -105,21 +159,42 @@ public class CharacterSelectMenu : MonoBehaviour
     private void ApplySelectedMonsterState(string element)
     {
         // 1) persist สำหรับ continue/restore
-        PlayerPrefs.SetString(SELECTED_MONSTER_KEY, element);
+        string normalizedElement = NormalizeElementId(element);
+        PlayerPrefs.SetString(SELECTED_MONSTER_KEY, normalizedElement);
         PlayerPrefs.Save();
 
         // 2) runtime additive session
         if (RunSessionStore.TryGet(out var sessionStore))
         {
-            sessionStore.SetSelectedMonster(element);
+            sessionStore.SetSelectedMonster(normalizedElement);
+        }
+        else
+        {
+            Debug.LogWarning("[CharacterSelectMenu] RunSessionStore not found while applying selected monster.");
         }
 
         // 3) primary selection pointer used by current gameplay systems
-        PlayerData resolved = ResolvePlayerDataByElement(element);
+        PlayerData resolved = ResolvePlayerDataByElement(normalizedElement);
         if (resolved != null && GameData.Instance != null)
         {
             GameData.Instance.selectedPlayer = resolved;
         }
+    }
+
+    private static string NormalizeElementId(string rawElement)
+    {
+        if (string.IsNullOrWhiteSpace(rawElement))
+        {
+            return string.Empty;
+        }
+
+        string normalized = rawElement.Trim();
+        if (normalized.StartsWith("Monster", System.StringComparison.OrdinalIgnoreCase))
+        {
+            normalized = normalized.Substring("Monster".Length);
+        }
+
+        return normalized;
     }
 
     private PlayerData ResolvePlayerDataByElement(string element)

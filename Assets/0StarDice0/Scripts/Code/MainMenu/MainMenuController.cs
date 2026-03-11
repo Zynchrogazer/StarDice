@@ -7,7 +7,7 @@ using System.Collections;
 public class MainMenuController : MonoBehaviour
 {
     [Header("Settings")]
-    public string gameSceneName = "GameScene"; // ใส่ชื่อ Scene เกมของคุณตรงนี้ (เช่น "MainGame" หรือ "DeckBuilding")
+    public string gameSceneName = "FirstMonsterSelect"; // ใส่ชื่อ Scene เกมของคุณตรงนี้ (เช่น "MainGame" หรือ "DeckBuilding")
     [SerializeField] private string bootstrapSceneName = "Bootstrap";
     [SerializeField] private GameObject confirmExitPanel;
 
@@ -16,7 +16,8 @@ public class MainMenuController : MonoBehaviour
     // รายชื่อ Key ที่ต้องการรีเซ็ตเมื่อกด New Game (ต้องตรงกับใน BackupSaveManager)
     private string[] keysToReset = new string[] 
     { 
-        "MonsterWater", "MonsterEarth", "MonsterWind", "MonsterLight", "MonsterDark",
+        "MonsterWater", "MonsterEarth", "MonsterWind", "MonsterLight", "MonsterDark", "MonsterFire",
+        "SelectedMonster", "HasChosenMainCharacter",
         "CurrentDeckData" 
         // ถ้ามี Level หรือ Credit ก็ใส่เพิ่มตรงนี้
     };
@@ -24,9 +25,25 @@ public class MainMenuController : MonoBehaviour
 
     private void Awake()
     {
+        SanitizeDefaultFlowTarget();
+
         if (confirmExitPanel != null)
         {
             confirmExitPanel.SetActive(false);
+        }
+    }
+
+
+    private void SanitizeDefaultFlowTarget()
+    {
+        if (string.Equals(gameSceneName, "GameScene", StringComparison.OrdinalIgnoreCase)
+            || string.IsNullOrWhiteSpace(gameSceneName)
+            || !Application.CanStreamedLevelBeLoaded(gameSceneName))
+        {
+            if (Application.CanStreamedLevelBeLoaded("FirstMonsterSelect"))
+            {
+                gameSceneName = "FirstMonsterSelect";
+            }
         }
     }
 
@@ -140,7 +157,14 @@ public class MainMenuController : MonoBehaviour
         if (!SceneFlowController.TryRequestScene(targetSceneName))
         {
             // fallback สุดท้ายเพื่อไม่ให้ flow ตาย
-            SceneManager.LoadScene(targetSceneName);
+            if (Application.CanStreamedLevelBeLoaded(targetSceneName))
+            {
+                SceneManager.LoadScene(targetSceneName);
+            }
+            else
+            {
+                Debug.LogError($"[MainMenu] Cannot load scene '{targetSceneName}'. Check Build Profiles.");
+            }
         }
 
         isRequestingFlowScene = false;

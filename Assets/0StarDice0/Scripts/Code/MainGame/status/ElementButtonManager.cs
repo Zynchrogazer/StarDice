@@ -60,7 +60,7 @@ public class ElementButtonManager : MonoBehaviour
         string selectedName = PlayerPrefs.GetString("SelectedMonster", string.Empty);
         if (!string.IsNullOrWhiteSpace(selectedName))
         {
-            PlayerData loaded = Resources.Load<PlayerData>($"PlayerData/{selectedName}");
+            PlayerData loaded = TryLoadSelectedPlayerData(selectedName);
             if (loaded != null)
             {
                 if (GameData.Instance != null)
@@ -71,6 +71,33 @@ public class ElementButtonManager : MonoBehaviour
         }
 
         return null;
+    }
+
+
+    private static PlayerData TryLoadSelectedPlayerData(string selectedName)
+    {
+        string trimmed = selectedName.Trim();
+        if (string.IsNullOrEmpty(trimmed))
+        {
+            return null;
+        }
+
+        PlayerData loaded = Resources.Load<PlayerData>($"PlayerData/{trimmed}");
+        if (loaded != null)
+        {
+            return loaded;
+        }
+
+        if (trimmed.StartsWith("Monster", StringComparison.OrdinalIgnoreCase))
+        {
+            string withoutPrefix = trimmed.Substring("Monster".Length);
+            if (!string.IsNullOrEmpty(withoutPrefix))
+            {
+                return Resources.Load<PlayerData>($"PlayerData/{withoutPrefix}");
+            }
+        }
+
+        return Resources.Load<PlayerData>($"PlayerData/Monster{trimmed}");
     }
 
     private int GetButtonIndexByElement(ElementType element)
