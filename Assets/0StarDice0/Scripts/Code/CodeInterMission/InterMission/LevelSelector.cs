@@ -44,7 +44,14 @@ public class LevelSelector : MonoBehaviour
     {
         if (!SceneFlowController.TryRequestScene(levelName))
         {
-            SceneManager.LoadScene(levelName);
+            if (Application.CanStreamedLevelBeLoaded(levelName))
+            {
+                SceneManager.LoadScene(levelName);
+            }
+            else
+            {
+                Debug.LogError($"[LevelSelector] Cannot load scene '{levelName}'. Check Build Profiles.");
+            }
         }
     }
 }
