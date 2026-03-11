@@ -6,8 +6,6 @@ public class SceneFlowController : MonoBehaviour
 {
     [Header("RuntimeHub")]
     [SerializeField] private string persistentSceneName = "RuntimeHub";
-    [SerializeField] private bool autoLoadFirstGameplayScene = true;
-    [SerializeField] private string firstGameplaySceneName = "Menu";
 
     [Header("Transition")]
     [SerializeField] private bool useAdditiveTransition = true;
@@ -31,7 +29,6 @@ public class SceneFlowController : MonoBehaviour
         }
 
         cached = this;
-        DontDestroyOnLoad(gameObject);
     }
 
     private void OnDestroy()
@@ -41,40 +38,6 @@ public class SceneFlowController : MonoBehaviour
             cached = null;
         }
     }
-
-    private void Start()
-    {
-        if (!autoLoadFirstGameplayScene)
-        {
-            return;
-        }
-
-        Scene activeScene = SceneManager.GetActiveScene();
-        if (!activeScene.IsValid())
-        {
-            return;
-        }
-
-        if (!string.Equals(activeScene.name, persistentSceneName, System.StringComparison.OrdinalIgnoreCase))
-        {
-            return;
-        }
-
-        if (string.IsNullOrEmpty(firstGameplaySceneName))
-        {
-            Debug.LogWarning("[SceneFlow] firstGameplaySceneName is empty. Auto-load skipped.");
-            return;
-        }
-
-        if (!Application.CanStreamedLevelBeLoaded(firstGameplaySceneName))
-        {
-            Debug.LogWarning($"[SceneFlow] Cannot load first gameplay scene '{firstGameplaySceneName}'. Check Build Settings scene name.");
-            return;
-        }
-
-        RequestScene(firstGameplaySceneName);
-    }
-
 
     public static bool TryRequestScene(string sceneName)
     {
