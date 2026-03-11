@@ -5,11 +5,17 @@ public class SceneLoader : MonoBehaviour
 {
     public void LoadSceneByName(string sceneName)
     {
-        SceneManager.LoadScene(sceneName);
+        if (!SceneFlowController.TryRequestScene(sceneName))
+        {
+            SceneManager.LoadScene(sceneName);
+        }
     }
 
     public void LoadSceneByIndex(int sceneIndex)
     {
-        SceneManager.LoadScene(sceneIndex);
+        if (!SceneFlowController.TryRequestScene(sceneIndex))
+        {
+            SceneManager.LoadScene(sceneIndex);
+        }
     }
 }

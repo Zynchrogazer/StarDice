@@ -5,6 +5,11 @@ public class BoardGameGroup : MonoBehaviour
 {
     private bool shouldResetOnNextBoardEntry = false;
 
+    [Header("Core system references (preferred)")]
+    [SerializeField] private NormaSystem normaSystem;
+    [SerializeField] private GameEventManager gameEventManager;
+    [SerializeField] private GameTurnManager gameTurnManager;
+
     [Header("Legacy fallback")]
     public string boardSceneName = "MainGame";
 
@@ -122,20 +127,71 @@ public class BoardGameGroup : MonoBehaviour
     {
         Debug.Log("[BoardSystem] ♻️ Reset board session state for fresh run.");
 
-        if (NormaSystem.TryGet(out var normaSystem))
+        if (ResolveNormaSystem(out var resolvedNormaSystem))
         {
-            normaSystem.ResetForNewBoardSession();
+            resolvedNormaSystem.ResetForNewBoardSession();
         }
 
-        if (GameEventManager.TryGet(out var gameEventManager))
+        if (ResolveGameEventManager(out var resolvedGameEventManager))
         {
-            gameEventManager.ResetForNewBoardSession();
+            resolvedGameEventManager.ResetForNewBoardSession();
         }
 
-        if (GameTurnManager.TryGet(out var gameTurnManager))
+        if (ResolveGameTurnManager(out var resolvedGameTurnManager))
         {
-            gameTurnManager.ResetForNewBoardSession();
+            resolvedGameTurnManager.ResetForNewBoardSession();
         }
+    }
+
+    private bool ResolveNormaSystem(out NormaSystem resolved)
+    {
+        if (normaSystem != null)
+        {
+            resolved = normaSystem;
+            return true;
+        }
+
+        if (NormaSystem.TryGet(out resolved))
+        {
+            normaSystem = resolved;
+            return true;
+        }
+
+        return false;
+    }
+
+    private bool ResolveGameEventManager(out GameEventManager resolved)
+    {
+        if (gameEventManager != null)
+        {
+            resolved = gameEventManager;
+            return true;
+        }
+
+        if (GameEventManager.TryGet(out resolved))
+        {
+            gameEventManager = resolved;
+            return true;
+        }
+
+        return false;
+    }
+
+    private bool ResolveGameTurnManager(out GameTurnManager resolved)
+    {
+        if (gameTurnManager != null)
+        {
+            resolved = gameTurnManager;
+            return true;
+        }
+
+        if (GameTurnManager.TryGet(out resolved))
+        {
+            gameTurnManager = resolved;
+            return true;
+        }
+
+        return false;
     }
 
     public void ShowBoard(bool show)

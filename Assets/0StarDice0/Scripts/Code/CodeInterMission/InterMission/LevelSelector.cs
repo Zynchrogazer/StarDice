@@ -42,6 +42,9 @@ public class LevelSelector : MonoBehaviour
     // ฟังก์ชันสำหรับให้ปุ่มกดเรียกใช้เพื่อเข้าด่าน
     public void SelectLevel(string levelName)
     {
-        SceneManager.LoadScene(levelName);
+        if (!SceneFlowController.TryRequestScene(levelName))
+        {
+            SceneManager.LoadScene(levelName);
+        }
     }
 }

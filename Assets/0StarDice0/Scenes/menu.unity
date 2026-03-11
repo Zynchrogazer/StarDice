@@ -210,7 +210,6 @@ GameObject:
   - component: {fileID: 129252161}
   - component: {fileID: 129252160}
   - component: {fileID: 129252159}
-  - component: {fileID: 129252162}
   m_Layer: 5
   m_Name: start
   m_TagString: Untagged
@@ -282,9 +281,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 129252162}
-        m_TargetAssemblyTypeName: ChangeSceneButton, Assembly-CSharp
-        m_MethodName: GoToScene
+      - m_Target: {fileID: 505430788}
+        m_TargetAssemblyTypeName: MainMenuController, Assembly-CSharp
+        m_MethodName: OnNewGameClicked
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -332,19 +331,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 129252157}
   m_CullTransparentMesh: 1
---- !u!114 &129252162
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 129252157}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b8bc61dfbf767d64caa04e948057186f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  sceneToLoad: FirstMonsterSelect
 --- !u!1 &151883702
 GameObject:
   m_ObjectHideFlags: 0
@@ -629,7 +615,6 @@ GameObject:
   - component: {fileID: 432141162}
   - component: {fileID: 432141161}
   - component: {fileID: 432141160}
-  - component: {fileID: 432141159}
   m_Layer: 5
   m_Name: Yes Button
   m_TagString: Untagged
@@ -657,18 +642,6 @@ RectTransform:
   m_AnchoredPosition: {x: -234.5, y: -48}
   m_SizeDelta: {x: 187, y: 64}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &432141159
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 432141157}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0e63a38f2b04e3047b4fb81c76180e6b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &432141160
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -713,9 +686,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 432141159}
+      - m_Target: {fileID: 505430787}
         m_TargetAssemblyTypeName: ExitGameHandler, Assembly-CSharp
-        m_MethodName: QuitGame
+        m_MethodName: OnConfirmExitYes
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -763,6 +736,67 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 432141157}
   m_CullTransparentMesh: 1
+--- !u!1 &505430786
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 505430789}
+  - component: {fileID: 505430788}
+  - component: {fileID: 505430787}
+  m_Layer: 0
+  m_Name: '[MainMenuManager]'
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &505430787
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 505430786}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0e63a38f2b04e3047b4fb81c76180e6b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  confirmExitPanel: {fileID: 1912165121}
+--- !u!114 &505430788
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 505430786}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d2907788422b8eb42afa1278f846c4f3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gameSceneName: FirstMonsterSelect
+  bootstrapSceneName: Bootstrap
+  confirmExitPanel: {fileID: 0}
+--- !u!4 &505430789
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 505430786}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 782.5629, y: 443.8184, z: 4.2413616}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &755297002
 GameObject:
   m_ObjectHideFlags: 0
@@ -1233,9 +1267,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: ClosePanel, Assembly-CSharp
-        m_MethodName: Close
+      - m_Target: {fileID: 505430787}
+        m_TargetAssemblyTypeName: ExitGameHandler, Assembly-CSharp
+        m_MethodName: OnConfirmExitNo
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1897,6 +1931,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   sceneToLoad: SL
+  normaSystem: {fileID: 0}
+  gameEventManager: {fileID: 0}
+  gameTurnManager: {fileID: 0}
+  resetAllStateBeforeLoad: 0
+  autoResetSceneName: InterMission
+  autoResetSceneNames:
+  - ShopIntermission
+  autoDestroyBoardCoreSystemsOnIntermission: 1
+  hardResetRuntimeOnIntermissionExit: 1
 --- !u!114 &1596517381
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2367,7 +2410,7 @@ GameObject:
   - component: {fileID: 1912165124}
   - component: {fileID: 1912165123}
   m_Layer: 5
-  m_Name: Panel (1)
+  m_Name: ConfirmExitPanel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2549,7 +2592,6 @@ GameObject:
   - component: {fileID: 2123532176}
   - component: {fileID: 2123532175}
   - component: {fileID: 2123532174}
-  - component: {fileID: 2123532177}
   m_Layer: 5
   m_Name: quit
   m_TagString: Untagged
@@ -2622,10 +2664,10 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 2123532177}
-        m_TargetAssemblyTypeName: PanelToggleManager, Assembly-CSharp
-        m_MethodName: TogglePanel
-        m_Mode: 3
+      - m_Target: {fileID: 505430787}
+        m_TargetAssemblyTypeName: ExitGameHandler, Assembly-CSharp
+        m_MethodName: OnExitButtonClicked
+        m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -2672,20 +2714,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2123532172}
   m_CullTransparentMesh: 1
---- !u!114 &2123532177
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2123532172}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 68d5638436ef7d84cbd61f40c406273d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  panels:
-  - {fileID: 1912165121}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -2693,6 +2721,7 @@ SceneRoots:
   - {fileID: 1680402614}
   - {fileID: 1308441355}
   - {fileID: 2009850344}
+  - {fileID: 505430789}
   - {fileID: 42596516}
   - {fileID: 792155505}
   - {fileID: 1496009527}

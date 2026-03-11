@@ -320,7 +320,17 @@ public class PlayerState : MonoBehaviour
         ResetInStageProgress();
 
         Debug.Log($"[PlayerState] Defeated -> return to {IntermissionSceneName}");
-        SceneManager.LoadScene(IntermissionSceneName);
+        RequestSceneCompat(IntermissionSceneName);
+    }
+
+    private static void RequestSceneCompat(string sceneName)
+    {
+        if (string.IsNullOrEmpty(sceneName)) return;
+
+        if (!SceneFlowController.TryRequestScene(sceneName))
+        {
+            SceneManager.LoadScene(sceneName);
+        }
     }
 
     private void ResetInStageProgress()
