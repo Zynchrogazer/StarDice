@@ -1,7 +1,5 @@
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.SceneManagement;
-using System.Collections;
 
 public class CharacterSelectMenu : MonoBehaviour
 {
@@ -23,36 +21,14 @@ public class CharacterSelectMenu : MonoBehaviour
 
     private const string SELECTED_MONSTER_KEY = "SelectedMonster";
     private const string HAS_CHOSEN_KEY = "HasChosenMainCharacter";
-
-    [Header("Flow")]
-    [SerializeField] private string bootstrapSceneName = "RuntimeHub";
-
     void Start()
     {
         UpdateAllButtons();
-        StartCoroutine(EnsureRuntimeSelectionSync());
+        SyncRuntimeSelectionFromPrefs();
     }
 
     private void OnEnable()
     {
-        StartCoroutine(EnsureRuntimeSelectionSync());
-    }
-
-
-    private IEnumerator EnsureRuntimeSelectionSync()
-    {
-        if (!RunSessionStore.TryGet(out _)
-            && !string.IsNullOrEmpty(bootstrapSceneName)
-            && Application.CanStreamedLevelBeLoaded(bootstrapSceneName)
-            && !SceneManager.GetSceneByName(bootstrapSceneName).isLoaded)
-        {
-            AsyncOperation bootstrapLoad = SceneManager.LoadSceneAsync(bootstrapSceneName, LoadSceneMode.Additive);
-            while (bootstrapLoad != null && !bootstrapLoad.isDone)
-            {
-                yield return null;
-            }
-        }
-
         SyncRuntimeSelectionFromPrefs();
     }
 
@@ -76,7 +52,7 @@ public class CharacterSelectMenu : MonoBehaviour
         PlayerData resolved = ResolvePlayerDataByElement(selectedFromPrefs);
         if (resolved != null && GameData.Instance != null)
         {
-            GameData.Instance.selectedPlayer = resolved;
+            GameData.Instance.SetSelectedPlayer(resolved);
         }
     }
 
@@ -177,7 +153,7 @@ public class CharacterSelectMenu : MonoBehaviour
         PlayerData resolved = ResolvePlayerDataByElement(normalizedElement);
         if (resolved != null && GameData.Instance != null)
         {
-            GameData.Instance.selectedPlayer = resolved;
+            GameData.Instance.SetSelectedPlayer(resolved);
         }
     }
 

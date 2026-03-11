@@ -1,218 +1,179 @@
-using UnityEngine;
-using UnityEngine.SceneManagement; // จำเป็นต้องมีเพื่อสั่งเปลี่ยน Scene
 using System;
-using System.Collections.Generic;
 using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class MainMenuController : MonoBehaviour
 {
-    [Header("Settings")]
-    public string gameSceneName = "FirstMonsterSelect"; // ใส่ชื่อ Scene เกมของคุณตรงนี้ (เช่น "MainGame" หรือ "DeckBuilding")
-    [SerializeField] private string bootstrapSceneName = "RuntimeHub";
-    [SerializeField] private GameObject confirmExitPanel;
+    [Header("Flow")]
+    [SerializeField] private string runtimeHubSceneName = "RuntimeHub";
+   
+
+    [Header("New Game Defaults")]
+    [SerializeField] private int resetCreditValue = 0;
+
+    private static readonly string[] MonsterUnlockKeys =
+    {
+        "MonsterWater", "MonsterEarth", "MonsterWind", "MonsterLight", "MonsterDark", "MonsterFire"
+    };
 
     private bool isRequestingFlowScene;
 
-    // รายชื่อ Key ที่ต้องการรีเซ็ตเมื่อกด New Game (ต้องตรงกับใน BackupSaveManager)
-    private string[] keysToReset = new string[] 
-    { 
-        "MonsterWater", "MonsterEarth", "MonsterWind", "MonsterLight", "MonsterDark", "MonsterFire",
-        "SelectedMonster", "HasChosenMainCharacter",
-        "CurrentDeckData" 
-        // ถ้ามี Level หรือ Credit ก็ใส่เพิ่มตรงนี้
-    };
-
-
     private void Awake()
     {
-        SanitizeDefaultFlowTarget();
-
-        if (confirmExitPanel != null)
-        {
-            confirmExitPanel.SetActive(false);
-        }
-    }
-
-
-    private void SanitizeDefaultFlowTarget()
-    {
-        if (string.Equals(gameSceneName, "GameScene", StringComparison.OrdinalIgnoreCase)
-            || string.IsNullOrWhiteSpace(gameSceneName)
-            || !Application.CanStreamedLevelBeLoaded(gameSceneName))
-        {
-            if (Application.CanStreamedLevelBeLoaded("FirstMonsterSelect"))
-            {
-                gameSceneName = "FirstMonsterSelect";
-            }
-        }
     }
 
     public void OnNewGameClicked()
     {
-        Debug.Log("🗑️ Clearing Active Data for New Game...");
+        Debug.Log("[MainMenu] Starting New Game. Resetting runtime/profile state.");
 
-        // เคลียร์ state runtime ที่ติดมาจากรอบก่อน (DontDestroyOnLoad / Singleton)
         ResetRuntimeState();
+        ResetProgressForRuntimeHubStart();
 
-        // 1. วนลูปเพื่อลบข้อมูลการเล่นปัจจุบันทิ้ง (Reset)
-        foreach (string key in keysToReset)
+        StartCoroutine(RequestRuntimeHubScene());
+    }
+
+    public void OnContinueClicked()
+    {
+        StartCoroutine(RequestRuntimeHubScene());
+    }
+
+    private void ResetProgressForRuntimeHubStart()
+    {
+        foreach (string monsterKey in MonsterUnlockKeys)
         {
-            PlayerPrefs.DeleteKey(key);
+            PlayerPrefs.SetInt(monsterKey, 0);
         }
 
-        // 2. บันทึกการลบ
-        PlayerPrefs.Save();
+        PlayerPrefs.DeleteKey("SelectedMonster");
+        PlayerPrefs.SetInt("HasChosenMainCharacter", 0);
 
-        // 2.1 เคลียร์ runtime run state (ถ้ามี bootstrap ค้างอยู่)
+        ResetCardAvailabilityToCommonOnly();
+        PlayerPrefs.DeleteKey("CurrentDeckData");
+        ResetEquippedItemsForNewGame();
+
         if (RunSessionStore.TryGet(out var runSessionStore))
         {
             runSessionStore.ClearRunState();
         }
 
-        // 3. เปิด panel เลือกมอนสเตอร์ใน RuntimeHub (fallback ไป scene เดิมถ้า panel ยังไม่ถูก bind)
-        if (!TryOpenFirstMonsterPanel())
+        if (GameData.Instance != null)
         {
-            StartCoroutine(RequestFlowScene(gameSceneName));
+            GameData.Instance.SetSelectedPlayer(null);
+            GameData.Instance.SetSelectedCards(new List<CardData>());
+        }
+
+        ResetAllPlayerCredits();
+        PlayerPrefs.Save();
+    }
+
+    private void ResetEquippedItemsForNewGame()
+    {
+        if (PlayerDataManager.Instance != null)
+        {
+            PlayerDataManager.Instance.ClearEquippedItemsAndSave();
+            return;
+        }
+
+        PlayerDataManager.ClearSavedEquipSlots();
+    }
+
+    private void ResetCardAvailabilityToCommonOnly()
+    {
+        HashSet<string> appliedCardKeys = new HashSet<string>(StringComparer.Ordinal);
+
+        if (DeckManager.TryGet(out var deckManager) && deckManager.allCards != null)
+        {
+            ApplyCardDefaults(deckManager.allCards, appliedCardKeys);
+
+            if (deckManager.cardUse != null)
+            {
+                for (int i = 0; i < deckManager.cardUse.Length; i++)
+                {
+                    deckManager.cardUse[i] = null;
+                }
+            }
+
+            deckManager.UpdateUseCardUI();
+            deckManager.SortAndRefreshCards();
+        }
+
+        CardData[] loadedCardData = Resources.FindObjectsOfTypeAll<CardData>();
+        ApplyCardDefaults(loadedCardData, appliedCardKeys);
+    }
+
+    private static void ApplyCardDefaults(IEnumerable<CardData> cards, HashSet<string> appliedCardKeys)
+    {
+        if (cards == null)
+        {
+            return;
+        }
+
+        foreach (CardData card in cards)
+        {
+            if (card == null || string.IsNullOrWhiteSpace(card.cardName))
+            {
+                continue;
+            }
+
+            if (!appliedCardKeys.Add(card.cardName))
+            {
+                continue;
+            }
+
+            bool isCommonCard = card.rarity == CardRarity.Common;
+            card.isUsable = isCommonCard;
+            PlayerPrefs.SetInt("CardState_" + card.cardName, isCommonCard ? 1 : 0);
+        }
+    }
+
+    private void ResetAllPlayerCredits()
+    {
+        int clampedCredit = Mathf.Max(0, resetCreditValue);
+        PlayerData[] players = Resources.FindObjectsOfTypeAll<PlayerData>();
+        foreach (PlayerData player in players)
+        {
+            if (player == null)
+            {
+                continue;
+            }
+
+            player.SetCredit(clampedCredit);
         }
     }
 
     private void ResetRuntimeState()
     {
-        HashSet<Type> persistentTypes = new HashSet<Type>
-        {
-            typeof(GameData),
-            typeof(DeckData),
-            typeof(DeckManager),
-            typeof(GameTurnManager),
-            typeof(GameEventManager),
-            typeof(DiceRollerFromPNG),
-            typeof(CameraController),
-            typeof(SceneController),
-            typeof(NormaSystem),
-            typeof(BoardGameGroup),
-            typeof(PlayerInventory),
-            typeof(PlayerDataManager),
-            typeof(EquipmentManager),
-            typeof(PassiveSkillManager),
-            typeof(ScoreManager),
-            typeof(CharacterSelectManager)
-        };
-
-        MonoBehaviour[] allBehaviours = Resources.FindObjectsOfTypeAll<MonoBehaviour>();
-        foreach (MonoBehaviour behaviour in allBehaviours)
-        {
-            if (behaviour == null) continue;
-            if (!persistentTypes.Contains(behaviour.GetType())) continue;
-            if (behaviour.gameObject.scene.buildIndex != -1) continue; // เฉพาะ DontDestroyOnLoad
-
-            Destroy(behaviour.gameObject);
-        }
-
+        // Scene-bound flow: managers live in RuntimeHub and are recreated by loading scenes,
+        // so we only need to clear static transient trackers here.
         PlayerStartSpawner.LastKnownPositions.Clear();
     }
 
-    // (แถม) ปุ่ม Continue: โหลดฉากเกมเลยโดยไม่ลบค่า (เล่นต่อจากล่าสุด)
-    public void OnContinueClicked()
-    {
-        if (!TryOpenFirstMonsterPanel())
-        {
-            StartCoroutine(RequestFlowScene(gameSceneName));
-        }
-    }
-
-    private bool TryOpenFirstMonsterPanel()
-    {
-        if (!RuntimeHubUIPanelController.TryGet(out var panelController))
-        {
-            return false;
-        }
-
-        return panelController.OpenFirstMonsterSelectPanel();
-    }
-
-    private IEnumerator RequestFlowScene(string targetSceneName)
+    private IEnumerator RequestRuntimeHubScene()
     {
         if (isRequestingFlowScene)
         {
             yield break;
         }
 
-        if (string.IsNullOrEmpty(targetSceneName))
+        if (string.IsNullOrWhiteSpace(runtimeHubSceneName))
         {
-            isRequestingFlowScene = false;
             yield break;
         }
 
         isRequestingFlowScene = true;
 
-        if (SceneFlowController.TryRequestScene(targetSceneName))
+        if (Application.CanStreamedLevelBeLoaded(runtimeHubSceneName))
         {
-            isRequestingFlowScene = false;
-            yield break;
+            SceneManager.LoadScene(runtimeHubSceneName, LoadSceneMode.Single);
         }
-
-        // กรณีเริ่มจาก Menu โดยยังไม่มี controller: โหลด RuntimeHub แบบ additive ก่อน
-        if (!string.IsNullOrEmpty(bootstrapSceneName) &&
-            Application.CanStreamedLevelBeLoaded(bootstrapSceneName) &&
-            !SceneManager.GetSceneByName(bootstrapSceneName).isLoaded)
+        else
         {
-            AsyncOperation bootstrapLoad = SceneManager.LoadSceneAsync(bootstrapSceneName, LoadSceneMode.Additive);
-            while (bootstrapLoad != null && !bootstrapLoad.isDone)
-            {
-                yield return null;
-            }
-        }
-
-        float timeout = 2f;
-        while (timeout > 0f && !SceneFlowController.TryGet(out _))
-        {
-            timeout -= Time.unscaledDeltaTime;
-            yield return null;
-        }
-
-        if (!SceneFlowController.TryRequestScene(targetSceneName))
-        {
-            // fallback สุดท้ายเพื่อไม่ให้ flow ตาย
-            if (Application.CanStreamedLevelBeLoaded(targetSceneName))
-            {
-                SceneManager.LoadScene(targetSceneName);
-            }
-            else
-            {
-                Debug.LogError($"[MainMenu] Cannot load scene '{targetSceneName}'. Check Build Profiles.");
-            }
+            Debug.LogError($"[MainMenu] Cannot load RuntimeHub scene '{runtimeHubSceneName}'. Check Build Profiles.");
         }
 
         isRequestingFlowScene = false;
     }
-    
-    // (แถม) ปุ่ม Exit
-    public void OnExitClicked()
-    {
-        if (confirmExitPanel != null)
-        {
-            confirmExitPanel.SetActive(true);
-            return;
-        }
-
-        ConfirmExitYes();
-    }
-
-    public void ConfirmExitYes()
-    {
-        Application.Quit();
-        Debug.Log("Quit Game");
-
-        #if UNITY_EDITOR
-        UnityEditor.EditorApplication.isPlaying = false;
-        #endif
-    }
-
-    public void ConfirmExitNo()
-    {
-        if (confirmExitPanel != null)
-        {
-            confirmExitPanel.SetActive(false);
-        }
-    }
+ 
 }

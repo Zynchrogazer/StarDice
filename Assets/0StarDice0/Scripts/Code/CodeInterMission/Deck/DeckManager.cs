@@ -70,7 +70,6 @@ public class DeckManager : MonoBehaviour
         }
 
         cachedManager = this;
-        DontDestroyOnLoad(gameObject);
     }
 
     private void OnDestroy()
@@ -179,7 +178,7 @@ public class DeckManager : MonoBehaviour
 
         if (GameData.Instance != null)
         {
-            GameData.Instance.selectedCards = selectedCards;
+            GameData.Instance.SetSelectedCards(selectedCards);
         }
 
         Debug.Log("💾 Deck Auto-Saved!");
