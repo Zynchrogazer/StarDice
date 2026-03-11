@@ -418,18 +418,57 @@ public class DeckManager : MonoBehaviour
         }
     }
 
+    private bool isTransitioningToNextScene;
+
     // ฟังก์ชันเดิม (ยังคงไว้เผื่อมีการเปลี่ยน Scene)
     public void ConfirmDeckAndGoNextScene(string nextScene)
     {
-        SaveCurrentDeck(); // เซฟก่อนเปลี่ยนฉากเพื่อความชัวร์ + push deck to bootstrap store
-        SceneManager.LoadScene(nextScene, LoadSceneMode.Additive);
-        
-        var canvasList = FindObjectsOfType<Canvas>();
-        foreach (var canvas in canvasList)
+        if (isTransitioningToNextScene)
         {
-            if (canvas.gameObject.scene.name == SceneManager.GetActiveScene().name)
-                canvas.enabled = false;
+            return;
         }
+
+        SaveCurrentDeck(); // เซฟก่อนเปลี่ยนฉากเพื่อความชัวร์ + push deck to bootstrap store
+        StartCoroutine(LoadNextSceneAdditiveAndHideRuntimeHub(nextScene));
+    }
+
+    private IEnumerator LoadNextSceneAdditiveAndHideRuntimeHub(string nextScene)
+    {
+        if (string.IsNullOrWhiteSpace(nextScene))
+        {
+            Debug.LogError("[DeckManager] nextScene is null or empty.");
+            yield break;
+        }
+
+        if (!Application.CanStreamedLevelBeLoaded(nextScene))
+        {
+            Debug.LogError($"[DeckManager] Cannot load scene '{nextScene}'. Check Build Profiles.");
+            yield break;
+        }
+
+        isTransitioningToNextScene = true;
+        Scene sourceScene = gameObject.scene;
+
+        AsyncOperation loadOperation = SceneManager.LoadSceneAsync(nextScene, LoadSceneMode.Additive);
+        yield return loadOperation;
+
+        Scene loadedScene = SceneManager.GetSceneByName(nextScene);
+        if (loadedScene.IsValid() && loadedScene.isLoaded)
+        {
+            SceneManager.SetActiveScene(loadedScene);
+            DynamicGI.UpdateEnvironment();
+        }
+
+        Canvas[] canvasList = FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        foreach (Canvas canvas in canvasList)
+        {
+            if (canvas != null && canvas.gameObject.scene == sourceScene)
+            {
+                canvas.enabled = false;
+            }
+        }
+
+        isTransitioningToNextScene = false;
     }
     // ในไฟล์ DeckManager.cs
 
