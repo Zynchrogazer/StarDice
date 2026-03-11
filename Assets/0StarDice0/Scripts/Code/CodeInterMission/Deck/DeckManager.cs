@@ -221,11 +221,17 @@ public class DeckManager : MonoBehaviour
 
     public void RemoveCard(int index)
     {
-        if (cardUse[index] != null) 
-        { 
-            cardUse[index] = null; 
-            UpdateUseCardUI(); 
-            
+        if (cardUse == null || index < 0 || index >= cardUse.Length)
+        {
+            Debug.LogWarning($"DeckManager: RemoveCard index ไม่ถูกต้อง ({index})");
+            return;
+        }
+
+        if (cardUse[index] != null)
+        {
+            cardUse[index] = null;
+            UpdateUseCardUI();
+
             SaveCurrentDeck(); // <--- เพิ่ม: ลบปุ๊บเซฟปั๊บ
         }
     }
@@ -318,14 +324,23 @@ public class DeckManager : MonoBehaviour
     
     void BindRemoveButtons()
     {
-        if (removeButtons != null && removeButtons.Length > 0)
+        if (removeButtons == null || removeButtons.Length == 0)
         {
-            for (int i = 0; i < removeButtons.Length; i++)
+            return;
+        }
+
+        for (int i = 0; i < removeButtons.Length; i++)
+        {
+            Button button = removeButtons[i];
+            if (button == null)
             {
-                int index = i;
-                removeButtons[i].onClick.RemoveAllListeners();
-                removeButtons[i].onClick.AddListener(() => RemoveCard(index));
+                Debug.LogWarning($"DeckManager: removeButtons[{i}] เป็น null (ยังไม่ได้ผูก Button component หรือ Object ไม่ถูกต้อง)");
+                continue;
             }
+
+            int index = i;
+            button.onClick.RemoveAllListeners();
+            button.onClick.AddListener(() => RemoveCard(index));
         }
     }
 

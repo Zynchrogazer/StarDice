@@ -3,7 +3,7 @@ using UnityEngine.EventSystems;
 using TMPro;
 using UnityEngine.UI;
 
-public class ButtonTextColorChange : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
+public class ButtonTextColorChange : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
 {
     public TextMeshProUGUI targetText; // ข้อความที่จะเปลี่ยนสี
     public Color normalColor = Color.white;
@@ -22,6 +22,17 @@ public class ButtonTextColorChange : MonoBehaviour, IPointerEnterHandler, IPoint
     }
 
     public void OnPointerExit(PointerEventData eventData)
+    {
+        if (targetText != null)
+            targetText.color = normalColor;
+    }
+
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        ResetToNormalColor();
+    }
+
+    public void ResetToNormalColor()
     {
         if (targetText != null)
             targetText.color = normalColor;
