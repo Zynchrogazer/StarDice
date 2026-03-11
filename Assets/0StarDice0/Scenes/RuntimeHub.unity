@@ -776,26 +776,26 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   useCardImages:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 5251872966270956157}
+  - {fileID: 8202837673357316135}
+  - {fileID: 5153680560865304443}
+  - {fileID: 4919314281774517186}
+  - {fileID: 2554529329195752259}
+  - {fileID: 2718527136919780351}
+  - {fileID: 6839830454868902454}
+  - {fileID: 6709595615351062210}
+  - {fileID: 517791968323179113}
+  - {fileID: 898750743278443621}
+  - {fileID: 4981195045474892082}
+  - {fileID: 8880861691650965074}
+  - {fileID: 8842679022220426221}
+  - {fileID: 1356832018696184371}
+  - {fileID: 1407775855869272323}
+  - {fileID: 7739457698238512442}
+  - {fileID: 1047837431440224607}
+  - {fileID: 4278029852401401473}
+  - {fileID: 6410037963772798753}
+  - {fileID: 2035718403912691914}
   defaultSprite: {fileID: 21300000, guid: af5a8f6825b399e4992166b4b85a1068, type: 3}
 --- !u!1 &1708905220
 GameObject:
@@ -11184,7 +11184,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!222 &1069759885827668067
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -27143,9 +27143,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: SceneChangeManager, Assembly-CSharp
-        m_MethodName: GoToScene
+      - m_Target: {fileID: 1583492662}
+        m_TargetAssemblyTypeName: DeckManager, Assembly-CSharp
+        m_MethodName: ConfirmDeckAndGoNextScene
         m_Mode: 5
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -33915,7 +33915,6 @@ GameObject:
   - component: {fileID: 7989229610147270280}
   - component: {fileID: 2737479984674237466}
   - component: {fileID: 8764797056928539705}
-  - component: {fileID: 3653964767353046303}
   - component: {fileID: 8851291237116479555}
   m_Layer: 5
   m_Name: Button_Next
@@ -38168,28 +38167,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &3653964767353046303
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3207845991116808228}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b8bc61dfbf767d64caa04e948057186f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  sceneToLoad: FirstDeck
-  normaSystem: {fileID: 0}
-  gameEventManager: {fileID: 0}
-  gameTurnManager: {fileID: 0}
-  resetAllStateBeforeLoad: 0
-  autoResetSceneName: InterMission
-  autoResetSceneNames:
-  - ShopIntermission
-  autoDestroyBoardCoreSystemsOnIntermission: 1
-  hardResetRuntimeOnIntermissionExit: 1
 --- !u!114 &3661179921083710122
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -62599,16 +62576,28 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: SceneChangeManager, Assembly-CSharp
-        m_MethodName: GoToScene
-        m_Mode: 5
+      - m_Target: {fileID: 715721849253333129}
+        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+        m_MethodName: SetActive
+        m_Mode: 6
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: FirstMonsterSelect
+          m_BoolArgument: 1
+        m_CallState: 2
+      - m_Target: {fileID: 7198492019833097922}
+        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+        m_MethodName: SetActive
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
 --- !u!114 &6133647568613268664
@@ -86924,16 +86913,28 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: DeckManager, Assembly-CSharp
-        m_MethodName: ConfirmDeckAndGoNextScene
-        m_Mode: 5
+      - m_Target: {fileID: 7198492019833097922}
+        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+        m_MethodName: SetActive
+        m_Mode: 6
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: TestMain
+          m_BoolArgument: 1
+        m_CallState: 2
+      - m_Target: {fileID: 715721849253333129}
+        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+        m_MethodName: SetActive
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
 --- !u!224 &8765606661705012843
@@ -91684,11 +91685,11 @@ SceneRoots:
   - {fileID: 1876237734}
   - {fileID: 653762973}
   - {fileID: 1393757534}
-  - {fileID: 1708905221}
   - {fileID: 530681172}
+  - {fileID: 1708905221}
   - {fileID: 2131011755}
-  - {fileID: 9091736496249121567}
   - {fileID: 1389685894}
+  - {fileID: 9091736496249121567}
   - {fileID: 2617767264195984845}
   - {fileID: 1448420268}
   - {fileID: 1489963497}
