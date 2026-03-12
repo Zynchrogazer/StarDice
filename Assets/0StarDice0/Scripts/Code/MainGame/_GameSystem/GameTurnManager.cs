@@ -83,9 +83,6 @@ public class GameTurnManager : MonoBehaviour
         }
 
         cachedManager = this;
-
-        // ✅ บรรทัดนี้สำคัญที่สุด! ทำให้ Manager ไม่ตายเมื่อเปลี่ยนฉาก
-        DontDestroyOnLoad(gameObject);
     }
 
     private void OnDestroy()
@@ -343,22 +340,11 @@ public class GameTurnManager : MonoBehaviour
         PlayerState[] discoveredPlayers = FindObjectsByType<PlayerState>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         List<PlayerState> validPlayers = new List<PlayerState>();
 
-        // 2. 🗺️ หาแผนที่ของฉากปัจจุบันเตรียมไว้
+        // KISS: ใช้ฉากของ RouteManager เป็น board scene หลัก แล้วดึงผู้เล่นเฉพาะฉากนี้
         RouteManager currentMap = FindObjectOfType<RouteManager>();
-        Scene activeScene = SceneManager.GetActiveScene();
+        Scene boardScene = currentMap != null ? currentMap.gameObject.scene : SceneManager.GetActiveScene();
 
         if (currentMap == null) Debug.LogError("😱 [Manager] ไม่เจอ RouteManager ในฉากนี้!");
-
-        bool hasPersistentPlayers = false;
-        for (int i = 0; i < discoveredPlayers.Length; i++)
-        {
-            PlayerState candidate = discoveredPlayers[i];
-            if (candidate != null && candidate.gameObject.scene.buildIndex == -1)
-            {
-                hasPersistentPlayers = true;
-                break;
-            }
-        }
 
         for (int i = 0; i < discoveredPlayers.Length; i++)
         {
@@ -374,19 +360,7 @@ public class GameTurnManager : MonoBehaviour
                 continue;
             }
 
-            bool isPersistentPlayer = obj.scene.buildIndex == -1;
-            bool isInActiveScene = obj.scene == activeScene;
-
-            // โหมดปกติ: ถ้ามีผู้เล่นข้ามฉาก ให้เลือกเฉพาะชุดนั้นก่อน
-            // โหมด fallback: ถ้าไม่พบผู้เล่นข้ามฉากเลย ให้ใช้ผู้เล่นจาก active scene เท่านั้น
-            if (hasPersistentPlayers)
-            {
-                if (!isPersistentPlayer)
-                {
-                    continue;
-                }
-            }
-            else if (!isInActiveScene)
+            if (obj.scene != boardScene)
             {
                 continue;
             }
@@ -410,8 +384,6 @@ public class GameTurnManager : MonoBehaviour
         });
 
         allPlayers.AddRange(validPlayers);
-
-        string sourceMode = hasPersistentPlayers ? "persistent players" : "active-scene players (fallback)";
-        Debug.Log($"<color=green>[Manager] ♻️ Refresh Players & Map: {allPlayers.Count} players from {sourceMode}</color>");
+        Debug.Log($"<color=green>[Manager] ♻️ Refresh Players & Map: {allPlayers.Count} players from board scene '{boardScene.name}'</color>");
     }
 }
