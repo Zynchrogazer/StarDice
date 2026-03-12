@@ -130,11 +130,6 @@ public class CharacterSelectMenu : MonoBehaviour
         // --- ส่วนบันทึกการเลือก (single point of truth update path) ---
         ApplySelectedMonsterState(element);
 
-        // RuntimeHub flow: หลังเลือกมอนเริ่มต้นครั้งแรก ให้บังคับ Deck กลับเป็น Common-only
-        if (isFirstCharacterSelection && DeckManager.TryGet(out var deckManager))
-        {
-            deckManager.ResetDeckForRuntimeHubStart();
-        }
 
         // รีเฟรชปุ่ม
         UpdateAllButtons();
