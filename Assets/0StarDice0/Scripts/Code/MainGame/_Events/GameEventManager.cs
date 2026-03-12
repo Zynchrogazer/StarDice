@@ -110,7 +110,6 @@ public class GameEventManager : MonoBehaviour
         if (managers.Length > 1) { Destroy(gameObject); return; }
 
         cachedManager = this;
-        DontDestroyOnLoad(gameObject);
     }
 
     private void OnDestroy()
