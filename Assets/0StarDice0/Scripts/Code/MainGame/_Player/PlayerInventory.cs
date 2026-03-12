@@ -31,7 +31,6 @@ public class PlayerInventory : MonoBehaviour
             return;
         }
 
-        DontDestroyOnLoad(gameObject);
     }
 
     // --- Logic การจัดการของ (ย้ายมาจาก PlayerState) ---

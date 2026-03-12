@@ -49,7 +49,6 @@ public class NormaSystem : MonoBehaviour
         }
 
         cachedManager = this;
-        DontDestroyOnLoad(gameObject);
     }
 
     private void OnDestroy()

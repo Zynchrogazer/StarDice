@@ -14,7 +14,6 @@ public class PlayerStatAggregator : MonoBehaviour
             return;
         }
 
-        DontDestroyOnLoad(gameObject);
         ResolveManagers();
     }
 
