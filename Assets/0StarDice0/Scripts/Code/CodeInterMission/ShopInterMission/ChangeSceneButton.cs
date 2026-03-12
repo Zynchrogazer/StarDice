@@ -30,13 +30,15 @@ public class ChangeSceneButton : MonoBehaviour
 
         bool shouldResetForTargetScene = resetAllStateBeforeLoad || ShouldAutoResetForTargetScene();
 
-        if (shouldResetForTargetScene && hardResetRuntimeOnIntermissionExit)
+        bool requiresHardReset = shouldResetForTargetScene && hardResetRuntimeOnIntermissionExit;
+
+        if (requiresHardReset)
         {
             HardResetRuntimeStateKeepPersistentCredit();
         }
         else
         {
-            if (ShouldDestroyBoardCoreSystemsForTargetScene())
+            if (ShouldDestroyBoardCoreSystemsForTargetScene(shouldResetForTargetScene))
             {
                 DestroyBoardCoreSystems();
             }
@@ -47,7 +49,8 @@ public class ChangeSceneButton : MonoBehaviour
             }
         }
 
-        if (SceneFlowController.TryRequestScene(sceneToLoad))
+        // Hard-reset may destroy runtime objects used by SceneFlowController; use local fallback load in that case.
+        if (!requiresHardReset && SceneFlowController.TryRequestScene(sceneToLoad))
         {
             return;
         }
@@ -155,7 +158,6 @@ public class ChangeSceneButton : MonoBehaviour
             }
         }
 
-        isFallbackTransitioning = false;
     }
 
     private bool ShouldAutoResetForTargetScene()
@@ -186,14 +188,9 @@ public class ChangeSceneButton : MonoBehaviour
         return sceneToLoad.IndexOf("intermission", StringComparison.OrdinalIgnoreCase) >= 0;
     }
 
-    private bool ShouldDestroyBoardCoreSystemsForTargetScene()
+    private bool ShouldDestroyBoardCoreSystemsForTargetScene(bool shouldResetForTargetScene)
     {
-        if (!autoDestroyBoardCoreSystemsOnIntermission)
-        {
-            return false;
-        }
-
-        return ShouldAutoResetForTargetScene();
+        return autoDestroyBoardCoreSystemsOnIntermission && shouldResetForTargetScene;
     }
 
     private void HardResetRuntimeStateKeepPersistentCredit()
