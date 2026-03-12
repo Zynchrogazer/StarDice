@@ -1030,7 +1030,56 @@ public class GameEventManager : MonoBehaviour
 
         RememberCurrentBoardScene();
         yield return null;
-        SceneManager.LoadScene(sceneName);
+
+        if (SceneFlowController.TryRequestScene(sceneName))
+        {
+            yield break;
+        }
+
+        if (!Application.CanStreamedLevelBeLoaded(sceneName))
+        {
+            Debug.LogError($"[EventManager] Cannot load minigame scene '{sceneName}'. Check Build Profiles.");
+            ResolveGameTurnManager()?.RequestEndTurn();
+            yield break;
+        }
+
+        yield return LoadSceneAdditiveThenUnloadCurrent(sceneName);
+    }
+
+    private IEnumerator LoadSceneAdditiveThenUnloadCurrent(string targetSceneName)
+    {
+        Scene currentActiveScene = SceneManager.GetActiveScene();
+
+        AsyncOperation loadOp = SceneManager.LoadSceneAsync(targetSceneName, LoadSceneMode.Additive);
+        if (loadOp == null)
+        {
+            Debug.LogError($"[EventManager] Failed to start additive load for '{targetSceneName}'.");
+            ResolveGameTurnManager()?.RequestEndTurn();
+            yield break;
+        }
+
+        while (!loadOp.isDone)
+        {
+            yield return null;
+        }
+
+        Scene targetScene = SceneManager.GetSceneByName(targetSceneName);
+        if (targetScene.IsValid() && targetScene.isLoaded)
+        {
+            SceneManager.SetActiveScene(targetScene);
+        }
+
+        if (currentActiveScene.IsValid()
+            && currentActiveScene.isLoaded
+            && !string.Equals(currentActiveScene.name, targetSceneName, System.StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(currentActiveScene.name, "RuntimeHub", System.StringComparison.OrdinalIgnoreCase))
+        {
+            AsyncOperation unloadOp = SceneManager.UnloadSceneAsync(currentActiveScene);
+            while (unloadOp != null && !unloadOp.isDone)
+            {
+                yield return null;
+            }
+        }
     }
 
     private string ResolveMinigameSceneName(string minigameKey)
