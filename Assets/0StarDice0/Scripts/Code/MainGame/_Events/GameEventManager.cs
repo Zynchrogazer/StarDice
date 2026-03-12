@@ -49,6 +49,23 @@ public class GameEventManager : MonoBehaviour
             manager.isRandomSpinning = value;
     }
 
+    public static bool TryLoadBattleSceneAdditive(string battleSceneName)
+    {
+        if (!TryGet(out var manager) || string.IsNullOrWhiteSpace(battleSceneName))
+        {
+            return false;
+        }
+
+        if (!Application.CanStreamedLevelBeLoaded(battleSceneName))
+        {
+            Debug.LogError($"[EventManager] Cannot load battle scene '{battleSceneName}'. Check Build Profiles.");
+            return false;
+        }
+
+        manager.StartCoroutine(manager.LoadBattleSceneAdditiveCoroutine(battleSceneName));
+        return true;
+    }
+
     public const string LastBoardSceneKey = "LastBoardSceneName";
 
     [Header("Scene Settings")]
@@ -78,12 +95,12 @@ public class GameEventManager : MonoBehaviour
     private Material boardSkyboxBeforeBattle;
     private bool hasBoardSkyboxBeforeBattle;
 
-    public int[] windTeleportTargetIDs; 
+    public int[] windTeleportTargetIDs;
     public string windTeleportPanelName = "windteleportpanel";
     // ✅ ตัวแปรเช็คสถานะการเล่น (เชื่อมกับ State Machine)
 
     public Sprite creditSprite; // 🖼️ ลากรูปเหรียญมาใส่ตรงนี้
-    
+
     public bool isEventProcessing => isRandomSpinning || (ResolveGameTurnManager() != null && ResolveGameTurnManager().currentState == GameState.EventProcessing);
 
     private GameTurnManager ResolveGameTurnManager()
@@ -149,6 +166,9 @@ public class GameEventManager : MonoBehaviour
 
             // ล้างค่าสุ่มค้าง
             isRandomSpinning = false;
+
+            int listenerCount = OnBoardSceneReady?.GetInvocationList().Length ?? 0;
+            Debug.Log($"[EventManager] Board scene ready: '{scene.name}' (listeners: {listenerCount})");
 
             // ตะโกนบอก Manager ว่าพร้อมแล้ว
             OnBoardSceneReady?.Invoke();
@@ -251,7 +271,7 @@ public class GameEventManager : MonoBehaviour
         }
     }
 
-   
+
 
     #endregion
 
@@ -376,9 +396,9 @@ public class GameEventManager : MonoBehaviour
             p.hasIceEffect = true; // ✅ ติดสถานะแช่แข็ง
             Debug.Log($"<color=cyan>❄️ Player {target.name} ติดสถานะ Ice Effect! (ทอยครั้งหน้าหารครึ่ง)</color>");
         }
-        
+
         // แสดง Panel แจ้งเตือน (อย่าลืมสร้าง Panel ชื่อ icepanel ใน Unity)
-        ShowPanel("icepanel", true); 
+        ShowPanel("icepanel", true);
     }
 
     private void WindTeleportEffect(GameObject target)
@@ -421,28 +441,28 @@ public class GameEventManager : MonoBehaviour
 
 
     [Header("ลากรูปใส่ตรงนี้ (เรียงตามลำดับ 0, 1, 2...)")]
-    public Sprite[] itemImages; 
+    public Sprite[] itemImages;
 
     [Header("ลาก UI Image เปล่าๆ มาใส่ตรงนี้")]
     public Image showImage;
-    
-    public ItemID Sword = ItemID.Sword; // สมมติกล่องนี้ดรอปดาบไฟ
-    public ItemID Armor = ItemID.Armor; 
-    public ItemID DawnRing = ItemID.DawnRign; 
-    public ItemID WhiteFeather = ItemID.WhiteFeather; 
-    public ItemID RecoverRing = ItemID.RecoverRing; 
-    public ItemID HearthNeckless = ItemID.HearthNeckless; 
-   
-   public ItemID KnightSword = ItemID.KnightSword; 
-   public ItemID KnightArmor = ItemID.KnightArmor; 
-   public ItemID KnightShoes = ItemID.KnightShoes; 
 
-   public ItemID LightSpear = ItemID.LightSpear; 
-   public ItemID FireLegendarySword = ItemID.FireLegendarySword; 
-   public ItemID WaterLegendaryArmor = ItemID.WaterLegendaryArmor; 
-   public ItemID WindSpear = ItemID.WindSpear; 
-   public ItemID EarthLegendaryArmor = ItemID.EarthLegendaryArmor; 
-   public ItemID DarkLegendaryRing = ItemID.DarkLegendaryRing; 
+    public ItemID Sword = ItemID.Sword; // สมมติกล่องนี้ดรอปดาบไฟ
+    public ItemID Armor = ItemID.Armor;
+    public ItemID DawnRing = ItemID.DawnRign;
+    public ItemID WhiteFeather = ItemID.WhiteFeather;
+    public ItemID RecoverRing = ItemID.RecoverRing;
+    public ItemID HearthNeckless = ItemID.HearthNeckless;
+
+   public ItemID KnightSword = ItemID.KnightSword;
+   public ItemID KnightArmor = ItemID.KnightArmor;
+   public ItemID KnightShoes = ItemID.KnightShoes;
+
+   public ItemID LightSpear = ItemID.LightSpear;
+   public ItemID FireLegendarySword = ItemID.FireLegendarySword;
+   public ItemID WaterLegendaryArmor = ItemID.WaterLegendaryArmor;
+   public ItemID WindSpear = ItemID.WindSpear;
+   public ItemID EarthLegendaryArmor = ItemID.EarthLegendaryArmor;
+   public ItemID DarkLegendaryRing = ItemID.DarkLegendaryRing;
     private void ApplyTreasureBoxEffect(GameObject target)
     {
         PlayerState p = target.GetComponent<PlayerState>();
@@ -476,114 +496,114 @@ public class GameEventManager : MonoBehaviour
         int roll = Random.Range(1, 101);
         if (roll < 51)
         {
-            int randomItem = Random.Range(0, 6); 
+            int randomItem = Random.Range(0, 6);
 
             if (randomItem == 0)
             {
                 EquipmentManager.Instance.UnlockItem(Sword);
-                showImage.sprite = itemImages[0]; 
+                showImage.sprite = itemImages[0];
                 SafeSetActive(showImage != null ? showImage.gameObject : null, true);
                 Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
             }
             else if(randomItem == 1){
                 EquipmentManager.Instance.UnlockItem(Armor);
-                showImage.sprite = itemImages[1]; 
+                showImage.sprite = itemImages[1];
                 SafeSetActive(showImage != null ? showImage.gameObject : null, true);
                 Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
             }
             else if(randomItem == 2){
                 EquipmentManager.Instance.UnlockItem(DawnRing);
-                showImage.sprite = itemImages[2]; 
+                showImage.sprite = itemImages[2];
                 SafeSetActive(showImage != null ? showImage.gameObject : null, true);
                 Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
             }
             else if(randomItem == 3){
                 EquipmentManager.Instance.UnlockItem(WhiteFeather);
-                showImage.sprite = itemImages[3]; 
+                showImage.sprite = itemImages[3];
                 SafeSetActive(showImage != null ? showImage.gameObject : null, true);
                 Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
             }
             else if(randomItem == 4){
                 EquipmentManager.Instance.UnlockItem(RecoverRing);
-                showImage.sprite = itemImages[4]; 
+                showImage.sprite = itemImages[4];
                 SafeSetActive(showImage != null ? showImage.gameObject : null, true);
                 Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
             }
             else if(randomItem == 5){
                 EquipmentManager.Instance.UnlockItem(HearthNeckless);
-                showImage.sprite = itemImages[5]; 
+                showImage.sprite = itemImages[5];
                 SafeSetActive(showImage != null ? showImage.gameObject : null, true);
                 Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
             }
         }
         else if (roll < 71 && roll > 50)
         {
-            int randomItem = Random.Range(0, 3); 
+            int randomItem = Random.Range(0, 3);
 
             if (randomItem == 0)
             {
                 EquipmentManager.Instance.UnlockItem(KnightSword);
-                showImage.sprite = itemImages[6]; 
+                showImage.sprite = itemImages[6];
                 SafeSetActive(showImage != null ? showImage.gameObject : null, true);
                 Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
             }
             else if(randomItem == 1){
                 EquipmentManager.Instance.UnlockItem(KnightArmor);
-                showImage.sprite = itemImages[7]; 
+                showImage.sprite = itemImages[7];
                 SafeSetActive(showImage != null ? showImage.gameObject : null, true);
                 Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
             }
             else if(randomItem == 2){
                 EquipmentManager.Instance.UnlockItem(DawnRing);
-                showImage.sprite = itemImages[8]; 
+                showImage.sprite = itemImages[8];
                 SafeSetActive(showImage != null ? showImage.gameObject : null, true);
                 Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
             }
         }
         else if (roll > 99)
         {
-            int randomItem = Random.Range(0, 6); 
+            int randomItem = Random.Range(0, 6);
 
             if (randomItem == 0)
             {
                 EquipmentManager.Instance.UnlockItem(LightSpear);
-                showImage.sprite = itemImages[9]; 
+                showImage.sprite = itemImages[9];
                 SafeSetActive(showImage != null ? showImage.gameObject : null, true);
                 Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
             }
             else if(randomItem == 1){
                 EquipmentManager.Instance.UnlockItem(FireLegendarySword);
-                showImage.sprite = itemImages[10]; 
+                showImage.sprite = itemImages[10];
                 SafeSetActive(showImage != null ? showImage.gameObject : null, true);
                 Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
             }
             else if(randomItem == 2){
                 EquipmentManager.Instance.UnlockItem(WaterLegendaryArmor);
-                showImage.sprite = itemImages[11]; 
+                showImage.sprite = itemImages[11];
                 SafeSetActive(showImage != null ? showImage.gameObject : null, true);
                 Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
             }
             else if(randomItem == 3){
                 EquipmentManager.Instance.UnlockItem(WindSpear);
-                showImage.sprite = itemImages[12]; 
+                showImage.sprite = itemImages[12];
                 SafeSetActive(showImage != null ? showImage.gameObject : null, true);
                 Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
             }
             else if(randomItem == 4){
                 EquipmentManager.Instance.UnlockItem(EarthLegendaryArmor);
-                showImage.sprite = itemImages[13]; 
+                showImage.sprite = itemImages[13];
                 SafeSetActive(showImage != null ? showImage.gameObject : null, true);
                 Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
             }
             else if(randomItem == 5){
                 EquipmentManager.Instance.UnlockItem(DarkLegendaryRing);
-                showImage.sprite = itemImages[14]; 
+                showImage.sprite = itemImages[14];
                 SafeSetActive(showImage != null ? showImage.gameObject : null, true);
                 Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
             }
             else
             {
-                showImage.sprite = itemImages[15]; 
+                showImage.sprite = itemImages[15];
                 SafeSetActive(showImage != null ? showImage.gameObject : null, true);
                 Debug.Log("ผู้เล่นไม่ได้ไอเท็ม");
             }
@@ -971,6 +991,16 @@ public class GameEventManager : MonoBehaviour
         int randomIndex = Random.Range(0, Scenes.Length);
         string battleSceneName = Scenes[randomIndex];
 
+        yield return LoadBattleSceneAdditiveCoroutine(battleSceneName);
+    }
+
+    private IEnumerator LoadBattleSceneAdditiveCoroutine(string battleSceneName)
+    {
+        if (string.IsNullOrWhiteSpace(battleSceneName))
+        {
+            yield break;
+        }
+
         if (SceneManager.GetSceneByName(battleSceneName).isLoaded)
         {
             bool hidBoardForLoadedBattle = HideBoardSceneRootsForBattle();
@@ -1130,42 +1160,48 @@ public class GameEventManager : MonoBehaviour
        }
 
        string currentSceneName = SceneManager.GetActiveScene().name;
+       string battleSceneName = string.Empty;
 
-       if (currentSceneName == "MainLight") 
+       if (currentSceneName == "MainLight")
        {
-           if(bosslevel < 11) SceneManager.LoadScene("FinalBoss hard"); 
-           else if(bosslevel >=11  && bosslevel <= 15) SceneManager.LoadScene("FianlBoss medium");
-           else SceneManager.LoadScene("FinalBoss");
+           if(bosslevel < 11) battleSceneName = "FinalBoss hard";
+           else if(bosslevel >=11  && bosslevel <= 15) battleSceneName = "FianlBoss medium";
+           else battleSceneName = "FinalBoss";
        }
-       else if (currentSceneName == "TestMain") 
+       else if (currentSceneName == "TestMain")
        {
-           if(bosslevel < 11) SceneManager.LoadScene("bossfire hard"); 
-           else if(bosslevel >=11  && bosslevel <= 15) SceneManager.LoadScene("bossfire medium");
-           else SceneManager.LoadScene("bossfire");
+           if(bosslevel < 11) battleSceneName = "bossfire hard";
+           else if(bosslevel >=11  && bosslevel <= 15) battleSceneName = "bossfire medium";
+           else battleSceneName = "bossfire";
        }
-       else if (currentSceneName == "MainWater") 
+       else if (currentSceneName == "MainWater")
        {
-           if(bosslevel < 11) SceneManager.LoadScene("boss water hard"); 
-           else if(bosslevel >=11  && bosslevel <= 15) SceneManager.LoadScene("boss water medium");
-           else SceneManager.LoadScene("boss water");
+           if(bosslevel < 11) battleSceneName = "boss water hard";
+           else if(bosslevel >=11  && bosslevel <= 15) battleSceneName = "boss water medium";
+           else battleSceneName = "boss water";
        }
        else if (currentSceneName == "MainWind")
        {
-           if(bosslevel < 11) SceneManager.LoadScene("boss wind hard"); 
-           else if(bosslevel >=11  && bosslevel <= 15) SceneManager.LoadScene("boss wind medium");
-           else SceneManager.LoadScene("boss wind");
+           if(bosslevel < 11) battleSceneName = "boss wind hard";
+           else if(bosslevel >=11  && bosslevel <= 15) battleSceneName = "boss wind medium";
+           else battleSceneName = "boss wind";
        }
        else if (currentSceneName == "MainEarth")
        {
-           if(bosslevel < 11) SceneManager.LoadScene("boss earth hard"); 
-           else if(bosslevel >=11  && bosslevel <= 15) SceneManager.LoadScene("boss earth medium");
-           else SceneManager.LoadScene("boss earth");
+           if(bosslevel < 11) battleSceneName = "boss earth hard";
+           else if(bosslevel >=11  && bosslevel <= 15) battleSceneName = "boss earth medium";
+           else battleSceneName = "boss earth";
        }
        else if (currentSceneName == "MainDark")
        {
-           if(bosslevel < 11) SceneManager.LoadScene("boss dark hard");
-           else if(bosslevel >=11  && bosslevel <= 15) SceneManager.LoadScene("boss dark medium");
-           else SceneManager.LoadScene("boss dark");
+           if(bosslevel < 11) battleSceneName = "boss dark hard";
+           else if(bosslevel >=11  && bosslevel <= 15) battleSceneName = "boss dark medium";
+           else battleSceneName = "boss dark";
+       }
+
+       if (!string.IsNullOrEmpty(battleSceneName))
+       {
+           yield return LoadBattleSceneAdditiveCoroutine(battleSceneName);
        }
 
        countbattle = 0;
@@ -1178,13 +1214,19 @@ public class GameEventManager : MonoBehaviour
          string currentSceneName = SceneManager.GetActiveScene().name;
          ShowPanel("specialboss", false);
          yield return new WaitForSeconds(1f);
+         string battleSceneName = string.Empty;
 
-         if(currentSceneName == "MainLight") SceneManager.LoadScene("SpecialBoss"); 
-         else if (currentSceneName == "TestMain") SceneManager.LoadScene("specialbossfire"); 
-         else if (currentSceneName == "MainWater") SceneManager.LoadScene("Special boss water"); 
-         else if (currentSceneName == "MainWind") SceneManager.LoadScene("special boss wind"); 
-         else if (currentSceneName == "MainEarth") SceneManager.LoadScene("specialboss earth"); 
-         else if (currentSceneName == "MainDark") SceneManager.LoadScene("special boss dark"); 
+         if(currentSceneName == "MainLight") battleSceneName = "SpecialBoss";
+         else if (currentSceneName == "TestMain") battleSceneName = "specialbossfire";
+         else if (currentSceneName == "MainWater") battleSceneName = "Special boss water";
+         else if (currentSceneName == "MainWind") battleSceneName = "special boss wind";
+         else if (currentSceneName == "MainEarth") battleSceneName = "specialboss earth";
+         else if (currentSceneName == "MainDark") battleSceneName = "special boss dark";
+
+         if (!string.IsNullOrEmpty(battleSceneName))
+         {
+             yield return LoadBattleSceneAdditiveCoroutine(battleSceneName);
+         }
     }
 
     private void ShowPanel(string panelKey, bool autoClose)

@@ -53,7 +53,7 @@ public class PlayerUIController : MonoBehaviour
             hpText.text = $"HP: {myPlayer.PlayerHealth}";
 
         if (creditText != null)
-            creditText.text = $"Credit: {myPlayer.PlayerCredit}";
+            creditText.text = $"Credit: {ResolvePersistentCredit()}";
 
         if (starText != null)
             starText.text = $"{myPlayer.PlayerStar}";
@@ -63,6 +63,19 @@ public class PlayerUIController : MonoBehaviour
 
         if (levelText != null)
             levelText.text = $"Lv. {myPlayer.PlayerLevel}";
+    }
+
+    private int ResolvePersistentCredit()
+    {
+        // KISS: ใช้เครดิตจากข้อมูลถาวรเป็นหลัก เพื่อไม่ให้รีเซ็ตตาม runtime board state
+        if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
+            return GameData.Instance.selectedPlayer.Credit;
+
+        if (myPlayer != null && myPlayer.selectedPlayerPreset != null)
+            return myPlayer.selectedPlayerPreset.Credit;
+
+        // fallback กันพังตอนเทสฉากเดี่ยว
+        return myPlayer != null ? myPlayer.PlayerCredit : 0;
     }
 
     /// <summary>

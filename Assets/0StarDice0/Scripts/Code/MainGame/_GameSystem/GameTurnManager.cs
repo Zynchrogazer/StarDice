@@ -124,6 +124,23 @@ public class GameTurnManager : MonoBehaviour
     {
         yield return null;
 
+        if (allPlayers == null || allPlayers.Count == 0)
+        {
+            RefreshPlayers();
+            if (allPlayers == null || allPlayers.Count == 0)
+            {
+                Debug.LogError("[GameTurnManager] Cannot start turn: no players found in board scene.");
+                SetState(GameState.Idle);
+                yield break;
+            }
+        }
+
+        if (currentPlayerIndex < 0 || currentPlayerIndex >= allPlayers.Count)
+        {
+            Debug.LogWarning($"[GameTurnManager] currentPlayerIndex out of range ({currentPlayerIndex}). Reset to 0.");
+            currentPlayerIndex = 0;
+        }
+
         SetState(GameState.Preparing);
         PlayerState currentPlayer = CurrentPlayer;
         if (currentPlayer != null)
@@ -159,11 +176,15 @@ public class GameTurnManager : MonoBehaviour
 
             if (ResolveDiceRoller() != null)
                 ResolveDiceRoller().RollDiceForAI();
+            else
+                Debug.LogError("[GameTurnManager] DiceRollerFromPNG not found for AI turn.");
         }
         else
         {
             if (ResolveDiceRoller() != null)
                 ResolveDiceRoller().ForceEnableButton();
+            else
+                Debug.LogError("[GameTurnManager] DiceRollerFromPNG not found for player turn.");
         }
     }
 
@@ -198,6 +219,13 @@ public class GameTurnManager : MonoBehaviour
     {
         if (currentState == GameState.Ending)
             return;
+
+        if (allPlayers == null || allPlayers.Count == 0)
+        {
+            Debug.LogWarning("[GameTurnManager] RequestEndTurn ignored: no players in turn list.");
+            SetState(GameState.Idle);
+            return;
+        }
 
         SetState(GameState.Ending);
         PlayerState currentPlayer = CurrentPlayer;

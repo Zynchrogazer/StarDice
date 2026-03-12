@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System;
 using System.Collections.Generic;
+using TMPro;
 
 public class ElementButtonManager : MonoBehaviour
 {
@@ -45,7 +46,66 @@ public class ElementButtonManager : MonoBehaviour
         }
 
         buttons[index].gameObject.SetActive(true);
+        ApplyRuntimeStatsToStatusPanels();
         hasInitialized = true;
+    }
+
+    private void ApplyRuntimeStatsToStatusPanels()
+    {
+        PlayerState playerState = ResolveHumanPlayerState();
+        if (playerState == null) return;
+
+        if (buttons == null) return;
+
+        foreach (Button btn in buttons)
+        {
+            if (btn == null) continue;
+
+            TMP_Text[] texts = btn.GetComponentsInChildren<TMP_Text>(true);
+            foreach (TMP_Text txt in texts)
+            {
+                if (txt == null) continue;
+
+                string key = txt.name.ToLowerInvariant();
+                if (key.Contains("hp"))
+                {
+                    txt.text = $"HP : {playerState.PlayerHealth}";
+                }
+                else if (key.Contains("atk"))
+                {
+                    txt.text = $"ATK : {playerState.CurrentAttack}";
+                }
+                else if (key.Contains("spd") || key.Contains("speed"))
+                {
+                    txt.text = $"SPD : {playerState.CurrentSpeed}";
+                }
+                else if (key.Contains("def"))
+                {
+                    txt.text = $"DEF : {playerState.CurrentDefense}";
+                }
+            }
+        }
+    }
+
+    private static PlayerState ResolveHumanPlayerState()
+    {
+        if (GameTurnManager.TryGet(out var gameTurnManager) && gameTurnManager.allPlayers != null)
+        {
+            foreach (PlayerState p in gameTurnManager.allPlayers)
+            {
+                if (p != null && !p.isAI)
+                    return p;
+            }
+        }
+
+        PlayerState[] players = FindObjectsByType<PlayerState>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        foreach (PlayerState p in players)
+        {
+            if (p != null && !p.isAI)
+                return p;
+        }
+
+        return null;
     }
 
     private PlayerData ResolveSelectedPlayer()

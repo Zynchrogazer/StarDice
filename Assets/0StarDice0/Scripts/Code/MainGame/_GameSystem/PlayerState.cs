@@ -20,6 +20,8 @@ public class PlayerState : MonoBehaviour
     public int PlayerCredit = 0;
     public int PlayerStar = 0;
     public int CurrentAttack;
+    public int CurrentSpeed;
+    public int CurrentDefense;
     public int RuntimeAttackModifier = 0;
     public int RuntimeMaxHealthModifier = 0;
     public int RuntimeStarModifier = 0;
@@ -100,6 +102,8 @@ public class PlayerState : MonoBehaviour
         MaxHealth = data.GetMaxHealth();
         PlayerHealth = MaxHealth;
         CurrentAttack = data.attackDamage;
+        CurrentSpeed = data.speed;
+        CurrentDefense = data.def;
         RuntimeAttackModifier = 0;
         RuntimeMaxHealthModifier = 0;
         RuntimeStarModifier = 0;
@@ -356,6 +360,8 @@ public class PlayerState : MonoBehaviour
             MaxHealth = sourceData.GetMaxHealth();
             PlayerHealth = MaxHealth;
             CurrentAttack = sourceData.attackDamage;
+            CurrentSpeed = sourceData.speed;
+            CurrentDefense = sourceData.def;
         }
         else
         {
@@ -363,6 +369,8 @@ public class PlayerState : MonoBehaviour
             CurrentExp = 0;
             MaxExp = Mathf.Max(MaxExp, 100);
             PlayerHealth = Mathf.Max(PlayerHealth, 1);
+            CurrentSpeed = Mathf.Max(CurrentSpeed, 0);
+            CurrentDefense = Mathf.Max(CurrentDefense, 0);
         }
 
         WinCount = 0;
