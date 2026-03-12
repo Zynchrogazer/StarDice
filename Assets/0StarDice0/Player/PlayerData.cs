@@ -13,7 +13,7 @@ public class PlayerData : ScriptableObject
     public Sprite playerSprite;
 
     public int maxHP = 100;
-    public int attackDamage = 10;
+    public int attackDamage = 100;
     public int speed = 10;
     public int def = 1;
     public SkillData[] skills = new SkillData[3]; // 3 สกิลพิเศษ
@@ -34,7 +34,7 @@ public class PlayerData : ScriptableObject
     // ------------------------------------
 
     [SerializeField] private int credit = 50;
-    private int star = 55; // ถ้าคุณใช้ star ด้วย ก็ควรเพิ่ม Property ให้มันเหมือน Credit
+    
 
     public event Action<int> OnCreditChanged;
     public event Action OnDied;

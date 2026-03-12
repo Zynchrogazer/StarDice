@@ -73,6 +73,10 @@ public class GameEventManager : MonoBehaviour
     private bool hasStartedGame = false;
     public GameObject shopPanel;
     private GameObject currentEventTarget;
+    private readonly List<GameObject> hiddenBoardSceneRoots = new List<GameObject>();
+    private string hiddenBoardSceneName;
+    private Material boardSkyboxBeforeBattle;
+    private bool hasBoardSkyboxBeforeBattle;
 
     public int[] windTeleportTargetIDs; 
     public string windTeleportPanelName = "windteleportpanel";
@@ -131,16 +135,12 @@ public class GameEventManager : MonoBehaviour
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        // 1. ลองหาดูว่าในซีนนี้มีระบบแผนที่ (RouteManager) อยู่ไหม?
-        // (สมมติว่า RouteManager ไม่ได้เป็น DontDestroyOnLoad หรือถ้าเป็น ก็เช็คว่ามี Node ไหม)
-        RouteManager mapSystem = ResolveRouteManager() ?? FindObjectOfType<RouteManager>();
-
-        // ✅ ถ้าเจอ RouteManager แสดงว่าเป็นฉากบอร์ดเกมแน่นอน (ไม่สนว่าชื่ออะไร)
-        if (mapSystem != null && mapSystem.nodeConnections != null && mapSystem.nodeConnections.Count > 0)
+        if (IsBoardScene(scene))
         {
-            Debug.Log($"<color=cyan>[EventManager] พบแผนที่ในซีน '{scene.name}' -> ถือเป็นฉาก Board Game</color>");
+            Debug.Log($"<color=cyan>[EventManager] ซีน '{scene.name}' ถูกระบุเป็น Board Game</color>");
 
             SetupReferences();
+            RestoreHiddenBoardSceneRoots();
 
             if (isFirstLoad)
             {
@@ -156,8 +156,38 @@ public class GameEventManager : MonoBehaviour
         }
         else
         {
-            Debug.Log($"[EventManager] ซีน '{scene.name}' ไม่มี RouteManager -> ไม่ทำอะไร (น่าจะเป็นฉากสู้/เมนู)");
+            Debug.Log($"[EventManager] ซีน '{scene.name}' ไม่ใช่ Board -> คงสถานะซ่อน Board ไว้");
         }
+    }
+
+    private bool IsBoardScene(Scene scene)
+    {
+        if (!scene.IsValid() || !scene.isLoaded)
+        {
+            return false;
+        }
+
+        if (!string.IsNullOrEmpty(scene.name) && scene.name == boardGameSceneName)
+        {
+            return true;
+        }
+
+        var roots = scene.GetRootGameObjects();
+        for (int i = 0; i < roots.Length; i++)
+        {
+            if (roots[i] == null)
+            {
+                continue;
+            }
+
+            RouteManager route = roots[i].GetComponentInChildren<RouteManager>(true);
+            if (route != null && route.nodeConnections != null && route.nodeConnections.Count > 0)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private void SetupReferences()
@@ -828,6 +858,111 @@ public class GameEventManager : MonoBehaviour
         }
     }
 
+    private bool HideBoardSceneRootsForBattle()
+    {
+        if (!hasBoardSkyboxBeforeBattle)
+        {
+            boardSkyboxBeforeBattle = RenderSettings.skybox;
+            hasBoardSkyboxBeforeBattle = true;
+        }
+
+        string boardSceneNameToHide = boardGameSceneName;
+        if (string.IsNullOrEmpty(boardSceneNameToHide))
+        {
+            boardSceneNameToHide = PlayerPrefs.GetString(LastBoardSceneKey, string.Empty);
+        }
+
+        if (string.IsNullOrEmpty(boardSceneNameToHide))
+        {
+            return false;
+        }
+
+        Scene boardScene = SceneManager.GetSceneByName(boardSceneNameToHide);
+        if (!boardScene.IsValid() || !boardScene.isLoaded)
+        {
+            Debug.LogWarning($"[EventManager] ไม่พบ board scene '{boardSceneNameToHide}' ที่โหลดอยู่ -> ซ่อนไม่ได้");
+            return false;
+        }
+
+        hiddenBoardSceneRoots.Clear();
+        var roots = boardScene.GetRootGameObjects();
+        for (int i = 0; i < roots.Length; i++)
+        {
+            GameObject root = roots[i];
+            if (root == null || !root.activeSelf)
+            {
+                continue;
+            }
+
+            hiddenBoardSceneRoots.Add(root);
+            root.SetActive(false);
+        }
+
+        hiddenBoardSceneName = boardScene.name;
+        Debug.Log($"[EventManager] ซ่อนวัตถุใน board scene '{hiddenBoardSceneName}' จำนวน {hiddenBoardSceneRoots.Count} roots");
+        return true;
+    }
+
+    private void RestoreHiddenBoardSceneRoots()
+    {
+        if (hiddenBoardSceneRoots.Count > 0)
+        {
+            for (int i = 0; i < hiddenBoardSceneRoots.Count; i++)
+            {
+                GameObject root = hiddenBoardSceneRoots[i];
+                if (root == null)
+                {
+                    continue;
+                }
+
+                root.SetActive(true);
+            }
+
+            Debug.Log($"[EventManager] แสดง board scene '{hiddenBoardSceneName}' กลับมาแล้ว");
+            hiddenBoardSceneRoots.Clear();
+        }
+
+        hiddenBoardSceneName = null;
+
+        if (hasBoardSkyboxBeforeBattle)
+        {
+            RenderSettings.skybox = boardSkyboxBeforeBattle;
+            DynamicGI.UpdateEnvironment();
+            hasBoardSkyboxBeforeBattle = false;
+            boardSkyboxBeforeBattle = null;
+        }
+    }
+
+    private bool TryApplyBattleSkybox(Scene battleScene)
+    {
+        if (!battleScene.IsValid() || !battleScene.isLoaded)
+        {
+            return false;
+        }
+
+        var roots = battleScene.GetRootGameObjects();
+        for (int i = 0; i < roots.Length; i++)
+        {
+            Skybox[] sceneSkyboxes = roots[i].GetComponentsInChildren<Skybox>(true);
+            for (int j = 0; j < sceneSkyboxes.Length; j++)
+            {
+                Material skyboxMaterial = sceneSkyboxes[j] != null ? sceneSkyboxes[j].material : null;
+                if (skyboxMaterial == null)
+                {
+                    continue;
+                }
+
+                RenderSettings.skybox = skyboxMaterial;
+                DynamicGI.UpdateEnvironment();
+                Debug.Log($"[EventManager] ใช้ skybox จาก battle scene '{battleScene.name}'");
+                return true;
+            }
+        }
+
+        Debug.LogWarning($"[EventManager] battle scene '{battleScene.name}' ไม่มี Skybox component/material ให้ใช้");
+        return false;
+    }
+
     private IEnumerator MonsterBattleCoroutine()
     {
         RememberCurrentBoardScene();
@@ -835,7 +970,52 @@ public class GameEventManager : MonoBehaviour
         yield return new WaitForSeconds(1f);
         string[] Scenes = { "fightDarkNormal", "fightEarthNormal", "fightLightNormal", "fightWaterNormal", "fightWindNormal", "TestFight" };
         int randomIndex = Random.Range(0, Scenes.Length);
-        SceneManager.LoadScene(Scenes[randomIndex]);
+        string battleSceneName = Scenes[randomIndex];
+
+        if (SceneManager.GetSceneByName(battleSceneName).isLoaded)
+        {
+            bool hidBoardForLoadedBattle = HideBoardSceneRootsForBattle();
+            Scene existingBattleScene = SceneManager.GetSceneByName(battleSceneName);
+            if (existingBattleScene.IsValid() && existingBattleScene.isLoaded)
+            {
+                SceneManager.SetActiveScene(existingBattleScene);
+                TryApplyBattleSkybox(existingBattleScene);
+            }
+            else if (hidBoardForLoadedBattle)
+            {
+                RestoreHiddenBoardSceneRoots();
+            }
+
+            Debug.LogWarning($"[EventManager] Battle scene '{battleSceneName}' ถูกโหลดอยู่แล้ว -> ไม่โหลดซ้ำ");
+            yield break;
+        }
+
+        bool hidBoardScene = HideBoardSceneRootsForBattle();
+
+        AsyncOperation loadBattleSceneOperation = SceneManager.LoadSceneAsync(battleSceneName, LoadSceneMode.Additive);
+        if (loadBattleSceneOperation == null)
+        {
+            Debug.LogError($"[EventManager] โหลด battle scene '{battleSceneName}' แบบ additive ไม่สำเร็จ");
+            if (hidBoardScene)
+            {
+                RestoreHiddenBoardSceneRoots();
+            }
+            yield break;
+        }
+
+        yield return loadBattleSceneOperation;
+
+        Scene loadedBattleScene = SceneManager.GetSceneByName(battleSceneName);
+        if (loadedBattleScene.IsValid() && loadedBattleScene.isLoaded)
+        {
+            SceneManager.SetActiveScene(loadedBattleScene);
+            TryApplyBattleSkybox(loadedBattleScene);
+            Debug.Log($"[EventManager] โหลด battle scene '{battleSceneName}' แบบ additive สำเร็จ และซ่อน BoardGame ชั่วคราว");
+        }
+        else if (hidBoardScene)
+        {
+            RestoreHiddenBoardSceneRoots();
+        }
     }
 
     private IEnumerator LoadMinigameSceneCoroutine(string minigameKey)
