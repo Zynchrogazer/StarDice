@@ -39,7 +39,6 @@ public class CameraController : MonoBehaviour
             return;
         }
 
-        DontDestroyOnLoad(gameObject);
     }
 
     private void OnEnable() { SceneManager.sceneLoaded += OnSceneLoaded; }

@@ -12,39 +12,50 @@ public class BattleRewardButton : MonoBehaviour
     {
         Debug.Log("🎁 Claiming Reward...");
 
-        // 1. 🔍 ตามหา "ร่างจริง" ของผู้เล่น (ที่เป็นอมตะและซ่อนอยู่)
-        // ต้องหาแบบ Include Inactive (true) เพราะ BoardGameGroup อาจซ่อนมันไว้
-        PlayerState[] allPlayers = FindObjectsOfType<PlayerState>(true);
+        PlayerState rewardTarget = null;
 
-        bool found = false;
-        foreach (var player in allPlayers)
+        // KISS: ถ้ามี GTM ใช้ current player ตรง ๆ ก่อน
+        if (GameTurnManager.TryGet(out var gameTurnManager) &&
+            gameTurnManager.allPlayers != null &&
+            gameTurnManager.allPlayers.Count > 0)
         {
-            // เงื่อนไข: เป็นคน (!isAI) และ เป็นตัวอมตะ (อยู่ scene -1 หรือ DontDestroyOnLoad)
-            if (!player.isAI && player.gameObject.scene.buildIndex == -1)
+            rewardTarget = GameTurnManager.CurrentPlayer;
+        }
+
+        // fallback: หา player ที่เป็นคนจาก scene ใดก็ได้ (รวม inactive)
+        if (rewardTarget == null)
+        {
+            PlayerState[] allPlayers = FindObjectsOfType<PlayerState>(true);
+            foreach (var player in allPlayers)
             {
-                Debug.Log($"✅ พบผู้เล่นตัวจริง: {player.name} -> เพิ่ม WinCount และ EXP");
-
-                // 2. 🎯 สั่งบวก WinCount และ Exp เข้าตัวจริงทันที
-                player.RecordBattleWin();
-
-                // 3. 💰 สุ่มเครดิตรางวัลหลังชนะ Battle
-                int reward = Random.Range(minBattleCreditReward, maxBattleCreditReward + 1);
-                player.PlayerCredit += reward;
-
-                // Sync เข้ากับ PlayerData ที่เป็นข้อมูลหลักให้เครดิตคงอยู่ข้ามด่าน/ข้ามซีน
-                if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
+                if (player != null && !player.isAI)
                 {
-                    GameData.Instance.selectedPlayer.AddCredit(reward);
+                    rewardTarget = player;
+                    break;
                 }
-
-                Debug.Log($"💰 ได้รับเครดิตจาก Battle +{reward} (รวมตอนนี้ {player.PlayerCredit})");
-
-                found = true;
-                break;
             }
         }
 
-        if (!found) Debug.LogWarning("⚠ หาผู้เล่นตัวจริงไม่เจอ! (ค่า WinCount อาจไม่อัปเดต)");
+        if (rewardTarget != null)
+        {
+            Debug.Log($"✅ พบผู้เล่นตัวจริง: {rewardTarget.name} -> เพิ่ม WinCount และ EXP");
+
+            // 2. 🎯 สั่งบวก WinCount และ Exp เข้าตัวจริงทันที
+            rewardTarget.RecordBattleWin();
+
+            // 3. 💰 สุ่มเครดิตรางวัลหลังชนะ Battle
+            int reward = Random.Range(minBattleCreditReward, maxBattleCreditReward + 1);
+            rewardTarget.PlayerCredit += reward;
+
+            // Sync เข้ากับ PlayerData ที่เป็นข้อมูลหลักให้เครดิตคงอยู่ข้ามด่าน/ข้ามซีน
+            if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
+            {
+                GameData.Instance.selectedPlayer.AddCredit(reward);
+            }
+
+            Debug.Log($"💰 ได้รับเครดิตจาก Battle +{reward} (รวมตอนนี้ {rewardTarget.PlayerCredit})");
+        }
+        else Debug.LogWarning("⚠ หาผู้เล่นตัวจริงไม่เจอ! (ค่า WinCount อาจไม่อัปเดต)");
 
         // 3. 🏠 ย้ายกลับบ้าน (กลับฉากบอร์ดล่าสุดที่จำไว้)
         string targetBoardScene = PlayerPrefs.GetString(GameEventManager.LastBoardSceneKey, "TestMain");

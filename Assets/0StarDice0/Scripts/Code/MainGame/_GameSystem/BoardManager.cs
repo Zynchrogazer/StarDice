@@ -27,7 +27,7 @@ public class BoardManager : MonoBehaviour
         if (!GameTurnManager.TryGet(out var gameTurnManager))
         {
             Debug.LogError("😱 [CRITICAL] GameTurnManager หายสาบสูญ! (Instance is NULL)");
-            Debug.LogError("👉 สาเหตุที่เป็นไปได้: ลืมใส่ DontDestroyOnLoad หรือถูกทำลายซ้ำซ้อน");
+            Debug.LogError("👉 สาเหตุที่เป็นไปได้: ไม่มี GameTurnManager ใน Board Scene หรือถูกทำลายผิดจังหวะ");
             return;
         }
         else

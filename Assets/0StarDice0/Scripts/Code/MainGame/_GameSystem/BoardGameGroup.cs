@@ -37,7 +37,6 @@ public class BoardGameGroup : MonoBehaviour
             }
         }
 
-        DontDestroyOnLoad(gameObject);
     }
 
     private void OnEnable()
