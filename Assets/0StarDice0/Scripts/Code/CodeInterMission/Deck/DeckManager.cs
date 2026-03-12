@@ -70,7 +70,6 @@ public class DeckManager : MonoBehaviour
         }
 
         cachedManager = this;
-        DontDestroyOnLoad(gameObject);
     }
 
     private void OnDestroy()
@@ -154,14 +153,34 @@ public class DeckManager : MonoBehaviour
     public void SaveCurrentDeck()
     {
         List<string> names = new List<string>();
+        List<string> selectedIds = new List<string>();
+        List<CardData> selectedCards = new List<CardData>();
         foreach (var c in cardUse)
         {
-            names.Add(c != null ? c.cardName : "EMPTY");
+            string cardId = c != null ? c.cardName : "EMPTY";
+            names.Add(cardId);
+
+            if (c != null)
+            {
+                selectedIds.Add(c.cardName);
+                selectedCards.Add(c);
+            }
         }
-        
+
         string deckStr = string.Join(",", names);
         PlayerPrefs.SetString("CurrentDeckData", deckStr);
         PlayerPrefs.Save();
+
+        if (RunSessionStore.TryGet(out var sessionStore))
+        {
+            sessionStore.SetSelectedDeck(selectedIds);
+        }
+
+        if (GameData.Instance != null)
+        {
+            GameData.Instance.SetSelectedCards(selectedCards);
+        }
+
         Debug.Log("💾 Deck Auto-Saved!");
     }
 
@@ -202,11 +221,17 @@ public class DeckManager : MonoBehaviour
 
     public void RemoveCard(int index)
     {
-        if (cardUse[index] != null) 
-        { 
-            cardUse[index] = null; 
-            UpdateUseCardUI(); 
-            
+        if (cardUse == null || index < 0 || index >= cardUse.Length)
+        {
+            Debug.LogWarning($"DeckManager: RemoveCard index ไม่ถูกต้อง ({index})");
+            return;
+        }
+
+        if (cardUse[index] != null)
+        {
+            cardUse[index] = null;
+            UpdateUseCardUI();
+
             SaveCurrentDeck(); // <--- เพิ่ม: ลบปุ๊บเซฟปั๊บ
         }
     }
@@ -299,14 +324,23 @@ public class DeckManager : MonoBehaviour
     
     void BindRemoveButtons()
     {
-        if (removeButtons != null && removeButtons.Length > 0)
+        if (removeButtons == null || removeButtons.Length == 0)
         {
-            for (int i = 0; i < removeButtons.Length; i++)
+            return;
+        }
+
+        for (int i = 0; i < removeButtons.Length; i++)
+        {
+            Button button = removeButtons[i];
+            if (button == null)
             {
-                int index = i;
-                removeButtons[i].onClick.RemoveAllListeners();
-                removeButtons[i].onClick.AddListener(() => RemoveCard(index));
+                Debug.LogWarning($"DeckManager: removeButtons[{i}] เป็น null (ยังไม่ได้ผูก Button component หรือ Object ไม่ถูกต้อง)");
+                continue;
             }
+
+            int index = i;
+            button.onClick.RemoveAllListeners();
+            button.onClick.AddListener(() => RemoveCard(index));
         }
     }
 
@@ -399,18 +433,57 @@ public class DeckManager : MonoBehaviour
         }
     }
 
+    private bool isTransitioningToNextScene;
+
     // ฟังก์ชันเดิม (ยังคงไว้เผื่อมีการเปลี่ยน Scene)
     public void ConfirmDeckAndGoNextScene(string nextScene)
     {
-        SaveCurrentDeck(); // เซฟก่อนเปลี่ยนฉากเพื่อความชัวร์
-        SceneManager.LoadScene(nextScene, LoadSceneMode.Additive);
-        
-        var canvasList = FindObjectsOfType<Canvas>();
-        foreach (var canvas in canvasList)
+        if (isTransitioningToNextScene)
         {
-            if (canvas.gameObject.scene.name == SceneManager.GetActiveScene().name)
-                canvas.enabled = false;
+            return;
         }
+
+        SaveCurrentDeck(); // เซฟก่อนเปลี่ยนฉากเพื่อความชัวร์ + push deck to bootstrap store
+        StartCoroutine(LoadNextSceneAdditiveAndHideRuntimeHub(nextScene));
+    }
+
+    private IEnumerator LoadNextSceneAdditiveAndHideRuntimeHub(string nextScene)
+    {
+        if (string.IsNullOrWhiteSpace(nextScene))
+        {
+            Debug.LogError("[DeckManager] nextScene is null or empty.");
+            yield break;
+        }
+
+        if (!Application.CanStreamedLevelBeLoaded(nextScene))
+        {
+            Debug.LogError($"[DeckManager] Cannot load scene '{nextScene}'. Check Build Profiles.");
+            yield break;
+        }
+
+        isTransitioningToNextScene = true;
+        Scene sourceScene = gameObject.scene;
+
+        AsyncOperation loadOperation = SceneManager.LoadSceneAsync(nextScene, LoadSceneMode.Additive);
+        yield return loadOperation;
+
+        Scene loadedScene = SceneManager.GetSceneByName(nextScene);
+        if (loadedScene.IsValid() && loadedScene.isLoaded)
+        {
+            SceneManager.SetActiveScene(loadedScene);
+            DynamicGI.UpdateEnvironment();
+        }
+
+        Canvas[] canvasList = FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        foreach (Canvas canvas in canvasList)
+        {
+            if (canvas != null && canvas.gameObject.scene == sourceScene)
+            {
+                canvas.enabled = false;
+            }
+        }
+
+        isTransitioningToNextScene = false;
     }
     // ในไฟล์ DeckManager.cs
 

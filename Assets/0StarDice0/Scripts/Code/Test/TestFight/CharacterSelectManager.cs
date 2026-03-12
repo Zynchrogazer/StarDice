@@ -2,27 +2,45 @@ using UnityEngine;
 
 public class CharacterSelectManager : MonoBehaviour
 {
-    public PlayerData selectedPlayer; // ตัวละครที่เลือกตอนนี้
+    public PlayerData selectedPlayer;
 
-    void Awake()
+    private void Awake()
     {
-        if (FindObjectsOfType<CharacterSelectManager>().Length > 1)
+        if (FindObjectsByType<CharacterSelectManager>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length > 1)
         {
             Destroy(gameObject);
             return;
         }
 
-        DontDestroyOnLoad(gameObject); // เก็บข้าม Scene
+        SyncWithGameData();
     }
 
-    // ฟังก์ชันเลือกตัวละคร
     public void SelectCharacter(PlayerData player)
     {
         selectedPlayer = player;
-       
+
         if (GameData.Instance != null)
         {
-            GameData.Instance.selectedPlayer = player;
+            GameData.Instance.SetSelectedPlayer(player);
+        }
+    }
+
+    private void SyncWithGameData()
+    {
+        if (GameData.Instance == null)
+        {
+            return;
+        }
+
+        if (GameData.Instance.selectedPlayer != null)
+        {
+            selectedPlayer = GameData.Instance.selectedPlayer;
+            return;
+        }
+
+        if (selectedPlayer != null)
+        {
+            GameData.Instance.SetSelectedPlayer(selectedPlayer);
         }
     }
 }

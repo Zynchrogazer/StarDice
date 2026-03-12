@@ -4,14 +4,16 @@ using UnityEngine.SceneManagement;
 
 public class SceneFlowController : MonoBehaviour
 {
-    [Header("Bootstrap")]
-    [SerializeField] private string persistentSceneName = "Bootstrap";
-    [SerializeField] private bool autoLoadFirstGameplayScene = true;
-    [SerializeField] private string firstGameplaySceneName = "Menu";
+    [Header("RuntimeHub")]
+    [SerializeField] private string persistentSceneName = "RuntimeHub";
 
     [Header("Transition")]
     [SerializeField] private bool useAdditiveTransition = true;
     [SerializeField] private bool blockInputDuringTransition = true;
+
+    [Header("Scene aliases")]
+    [SerializeField] private string shopAliasName = "Shop";
+    [SerializeField] private string shopIntermissionSceneName = "ShopIntermission";
 
     private static SceneFlowController cached;
     private bool isTransitioning;
@@ -27,7 +29,6 @@ public class SceneFlowController : MonoBehaviour
         }
 
         cached = this;
-        DontDestroyOnLoad(gameObject);
     }
 
     private void OnDestroy()
@@ -37,40 +38,6 @@ public class SceneFlowController : MonoBehaviour
             cached = null;
         }
     }
-
-    private void Start()
-    {
-        if (!autoLoadFirstGameplayScene)
-        {
-            return;
-        }
-
-        Scene activeScene = SceneManager.GetActiveScene();
-        if (!activeScene.IsValid())
-        {
-            return;
-        }
-
-        if (!string.Equals(activeScene.name, persistentSceneName, System.StringComparison.OrdinalIgnoreCase))
-        {
-            return;
-        }
-
-        if (string.IsNullOrEmpty(firstGameplaySceneName))
-        {
-            Debug.LogWarning("[SceneFlow] firstGameplaySceneName is empty. Auto-load skipped.");
-            return;
-        }
-
-        if (!Application.CanStreamedLevelBeLoaded(firstGameplaySceneName))
-        {
-            Debug.LogWarning($"[SceneFlow] Cannot load first gameplay scene '{firstGameplaySceneName}'. Check Build Settings scene name.");
-            return;
-        }
-
-        RequestScene(firstGameplaySceneName);
-    }
-
 
     public static bool TryRequestScene(string sceneName)
     {
@@ -84,7 +51,13 @@ public class SceneFlowController : MonoBehaviour
             return false;
         }
 
-        controller.RequestScene(sceneName);
+        if (!controller.TryResolveSceneName(sceneName, out string resolvedSceneName))
+        {
+            Debug.LogError($"[SceneFlow] Cannot resolve scene '{sceneName}'. Check Build Profiles/scene name.");
+            return false;
+        }
+
+        controller.RequestScene(resolvedSceneName);
         return true;
     }
 
@@ -119,13 +92,20 @@ public class SceneFlowController : MonoBehaviour
             return;
         }
 
+
+        if (!TryResolveSceneName(sceneName, out string resolvedSceneName))
+        {
+            Debug.LogError($"[SceneFlow] Cannot resolve scene '{sceneName}'. Transition skipped.");
+            return;
+        }
+
         Scene activeScene = SceneManager.GetActiveScene();
-        if (activeScene.IsValid() && string.Equals(activeScene.name, sceneName, System.StringComparison.OrdinalIgnoreCase))
+        if (activeScene.IsValid() && string.Equals(activeScene.name, resolvedSceneName, System.StringComparison.OrdinalIgnoreCase))
         {
             return;
         }
 
-        StartCoroutine(TransitionToScene(sceneName));
+        StartCoroutine(TransitionToScene(resolvedSceneName));
     }
 
     public void RequestScene(int sceneIndex)
@@ -137,6 +117,44 @@ public class SceneFlowController : MonoBehaviour
 
         string sceneName = System.IO.Path.GetFileNameWithoutExtension(SceneUtility.GetScenePathByBuildIndex(sceneIndex));
         RequestScene(sceneName);
+    }
+
+    private bool TryResolveSceneName(string requestedSceneName, out string resolvedSceneName)
+    {
+        resolvedSceneName = string.Empty;
+        if (string.IsNullOrWhiteSpace(requestedSceneName))
+        {
+            return false;
+        }
+
+        string requested = requestedSceneName.Trim();
+        if (Application.CanStreamedLevelBeLoaded(requested))
+        {
+            resolvedSceneName = requested;
+            return true;
+        }
+
+        if (!string.IsNullOrEmpty(shopAliasName)
+            && string.Equals(requested, shopAliasName, System.StringComparison.OrdinalIgnoreCase)
+            && Application.CanStreamedLevelBeLoaded(shopIntermissionSceneName))
+        {
+            resolvedSceneName = shopIntermissionSceneName;
+            return true;
+        }
+
+        int sceneCount = SceneManager.sceneCountInBuildSettings;
+        for (int i = 0; i < sceneCount; i++)
+        {
+            string path = SceneUtility.GetScenePathByBuildIndex(i);
+            string candidateName = System.IO.Path.GetFileNameWithoutExtension(path);
+            if (string.Equals(candidateName, requested, System.StringComparison.OrdinalIgnoreCase))
+            {
+                resolvedSceneName = candidateName;
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private IEnumerator TransitionToScene(string nextSceneName)

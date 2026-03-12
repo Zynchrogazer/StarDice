@@ -5,34 +5,15 @@ public class PlayerDataManager : MonoBehaviour
 {
     public static PlayerDataManager Instance { get; private set; }
 
-    public EquipmentData[] equippedItems = new EquipmentData[2];
+    public EquipmentData[] equippedItems = new EquipmentData[EquipSlotCount];
     public Action OnEquipmentChanged;
     private const string EquipSlotPrefKeyPrefix = "EquipSlot_";
-
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-    private static void Bootstrap()
-    {
-        if (Instance != null)
-        {
-            return;
-        }
-
-        Instance = FindFirstObjectByType<PlayerDataManager>();
-        if (Instance != null)
-        {
-            return;
-        }
-
-        GameObject managerObject = new GameObject(nameof(PlayerDataManager));
-        Instance = managerObject.AddComponent<PlayerDataManager>();
-    }
-
+    public const int EquipSlotCount = 2;
     private void Awake()
     {
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject);
         }
         else if (Instance != this)
         {
@@ -41,6 +22,14 @@ public class PlayerDataManager : MonoBehaviour
         }
 
         LoadEquippedItems();
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this)
+        {
+            Instance = null;
+        }
     }
 
     private void Start()
@@ -113,6 +102,24 @@ public class PlayerDataManager : MonoBehaviour
 
    
 
+    public void ClearEquippedItemsAndSave()
+    {
+        for (int i = 0; i < equippedItems.Length; i++)
+        {
+            equippedItems[i] = null;
+        }
+
+        SaveEquippedItems();
+        OnEquipmentChanged?.Invoke();
+    }
+
+    public static void ClearSavedEquipSlots()
+    {
+        for (int i = 0; i < EquipSlotCount; i++)
+        {
+            PlayerPrefs.DeleteKey(EquipSlotPrefKeyPrefix + i);
+        }
+    }
 
     private void LoadEquippedItems()
     {

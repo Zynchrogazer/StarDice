@@ -1,6 +1,12 @@
 # Singleton Audit
 
 Scope: `Assets/0StarDice0/Scripts`
+## Agreed flow reminder (must keep aligned)
+
+- Current expected play flow: `Menu -> (Start) -> FirstMonsterSelect -> FirstDeck -> TestMain -> Intermission -> TestMain`.
+- `Start` from menu must route through `MainMenuController.RequestFlowScene(...)` and ensure `Bootstrap` is loaded additively before requesting gameplay scene via `SceneFlowController`.
+- Default target from menu Start is `FirstMonsterSelect` (not `GameScene`).
+
 ## Summary
 
 - Total singleton-style `Instance` declarations found (initial audit): **22**
@@ -630,3 +636,18 @@ When player confirms monster selection (`CharacterSelectMenu.SelectCharacter`), 
 - Data that must survive app restart -> persistence layer.
 - Data that must survive scene swap only -> session store / game data pointer.
 - Data used only inside one board run -> player/runtime state.
+
+## Immediate next implementation checklist
+
+1. Keep menu Start target fixed to `FirstMonsterSelect` and verify existing scene instances are not serialized with stale `GameScene`.
+2. Keep `RunSessionStore` monster sync pref-first (never fallback to serialized inspector value) to avoid stale element carry-over.
+3. Pilot `DeckManager` bootstrap ownership only, then validate transitions (`FirstDeck -> TestMain -> Intermission -> TestMain`) before moving other managers.
+4. Add per-scene smoke script/checklist in Unity for: selected monster, selected deck ids, and opening hand source.
+
+
+## RunSessionStore responsibility (clarified)
+
+- `RunSessionStore` is for **run-level transient state across scene swaps** (e.g., selected monster id, selected deck ids, round index).
+- It should mirror persisted selection (`PlayerPrefs`) into runtime memory and expose values for systems that should not parse prefs repeatedly.
+- It is **not** the long-term save system itself; persistence remains in save/profile keys.
+

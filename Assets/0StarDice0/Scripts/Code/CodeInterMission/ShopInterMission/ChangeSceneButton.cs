@@ -18,19 +18,27 @@ public class ChangeSceneButton : MonoBehaviour
     [SerializeField] private bool autoDestroyBoardCoreSystemsOnIntermission = true;
     [SerializeField] private bool hardResetRuntimeOnIntermissionExit = true;
 
+    [Header("Fallback additive transition")]
+    [SerializeField] private string fallbackPersistentSceneName = "RuntimeHub";
+    [SerializeField] private bool unloadAllNonPersistentScenes = true;
+
+    private bool isFallbackTransitioning;
+
     public void GoToScene()
     {
         Time.timeScale = 1f;
 
         bool shouldResetForTargetScene = resetAllStateBeforeLoad || ShouldAutoResetForTargetScene();
 
-        if (shouldResetForTargetScene && hardResetRuntimeOnIntermissionExit)
+        bool requiresHardReset = shouldResetForTargetScene && hardResetRuntimeOnIntermissionExit;
+
+        if (requiresHardReset)
         {
             HardResetRuntimeStateKeepPersistentCredit();
         }
         else
         {
-            if (ShouldDestroyBoardCoreSystemsForTargetScene())
+            if (ShouldDestroyBoardCoreSystemsForTargetScene(shouldResetForTargetScene))
             {
                 DestroyBoardCoreSystems();
             }
@@ -41,10 +49,115 @@ public class ChangeSceneButton : MonoBehaviour
             }
         }
 
-        if (!SceneFlowController.TryRequestScene(sceneToLoad))
+        // Hard-reset may destroy runtime objects used by SceneFlowController; use local fallback load in that case.
+        if (!requiresHardReset && SceneFlowController.TryRequestScene(sceneToLoad))
         {
-            SceneManager.LoadScene(sceneToLoad);
+            return;
         }
+
+        if (!Application.CanStreamedLevelBeLoaded(sceneToLoad))
+        {
+            Debug.LogError($"[ChangeSceneButton] Cannot load scene '{sceneToLoad}'. Check Build Profiles.");
+            return;
+        }
+
+        if (!isFallbackTransitioning)
+        {
+            StartCoroutine(LoadAdditiveThenUnloadCurrent(sceneToLoad));
+        }
+    }
+
+    private System.Collections.IEnumerator LoadAdditiveThenUnloadCurrent(string targetSceneName)
+    {
+        isFallbackTransitioning = true;
+
+        Scene currentActiveScene = SceneManager.GetActiveScene();
+        Scene targetScene = SceneManager.GetSceneByName(targetSceneName);
+
+        if (!targetScene.IsValid() || !targetScene.isLoaded)
+        {
+            AsyncOperation loadOp = SceneManager.LoadSceneAsync(targetSceneName, LoadSceneMode.Additive);
+            if (loadOp == null)
+            {
+                Debug.LogError($"[ChangeSceneButton] Failed to start additive load for scene '{targetSceneName}'.");
+                isFallbackTransitioning = false;
+                yield break;
+            }
+
+            while (!loadOp.isDone)
+            {
+                yield return null;
+            }
+
+            targetScene = SceneManager.GetSceneByName(targetSceneName);
+        }
+
+        if (targetScene.IsValid() && targetScene.isLoaded)
+        {
+            SceneManager.SetActiveScene(targetScene);
+        }
+
+        if (unloadAllNonPersistentScenes)
+        {
+            yield return UnloadAllNonPersistentScenesExcept(targetSceneName);
+        }
+        else
+        {
+            yield return UnloadPreviousActiveIfNeeded(currentActiveScene, targetSceneName);
+        }
+
+        isFallbackTransitioning = false;
+    }
+
+    private System.Collections.IEnumerator UnloadPreviousActiveIfNeeded(Scene currentActiveScene, string targetSceneName)
+    {
+        if (!currentActiveScene.IsValid()
+            || !currentActiveScene.isLoaded
+            || string.Equals(currentActiveScene.name, targetSceneName, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(currentActiveScene.name, fallbackPersistentSceneName, StringComparison.OrdinalIgnoreCase))
+        {
+            yield break;
+        }
+
+        AsyncOperation unloadOp = SceneManager.UnloadSceneAsync(currentActiveScene);
+        while (unloadOp != null && !unloadOp.isDone)
+        {
+            yield return null;
+        }
+    }
+
+    private System.Collections.IEnumerator UnloadAllNonPersistentScenesExcept(string targetSceneName)
+    {
+        int loadedCount = SceneManager.sceneCount;
+        string[] sceneNamesToUnload = new string[loadedCount];
+        int unloadCount = 0;
+
+        for (int i = 0; i < loadedCount; i++)
+        {
+            Scene scene = SceneManager.GetSceneAt(i);
+            if (!scene.IsValid() || !scene.isLoaded)
+            {
+                continue;
+            }
+
+            if (string.Equals(scene.name, targetSceneName, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(scene.name, fallbackPersistentSceneName, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            sceneNamesToUnload[unloadCount++] = scene.name;
+        }
+
+        for (int i = 0; i < unloadCount; i++)
+        {
+            AsyncOperation unloadOp = SceneManager.UnloadSceneAsync(sceneNamesToUnload[i]);
+            while (unloadOp != null && !unloadOp.isDone)
+            {
+                yield return null;
+            }
+        }
+
     }
 
     private bool ShouldAutoResetForTargetScene()
@@ -75,14 +188,9 @@ public class ChangeSceneButton : MonoBehaviour
         return sceneToLoad.IndexOf("intermission", StringComparison.OrdinalIgnoreCase) >= 0;
     }
 
-    private bool ShouldDestroyBoardCoreSystemsForTargetScene()
+    private bool ShouldDestroyBoardCoreSystemsForTargetScene(bool shouldResetForTargetScene)
     {
-        if (!autoDestroyBoardCoreSystemsOnIntermission)
-        {
-            return false;
-        }
-
-        return ShouldAutoResetForTargetScene();
+        return autoDestroyBoardCoreSystemsOnIntermission && shouldResetForTargetScene;
     }
 
     private void HardResetRuntimeStateKeepPersistentCredit()
