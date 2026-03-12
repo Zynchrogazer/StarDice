@@ -45,7 +45,6 @@ public class DiceRollerFromPNG : MonoBehaviour
         if (rollers.Length > 1) { Destroy(gameObject); return; }
 
         cachedManager = this;
-        DontDestroyOnLoad(gameObject);
 
         if (sfxSource == null) sfxSource = GetComponent<AudioSource>();
         if (sfxSource == null) sfxSource = gameObject.AddComponent<AudioSource>();

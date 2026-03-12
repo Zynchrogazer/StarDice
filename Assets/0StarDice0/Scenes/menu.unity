@@ -779,9 +779,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d2907788422b8eb42afa1278f846c4f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gameSceneName: FirstMonsterSelect
-  bootstrapSceneName: RuntimeHub
-  confirmExitPanel: {fileID: 0}
+  runtimeHubSceneName: RuntimeHub
+  resetCreditValue: 0
 --- !u!4 &505430789
 Transform:
   m_ObjectHideFlags: 0
@@ -1909,6 +1908,8 @@ MonoBehaviour:
   - ShopIntermission
   autoDestroyBoardCoreSystemsOnIntermission: 1
   hardResetRuntimeOnIntermissionExit: 1
+  fallbackPersistentSceneName: RuntimeHub
+  unloadAllNonPersistentScenes: 1
 --- !u!114 &1596517381
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2734,8 +2735,8 @@ SceneRoots:
   m_Roots:
   - {fileID: 1680402614}
   - {fileID: 1308441355}
-  - {fileID: 2009850344}
   - {fileID: 505430789}
+  - {fileID: 2009850344}
   - {fileID: 42596516}
   - {fileID: 792155505}
   - {fileID: 755297004}

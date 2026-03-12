@@ -28,7 +28,6 @@ public class PassiveSkillManager : MonoBehaviour
             return;
         }
 
-        DontDestroyOnLoad(gameObject);
         ResolvePlayerStatAggregator();
         EnsureLoadedForCurrentPlayer();
     }

@@ -11,7 +11,6 @@ public class SceneController : MonoBehaviour
         if (instance == null)
         {
             instance = this; // ถ้ายังไม่มี ให้ตัวนี้เป็นตัวหลัก
-            DontDestroyOnLoad(gameObject); // สั่งไม่ให้ทำลาย Object นี้เมื่อเปลี่ยนซีน
         }
         else
         {

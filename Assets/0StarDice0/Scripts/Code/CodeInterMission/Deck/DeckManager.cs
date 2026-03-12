@@ -99,9 +99,13 @@ public class DeckManager : MonoBehaviour
         LoadDeckFromPrefs();
 
         // 3. เริ่มต้นระบบ UI
-        BindRemoveButtons(); 
+        BindRemoveButtons();
         UpdateUseCardUI();
-        SortAndRefreshCards(); 
+        SortAndRefreshCards();
+
+        // RuntimeHub เป็นฉากแรกหลังเมนู จึงต้อง bind UI ของฉากปัจจุบันด้วย
+        // (ไม่พึ่งเฉพาะ sceneLoaded event อย่างเดียว)
+        StartCoroutine(WaitAndBindUI());
     }
 
     // --- ส่วนจัดการ PlayerPrefs (Save/Load) ---
@@ -109,16 +113,36 @@ public class DeckManager : MonoBehaviour
     // โหลดสถานะ Usable ของการ์ดทุกใบ
     void LoadCardStates()
     {
+        if (allCards == null)
+        {
+            Debug.LogWarning("DeckManager: allCards ยังไม่ได้ bind ใน Inspector");
+            return;
+        }
+
         foreach (var card in allCards)
         {
+            if (card == null || string.IsNullOrWhiteSpace(card.cardName))
+            {
+                continue;
+            }
+
             string key = "CardState_" + card.cardName;
             // ถ้ามีค่าบันทึกไว้ ให้ใช้ค่านั้น (1=True, 0=False)
             if (PlayerPrefs.HasKey(key))
             {
                 card.isUsable = PlayerPrefs.GetInt(key) == 1;
             }
-            // ถ้าไม่มี (เพิ่งเล่นครั้งแรก) จะใช้ค่า Default ที่ตั้งใน Inspector
+            else
+            {
+                // ถ้าไม่มีค่าใน PlayerPrefs ให้ใช้ค่าเริ่มต้นแบบ Common-only
+                // เพื่อกันกรณี Inspector ติด true มาทุกใบ
+                bool isCommonCard = card.rarity == CardRarity.Common;
+                card.isUsable = isCommonCard;
+                PlayerPrefs.SetInt(key, isCommonCard ? 1 : 0);
+            }
         }
+
+        PlayerPrefs.Save();
         Debug.Log("📖 Loaded Card States from PlayerPrefs");
     }
 
@@ -240,38 +264,7 @@ public class DeckManager : MonoBehaviour
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        if (scene.name == "FirstDeck")
-        {
-            ResetDeckForFirstDeckScene();
-        }
-
         StartCoroutine(WaitAndBindUI());
-    }
-
-    void ResetDeckForFirstDeckScene()
-    {
-        // เคลียร์เด็คที่เคยจัดไว้ทั้งหมด
-        for (int i = 0; i < cardUse.Length; i++)
-        {
-            cardUse[i] = null;
-        }
-
-        // ปลดล็อกเฉพาะการ์ดระดับ Common และล็อกความหายากอื่น
-        foreach (var card in allCards)
-        {
-            if (card == null) continue;
-
-            bool shouldBeUsable = card.rarity == CardRarity.Common;
-            card.isUsable = shouldBeUsable;
-            PlayerPrefs.SetInt("CardState_" + card.cardName, shouldBeUsable ? 1 : 0);
-        }
-
-        SaveCurrentDeck();
-        PlayerPrefs.Save();
-
-        UpdateUseCardUI();
-        SortAndRefreshCards();
-        Debug.Log("♻️ Entered FirstDeck: Deck reset and only Common cards are unlocked.");
     }
 
     private IEnumerator WaitAndBindUI()
@@ -390,11 +383,16 @@ public class DeckManager : MonoBehaviour
 
     public void SortAndRefreshCards()
     {
+        if (allCards == null || addButtons == null)
+        {
+            return;
+        }
+
         // เรียงการ์ดตาม Rarity -> Name
         allCards = allCards
-            .OrderBy(card => card.rarity)     
-            .ThenBy(card => card.cardName)    
-            .ToList(); 
+            .OrderBy(card => card.rarity)
+            .ThenBy(card => card.cardName)
+            .ToList();
 
         int count = Mathf.Min(allCards.Count, addButtons.Length);
 

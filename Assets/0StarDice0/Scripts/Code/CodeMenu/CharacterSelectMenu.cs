@@ -115,9 +115,11 @@ public class CharacterSelectMenu : MonoBehaviour
         element = NormalizeElementId(element);
         Debug.Log("เลือก: " + element);
 
+        bool isFirstCharacterSelection = PlayerPrefs.GetInt(HAS_CHOSEN_KEY, 0) == 0;
+
         // --- ส่วนแจกฟรี ---
         // ถ้าเป็นผู้เล่นใหม่ กดปุ๊บ ได้ตัวนั้นเป็นของตัวเองทันที
-        if (PlayerPrefs.GetInt(HAS_CHOSEN_KEY, 0) == 0)
+        if (isFirstCharacterSelection)
         {
             PlayerPrefs.SetInt("Monster" + element, 1); // ปลดล็อคตัวนี้
             PlayerPrefs.SetInt(HAS_CHOSEN_KEY, 1);      // จบสถานะผู้เล่นใหม่
@@ -127,6 +129,7 @@ public class CharacterSelectMenu : MonoBehaviour
 
         // --- ส่วนบันทึกการเลือก (single point of truth update path) ---
         ApplySelectedMonsterState(element);
+
 
         // รีเฟรชปุ่ม
         UpdateAllButtons();
