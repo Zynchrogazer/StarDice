@@ -267,44 +267,6 @@ public class DeckManager : MonoBehaviour
         StartCoroutine(WaitAndBindUI());
     }
 
-    public void ResetDeckForRuntimeHubStart()
-    {
-        if (allCards == null)
-        {
-            Debug.LogWarning("DeckManager: allCards ยังไม่ได้ bind ใน Inspector");
-            return;
-        }
-
-        // เคลียร์เด็คที่เคยจัดไว้ทั้งหมด
-        if (cardUse != null)
-        {
-            for (int i = 0; i < cardUse.Length; i++)
-            {
-                cardUse[i] = null;
-            }
-        }
-
-        // ปลดล็อกเฉพาะการ์ดระดับ Common และล็อกความหายากอื่น
-        foreach (var card in allCards)
-        {
-            if (card == null || string.IsNullOrWhiteSpace(card.cardName))
-            {
-                continue;
-            }
-
-            bool shouldBeUsable = card.rarity == CardRarity.Common;
-            card.isUsable = shouldBeUsable;
-            PlayerPrefs.SetInt("CardState_" + card.cardName, shouldBeUsable ? 1 : 0);
-        }
-
-        SaveCurrentDeck();
-        PlayerPrefs.Save();
-
-        UpdateUseCardUI();
-        SortAndRefreshCards();
-        Debug.Log("♻️ RuntimeHub start: Deck reset and only Common cards are unlocked.");
-    }
-
     private IEnumerator WaitAndBindUI()
     {
         yield return null;
