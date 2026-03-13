@@ -486,6 +486,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1389685894}
   - component: {fileID: 1389685895}
+  - component: {fileID: 1389685896}
   m_Layer: 0
   m_Name: '[MonSelectUIManager]'
   m_TagString: Untagged
@@ -535,6 +536,30 @@ MonoBehaviour:
   - {fileID: 9053508885951087688}
   - {fileID: 8306879886878895792}
   characterSelectManager: {fileID: 1583492660}
+--- !u!114 &1389685896
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1389685893}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68d5638436ef7d84cbd61f40c406273d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  panels:
+  - {fileID: 6495079984640963941}
+  - {fileID: 3488940945079824433}
+  - {fileID: 6770478858265191209}
+  - {fileID: 5437547350177211009}
+  - {fileID: 8998673826220253450}
+  - {fileID: 972397221382172629}
+  allowToggleOffWhenTargetAlreadyOpen: 0
+  openPolicy: 0
+  closeOnOutsideClick: 1
+  ignoreOutsideCloseWhenPointerOverAnyUI: 1
+  enableDebugLogs: 0
 --- !u!1 &1393757533
 GameObject:
   m_ObjectHideFlags: 0
@@ -17585,7 +17610,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 1389685896}
         m_TargetAssemblyTypeName: PanelToggleManager, Assembly-CSharp
         m_MethodName: TogglePanel
         m_Mode: 3
@@ -19558,7 +19583,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 1389685896}
         m_TargetAssemblyTypeName: PanelToggleManager, Assembly-CSharp
         m_MethodName: TogglePanel
         m_Mode: 3
@@ -23037,7 +23062,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 1389685896}
         m_TargetAssemblyTypeName: PanelToggleManager, Assembly-CSharp
         m_MethodName: TogglePanel
         m_Mode: 3
@@ -43190,7 +43215,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 1389685896}
         m_TargetAssemblyTypeName: PanelToggleManager, Assembly-CSharp
         m_MethodName: TogglePanel
         m_Mode: 3
@@ -78243,7 +78268,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 1389685896}
         m_TargetAssemblyTypeName: PanelToggleManager, Assembly-CSharp
         m_MethodName: TogglePanel
         m_Mode: 3
@@ -91734,7 +91759,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 1389685896}
         m_TargetAssemblyTypeName: PanelToggleManager, Assembly-CSharp
         m_MethodName: TogglePanel
         m_Mode: 3

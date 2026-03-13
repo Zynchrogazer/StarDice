@@ -6,22 +6,22 @@ using TMPro;
 
 public class GameManagerLevel3 : MonoBehaviour
 {
-    [SerializeField] private ScoreManager scoreManager;
-    
+    public static GameManagerLevel3 Instance;
 
+    [Header("Card Settings")]
     public GameObject cardPrefab;
     public Transform cardParent;
     public TMP_Text mistakeText;
-
-    public Color[] cardColors; // <- ใส่สีที่ไม่ซ้ำกัน 8 สี
+    public Color[] cardColors; // <- ใส่สีที่ไม่ซ้ำกัน 8 สี (หรือมากกว่าถ้าต้องการ 15 คู่)
 
     private Card firstCard, secondCard;
     private int matchedPairs = 0;
     private int mistakes = 0;
-    private int totalPairs = 15;
+    private int totalPairs = 15; // 15 คู่ = จับคู่ถูกหมดได้ 1500 คะแนน
 
     public bool IsBusy = false;
 
+    [Header("UI & Timing")]
     public TMP_Text timerText;
     public GameObject resultPanel;
     public TMP_Text resultText;
@@ -29,20 +29,46 @@ public class GameManagerLevel3 : MonoBehaviour
     private float timeRemaining = 60f;
     private bool gameEnded = false;
 
+    [Header("Scoring")]
     public int score = 0;
+    public TMP_Text scoreText;
 
-    public TMP_Text scoreText; // อย่าลืม using TMPro;
+    // ---------------------------------------------------------
+    // [เพิ่มใหม่] ตัวแปรสำหรับจัดการไอเทมและรูปภาพ
+    // ---------------------------------------------------------
+    [Header("Reward Settings")]
+    public Sprite[] itemImages; 
+    public Image showImage;
 
+    public ItemID KnightSword = ItemID.KnightSword;
+    public ItemID KnightArmor = ItemID.KnightArmor;
+    public ItemID KnightShoes = ItemID.KnightShoes;
+    public ItemID WaterGodArmor = ItemID.WaterGodArmor;
+    public ItemID EarthLegendaryArmor = ItemID.EarthLegendaryArmor;
+    public ItemID HearthNeckless = ItemID.HearthNeckless;
+    public ItemID RecoverRing = ItemID.RecoverRing;
+    public ItemID WhiteFeather = ItemID.WhiteFeather;
+    public ItemID DawnRign = ItemID.DawnRign;
+    public ItemID Armor = ItemID.Armor;
+    public ItemID Sword = ItemID.Sword;
+    // ---------------------------------------------------------
+
+    void Awake()
+    {
+        Instance = this;
+    }
 
     void Start()
     {
-        ResolveScoreManager();
         CreateCards();
         mistakeText.text = "Mistakes: 0";
 
         resultPanel.SetActive(false);
         nextButton.onClick.AddListener(GoToNextScene);
 
+        // [เพิ่มใหม่] ซ่อนรูปไอเทมตอนเริ่มเกม
+        if (showImage != null)
+            showImage.gameObject.SetActive(false);
     }
 
     void CreateCards()
@@ -62,14 +88,10 @@ public class GameManagerLevel3 : MonoBehaviour
             Card card = obj.GetComponent<Card>();
             card.Setup(id);
 
-            card.ConfigureSelection(OnCardSelected, () => !IsBusy);
-
             Button btn = obj.GetComponent<Button>();
             btn.onClick.AddListener(() => card.OnClick());
         }
     }
-
-
 
     void Shuffle(List<int> list)
     {
@@ -102,16 +124,17 @@ public class GameManagerLevel3 : MonoBehaviour
 
         if (firstCard.cardId == secondCard.cardId)
         {
-              AddScore(100); // ได้ 100 คะแนน
-               ResolveScoreManager()?.AddScore(100);
+            AddScore(100); // ได้ 100 คะแนน
+            ScoreManager.Instance.AddScore(100);
+            
             firstCard.isMatched = true;
             secondCard.isMatched = true;
             matchedPairs++;
         }
         else
         {
-             SubtractScore(10);
-             ResolveScoreManager()?.SubtractScore(10);
+            SubtractScore(10); // หัก 10 คะแนน
+            ScoreManager.Instance.SubtractScore(10);
 
             mistakes++;
             mistakeText.text = "Mistakes: " + mistakes;
@@ -127,7 +150,6 @@ public class GameManagerLevel3 : MonoBehaviour
         {
             EndGame(true);
         }
-
     }
 
     void Update()
@@ -144,62 +166,150 @@ public class GameManagerLevel3 : MonoBehaviour
         }
     }
 
-    private ScoreManager ResolveScoreManager()
+    public void AddScore(int amount)
     {
-        if (scoreManager == null)
-            scoreManager = FindFirstObjectByType<ScoreManager>();
-
-        return scoreManager;
+        score += amount;
+        UpdateScoreUI(); 
     }
 
-public void AddScore(int amount)
-{
-    score += amount;
-    Debug.Log("Score: " + score); // สำหรับเทสต์
-    UpdateScoreUI(); // ถ้ามี UI
-}
-
+    public void SubtractScore(int amount)
+    {
+        score -= amount;
+        if (score < 0) score = 0; // ไม่ให้ติดลบ
+        UpdateScoreUI();
+    }
 
     void UpdateScoreUI()
     {
-        if (scoreText != null)
-       
-             scoreText.text = "Total Score: " + (ResolveScoreManager() != null ? ResolveScoreManager().totalScore : score);
+        if (scoreText != null && ScoreManager.Instance != null)
+            scoreText.text = "Total Score: " + ScoreManager.Instance.totalScore;
     }
 
-public void SubtractScore(int amount)
-{
-    score -= amount;
-
-    // ไม่ให้ติดลบ (ถ้าอยากจำกัด)
-    if (score < 0) score = 0;
-
-    UpdateScoreUI();
-}
-
-
-
-void EndGame(bool won)
-{
-    gameEnded = true;
-    resultPanel.SetActive(true);
-
-    MiniGameRewardService.TryGrantCreditReward(ResolveScoreManager() != null ? ResolveScoreManager().totalScore : score, "CardMemory");
-
-    if (won)
-        resultText.text = "You matched all cards!\nMistakes: " + mistakes;
-    else
-        resultText.text = "Time's up!\nMistakes: " + mistakes;
-}
-
-void GoToNextScene()
-{
-    if (ResolveScoreManager() != null)
+    void EndGame(bool won)
     {
-        ResolveScoreManager().ResetScore();
+        // ป้องกัน EndGame ทำงานซ้ำ
+        if (gameEnded) return;
+
+        gameEnded = true;
+        resultPanel.SetActive(true);
+
+        if (won)
+            resultText.text = "You matched all cards!\nMistakes: " + mistakes + "\nScore: " + score;
+        else
+            resultText.text = "Time's up!\nMistakes: " + mistakes + "\nScore: " + score;
+
+        // ---------------------------------------------------------
+        // [เพิ่มใหม่] สุ่มแจกไอเทมตอนจบเกม
+        GiveRewardBasedOnScore();
+        // ---------------------------------------------------------
     }
-    MiniGameRewardService.ReturnToBoardScene();
-}
 
+    void GoToNextScene()
+    {
+        ScoreManager.Instance.ResetScore();
+        UnityEngine.SceneManagement.SceneManager.LoadScene(1); 
+    }
 
+    // ---------------------------------------------------------
+    // [เพิ่มใหม่] ฟังก์ชันสำหรับแจกไอเทมตามคะแนน (ปรับเกณฑ์ให้เข้ากับคะแนนเต็ม 1500)
+    // ---------------------------------------------------------
+    void GiveRewardBasedOnScore()
+    {
+        int roll = Random.Range(1, 101); // สุ่มเลข 1-100
+
+        if (score >= 1500) // เกณฑ์ระดับสูง
+        {
+            if (roll <= 20) 
+            {
+                EquipmentManager.Instance.UnlockItem(KnightSword);
+                showImage.sprite = itemImages[0]; 
+                showImage.gameObject.SetActive(true);
+            }
+            else if (roll <= 40) 
+            {
+                EquipmentManager.Instance.UnlockItem(KnightArmor);
+                showImage.sprite = itemImages[1]; 
+                showImage.gameObject.SetActive(true);
+            }
+            else if (roll <= 60) 
+            {
+                EquipmentManager.Instance.UnlockItem(KnightShoes);
+                showImage.sprite = itemImages[2]; 
+                showImage.gameObject.SetActive(true);
+            }
+            else if (roll == 90) 
+            {
+                EquipmentManager.Instance.UnlockItem(EarthLegendaryArmor);
+                showImage.sprite = itemImages[3]; 
+                showImage.gameObject.SetActive(true);
+            }
+            else if (roll == 100) 
+            {
+                EquipmentManager.Instance.UnlockItem(WaterGodArmor);
+                showImage.sprite = itemImages[4]; 
+                showImage.gameObject.SetActive(true);
+            }
+            else 
+            {
+                showImage.gameObject.SetActive(false); 
+            }
+        }
+        else if (score >= 1000) // เกณฑ์ระดับกลาง
+        {
+            if (roll <= 40) 
+            {
+                EquipmentManager.Instance.UnlockItem(HearthNeckless);
+                showImage.sprite = itemImages[5]; 
+                showImage.gameObject.SetActive(true);
+            }
+            else if (roll <=80)
+            {
+                EquipmentManager.Instance.UnlockItem(RecoverRing);
+                showImage.sprite = itemImages[6]; 
+                showImage.gameObject.SetActive(true);
+            }
+              else 
+            {
+                // หากสุ่มได้เลข 61-89 หรือ 91-99 จะไม่ได้ไอเทมพิเศษอะไร (เกลือ)
+                showImage.gameObject.SetActive(false); 
+            }
+        }
+        else if( score >=500) // เกณฑ์ระดับเริ่มต้น (น้อยกว่า 500 หรือจบแบบ Game Over)
+        {
+            if (roll <= 20) 
+            {
+                EquipmentManager.Instance.UnlockItem(WhiteFeather);
+                showImage.sprite = itemImages[7]; 
+                showImage.gameObject.SetActive(true);
+            }
+            else if (roll <= 40) 
+            {
+                EquipmentManager.Instance.UnlockItem(DawnRign);
+                showImage.sprite = itemImages[8]; 
+                showImage.gameObject.SetActive(true);
+            }
+            else if (roll <= 60) 
+            {
+                EquipmentManager.Instance.UnlockItem(Armor);
+                showImage.sprite = itemImages[9]; 
+                showImage.gameObject.SetActive(true);
+            }
+            else if (roll <=80)
+            {
+                EquipmentManager.Instance.UnlockItem(Sword);
+                showImage.sprite = itemImages[10]; 
+                showImage.gameObject.SetActive(true);
+            }
+             else 
+            {
+                // หากสุ่มได้เลข 61-89 หรือ 91-99 จะไม่ได้ไอเทมพิเศษอะไร (เกลือ)
+                showImage.gameObject.SetActive(false); 
+            }
+        }
+          else 
+            {
+              
+                showImage.gameObject.SetActive(false); 
+            }
+    }
 }
