@@ -6341,14 +6341,14 @@ MonoBehaviour:
   - {fileID: 11400000, guid: ac96dadc7bf9ad1499e0cff900d12bdf, type: 2}
   - {fileID: 11400000, guid: 3f53ecbc69dc89a4eb7ee43b6062e19a, type: 2}
   - {fileID: 11400000, guid: fc728578ce373154c8447b7683d0df6b, type: 2}
-  shopPanel: {fileID: 0}
+  shopPanel: {fileID: 1151711728}
   shopSlots:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  shopCreditText: {fileID: 0}
+  - {fileID: 1151711727}
+  - {fileID: 1151711726}
+  - {fileID: 1151711725}
+  - {fileID: 1151711724}
+  - {fileID: 1151711723}
+  shopCreditText: {fileID: 1151711722}
   creditPrefix: 'Credit: '
 --- !u!4 &961116190
 Transform:
@@ -7923,6 +7923,77 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+--- !u!114 &1151711722 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5327990623640716574, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+  m_PrefabInstance: {fileID: 1151711721}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1151711723 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5235187342142932080, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+  m_PrefabInstance: {fileID: 1151711721}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 821458c75195a6c4fbd7b7fca8435393, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1151711724 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7681002231328938895, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+  m_PrefabInstance: {fileID: 1151711721}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 821458c75195a6c4fbd7b7fca8435393, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1151711725 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6652298327755738970, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+  m_PrefabInstance: {fileID: 1151711721}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 821458c75195a6c4fbd7b7fca8435393, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1151711726 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2186340105202837183, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+  m_PrefabInstance: {fileID: 1151711721}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 821458c75195a6c4fbd7b7fca8435393, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1151711727 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4949445901081199734, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+  m_PrefabInstance: {fileID: 1151711721}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 821458c75195a6c4fbd7b7fca8435393, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!1 &1151711728 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 133693192813705968, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+  m_PrefabInstance: {fileID: 1151711721}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1160805608
 GameObject:
   m_ObjectHideFlags: 0
@@ -12219,6 +12290,9 @@ MonoBehaviour:
   maxRandomizeAttempts: 10
   tileInvariantRules: []
   bossPrefab: {fileID: 761355516}
+  rockObstaclePrefab: {fileID: 0}
+  initialRockTileIDs: 
+  activeRockObstacles: []
 --- !u!1 &1669922060
 GameObject:
   m_ObjectHideFlags: 0
