@@ -221,9 +221,19 @@ public class PlayerState : MonoBehaviour
         // Bonus เมื่อเวลอัป (สไตล์ RPG)
         MaxHealth += 20;
         PlayerHealth = MaxHealth; // เลือดเด้งเต็ม
-        CurrentAttack += 2;          // ตีแรงขึ้น
+        CurrentAttack += 2;       // ตีแรงขึ้น
 
-        Debug.Log($"💪 RPG LEVEL UP! Lv.{PlayerLevel} (HP: {MaxHealth}, ATK: {CurrentAttack})");
+        if (PlayerLevel % 2 == 0)
+        {
+            CurrentDefense += 1; // เพิ่ม DEF ทุก ๆ 2 เลเวล
+        }
+
+        if (PlayerLevel % 5 == 0)
+        {
+            CurrentSpeed += 1; // เพิ่ม SPD ทุก ๆ 5 เลเวล
+        }
+
+        Debug.Log($"💪 RPG LEVEL UP! Lv.{PlayerLevel} (HP: {MaxHealth}, ATK: {CurrentAttack}, SPD: {CurrentSpeed}, DEF: {CurrentDefense})");
 
         // ถ้า EXP ยังเหลือเฟือ ก็ให้เช็คเวลอัปซ้ำ
         if (CurrentExp >= MaxExp) LevelUpRPG();

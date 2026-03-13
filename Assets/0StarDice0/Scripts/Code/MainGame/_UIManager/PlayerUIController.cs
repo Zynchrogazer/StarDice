@@ -5,10 +5,14 @@ public class PlayerUIController : MonoBehaviour
 {
     [Header("UI References")]
     public TMP_Text hpText;
+    public TMP_Text hpCurrentMaxText;
     public TMP_Text creditText;
     public TMP_Text starText;
     public TMP_Text winText;
     public TMP_Text levelText;
+    public TMP_Text atkText;
+    public TMP_Text spdText;
+    public TMP_Text defText;
 
     // ตัวแปรสำหรับจำตัวละครที่เป็น "คนเล่น" (Human)
     private PlayerState myPlayer;
@@ -52,6 +56,9 @@ public class PlayerUIController : MonoBehaviour
         if (hpText != null)
             hpText.text = $"HP: {myPlayer.PlayerHealth}";
 
+        if (hpCurrentMaxText != null)
+            hpCurrentMaxText.text = $"HP: {myPlayer.PlayerHealth}/{myPlayer.MaxHealth}";
+
         if (creditText != null)
             creditText.text = $"Credit: {ResolvePersistentCredit()}";
 
@@ -63,6 +70,15 @@ public class PlayerUIController : MonoBehaviour
 
         if (levelText != null)
             levelText.text = $"Lv. {myPlayer.PlayerLevel}";
+
+        if (atkText != null)
+            atkText.text = $"ATK: {myPlayer.CurrentAttack}";
+
+        if (spdText != null)
+            spdText.text = $"SPD: {myPlayer.CurrentSpeed}";
+
+        if (defText != null)
+            defText.text = $"DEF: {myPlayer.CurrentDefense}";
     }
 
     private int ResolvePersistentCredit()
@@ -84,7 +100,8 @@ public class PlayerUIController : MonoBehaviour
     /// </summary>
     private void TryAutoAssignUIRefs()
     {
-        if (hpText != null && creditText != null && starText != null && winText != null && levelText != null)
+        if (hpText != null && creditText != null && starText != null && winText != null && levelText != null
+            && atkText != null && spdText != null && defText != null)
             return;
 
         TMP_Text[] texts = FindObjectsByType<TMP_Text>(FindObjectsInactive.Include, FindObjectsSortMode.None);
@@ -93,11 +110,15 @@ public class PlayerUIController : MonoBehaviour
             if (txt == null) continue;
             string n = txt.name.ToLower();
 
-            if (hpText == null && n.Contains("hp")) hpText = txt;
+            if (hpCurrentMaxText == null && n.Contains("hp") && (n.Contains("max") || n.Contains("full") || n.Contains("slash") || n.Contains("detail"))) hpCurrentMaxText = txt;
+            else if (hpText == null && n.Contains("hp")) hpText = txt;
             else if (creditText == null && n.Contains("credit")) creditText = txt;
             else if (starText == null && n.Contains("star")) starText = txt;
             else if (winText == null && n.Contains("win")) winText = txt;
             else if (levelText == null && (n.Contains("level") || n.Contains("lv"))) levelText = txt;
+            else if (atkText == null && n.Contains("atk")) atkText = txt;
+            else if (spdText == null && (n.Contains("spd") || n.Contains("speed"))) spdText = txt;
+            else if (defText == null && n.Contains("def")) defText = txt;
         }
     }
 }
