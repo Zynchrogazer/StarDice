@@ -54,6 +54,17 @@ public struct TileInvariantRule
 }
 
 [System.Serializable]
+public class RockObstacleState
+{
+    [Tooltip("tileID ของช่องที่มีหิน")]
+    public int tileID;
+    [Tooltip("ถ้าเปิด = หินยังขวางทางอยู่")]
+    public bool isActive = true;
+    [Tooltip("อ็อบเจ็กต์หินที่ถูก Spawn ไว้บนช่อง (ถ้ามี)")]
+    public GameObject spawnedObject;
+}
+
+[System.Serializable]
 public struct TileGenSettings
 {
     public string name;
@@ -764,6 +775,112 @@ public class RouteManager : MonoBehaviour
     #endregion
     [Header("Boss Settings")]
     public GameObject bossPrefab;
+
+    [Header("Rock Obstacle Settings")]
+    [Tooltip("Prefab ของหินที่ใช้วางเป็นสิ่งกีดขวาง (optional)")]
+    public GameObject rockObstaclePrefab;
+    [Tooltip("ตำแหน่งช่องที่อยากให้มีหินตั้งแต่เริ่มเกม")]
+    public List<int> initialRockTileIDs = new List<int>();
+    [Tooltip("สถานะหินที่กำลังใช้งานในเกม")]
+    public List<RockObstacleState> activeRockObstacles = new List<RockObstacleState>();
+
+    private readonly Dictionary<int, RockObstacleState> rockObstacleMap = new Dictionary<int, RockObstacleState>();
+
+    private void Start()
+    {
+        if (!Application.isPlaying)
+        {
+            return;
+        }
+
+        if (initialRockTileIDs == null || initialRockTileIDs.Count == 0)
+        {
+            return;
+        }
+
+        foreach (int tileID in initialRockTileIDs)
+        {
+            ActivateRockObstacle(tileID);
+        }
+    }
+
+    public bool IsRockObstacleActive(int tileID)
+    {
+        RockObstacleState state = GetOrCreateRockObstacleState(tileID, false);
+        return state != null && state.isActive;
+    }
+
+    public bool TryBreakRockObstacle(int tileID)
+    {
+        RockObstacleState state = GetOrCreateRockObstacleState(tileID, false);
+        if (state == null || !state.isActive)
+        {
+            return false;
+        }
+
+        state.isActive = false;
+        if (state.spawnedObject != null)
+        {
+            Destroy(state.spawnedObject);
+            state.spawnedObject = null;
+        }
+
+        Debug.Log($"🪨 Rock obstacle on tile {tileID} was broken.");
+        return true;
+    }
+
+    public bool ActivateRockObstacle(int tileID)
+    {
+        NodeConnection nodeData = GetNodeData(tileID);
+        if (nodeData == null || nodeData.node == null)
+        {
+            Debug.LogWarning($"[RouteManager] ไม่พบ tileID {tileID} สำหรับวางหิน");
+            return false;
+        }
+
+        RockObstacleState state = GetOrCreateRockObstacleState(tileID, true);
+        state.isActive = true;
+
+        if (rockObstaclePrefab != null && state.spawnedObject == null)
+        {
+            state.spawnedObject = Instantiate(rockObstaclePrefab, nodeData.node.position, Quaternion.identity, nodeData.node);
+        }
+
+        return true;
+    }
+
+    private RockObstacleState GetOrCreateRockObstacleState(int tileID, bool createIfMissing)
+    {
+        if (tileID <= 0)
+        {
+            return null;
+        }
+
+        if (rockObstacleMap.TryGetValue(tileID, out RockObstacleState cached))
+        {
+            return cached;
+        }
+
+        for (int i = 0; i < activeRockObstacles.Count; i++)
+        {
+            RockObstacleState state = activeRockObstacles[i];
+            if (state != null && state.tileID == tileID)
+            {
+                rockObstacleMap[tileID] = state;
+                return state;
+            }
+        }
+
+        if (!createIfMissing)
+        {
+            return null;
+        }
+
+        RockObstacleState newState = new RockObstacleState { tileID = tileID, isActive = true };
+        activeRockObstacles.Add(newState);
+        rockObstacleMap[tileID] = newState;
+        return newState;
+    }
 
     public void SpawnBossTile()
     {

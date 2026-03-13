@@ -8,6 +8,7 @@ using System.Linq;
 public class DeckManager : MonoBehaviour
 {
     private static DeckManager cachedManager;
+    private const string PrimarySceneName = "RuntimeHub";
     private static readonly CardData[] EmptyDeck = new CardData[0];
 
     public static bool TryGet(out DeckManager manager)
@@ -18,7 +19,7 @@ public class DeckManager : MonoBehaviour
             return true;
         }
 
-        manager = FindFirstObjectByType<DeckManager>();
+        manager = FindBestAvailableManager();
         if (manager != null)
         {
             cachedManager = manager;
@@ -62,14 +63,66 @@ public class DeckManager : MonoBehaviour
 
     private void Awake()
     {
-        DeckManager[] managers = FindObjectsByType<DeckManager>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-        if (managers.Length > 1)
+        if (cachedManager == null)
         {
-            Destroy(gameObject);
+            cachedManager = this;
             return;
         }
 
-        cachedManager = this;
+        if (cachedManager == this)
+        {
+            return;
+        }
+
+        bool thisIsPrimary = IsInPrimaryScene(this);
+        bool cachedIsPrimary = IsInPrimaryScene(cachedManager);
+
+        if (thisIsPrimary && !cachedIsPrimary)
+        {
+            DeckManager oldManager = cachedManager;
+            cachedManager = this;
+            if (oldManager != null)
+            {
+                Destroy(oldManager.gameObject);
+            }
+
+            return;
+        }
+
+        Destroy(gameObject);
+    }
+
+    private static bool IsInPrimaryScene(DeckManager manager)
+    {
+        return manager != null
+            && manager.gameObject.scene.IsValid()
+            && string.Equals(manager.gameObject.scene.name, PrimarySceneName, System.StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static DeckManager FindBestAvailableManager()
+    {
+        DeckManager[] managers = FindObjectsByType<DeckManager>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        DeckManager fallback = null;
+
+        foreach (DeckManager manager in managers)
+        {
+            if (manager == null)
+            {
+                continue;
+            }
+
+            if (IsInPrimaryScene(manager))
+            {
+                return manager;
+            }
+
+            if (fallback == null)
+            {
+                fallback = manager;
+            }
+        }
+
+        return fallback;
     }
 
     private void OnDestroy()
@@ -270,9 +323,17 @@ public class DeckManager : MonoBehaviour
     private IEnumerator WaitAndBindUI()
     {
         yield return null;
-        var addObjs = GameObject.FindGameObjectsWithTag("AddButton");
-        var removeObjs = GameObject.FindGameObjectsWithTag("RemoveButton");
-        var useCardObjs = GameObject.FindGameObjectsWithTag("UseCardImage");
+        Scene activeScene = SceneManager.GetActiveScene();
+
+        var addObjs = GameObject.FindGameObjectsWithTag("AddButton")
+            .Where(obj => obj.scene == activeScene)
+            .ToArray();
+        var removeObjs = GameObject.FindGameObjectsWithTag("RemoveButton")
+            .Where(obj => obj.scene == activeScene)
+            .ToArray();
+        var useCardObjs = GameObject.FindGameObjectsWithTag("UseCardImage")
+            .Where(obj => obj.scene == activeScene)
+            .ToArray();
 
         if (addObjs.Length > 0)
         {
