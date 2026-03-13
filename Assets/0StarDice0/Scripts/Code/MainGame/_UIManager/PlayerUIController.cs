@@ -5,13 +5,20 @@ public class PlayerUIController : MonoBehaviour
 {
     [Header("UI References")]
     public TMP_Text hpText;
+    public TMP_Text hpCurrentMaxText;
     public TMP_Text creditText;
+    [Tooltip("รองรับกรณีมี Credit UI มากกว่า 1 จุด")]
+    public TMP_Text secondaryCreditText;
     public TMP_Text starText;
     public TMP_Text winText;
     public TMP_Text levelText;
+    public TMP_Text atkText;
+    public TMP_Text spdText;
+    public TMP_Text defText;
 
     // ตัวแปรสำหรับจำตัวละครที่เป็น "คนเล่น" (Human)
     private PlayerState myPlayer;
+    private ElementButtonManager elementButtonManager;
 
     private void Update()
     {
@@ -52,8 +59,11 @@ public class PlayerUIController : MonoBehaviour
         if (hpText != null)
             hpText.text = $"HP: {myPlayer.PlayerHealth}";
 
-        if (creditText != null)
-            creditText.text = $"Credit: {myPlayer.PlayerCredit}";
+        if (hpCurrentMaxText != null)
+            hpCurrentMaxText.text = $"HP: {myPlayer.PlayerHealth}/{myPlayer.MaxHealth}";
+
+        int resolvedCredit = ResolvePersistentCredit();
+        SetCreditUI(resolvedCredit);
 
         if (starText != null)
             starText.text = $"{myPlayer.PlayerStar}";
@@ -63,6 +73,42 @@ public class PlayerUIController : MonoBehaviour
 
         if (levelText != null)
             levelText.text = $"Lv. {myPlayer.PlayerLevel}";
+
+        if (atkText != null)
+            atkText.text = $"ATK: {myPlayer.CurrentAttack}";
+
+        if (spdText != null)
+            spdText.text = $"SPD: {myPlayer.CurrentSpeed}";
+
+        if (defText != null)
+            defText.text = $"DEF: {myPlayer.CurrentDefense}";
+    }
+
+    private void SetCreditUI(int credit)
+    {
+        string textValue = $"Credit: {credit}";
+
+        if (creditText != null)
+            creditText.text = textValue;
+
+        if (secondaryCreditText != null)
+            secondaryCreditText.text = textValue;
+    }
+
+    private int ResolvePersistentCredit()
+    {
+        // KISS: บน board ให้ยึดค่าจาก PlayerState ก่อน (source of truth ระหว่างเล่น)
+        if (myPlayer != null)
+            return Mathf.Max(0, myPlayer.PlayerCredit);
+
+        if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
+            return Mathf.Max(0, GameData.Instance.selectedPlayer.Credit);
+
+        if (myPlayer != null && myPlayer.selectedPlayerPreset != null)
+            return Mathf.Max(0, myPlayer.selectedPlayerPreset.Credit);
+
+        // fallback กันพังตอนเทสฉากเดี่ยว
+        return 0;
     }
 
     /// <summary>
@@ -71,20 +117,75 @@ public class PlayerUIController : MonoBehaviour
     /// </summary>
     private void TryAutoAssignUIRefs()
     {
-        if (hpText != null && creditText != null && starText != null && winText != null && levelText != null)
+        if (hpText != null && creditText != null && starText != null && winText != null && levelText != null
+            && atkText != null && spdText != null && defText != null)
+        {
+            // secondaryCreditText เป็น optional
+            return;
+        }
+
+        // KISS: ถ้ามี ElementButtonManager ให้ยึด status root ที่ active ก่อน
+        Transform activeStatusRoot = ResolveActiveStatusRoot();
+        if (activeStatusRoot != null)
+        {
+            TMP_Text[] statusTexts = activeStatusRoot.GetComponentsInChildren<TMP_Text>(true);
+            AssignTextsByName(statusTexts, preferActiveOnly: true);
+        }
+
+        // KISS: หาใน scope ของตัวเองก่อน (ลดโอกาสไปจับ UI ของธาตุ/หน้าต่างอื่น)
+        TMP_Text[] localTexts = GetComponentsInChildren<TMP_Text>(true);
+        AssignTextsByName(localTexts, preferActiveOnly: true);
+
+        if (hpText != null && creditText != null && starText != null && winText != null && levelText != null
+            && atkText != null && spdText != null && defText != null)
             return;
 
-        TMP_Text[] texts = FindObjectsByType<TMP_Text>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        // fallback: ค่อยค้นทั้ง scene แต่ยัง prefer เฉพาะ object ที่ active
+        TMP_Text[] activeSceneTexts = FindObjectsByType<TMP_Text>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+        AssignTextsByName(activeSceneTexts, preferActiveOnly: true);
+
+        if (hpText != null && creditText != null && starText != null && winText != null && levelText != null
+            && atkText != null && spdText != null && defText != null)
+            return;
+
+        // fallback สุดท้าย: รวม inactive เผื่อบาง panel เปิดภายหลัง
+        TMP_Text[] allTexts = FindObjectsByType<TMP_Text>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        AssignTextsByName(allTexts, preferActiveOnly: false);
+    }
+
+    private Transform ResolveActiveStatusRoot()
+    {
+        if (elementButtonManager == null)
+            elementButtonManager = FindFirstObjectByType<ElementButtonManager>();
+
+        return elementButtonManager != null ? elementButtonManager.GetActiveStatusRoot() : null;
+    }
+
+    private void AssignTextsByName(TMP_Text[] texts, bool preferActiveOnly)
+    {
+        if (texts == null) return;
+
         foreach (var txt in texts)
         {
             if (txt == null) continue;
+            if (preferActiveOnly && !txt.gameObject.activeInHierarchy) continue;
+
             string n = txt.name.ToLower();
 
-            if (hpText == null && n.Contains("hp")) hpText = txt;
-            else if (creditText == null && n.Contains("credit")) creditText = txt;
+            if (hpCurrentMaxText == null && n.Contains("hp") && (n.Contains("max") || n.Contains("full") || n.Contains("slash") || n.Contains("detail"))) hpCurrentMaxText = txt;
+            else if (hpText == null && n.Contains("hp")) hpText = txt;
+            else if (n.Contains("credit"))
+            {
+                if (creditText == null) creditText = txt;
+                else if (secondaryCreditText == null && txt != creditText) secondaryCreditText = txt;
+            }
             else if (starText == null && n.Contains("star")) starText = txt;
             else if (winText == null && n.Contains("win")) winText = txt;
             else if (levelText == null && (n.Contains("level") || n.Contains("lv"))) levelText = txt;
+            else if (atkText == null && n.Contains("atk")) atkText = txt;
+            else if (spdText == null && (n.Contains("spd") || n.Contains("speed"))) spdText = txt;
+            else if (defText == null && n.Contains("def")) defText = txt;
         }
     }
+
 }

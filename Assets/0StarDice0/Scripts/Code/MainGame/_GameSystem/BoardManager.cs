@@ -238,6 +238,10 @@ public class BoardManager : MonoBehaviour
     private void StartBattle(GameObject attacker, GameObject defender)
     {
         Debug.Log($"Loading Battle Scene (PvP): {attacker.name} vs {defender.name}");
-        SceneManager.LoadScene("TestFight");
+
+        if (!GameEventManager.TryLoadBattleSceneAdditive("TestFight"))
+        {
+            Debug.LogError("[BoardManager] Failed to load PvP battle scene additively.");
+        }
     }
 }

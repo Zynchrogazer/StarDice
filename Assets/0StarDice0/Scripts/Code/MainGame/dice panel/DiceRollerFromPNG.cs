@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 using UnityEngine.SceneManagement;
@@ -88,11 +88,18 @@ public class DiceRollerFromPNG : MonoBehaviour
     {
         yield return new WaitForSeconds(0.2f); // รอให้ Manager ตั้งสติแป๊บนึง
         if (GameTurnManager.TryGet(out var gameTurnManager) &&
-            gameTurnManager.currentState == GameState.WaitingForRoll &&
-            !GameTurnManager.CurrentPlayer.isAI)
+            gameTurnManager.currentState == GameState.WaitingForRoll)
         {
-            SetRollButtonActive(true);
-            Debug.Log("<color=lime>[DiceRoller] กลับมาที่ซีนหลักและเปิดปุ่มให้ใหม่แล้ว</color>");
+            PlayerState current = GameTurnManager.CurrentPlayer;
+            if (current != null && !current.isAI)
+            {
+                SetRollButtonActive(true);
+                Debug.Log("<color=lime>[DiceRoller] กลับมาที่ซีนหลักและเปิดปุ่มให้ใหม่แล้ว</color>");
+            }
+            else if (current == null)
+            {
+                Debug.LogWarning("[DiceRoller] WaitingForRoll but CurrentPlayer is null.");
+            }
         }
     }
 
