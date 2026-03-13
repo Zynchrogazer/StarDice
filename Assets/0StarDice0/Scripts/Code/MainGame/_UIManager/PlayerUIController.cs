@@ -19,6 +19,7 @@ public class PlayerUIController : MonoBehaviour
     // ตัวแปรสำหรับจำตัวละครที่เป็น "คนเล่น" (Human)
     private PlayerState myPlayer;
     private ElementButtonManager elementButtonManager;
+    private Transform boundStatusRoot;
 
     private void Update()
     {
@@ -117,6 +118,9 @@ public class PlayerUIController : MonoBehaviour
     /// </summary>
     private void TryAutoAssignUIRefs()
     {
+        Transform activeStatusRoot = ResolveActiveStatusRoot();
+        RebindIfStatusRootChanged(activeStatusRoot);
+
         if (hpText != null && creditText != null && starText != null && winText != null && levelText != null
             && atkText != null && spdText != null && defText != null)
         {
@@ -124,12 +128,12 @@ public class PlayerUIController : MonoBehaviour
             return;
         }
 
-        // KISS: ถ้ามี ElementButtonManager ให้ยึด status root ที่ active ก่อน
-        Transform activeStatusRoot = ResolveActiveStatusRoot();
+        // KISS: ถ้ามี ElementButtonManager ให้ยึด status root ที่ active เท่านั้น
         if (activeStatusRoot != null)
         {
             TMP_Text[] statusTexts = activeStatusRoot.GetComponentsInChildren<TMP_Text>(true);
             AssignTextsByName(statusTexts, preferActiveOnly: true);
+            return;
         }
 
         // KISS: หาใน scope ของตัวเองก่อน (ลดโอกาสไปจับ UI ของธาตุ/หน้าต่างอื่น)
@@ -151,6 +155,29 @@ public class PlayerUIController : MonoBehaviour
         // fallback สุดท้าย: รวม inactive เผื่อบาง panel เปิดภายหลัง
         TMP_Text[] allTexts = FindObjectsByType<TMP_Text>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         AssignTextsByName(allTexts, preferActiveOnly: false);
+    }
+
+    private void RebindIfStatusRootChanged(Transform activeStatusRoot)
+    {
+        if (boundStatusRoot == activeStatusRoot)
+            return;
+
+        boundStatusRoot = activeStatusRoot;
+
+        if (activeStatusRoot == null)
+            return;
+
+        // status panel เปลี่ยนแล้ว ให้ bind ใหม่ทั้งหมด เพื่อลดปัญหาชื่อ txt ซ้ำหลาย panel
+        hpText = null;
+        //hpCurrentMaxText = null;
+        creditText = null;
+        //secondaryCreditText = null;
+        starText = null;
+        winText = null;
+        levelText = null;
+        atkText = null;
+        spdText = null;
+        defText = null;
     }
 
     private Transform ResolveActiveStatusRoot()
