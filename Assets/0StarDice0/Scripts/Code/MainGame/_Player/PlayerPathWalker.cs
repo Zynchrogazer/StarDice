@@ -29,6 +29,7 @@ public class PlayerPathWalker : MonoBehaviour
     private bool isExecutingTurn = false;
     private bool isMoving = false;
     private Transform chosenNodeFromUI;
+    private int previousNodeID;
 
     public bool IsExecutingTurn => isExecutingTurn;
     public bool IsMoving => isMoving;
@@ -80,6 +81,7 @@ public class PlayerPathWalker : MonoBehaviour
 
         GiveTurnStartBonus();
         stepsRemaining = steps;
+        previousNodeID = currentNodeID;
         StartCoroutine(MoveTurnCoroutine());
     }
 
@@ -119,10 +121,30 @@ public class PlayerPathWalker : MonoBehaviour
                 }
             }
 
+            int nextTileID = routeManager.ExtractNumberFromName(nextNode.name);
+
             // สั่งเดินไปยังโหนดถัดไป
             yield return StartCoroutine(MoveTowardsCoroutine(nextNode));
 
-            currentNodeID = routeManager.ExtractNumberFromName(nextNode.name);
+            currentNodeID = nextTileID;
+
+            if (routeManager.IsRockObstacleActive(currentNodeID))
+            {
+                bool wasBroken = routeManager.TryBreakRockObstacle(currentNodeID);
+                if (wasBroken)
+                {
+                    NodeConnection previousNode = routeManager.GetNodeData(previousNodeID);
+                    if (previousNode != null && previousNode.node != null)
+                    {
+                        transform.position = previousNode.node.position;
+                        currentNodeID = previousNodeID;
+                    }
+
+                    Debug.Log($"🪨 {name} ชนหินที่ช่อง {nextTileID} หินแตกและเด้งกลับไปช่อง {currentNodeID}");
+                }
+            }
+
+            previousNodeID = currentNodeID;
             stepsRemaining--;
 
             if (stepsRemaining > 0)
