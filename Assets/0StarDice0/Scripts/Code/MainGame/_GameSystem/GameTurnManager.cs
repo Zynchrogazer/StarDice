@@ -344,13 +344,19 @@ public class GameTurnManager : MonoBehaviour
             return;
         }
 
-        currentPlayerIndex = 0;
+        // กลับจาก battle = จบเทิร์นของผู้เล่น/AI ที่เพิ่งเข้าฉากสู้
+        // ไม่ควรรีเซ็ตทั้งระบบกลับไปคนแรกเสมอ เพราะจะทำให้วนเทิร์นผู้เล่นซ้ำ
+        currentPlayerIndex++;
+        if (currentPlayerIndex >= allPlayers.Count)
+        {
+            currentPlayerIndex = 0;
+        }
 
         SetState(GameState.Idle);
         StopAllCoroutines();
         if (ResolveGameEventManager() != null) ResolveGameEventManager().ResetEventStatus();
 
-        Debug.Log("[Manager] ✅ กลับจาก Battle แล้ว เริ่มเทิร์นที่ผู้เล่นคนแรก");
+        Debug.Log($"[Manager] ✅ กลับจาก Battle แล้ว ส่งต่อเทิร์นให้: {CurrentPlayer?.name}");
         StartCoroutine(StartTurnRoutine());
     }
 

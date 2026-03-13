@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine.SceneManagement;
+using UnityEngine.Serialization;
 
 [System.Serializable]
 
@@ -17,7 +18,8 @@ public class PlayerState : MonoBehaviour
     [Header("Player Stats")]
     public int PlayerHealth;   // เปลี่ยนจาก Property เป็น Field เพื่อให้เห็นใน Inspector
     public int MaxHealth;      // ✅ เพิ่ม: เพื่อใช้คุมเพดานเลือด
-    public int PlayerCredit = 0;
+    [FormerlySerializedAs("PlayerCredit")]
+    [SerializeField] private int playerCredit = 0;
     public int PlayerStar = 0;
     public int CurrentAttack;
     public int CurrentSpeed;
@@ -56,6 +58,32 @@ public class PlayerState : MonoBehaviour
 
     public event System.Action OnDied;
     public event Action OnStatsUpdated;
+
+
+    public int PlayerCredit
+    {
+        get
+        {
+            if (TryResolveCreditData(out PlayerData data))
+            {
+                playerCredit = Mathf.Max(0, data.Credit);
+            }
+
+            return Mathf.Max(0, playerCredit);
+        }
+        set
+        {
+            int normalizedValue = Mathf.Max(0, value);
+            playerCredit = normalizedValue;
+
+            if (TryResolveCreditData(out PlayerData data))
+            {
+                data.SetCredit(normalizedValue);
+            }
+
+            OnStatsUpdated?.Invoke();
+        }
+    }
     private bool isDefeatHandling = false;
     private void Awake()
     {
@@ -91,6 +119,26 @@ public class PlayerState : MonoBehaviour
     {
         OnDied -= HandleDefeat;
         SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+
+    private bool TryResolveCreditData(out PlayerData data)
+    {
+        data = selectedPlayerPreset;
+
+        if (data != null)
+        {
+            return true;
+        }
+
+        if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
+        {
+            data = GameData.Instance.selectedPlayer;
+            selectedPlayerPreset = data;
+            return true;
+        }
+
+        return false;
     }
 
     public void LoadFromPlayerData(PlayerData data)

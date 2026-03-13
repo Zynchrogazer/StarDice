@@ -1,0 +1,66 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &718398898124601849
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6817492124456340367}
+  - component: {fileID: 4220446787842215716}
+  m_Layer: 0
+  m_Name: shopmanager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6817492124456340367
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 718398898124601849}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 567.3106, y: 278.93143, z: -50.800034}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4220446787842215716
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 718398898124601849}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cf55f1a3a8a7fc746bc632ac30c4551e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  allPossibleCards:
+  - {fileID: 11400000, guid: 9f95aca8bafb6084f865b88d712cc613, type: 2}
+  - {fileID: 11400000, guid: d2906cb5814866a4288ab0d17d0f0fd4, type: 2}
+  - {fileID: 11400000, guid: 4055b974dc118ec488af1fc45a2099c4, type: 2}
+  - {fileID: 11400000, guid: a6406eb18cb57824e91973e99a24a9a3, type: 2}
+  - {fileID: 11400000, guid: 749da29f08658a24fbcf33b645ae761b, type: 2}
+  - {fileID: 11400000, guid: 5b08871e160883d4c864913dce07b30c, type: 2}
+  - {fileID: 11400000, guid: 653953c803b57df49be09f792cf88bdd, type: 2}
+  - {fileID: 11400000, guid: ac96dadc7bf9ad1499e0cff900d12bdf, type: 2}
+  - {fileID: 11400000, guid: 3f53ecbc69dc89a4eb7ee43b6062e19a, type: 2}
+  - {fileID: 11400000, guid: fc728578ce373154c8447b7683d0df6b, type: 2}
+  shopPanel: {fileID: 0}
+  shopSlots:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  shopCreditText: {fileID: 0}
+  creditPrefix: 'Credit: '
