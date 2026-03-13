@@ -93,10 +93,38 @@ public static class BattleHealthSyncBridge
         if (runtimeBattlePlayerData == null) return;
 
         PlayerData runtimeDataToCleanup = runtimeBattlePlayerData;
+        SyncRuntimeBattleProgressToBoard(runtimeDataToCleanup);
         RestoreGlobalSelectedPlayerAfterBattle(runtimeDataToCleanup);
 
         Object.Destroy(runtimeBattlePlayerData);
         runtimeBattlePlayerData = null;
+    }
+
+    private static void SyncRuntimeBattleProgressToBoard(PlayerData runtimeData)
+    {
+        if (runtimeData == null) return;
+
+        PlayerState currentPlayer = ResolveBoardPlayerState();
+        if (currentPlayer == null) return;
+
+        // Legacy battle scripts หลายตัวแก้ค่ารางวัลผ่าน selectedPlayer (PlayerData)
+        // จึงต้อง sync กลับเข้า PlayerState/ข้อมูลหลักก่อนทำลาย runtime clone
+        int syncedCredit = Mathf.Max(0, runtimeData.Credit);
+        currentPlayer.PlayerCredit = syncedCredit;
+        currentPlayer.PlayerLevel = Mathf.Max(1, runtimeData.level);
+        currentPlayer.CurrentExp = Mathf.Max(0, runtimeData.currentExp);
+        currentPlayer.MaxExp = Mathf.Max(1, runtimeData.maxExp);
+        currentPlayer.NotifyStatsUpdated();
+
+        if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
+        {
+            GameData.Instance.selectedPlayer.SetCredit(syncedCredit);
+            GameData.Instance.selectedPlayer.level = currentPlayer.PlayerLevel;
+            GameData.Instance.selectedPlayer.currentExp = currentPlayer.CurrentExp;
+            GameData.Instance.selectedPlayer.maxExp = currentPlayer.MaxExp;
+        }
+
+        Debug.Log($"[BattleHealthSyncBridge] Synced runtime battle rewards -> Credit:{syncedCredit}, Lv:{currentPlayer.PlayerLevel}, EXP:{currentPlayer.CurrentExp}/{currentPlayer.MaxExp}");
     }
 
     private static void OverrideGlobalSelectedPlayerForBattle()
