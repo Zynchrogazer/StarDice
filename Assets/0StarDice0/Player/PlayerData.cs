@@ -14,7 +14,7 @@ public class PlayerData : ScriptableObject
 
     [Tooltip("Primary max HP value used by runtime systems.")]
     public int maxHP = 100;
-    public int attackDamage = 10;
+    public int attackDamage = 100;
     public int speed = 10;
     public int def = 1;
     public SkillData[] skills = new SkillData[3]; // 3 สกิลพิเศษ

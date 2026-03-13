@@ -223,6 +223,10 @@ public static class BattleHealthSyncBridge
     {
         if (panel == null) return;
 
+        // ถ้ามี BattleResultPanelController แล้ว ให้ใช้การ bind แบบ explicit จาก prefab
+        // ไม่ต้องเดาชื่อปุ่มด้วย reflection ที่นี่อีก
+        if (panel.GetComponentInParent<BattleResultPanelController>(true) != null) return;
+
         Button[] buttons = panel.GetComponentsInChildren<Button>(true);
         if (buttons == null || buttons.Length == 0) return;
 
@@ -257,7 +261,7 @@ public static class BattleHealthSyncBridge
             {
                 if (rewardButton.onClick.GetPersistentEventCount() == 0)
                 {
-                    rewardButton.onClick.AddListener(BattleResultFlowService.HandleRewardAndReturnToBoard);
+                    rewardButton.onClick.AddListener(() => BattleResultFlowService.HandleRewardAndReturnToBoard());
                 }
             }
 
