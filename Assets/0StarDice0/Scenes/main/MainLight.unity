@@ -232,6 +232,77 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+--- !u!114 &1800484142 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5327990623640716574, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+  m_PrefabInstance: {fileID: 1800484141}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1800484143 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5235187342142932080, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+  m_PrefabInstance: {fileID: 1800484141}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 821458c75195a6c4fbd7b7fca8435393, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1800484144 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7681002231328938895, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+  m_PrefabInstance: {fileID: 1800484141}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 821458c75195a6c4fbd7b7fca8435393, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1800484145 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6652298327755738970, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+  m_PrefabInstance: {fileID: 1800484141}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 821458c75195a6c4fbd7b7fca8435393, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1800484146 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2186340105202837183, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+  m_PrefabInstance: {fileID: 1800484141}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 821458c75195a6c4fbd7b7fca8435393, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1800484147 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4949445901081199734, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+  m_PrefabInstance: {fileID: 1800484141}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 821458c75195a6c4fbd7b7fca8435393, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!1 &1800484148 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 133693192813705968, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+  m_PrefabInstance: {fileID: 1800484141}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &8184786055352829
 GameObject:
   m_ObjectHideFlags: 0
@@ -1176,6 +1247,9 @@ MonoBehaviour:
   maxRandomizeAttempts: 10
   tileInvariantRules: []
   bossPrefab: {fileID: 0}
+  rockObstaclePrefab: {fileID: 0}
+  initialRockTileIDs: 
+  activeRockObstacles: []
 --- !u!33 &390451425800785429
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -4541,21 +4615,20 @@ MonoBehaviour:
   - {fileID: 11400000, guid: d2906cb5814866a4288ab0d17d0f0fd4, type: 2}
   - {fileID: 11400000, guid: 4055b974dc118ec488af1fc45a2099c4, type: 2}
   - {fileID: 11400000, guid: a6406eb18cb57824e91973e99a24a9a3, type: 2}
-  - {fileID: 11400000, guid: 9f95aca8bafb6084f865b88d712cc613, type: 2}
-  - {fileID: 11400000, guid: 9f95aca8bafb6084f865b88d712cc613, type: 2}
-  - {fileID: 11400000, guid: 9f95aca8bafb6084f865b88d712cc613, type: 2}
-  - {fileID: 11400000, guid: 9f95aca8bafb6084f865b88d712cc613, type: 2}
-  - {fileID: 11400000, guid: 9f95aca8bafb6084f865b88d712cc613, type: 2}
-  - {fileID: 11400000, guid: 9f95aca8bafb6084f865b88d712cc613, type: 2}
-  - {fileID: 11400000, guid: 9f95aca8bafb6084f865b88d712cc613, type: 2}
-  shopPanel: {fileID: 0}
+  - {fileID: 11400000, guid: 749da29f08658a24fbcf33b645ae761b, type: 2}
+  - {fileID: 11400000, guid: 5b08871e160883d4c864913dce07b30c, type: 2}
+  - {fileID: 11400000, guid: 653953c803b57df49be09f792cf88bdd, type: 2}
+  - {fileID: 11400000, guid: ac96dadc7bf9ad1499e0cff900d12bdf, type: 2}
+  - {fileID: 11400000, guid: 3f53ecbc69dc89a4eb7ee43b6062e19a, type: 2}
+  - {fileID: 11400000, guid: fc728578ce373154c8447b7683d0df6b, type: 2}
+  shopPanel: {fileID: 1800484148}
   shopSlots:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  shopCreditText: {fileID: 0}
+  - {fileID: 1800484147}
+  - {fileID: 1800484146}
+  - {fileID: 1800484145}
+  - {fileID: 1800484144}
+  - {fileID: 1800484143}
+  shopCreditText: {fileID: 1800484142}
   creditPrefix: 'Credit: '
 --- !u!33 &2939174709847314411
 MeshFilter:
