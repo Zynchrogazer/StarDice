@@ -56,6 +56,8 @@ public static class BattleHealthSyncBridge
             TryInvokeHpUiRefresh(behaviour);
         }
 
+        TryWireResultButtons(scene);
+
         Debug.Log($"[BattleHealthSyncBridge] Synced board HP ({syncedHealth}) into battle scene '{scene.name}'.");
     }
 
@@ -186,6 +188,102 @@ public static class BattleHealthSyncBridge
     {
         MethodInfo updateMethod = behaviour.GetType().GetMethod("UpdatePlayerHPUI", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
         updateMethod?.Invoke(behaviour, null);
+    }
+
+
+    private static void TryWireResultButtons(Scene scene)
+    {
+        foreach (MonoBehaviour behaviour in Object.FindObjectsOfType<MonoBehaviour>(true))
+        {
+            if (behaviour == null || behaviour.gameObject.scene != scene) continue;
+
+            GameObject winPanel = TryGetPanelField(behaviour, "winPanel");
+            GameObject losePanel = TryGetPanelField(behaviour, "losePanel");
+
+            if (winPanel != null)
+            {
+                WirePanelButtons(winPanel, isWinPanel: true);
+            }
+
+            if (losePanel != null)
+            {
+                WirePanelButtons(losePanel, isWinPanel: false);
+            }
+        }
+    }
+
+    private static GameObject TryGetPanelField(MonoBehaviour behaviour, string fieldName)
+    {
+        FieldInfo field = behaviour.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        if (field == null || !typeof(GameObject).IsAssignableFrom(field.FieldType)) return null;
+        return field.GetValue(behaviour) as GameObject;
+    }
+
+    private static void WirePanelButtons(GameObject panel, bool isWinPanel)
+    {
+        if (panel == null) return;
+
+        Button[] buttons = panel.GetComponentsInChildren<Button>(true);
+        if (buttons == null || buttons.Length == 0) return;
+
+        Button rewardButton = null;
+        Button restartButton = null;
+
+        for (int i = 0; i < buttons.Length; i++)
+        {
+            Button btn = buttons[i];
+            if (btn == null) continue;
+
+            string n = btn.name.ToLowerInvariant();
+            if (rewardButton == null && (n.Contains("reward") || n.Contains("claim")))
+            {
+                rewardButton = btn;
+            }
+
+            if (restartButton == null && (n.Contains("restart") || n.Contains("retry") || n.Contains("inter") || n.Contains("back")))
+            {
+                restartButton = btn;
+            }
+        }
+
+        if (isWinPanel)
+        {
+            if (rewardButton == null && buttons.Length == 1)
+            {
+                rewardButton = buttons[0];
+            }
+
+            if (rewardButton != null)
+            {
+                if (rewardButton.onClick.GetPersistentEventCount() == 0)
+                {
+                    rewardButton.onClick.AddListener(BattleResultFlowService.HandleRewardAndReturnToBoard);
+                }
+            }
+
+            if (restartButton != null)
+            {
+                if (restartButton.onClick.GetPersistentEventCount() == 0)
+                {
+                    restartButton.onClick.AddListener(BattleResultFlowService.HandleRestartToInterMission);
+                }
+            }
+        }
+        else
+        {
+            if (restartButton == null)
+            {
+                restartButton = buttons[0];
+            }
+
+            if (restartButton != null)
+            {
+                if (restartButton.onClick.GetPersistentEventCount() == 0)
+                {
+                    restartButton.onClick.AddListener(BattleResultFlowService.HandleRestartToInterMission);
+                }
+            }
+        }
     }
 
     private static bool IsBattleScene(Scene scene)
