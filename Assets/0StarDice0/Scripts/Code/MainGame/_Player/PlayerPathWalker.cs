@@ -34,6 +34,7 @@ public class PlayerPathWalker : MonoBehaviour
     public bool IsExecutingTurn => isExecutingTurn;
     public bool IsMoving => isMoving;
     public Transform CurrentNodeTransform => routeManager?.GetNodeData(currentNodeID)?.node;
+    public int PreviousNodeID => previousNodeID;
 
     private void Awake()
     {
@@ -128,20 +129,9 @@ public class PlayerPathWalker : MonoBehaviour
 
             currentNodeID = nextTileID;
 
-            if (routeManager.IsRockObstacleActive(currentNodeID))
+            if (TryBreakRockAndBounceBack(nextTileID))
             {
-                bool wasBroken = routeManager.TryBreakRockObstacle(currentNodeID);
-                if (wasBroken)
-                {
-                    NodeConnection previousNode = routeManager.GetNodeData(previousNodeID);
-                    if (previousNode != null && previousNode.node != null)
-                    {
-                        transform.position = previousNode.node.position;
-                        currentNodeID = previousNodeID;
-                    }
-
-                    Debug.Log($"🪨 {name} ชนหินที่ช่อง {nextTileID} หินแตกและเด้งกลับไปช่อง {currentNodeID}");
-                }
+                Debug.Log($"🪨 {name} ชนหินที่ช่อง {nextTileID} หินแตกและเด้งกลับไปช่อง {currentNodeID}");
             }
 
             previousNodeID = currentNodeID;
@@ -207,6 +197,34 @@ public class PlayerPathWalker : MonoBehaviour
         }
         transform.position = targetNode.position;
         isMoving = false;
+    }
+
+    public bool TryBreakRockAndBounceBack(int rockTileID)
+    {
+        if (routeManager == null || rockTileID <= 0)
+        {
+            return false;
+        }
+
+        if (!routeManager.IsRockObstacleActive(rockTileID))
+        {
+            return false;
+        }
+
+        bool wasBroken = routeManager.TryBreakRockObstacle(rockTileID);
+        if (!wasBroken)
+        {
+            return false;
+        }
+
+        NodeConnection previousNode = routeManager.GetNodeData(previousNodeID);
+        if (previousNode != null && previousNode.node != null)
+        {
+            transform.position = previousNode.node.position;
+            currentNodeID = previousNodeID;
+        }
+
+        return true;
     }
 
     private void OnPathChosen(Transform chosenNode)

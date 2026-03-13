@@ -121,6 +121,8 @@ GameObject:
   - component: {fileID: 6768610762504644427}
   - component: {fileID: 8103519792596771332}
   - component: {fileID: -6495200840618862907}
+  - component: {fileID: 7977566403097918216}
+  - component: {fileID: 6019919859752298002}
   m_Layer: 0
   m_Name: Player_root
   m_TagString: Player
@@ -159,6 +161,9 @@ MonoBehaviour:
   moveSpeed: 5
   delayAfterNodeArrival: 0.2
   walkSound: {fileID: 8300000, guid: 1dc14e8284609614790e5de6a1015c4e, type: 3}
+  landSound: {fileID: 0}
+  soundVolume: 0.8
+  eventManager: {fileID: 0}
   currentNodeID: 0
 --- !u!114 &8103519792596771332
 MonoBehaviour:
@@ -172,12 +177,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b3d1ac737dd66d4aabf1701df9ea41e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  playerStatAggregator: {fileID: 0}
   isAI: 0
   PlayerHealth: 0
   MaxHealth: 50
   PlayerCredit: 0
   PlayerStar: 0
   CurrentAttack: 0
+  CurrentSpeed: 0
+  CurrentDefense: 0
+  RuntimeAttackModifier: 0
+  RuntimeMaxHealthModifier: 0
+  RuntimeStarModifier: 0
+  AppliedStarBonusTotal: 0
+  DebuffBurn: 0
+  DebuffBurnTurnsRemaining: 0
+  hasIceEffect: 0
   WinCount: 0
   PlayerLevel: 1
   CurrentExp: 0
@@ -279,3 +294,76 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!50 &7977566403097918216
+Rigidbody2D:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1634736934703218726}
+  m_BodyType: 0
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_GravityScale: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 0
+  m_Constraints: 0
+--- !u!61 &6019919859752298002
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1634736934703218726}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0, y: 0}
+    oldSize: {x: 0, y: 0}
+    newSize: {x: 0, y: 0}
+    adaptiveTilingThreshold: 0
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  m_Size: {x: 1, y: 1}
+  m_EdgeRadius: 0
