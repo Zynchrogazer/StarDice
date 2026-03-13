@@ -160,6 +160,8 @@ public static class BattleHealthSyncBridge
         runtimeData.maxHealth = syncedMaxHealth;
         runtimeData.maxHP = syncedMaxHealth;
         runtimeData.attackDamage = Mathf.Max(0, currentPlayer.CurrentAttack);
+        runtimeData.speed = Mathf.Max(0, currentPlayer.CurrentSpeed);
+        runtimeData.def = Mathf.Max(0, currentPlayer.CurrentDefense);
         runtimeData.level = Mathf.Max(1, currentPlayer.PlayerLevel);
         runtimeData.currentExp = Mathf.Max(0, currentPlayer.CurrentExp);
         runtimeData.maxExp = Mathf.Max(1, currentPlayer.MaxExp);
