@@ -99,15 +99,17 @@ public class PlayerUIController : MonoBehaviour
 
     private int ResolvePersistentCredit()
     {
-        // KISS: บน board ให้ยึดค่าจาก PlayerState ก่อน (source of truth ระหว่างเล่น)
-        if (myPlayer != null)
-            return Mathf.Max(0, myPlayer.PlayerCredit);
-
+        // KISS: credit ให้ยึด PlayerData ก่อน เพื่อไม่ให้ค่ารีเซ็ตเมื่อ unload scene
+        // (PlayerState เป็น scene-bound)
         if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
             return Mathf.Max(0, GameData.Instance.selectedPlayer.Credit);
 
         if (myPlayer != null && myPlayer.selectedPlayerPreset != null)
             return Mathf.Max(0, myPlayer.selectedPlayerPreset.Credit);
+
+        // fallback กันกรณี scene เทส/ข้อมูลยังไม่ถูกฉีดเข้ามา
+        if (myPlayer != null)
+            return Mathf.Max(0, myPlayer.PlayerCredit);
 
         // fallback กันพังตอนเทสฉากเดี่ยว
         return 0;
@@ -181,7 +183,7 @@ public class PlayerUIController : MonoBehaviour
     private Transform ResolveActiveStatusRoot()
     {
         if (elementButtonManager == null || !elementButtonManager.gameObject.scene.IsValid())
-            elementButtonManager = FindPreferredElementButtonManager();
+            elementButtonManager = ResolvePreferredElementButtonManagerInstance();
 
         if (elementButtonManager == null)
             return null;
@@ -229,7 +231,7 @@ public class PlayerUIController : MonoBehaviour
         }
     }
 
-    private ElementButtonManager FindPreferredElementButtonManager()
+    private ElementButtonManager ResolvePreferredElementButtonManagerInstance()
     {
         ElementButtonManager[] managers = FindObjectsByType<ElementButtonManager>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         if (managers == null || managers.Length == 0)
