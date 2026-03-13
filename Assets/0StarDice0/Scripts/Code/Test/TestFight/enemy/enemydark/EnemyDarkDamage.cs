@@ -313,8 +313,21 @@ public class EnemyDarkDamage: MonoBehaviour
 
     void SetupPlayer()
     {
-        playerHP = selectedPlayer.maxHP;
-        playerHPBar.maxValue = selectedPlayer.maxHP;
+        int maxHp = Mathf.Max(1, selectedPlayer.maxHP);
+
+        // ใช้ค่า HP ที่ถูก sync จาก BattleHealthSyncBridge (ถ้ามี) เพื่อไม่รีเซ็ตเลือดเต็มทุกครั้ง
+        // ถ้าไม่มีค่า sync มาก่อน (เช่นเข้าเทส scene เดี่ยว) ค่อย fallback เป็นเต็มหลอด
+        bool hasSyncedHp = playerHP > 0 && playerHP <= maxHp;
+        if (!hasSyncedHp)
+        {
+            playerHP = maxHp;
+        }
+        else
+        {
+            playerHP = Mathf.Clamp(playerHP, 0, maxHp);
+        }
+
+        playerHPBar.maxValue = maxHp;
         playerHPBar.value = playerHP;
         UpdatePlayerHPUI();
 
