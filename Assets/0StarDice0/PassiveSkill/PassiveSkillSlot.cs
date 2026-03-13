@@ -1,6 +1,8 @@
-﻿using UnityEngine;
+﻿﻿using System.Text;
+using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using TMPro;
 
 public class PassiveSkillSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
 {
@@ -25,6 +27,7 @@ public class PassiveSkillSlot : MonoBehaviour, IPointerEnterHandler, IPointerExi
     private Image lockedOverlayImage;
     [SerializeField] private PassiveSkillTooltip tooltip;
     [SerializeField] private SkillManager skillManager;
+    [SerializeField] private TextMeshProUGUI costText;
 
     private void Awake()
     {
@@ -34,6 +37,7 @@ public class PassiveSkillSlot : MonoBehaviour, IPointerEnterHandler, IPointerExi
         }
 
         EnsureLockedOverlay();
+        ResolveCostText();
     }
 
     private void Start()
@@ -83,6 +87,11 @@ public class PassiveSkillSlot : MonoBehaviour, IPointerEnterHandler, IPointerExi
             if (frameImage != null) frameImage.color = lockedFrameColor;
             SetLockedOverlay(true, lockedOverlayAlpha);
         }
+
+        if (ResolveCostText() != null && passiveSkillData != null)
+        {
+            ResolveCostText().text = $"Cost: {passiveSkillData.costPoint}";
+        }
     }
 
     public void OnPointerClick(PointerEventData eventData)
@@ -108,7 +117,7 @@ public class PassiveSkillSlot : MonoBehaviour, IPointerEnterHandler, IPointerExi
             skillManager = FindFirstObjectByType<SkillManager>();
 
         if (passiveSkillData != null && tooltip != null)
-            tooltip.ShowTooltip(passiveSkillData.skillName, passiveSkillData.description);
+            tooltip.ShowTooltip(passiveSkillData.skillName, BuildTooltipDescription());
     }
 
     public void OnPointerExit(PointerEventData eventData)
@@ -120,6 +129,24 @@ public class PassiveSkillSlot : MonoBehaviour, IPointerEnterHandler, IPointerExi
 
         if (tooltip != null)
             tooltip.HideTooltip();
+    }
+
+    private TextMeshProUGUI ResolveCostText()
+    {
+        if (costText != null)
+            return costText;
+
+        TextMeshProUGUI[] texts = GetComponentsInChildren<TextMeshProUGUI>(true);
+        for (int i = 0; i < texts.Length; i++)
+        {
+            if (texts[i] != null && texts[i].name.ToLowerInvariant().Contains("cost"))
+            {
+                costText = texts[i];
+                break;
+            }
+        }
+
+        return costText;
     }
 
     private SkillManager ResolveSkillManager()
@@ -170,6 +197,7 @@ public class PassiveSkillSlot : MonoBehaviour, IPointerEnterHandler, IPointerExi
         if (lockedOverlayObject == null)
         {
             EnsureLockedOverlay();
+        ResolveCostText();
         }
 
         if (lockedOverlayObject == null) return;
@@ -181,5 +209,39 @@ public class PassiveSkillSlot : MonoBehaviour, IPointerEnterHandler, IPointerExi
         }
 
         lockedOverlayObject.SetActive(visible);
+    }
+
+    private string BuildTooltipDescription()
+    {
+        if (passiveSkillData == null)
+            return string.Empty;
+
+        StringBuilder builder = new StringBuilder();
+        if (!string.IsNullOrWhiteSpace(passiveSkillData.description))
+        {
+            builder.AppendLine(passiveSkillData.description.Trim());
+            builder.AppendLine();
+        }
+
+        AppendBonusLine(builder, "ATK", passiveSkillData.bonusAttack);
+        AppendBonusLine(builder, "HP", passiveSkillData.bonusMaxHP);
+        AppendBonusLine(builder, "STAR", passiveSkillData.bonusStar);
+        AppendBonusLine(builder, "SPD", passiveSkillData.bonusSpeed);
+        AppendBonusLine(builder, "DEF", passiveSkillData.bonusDefense);
+
+        if (passiveSkillData.costPoint > 0)
+        {
+            builder.AppendLine($"Cost: {passiveSkillData.costPoint}");
+        }
+
+        string result = builder.ToString().TrimEnd();
+        return string.IsNullOrEmpty(result) ? "No bonus" : result;
+    }
+
+    private static void AppendBonusLine(StringBuilder builder, string label, int value)
+    {
+        if (value == 0) return;
+        string sign = value > 0 ? "+" : string.Empty;
+        builder.AppendLine($"{label}: {sign}{value}");
     }
 }

@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+﻿﻿using UnityEngine;
 using System.Collections.Generic;
 
 [CreateAssetMenu(fileName = "New Passive Skill", menuName = "Skill Tree/Passive Skill Data")]
@@ -23,9 +23,11 @@ public class PassiveSkillData : ScriptableObject
     public int bonusAttack = 0;
     public int bonusMaxHP = 0;
     public int bonusStar = 0;
+    public int bonusSpeed = 0;
+    public int bonusDefense = 0;
 
     public bool HasAnyBonus()
     {
-        return bonusAttack != 0 || bonusMaxHP != 0 || bonusStar != 0;
+        return bonusAttack != 0 || bonusMaxHP != 0 || bonusStar != 0 || bonusSpeed != 0 || bonusDefense != 0;
     }
 }

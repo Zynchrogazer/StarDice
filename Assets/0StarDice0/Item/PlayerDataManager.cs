@@ -39,6 +39,7 @@ public class PlayerDataManager : MonoBehaviour
         {
             LoadEquippedItems();
             OnEquipmentChanged?.Invoke();
+            RefreshCurrentPlayerStats();
         }
     }
 
@@ -74,6 +75,7 @@ public class PlayerDataManager : MonoBehaviour
         // 3. แจ้งเตือน UI
         SaveEquippedItems();
         OnEquipmentChanged?.Invoke();
+        RefreshCurrentPlayerStats();
     }
 
     public bool IsItemEquipped(EquipmentData itemToCheck)
@@ -111,6 +113,7 @@ public class PlayerDataManager : MonoBehaviour
 
         SaveEquippedItems();
         OnEquipmentChanged?.Invoke();
+        RefreshCurrentPlayerStats();
     }
 
     public static void ClearSavedEquipSlots()
@@ -118,6 +121,15 @@ public class PlayerDataManager : MonoBehaviour
         for (int i = 0; i < EquipSlotCount; i++)
         {
             PlayerPrefs.DeleteKey(EquipSlotPrefKeyPrefix + i);
+        }
+    }
+
+    private void RefreshCurrentPlayerStats()
+    {
+        PlayerStatAggregator aggregator = FindFirstObjectByType<PlayerStatAggregator>();
+        if (aggregator != null)
+        {
+            aggregator.RefreshCurrentPlayerStats();
         }
     }
 
