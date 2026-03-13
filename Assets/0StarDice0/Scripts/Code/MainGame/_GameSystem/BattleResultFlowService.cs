@@ -97,6 +97,7 @@ public static class BattleResultFlowService
                 yield break;
 
             Scene targetScene = SceneManager.GetSceneByName(targetSceneName);
+            bool wasAlreadyLoaded = targetScene.IsValid() && targetScene.isLoaded;
             if (!targetScene.IsValid() || !targetScene.isLoaded)
             {
                 AsyncOperation loadOp = SceneManager.LoadSceneAsync(targetSceneName, LoadSceneMode.Additive);
@@ -108,6 +109,7 @@ public static class BattleResultFlowService
                 targetScene = SceneManager.GetSceneByName(targetSceneName);
             }
 
+            bool targetBoardReady = false;
             if (targetScene.IsValid() && targetScene.isLoaded)
             {
                 foreach (GameObject root in targetScene.GetRootGameObjects())
@@ -116,6 +118,14 @@ public static class BattleResultFlowService
                 }
 
                 SceneManager.SetActiveScene(targetScene);
+                targetBoardReady = true;
+            }
+
+            if (targetBoardReady && wasAlreadyLoaded)
+            {
+                // KISS: ถ้า board ถูกโหลดค้างอยู่แล้ว จะไม่เกิด SceneLoaded event
+                // จึงยิงสัญญาณ ready ตรงนี้เพื่อให้ TurnManager กู้ flow ได้แน่นอน
+                GameEventManager.NotifyBoardSceneReady(targetSceneName);
             }
 
             int sceneCount = SceneManager.sceneCount;
