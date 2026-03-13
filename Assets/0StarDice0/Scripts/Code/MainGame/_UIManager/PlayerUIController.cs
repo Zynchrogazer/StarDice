@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 
 public class PlayerUIController : MonoBehaviour
@@ -128,11 +129,11 @@ public class PlayerUIController : MonoBehaviour
             return;
         }
 
-        // KISS: ถ้ามี ElementButtonManager ให้ยึด status root ที่ active เท่านั้น
+        // KISS: ถ้ามี ElementButtonManager ให้ยึด status root ของธาตุที่เลือกโดยตรง
         if (activeStatusRoot != null)
         {
             TMP_Text[] statusTexts = activeStatusRoot.GetComponentsInChildren<TMP_Text>(true);
-            AssignTextsByName(statusTexts, preferActiveOnly: true);
+            AssignTextsByName(statusTexts, preferActiveOnly: false);
             return;
         }
 
@@ -164,17 +165,14 @@ public class PlayerUIController : MonoBehaviour
 
         boundStatusRoot = activeStatusRoot;
 
-        if (activeStatusRoot == null)
-            return;
-
-        // status panel เปลี่ยนแล้ว ให้ bind ใหม่ทั้งหมด เพื่อลดปัญหาชื่อ txt ซ้ำหลาย panel
+        // status panel เปลี่ยน (รวมถึงหายไป) ให้ bind ใหม่ทั้งหมด เพื่อลดปัญหาค้าง ref ข้าม scene
         hpText = null;
         //hpCurrentMaxText = null;
-        creditText = null;
+        //creditText = null;
         //secondaryCreditText = null;
-        starText = null;
-        winText = null;
-        levelText = null;
+        //starText = null;
+        //winText = null;
+        //levelText = null;
         atkText = null;
         spdText = null;
         defText = null;
@@ -182,10 +180,71 @@ public class PlayerUIController : MonoBehaviour
 
     private Transform ResolveActiveStatusRoot()
     {
-        if (elementButtonManager == null)
-            elementButtonManager = FindFirstObjectByType<ElementButtonManager>();
+        if (elementButtonManager == null || !elementButtonManager.gameObject.scene.IsValid())
+            elementButtonManager = FindPreferredElementButtonManager();
 
-        return elementButtonManager != null ? elementButtonManager.GetActiveStatusRoot() : null;
+        if (elementButtonManager == null)
+            return null;
+
+        // KISS: เลือก panel ตาม selectedPlayer ก่อน (เหมือนแนวคิดเดียวกับ ElementButtonManager)
+        Transform selectedRoot = ResolveStatusRootFromSelectedPlayer(elementButtonManager);
+        if (selectedRoot != null)
+            return selectedRoot;
+
+        return elementButtonManager.GetActiveStatusRoot();
+    }
+
+
+    private static Transform ResolveStatusRootFromSelectedPlayer(ElementButtonManager manager)
+    {
+        if (manager == null || manager.buttons == null)
+            return null;
+
+        PlayerData selected = manager.selectedPlayer;
+        if (selected == null && GameData.Instance != null)
+            selected = GameData.Instance.selectedPlayer;
+
+        if (selected == null)
+            return null;
+
+        int index = GetButtonIndexByElement(selected.element);
+        if (index < 0 || index >= manager.buttons.Length)
+            return null;
+
+        Button selectedButton = manager.buttons[index];
+        return selectedButton != null ? selectedButton.transform : null;
+    }
+
+    private static int GetButtonIndexByElement(ElementType element)
+    {
+        switch (element)
+        {
+            case ElementType.Fire: return 0;
+            case ElementType.Water: return 1;
+            case ElementType.Wind: return 2;
+            case ElementType.Earth: return 3;
+            case ElementType.Light: return 4;
+            case ElementType.Dark: return 5;
+            default: return -1;
+        }
+    }
+
+    private ElementButtonManager FindPreferredElementButtonManager()
+    {
+        ElementButtonManager[] managers = FindObjectsByType<ElementButtonManager>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        if (managers == null || managers.Length == 0)
+            return null;
+
+        var myScene = gameObject.scene;
+
+        foreach (var manager in managers)
+        {
+            if (manager == null) continue;
+            if (manager.gameObject.scene == myScene)
+                return manager;
+        }
+
+        return managers[0];
     }
 
     private void AssignTextsByName(TMP_Text[] texts, bool preferActiveOnly)
