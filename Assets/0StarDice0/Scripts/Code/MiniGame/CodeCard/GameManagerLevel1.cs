@@ -6,7 +6,7 @@ using TMPro;
 
 public class GameManagerLevel1 : MonoBehaviour
 {
-    [SerializeField] private ScoreManager scoreManager;
+    public static GameManagerLevel1 Instance;
 
     public GameObject cardPrefab;
     public Transform cardParent;
@@ -34,9 +34,13 @@ public class GameManagerLevel1 : MonoBehaviour
 
 
 
+    void Awake()
+    {
+        Instance = this;
+    }
+
     void Start()
     {
-        ResolveScoreManager();
         CreateCards();
         mistakeText.text = "Mistakes: 0";
 
@@ -61,8 +65,6 @@ public class GameManagerLevel1 : MonoBehaviour
             GameObject obj = Instantiate(cardPrefab, cardParent);
             Card card = obj.GetComponent<Card>();
             card.Setup(id);
-
-            card.ConfigureSelection(OnCardSelected, () => !IsBusy);
 
             Button btn = obj.GetComponent<Button>();
             btn.onClick.AddListener(() => card.OnClick());
@@ -103,7 +105,7 @@ public class GameManagerLevel1 : MonoBehaviour
         if (firstCard.cardId == secondCard.cardId)
         {
               AddScore(100); // ได้ 100 คะแนน
-              ResolveScoreManager()?.AddScore(100);
+              ScoreManager.Instance.AddScore(100);
             firstCard.isMatched = true;
             secondCard.isMatched = true;
             matchedPairs++;
@@ -111,7 +113,7 @@ public class GameManagerLevel1 : MonoBehaviour
         else
         {
              SubtractScore(10);
-             ResolveScoreManager()?.SubtractScore(10);
+             ScoreManager.Instance.SubtractScore(10);
 
             mistakes++;
             mistakeText.text = "Mistakes: " + mistakes;
@@ -144,14 +146,6 @@ public class GameManagerLevel1 : MonoBehaviour
         }
     }
 
-    private ScoreManager ResolveScoreManager()
-    {
-        if (scoreManager == null)
-            scoreManager = FindFirstObjectByType<ScoreManager>();
-
-        return scoreManager;
-    }
-
 public void AddScore(int amount)
 {
     score += amount;
@@ -164,7 +158,7 @@ public void AddScore(int amount)
     {
         if (scoreText != null)
              
-                 scoreText.text = "Total Score: " + (ResolveScoreManager() != null ? ResolveScoreManager().totalScore : score);
+                 scoreText.text = "Total Score: " + ScoreManager.Instance.totalScore;
     }
 
 public void SubtractScore(int amount)
@@ -192,7 +186,7 @@ public void SubtractScore(int amount)
 
 void GoToNextScene()
 {
-    UnityEngine.SceneManagement.SceneManager.LoadScene(3); // หรือชื่อ Scene ถัดไป
+    UnityEngine.SceneManagement.SceneManager.LoadScene("Level 2"); // หรือชื่อ Scene ถัดไป
 }
 
 
