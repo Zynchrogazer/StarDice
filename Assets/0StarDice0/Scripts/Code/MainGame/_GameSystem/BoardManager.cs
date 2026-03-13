@@ -195,7 +195,7 @@ public class BoardManager : MonoBehaviour
 
             // 2. บอส -> ไป bossfire (ต้องแยกออกมา!)
             case TileType.Boss:
-            case TileType.SpecialBoss: // รวม SpecialBoss ไว้ด้วยก็ได้ถ้าอยากให้ไปฉากบอสเหมือนกัน
+           // case TileType.SpecialBoss: // รวม SpecialBoss ไว้ด้วยก็ได้ถ้าอยากให้ไปฉากบอสเหมือนกัน
                 Debug.Log($"[BoardManager] 👿 BOSS FIGHT! Triggering Boss Event.");
                 // ✅ ส่ง Event ชื่อ "boss" เพื่อให้ GameEventManager โหลดฉาก bossfire
                 GameEventManager.TryTriggerEvent("boss", playerObject);
