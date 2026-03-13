@@ -243,7 +243,12 @@ public class PlayerPathWalker : MonoBehaviour
     private void GiveTurnStartBonus()
     {
         if (myState == null) return;
-        myState.PlayerStar += Random.Range(1, 4);
+
+        int starGain = Random.Range(1, 4);
+        myState.PlayerStar += starGain;
+        myState.NotifyStatsUpdated();
+
+        Debug.Log($"[PathWalker] {name} gained +{starGain} stars at move start (total: {myState.PlayerStar}).");
     }
 
     public void SetChoiceUIManager(ChoiceUIManager ui) { this.choiceUIManager = ui; }
