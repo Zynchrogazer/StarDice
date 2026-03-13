@@ -12,8 +12,9 @@ public class PlayerData : ScriptableObject
     public ElementType element;
     public Sprite playerSprite;
 
+    [Tooltip("Primary max HP value used by runtime systems.")]
     public int maxHP = 100;
-    public int attackDamage = 100;
+    public int attackDamage = 10;
     public int speed = 10;
     public int def = 1;
     public SkillData[] skills = new SkillData[3]; // 3 สกิลพิเศษ
@@ -22,6 +23,7 @@ public class PlayerData : ScriptableObject
 
 
     [Header("Player Stats")]
+    [Obsolete("Use maxHP as the source of truth.")]
     public int maxHealth = 100;
     [FormerlySerializedAs("currentHealth")]
     [SerializeField, HideInInspector]
@@ -60,12 +62,25 @@ public class PlayerData : ScriptableObject
 
     private void OnEnable()
     {
-        if (maxHealth <= 0)
+        NormalizeMaxHpFields();
+        LoadCredit();
+    }
+
+    private void NormalizeMaxHpFields()
+    {
+        // maxHP is the source of truth. Keep legacy maxHealth synchronized for compatibility.
+        if (maxHP <= 0 && maxHealth > 0)
         {
-            maxHealth = Mathf.Max(1, maxHP);
+            maxHP = maxHealth;
         }
 
-        LoadCredit();
+        maxHP = Mathf.Max(1, maxHP);
+        maxHealth = maxHP;
+    }
+
+    private void OnValidate()
+    {
+        NormalizeMaxHpFields();
     }
 
     private string GetCreditSaveKey()
@@ -99,7 +114,7 @@ public class PlayerData : ScriptableObject
 
     public int GetMaxHealth()
     {
-        return Mathf.Max(1, maxHealth);
+        return Mathf.Max(1, maxHP);
     }
 
     [Obsolete("PlayerData should not store runtime HP. Update PlayerState.PlayerHealth instead.")]

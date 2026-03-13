@@ -20,6 +20,8 @@ public class PlayerState : MonoBehaviour
     public int PlayerCredit = 0;
     public int PlayerStar = 0;
     public int CurrentAttack;
+    public int CurrentSpeed;
+    public int CurrentDefense;
     public int RuntimeAttackModifier = 0;
     public int RuntimeMaxHealthModifier = 0;
     public int RuntimeStarModifier = 0;
@@ -100,6 +102,8 @@ public class PlayerState : MonoBehaviour
         MaxHealth = data.GetMaxHealth();
         PlayerHealth = MaxHealth;
         CurrentAttack = data.attackDamage;
+        CurrentSpeed = data.speed;
+        CurrentDefense = data.def;
         RuntimeAttackModifier = 0;
         RuntimeMaxHealthModifier = 0;
         RuntimeStarModifier = 0;
@@ -217,9 +221,19 @@ public class PlayerState : MonoBehaviour
         // Bonus เมื่อเวลอัป (สไตล์ RPG)
         MaxHealth += 20;
         PlayerHealth = MaxHealth; // เลือดเด้งเต็ม
-        CurrentAttack += 2;          // ตีแรงขึ้น
+        CurrentAttack += 2;       // ตีแรงขึ้น
 
-        Debug.Log($"💪 RPG LEVEL UP! Lv.{PlayerLevel} (HP: {MaxHealth}, ATK: {CurrentAttack})");
+        if (PlayerLevel % 2 == 0)
+        {
+            CurrentDefense += 1; // เพิ่ม DEF ทุก ๆ 2 เลเวล
+        }
+
+        if (PlayerLevel % 5 == 0)
+        {
+            CurrentSpeed += 1; // เพิ่ม SPD ทุก ๆ 5 เลเวล
+        }
+
+        Debug.Log($"💪 RPG LEVEL UP! Lv.{PlayerLevel} (HP: {MaxHealth}, ATK: {CurrentAttack}, SPD: {CurrentSpeed}, DEF: {CurrentDefense})");
 
         // ถ้า EXP ยังเหลือเฟือ ก็ให้เช็คเวลอัปซ้ำ
         if (CurrentExp >= MaxExp) LevelUpRPG();
@@ -356,6 +370,8 @@ public class PlayerState : MonoBehaviour
             MaxHealth = sourceData.GetMaxHealth();
             PlayerHealth = MaxHealth;
             CurrentAttack = sourceData.attackDamage;
+            CurrentSpeed = sourceData.speed;
+            CurrentDefense = sourceData.def;
         }
         else
         {
@@ -363,6 +379,8 @@ public class PlayerState : MonoBehaviour
             CurrentExp = 0;
             MaxExp = Mathf.Max(MaxExp, 100);
             PlayerHealth = Mathf.Max(PlayerHealth, 1);
+            CurrentSpeed = Mathf.Max(CurrentSpeed, 0);
+            CurrentDefense = Mathf.Max(CurrentDefense, 0);
         }
 
         WinCount = 0;
