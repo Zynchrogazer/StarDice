@@ -118,6 +118,8 @@ public class SkillManager : MonoBehaviour
             totals.attackBonus += passive.bonusAttack;
             totals.maxHpBonus += passive.bonusMaxHP;
             totals.starBonus += passive.bonusStar;
+            totals.speedBonus += passive.bonusSpeed;
+            totals.defenseBonus += passive.bonusDefense;
         }
 
         return totals;

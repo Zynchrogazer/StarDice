@@ -149,6 +149,13 @@ public class GameEventManager : MonoBehaviour
 
     public static System.Action OnBoardSceneReady; // ✅ ช่องสัญญาณ Global
 
+    public static void NotifyBoardSceneReady(string sceneName)
+    {
+        int listenerCount = OnBoardSceneReady?.GetInvocationList().Length ?? 0;
+        Debug.Log($"[EventManager] Board scene ready: '{sceneName}' (listeners: {listenerCount})");
+        OnBoardSceneReady?.Invoke();
+    }
+
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         if (IsBoardScene(scene))
@@ -167,11 +174,8 @@ public class GameEventManager : MonoBehaviour
             // ล้างค่าสุ่มค้าง
             isRandomSpinning = false;
 
-            int listenerCount = OnBoardSceneReady?.GetInvocationList().Length ?? 0;
-            Debug.Log($"[EventManager] Board scene ready: '{scene.name}' (listeners: {listenerCount})");
-
             // ตะโกนบอก Manager ว่าพร้อมแล้ว
-            OnBoardSceneReady?.Invoke();
+            NotifyBoardSceneReady(scene.name);
         }
         else
         {
