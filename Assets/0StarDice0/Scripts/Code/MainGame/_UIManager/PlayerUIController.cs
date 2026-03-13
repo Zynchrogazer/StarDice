@@ -164,10 +164,7 @@ public class PlayerUIController : MonoBehaviour
 
         boundStatusRoot = activeStatusRoot;
 
-        if (activeStatusRoot == null)
-            return;
-
-        // status panel เปลี่ยนแล้ว ให้ bind ใหม่ทั้งหมด เพื่อลดปัญหาชื่อ txt ซ้ำหลาย panel
+        // status panel เปลี่ยน (รวมถึงหายไป) ให้ bind ใหม่ทั้งหมด เพื่อลดปัญหาค้าง ref ข้าม scene
         hpText = null;
         //hpCurrentMaxText = null;
         creditText = null;
@@ -182,10 +179,28 @@ public class PlayerUIController : MonoBehaviour
 
     private Transform ResolveActiveStatusRoot()
     {
-        if (elementButtonManager == null)
-            elementButtonManager = FindFirstObjectByType<ElementButtonManager>();
+        if (elementButtonManager == null || !elementButtonManager.gameObject.scene.IsValid())
+            elementButtonManager = FindPreferredElementButtonManager();
 
         return elementButtonManager != null ? elementButtonManager.GetActiveStatusRoot() : null;
+    }
+
+    private ElementButtonManager FindPreferredElementButtonManager()
+    {
+        ElementButtonManager[] managers = FindObjectsByType<ElementButtonManager>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        if (managers == null || managers.Length == 0)
+            return null;
+
+        var myScene = gameObject.scene;
+
+        foreach (var manager in managers)
+        {
+            if (manager == null) continue;
+            if (manager.gameObject.scene == myScene)
+                return manager;
+        }
+
+        return managers[0];
     }
 
     private void AssignTextsByName(TMP_Text[] texts, bool preferActiveOnly)
