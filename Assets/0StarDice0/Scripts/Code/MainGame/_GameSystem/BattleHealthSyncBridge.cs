@@ -253,7 +253,7 @@ public static class BattleHealthSyncBridge
 
         // ถ้ามี BattleResultPanelController แล้ว ให้ใช้การ bind แบบ explicit จาก prefab
         // ไม่ต้องเดาชื่อปุ่มด้วย reflection ที่นี่อีก
-        if (panel.GetComponentInParent<BattleResultPanelController>(true) != null) return;
+      
 
         Button[] buttons = panel.GetComponentsInChildren<Button>(true);
         if (buttons == null || buttons.Length == 0) return;
