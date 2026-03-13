@@ -190,8 +190,22 @@ public static class BattleHealthSyncBridge
 
     private static bool IsBattleScene(Scene scene)
     {
-        string sceneName = scene.name.ToLowerInvariant();
-        return sceneName.Contains("fight") || sceneName.Contains("boss");
+        foreach (GameObject root in scene.GetRootGameObjects())
+        {
+            if (root == null) continue;
+
+            if (string.Equals(root.name, "BattleSystem", System.StringComparison.OrdinalIgnoreCase))
+                return true;
+
+            foreach (Transform child in root.GetComponentsInChildren<Transform>(true))
+            {
+                if (child == null) continue;
+                if (string.Equals(child.name, "BattleSystem", System.StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+        }
+
+        return false;
     }
 
     private static PlayerState ResolveBoardPlayerState()
