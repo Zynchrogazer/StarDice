@@ -231,5 +231,19 @@ public class ElementButtonManager : MonoBehaviour
         }
     }
 
+    public Transform GetActiveStatusRoot()
+    {
+        if (buttons == null) return null;
+
+        foreach (Button btn in buttons)
+        {
+            if (btn == null) continue;
+            if (!btn.gameObject.activeInHierarchy) continue;
+            return btn.transform;
+        }
+
+        return null;
+    }
+
     // อนาตจะทำ panel choose skill ในนี้ โดย if(selectedPlayer.element == ElementType.Fire && level 10 || level 20 ... level 50) โดยจะทำการสุ่มสกิลที่ยังไม่ปลดล็อคท้ังหมด ละให้เลือกอันเดียว
 }

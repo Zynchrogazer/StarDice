@@ -2,6 +2,7 @@ using System.Reflection;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using TMPro;
 
 /// <summary>
 /// Sync HP between board PlayerState and legacy battle controllers that still store HP in local fields.
@@ -116,12 +117,30 @@ public static class BattleHealthSyncBridge
         currentPlayer.MaxExp = Mathf.Max(1, runtimeData.maxExp);
         currentPlayer.NotifyStatsUpdated();
 
-        if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
+        if (GameData.Instance != null)
         {
-            GameData.Instance.selectedPlayer.SetCredit(syncedCredit);
-            GameData.Instance.selectedPlayer.level = currentPlayer.PlayerLevel;
-            GameData.Instance.selectedPlayer.currentExp = currentPlayer.CurrentExp;
-            GameData.Instance.selectedPlayer.maxExp = currentPlayer.MaxExp;
+            // KISS: เขียนกลับตัวข้อมูลถาวรโดยตรง (previousSelectedPlayerData)
+            // เพื่อกันกรณี GameData.selectedPlayer ยังชี้ runtime clone ระหว่าง cleanup
+            PlayerData persistentTarget = previousSelectedPlayerData != null
+                ? previousSelectedPlayerData
+                : GameData.Instance.selectedPlayer;
+
+            if (persistentTarget != null)
+            {
+                persistentTarget.SetCredit(syncedCredit);
+                persistentTarget.level = currentPlayer.PlayerLevel;
+                persistentTarget.currentExp = currentPlayer.CurrentExp;
+                persistentTarget.maxExp = currentPlayer.MaxExp;
+            }
+
+            // กันค่าใน runtime selectedPlayer ไม่ตรงระหว่างเปลี่ยน scene
+            if (GameData.Instance.selectedPlayer != null && GameData.Instance.selectedPlayer != persistentTarget)
+            {
+                GameData.Instance.selectedPlayer.SetCredit(syncedCredit);
+                GameData.Instance.selectedPlayer.level = currentPlayer.PlayerLevel;
+                GameData.Instance.selectedPlayer.currentExp = currentPlayer.CurrentExp;
+                GameData.Instance.selectedPlayer.maxExp = currentPlayer.MaxExp;
+            }
         }
 
         Debug.Log($"[BattleHealthSyncBridge] Synced runtime battle rewards -> Credit:{syncedCredit}, Lv:{currentPlayer.PlayerLevel}, EXP:{currentPlayer.CurrentExp}/{currentPlayer.MaxExp}");
@@ -266,13 +285,29 @@ public static class BattleHealthSyncBridge
             Button btn = buttons[i];
             if (btn == null) continue;
 
-            string n = btn.name.ToLowerInvariant();
-            if (rewardButton == null && (n.Contains("reward") || n.Contains("claim")))
+            string searchText = BuildButtonSearchText(btn);
+            if (rewardButton == null &&
+                (searchText.Contains("reward") ||
+                 searchText.Contains("claim") ||
+                 searchText.Contains("collect") ||
+                 searchText.Contains("loot") ||
+                 searchText.Contains("chest") ||
+                 searchText.Contains("item") ||
+                 searchText.Contains("รับ") ||
+                 searchText.Contains("รางวัล")))
             {
                 rewardButton = btn;
             }
 
-            if (restartButton == null && (n.Contains("restart") || n.Contains("retry") || n.Contains("inter") || n.Contains("back")))
+            if (restartButton == null &&
+                (searchText.Contains("restart") ||
+                 searchText.Contains("retry") ||
+                 searchText.Contains("inter") ||
+                 searchText.Contains("back") ||
+                 searchText.Contains("close") ||
+                 searchText.Contains("exit") ||
+                 searchText.Contains("ออก") ||
+                 searchText.Contains("กลับ")))
             {
                 restartButton = btn;
             }
@@ -280,6 +315,18 @@ public static class BattleHealthSyncBridge
 
         if (isWinPanel)
         {
+            if (rewardButton == null)
+            {
+                for (int i = 0; i < buttons.Length; i++)
+                {
+                    if (buttons[i] == null) continue;
+                    if (buttons[i] == restartButton) continue;
+
+                    rewardButton = buttons[i];
+                    break;
+                }
+            }
+
             if (rewardButton == null && buttons.Length == 1)
             {
                 rewardButton = buttons[0];
@@ -287,17 +334,19 @@ public static class BattleHealthSyncBridge
 
             if (rewardButton != null)
             {
-                if (rewardButton.onClick.GetPersistentEventCount() == 0)
+                if (!HasUsablePersistentOnClick(rewardButton))
                 {
-                    rewardButton.onClick.AddListener(() => BattleResultFlowService.HandleRewardAndReturnToBoard());
+                    rewardButton.onClick.RemoveListener(HandleRewardButtonClicked);
+                    rewardButton.onClick.AddListener(HandleRewardButtonClicked);
                 }
             }
 
             if (restartButton != null)
             {
-                if (restartButton.onClick.GetPersistentEventCount() == 0)
+                if (!HasUsablePersistentOnClick(restartButton))
                 {
-                    restartButton.onClick.AddListener(BattleResultFlowService.HandleRestartToInterMission);
+                    restartButton.onClick.RemoveListener(HandleRestartButtonClicked);
+                    restartButton.onClick.AddListener(HandleRestartButtonClicked);
                 }
             }
         }
@@ -310,12 +359,61 @@ public static class BattleHealthSyncBridge
 
             if (restartButton != null)
             {
-                if (restartButton.onClick.GetPersistentEventCount() == 0)
+                if (!HasUsablePersistentOnClick(restartButton))
                 {
-                    restartButton.onClick.AddListener(BattleResultFlowService.HandleRestartToInterMission);
+                    restartButton.onClick.RemoveListener(HandleRestartButtonClicked);
+                    restartButton.onClick.AddListener(HandleRestartButtonClicked);
                 }
             }
         }
+    }
+
+    private static string BuildButtonSearchText(Button button)
+    {
+        if (button == null) return string.Empty;
+
+        string buttonName = button.name ?? string.Empty;
+        string parentName = button.transform.parent != null ? button.transform.parent.name : string.Empty;
+
+        TMP_Text tmpText = button.GetComponentInChildren<TMP_Text>(true);
+        string legacyText = string.Empty;
+        Text uiText = button.GetComponentInChildren<Text>(true);
+        if (uiText != null)
+        {
+            legacyText = uiText.text ?? string.Empty;
+        }
+
+        string labelText = tmpText != null ? (tmpText.text ?? string.Empty) : legacyText;
+        string merged = $"{buttonName} {parentName} {labelText}";
+        return merged.ToLowerInvariant();
+    }
+
+    private static bool HasUsablePersistentOnClick(Button button)
+    {
+        if (button == null) return false;
+
+        int count = button.onClick.GetPersistentEventCount();
+        for (int i = 0; i < count; i++)
+        {
+            Object target = button.onClick.GetPersistentTarget(i);
+            string method = button.onClick.GetPersistentMethodName(i);
+            if (target != null && !string.IsNullOrWhiteSpace(method))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static void HandleRewardButtonClicked()
+    {
+        BattleResultFlowService.HandleRewardAndReturnToBoard();
+    }
+
+    private static void HandleRestartButtonClicked()
+    {
+        BattleResultFlowService.HandleRestartToInterMission();
     }
 
     private static bool IsBattleScene(Scene scene)
