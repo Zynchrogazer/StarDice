@@ -393,6 +393,88 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1186243977
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1186243981}
+  - component: {fileID: 1186243980}
+  - component: {fileID: 1186243979}
+  - component: {fileID: 1186243978}
+  m_Layer: 0
+  m_Name: '[PassiveSkillManager]'
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1186243978
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1186243977}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8d7046ddcd117c44fba6de3ab2cc4b83, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerStatAggregator: {fileID: 1186243979}
+  defaultSkillPoints: 0
+--- !u!114 &1186243979
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1186243977}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c17f4b53e1f345f4ca5b02b08892a99a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  passiveSkillManager: {fileID: 1186243980}
+  skillManager: {fileID: 1186243978}
+--- !u!114 &1186243980
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1186243977}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d2378d7440e857b40824b3329061a589, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerStatAggregator: {fileID: 1186243979}
+  starSkillLevel: 0
+  attackSkillLevel: 0
+  baseUpgradeCost: 100
+  attackCostStep: 60
+  starCostStep: 45
+  starBonusPerLevel: 1
+  attackBonusPerLevel: 5
+--- !u!4 &1186243981
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1186243977}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -8.07725, y: -0.5121279, z: 11.900612}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1389685893
 GameObject:
   m_ObjectHideFlags: 0
@@ -91768,3 +91850,4 @@ SceneRoots:
   - {fileID: 1489963497}
   - {fileID: 1583492658}
   - {fileID: 1828284881}
+  - {fileID: 1186243981}
