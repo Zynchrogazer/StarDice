@@ -121,4 +121,24 @@ public class EquipmentManager : MonoBehaviour
             }
         }
     }
+
+
+    [ContextMenu("Reset All Equipment Save")]
+    public void ResetAllEquipmentSave()
+    {
+        foreach (var item in allEquipmentList)
+        {
+            if (item != null)
+            {
+            
+                item.isOwned = false; 
+
+            
+                PlayerPrefs.DeleteKey(OwnershipPrefKeyPrefix + item.itemID); 
+            }
+        }
+        
+        PlayerPrefs.Save(); 
+        Debug.Log("<color=red>รีเซ็ตไอเท็มและลบเซฟเก่าทิ้งทั้งหมดเรียบร้อยแล้ว!</color>");
+    }
 }
