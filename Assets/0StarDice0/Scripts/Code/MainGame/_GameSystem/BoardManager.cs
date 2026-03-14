@@ -239,9 +239,57 @@ public class BoardManager : MonoBehaviour
     {
         Debug.Log($"Loading Battle Scene (PvP): {attacker.name} vs {defender.name}");
 
-        if (!GameEventManager.TryLoadBattleSceneAdditive("TestFight"))
-        {
-            Debug.LogError("[BoardManager] Failed to load PvP battle scene additively.");
-        }
+        string currentSceneName = SceneManager.GetActiveScene().name; 
+    
+    string battleSceneName = "TestFight"; 
+
+    if (currentSceneName == "MainLight")
+    {
+        string[] randomScenes = { "Light buff", "Light damage", "Light heal", "Lightone" };
+        
+        int randomIndex = Random.Range(0, randomScenes.Length);
+        
+        battleSceneName = randomScenes[randomIndex];
+    }
+    else if (currentSceneName == "TestMain")
+    {
+        string[] randomScenes = { "enemyfire buff", "enemyfire damage", "enemyfire heal", "enemyfire1" };
+        
+        int randomIndex = Random.Range(0, randomScenes.Length);
+        battleSceneName = randomScenes[randomIndex];
+    }
+    else if (currentSceneName == "MainWater")
+    {
+        string[] randomScenes = { "enemy water", "enemy water buff", "enemy water damage", "enemy water heal" };
+        
+        int randomIndex = Random.Range(0, randomScenes.Length);
+        battleSceneName = randomScenes[randomIndex];
+    }
+     else if (currentSceneName == "MainWind")
+    {
+        string[] randomScenes = { "enemy wind", "enemy wind buff", "enemy wind damage", "enemy wind heal" };
+        
+        int randomIndex = Random.Range(0, randomScenes.Length);
+        battleSceneName = randomScenes[randomIndex];
+    }
+    else if (currentSceneName == "MainEarth")
+    {
+        string[] randomScenes = { "enemy earth", "enemy earth buff", "enemy earth damage", "enemy earth heal" };
+        
+        int randomIndex = Random.Range(0, randomScenes.Length);
+        battleSceneName = randomScenes[randomIndex];
+    }
+     else if (currentSceneName == "MainDark")
+    {
+        string[] randomScenes = { "enemy dark", "enemy dark buff", "enemy dark damage", "enemy dark heal" };
+        
+        int randomIndex = Random.Range(0, randomScenes.Length);
+        battleSceneName = randomScenes[randomIndex];
+    }
+
+    if (!GameEventManager.TryLoadBattleSceneAdditive(battleSceneName))
+    {
+        Debug.LogError($"[BoardManager] Failed to load PvP battle scene '{battleSceneName}' additively.");
+    }
     }
 }
