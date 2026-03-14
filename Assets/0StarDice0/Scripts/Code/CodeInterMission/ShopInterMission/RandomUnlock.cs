@@ -1,13 +1,20 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.Collections.Generic;
+
 public class RandomUnlock : MonoBehaviour
 {
+    [Header("Economy Setup")]
+    public int rollPrice = 100;
+    public TMP_Text creditText;
+
     [Header("UI Setup")]
     public GameObject resultPanel;
     public TMP_Text resultText;
     public Button rollButton;
     public Button closeButton;
+    public Button resetButton;
 
     [Header("Monster Images")]
     public GameObject waterImage;
@@ -15,44 +22,112 @@ public class RandomUnlock : MonoBehaviour
     public GameObject windImage;
     public GameObject lightImage;
     public GameObject darkImage;
-    public Button resetButton;
+    public GameObject fireImage;
+
+    private void OnEnable()
+    {
+        UpdateCreditText();
+    }
+
     private void Start()
     {
         resultPanel.SetActive(false);
+        CheckRollButtonState();
+        UpdateCreditText();
 
-        // ปุ่ม Close → ปิด Panel
         closeButton.onClick.AddListener(() =>
         {
             resultPanel.SetActive(false);
         });
 
-        // ปุ่ม Roll → สุ่ม Monster
         rollButton.onClick.AddListener(() =>
         {
             RollMonster();
         });
 
-       resetButton.onClick.AddListener(() =>
-{
-    ResetAllMonsters();
-    UpdateMonsterUI(); // รีเฟรช UI
-    resultText.text = "Reset Monster";
-    resultPanel.SetActive(true);
-});
-
+        resetButton.onClick.AddListener(() =>
+        {
+            ResetAllMonsters();
+            UpdateMonsterUI(); 
+            resultText.text = "Reset Monster";
+            resultPanel.SetActive(true);
+            CheckRollButtonState(); 
+        });
     }
 
     public void RollMonster()
     {
-        int randomNum = Random.Range(0, 6); // สุ่ม 1-5
-        string monsterName = "";
+        // 🟢 1. ดึงเงินปัจจุบัน (ฉลาดขึ้น: รองรับทั้งฉาก Board และฉาก Intermission)
+        int currentCredit = 0;
+        PlayerState boardPlayer = GameTurnManager.CurrentPlayer;
 
-        // ซ่อนรูปทั้งหมดก่อน
+        if (boardPlayer != null)
+        {
+            currentCredit = boardPlayer.PlayerCredit; // ดึงจากกระดาน
+        }
+        else if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
+        {
+            currentCredit = GameData.Instance.selectedPlayer.Credit; // ดึงจากเซฟหลัก
+        }
+        else
+        {
+            currentCredit = PlayerPrefs.GetInt("PlayerCredit", 0); // ระบบสำรองเผื่อเทสต์เดี่ยวๆ
+        }
+
+        // 🟢 2. เช็คว่าเงินพอไหม?
+        if (currentCredit < rollPrice)
+        {
+            resultText.text = "Not Enough Credit!";
+            resultPanel.SetActive(true);
+            return; 
+        }
+
+        // เตรียมมอนสเตอร์ที่เหลือ
+        List<int> availableMonsters = new List<int>();
+
+        if (PlayerPrefs.GetInt("MonsterFire", 0) == 0) availableMonsters.Add(1);
+        if (PlayerPrefs.GetInt("MonsterWater", 0) == 0) availableMonsters.Add(2);
+        if (PlayerPrefs.GetInt("MonsterEarth", 0) == 0) availableMonsters.Add(3);
+        if (PlayerPrefs.GetInt("MonsterWind", 0) == 0) availableMonsters.Add(4);
+        if (PlayerPrefs.GetInt("MonsterLight", 0) == 0) availableMonsters.Add(5);
+        if (PlayerPrefs.GetInt("MonsterDark", 0) == 0) availableMonsters.Add(6);
+
+        if (availableMonsters.Count == 0)
+        {
+            resultText.text = "You Got All Monsters!";
+            resultPanel.SetActive(true);
+            rollButton.interactable = false; 
+            return; 
+        }
+
+        // 🟢 3. หักเงินและเซฟข้อมูลกลับไปที่เดิม
+        currentCredit -= rollPrice;
+
+        if (boardPlayer != null)
+        {
+            boardPlayer.PlayerCredit = currentCredit; // ให้ PlayerState จัดการเซฟให้
+        }
+        else if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
+        {
+            GameData.Instance.selectedPlayer.SetCredit(currentCredit); // เซฟลง GameData โดยตรง
+        }
+        else
+        {
+            PlayerPrefs.SetInt("PlayerCredit", currentCredit); // เซฟสำรอง
+        }
+
+        UpdateCreditText(); // อัปเดตตัวหนังสือ
+
+        // 🟢 4. สุ่มมอนสเตอร์
+        int randomIndex = Random.Range(0, availableMonsters.Count);
+        int finalMonsterId = availableMonsters[randomIndex]; 
+
+        string monsterName = "";
         HideAllImages();
 
-        switch (randomNum)
+        switch (finalMonsterId)
         {
-            case 1: monsterName = "MonsterFire"; waterImage.SetActive(true); break;
+            case 1: monsterName = "MonsterFire"; fireImage.SetActive(true); break;
             case 2: monsterName = "MonsterWater"; waterImage.SetActive(true); break;
             case 3: monsterName = "MonsterEarth"; earthImage.SetActive(true); break;
             case 4: monsterName = "MonsterWind"; windImage.SetActive(true); break;
@@ -60,15 +135,56 @@ public class RandomUnlock : MonoBehaviour
             case 6: monsterName = "MonsterDark"; darkImage.SetActive(true); break;
         }
 
-        // บันทึกว่าได้ตัวนี้แล้ว
         PlayerPrefs.SetInt(monsterName, 1);
         PlayerPrefs.Save();
 
-        // อัพเดตข้อความ
-        resultText.text = "You Got" + monsterName + " !";
-
-        // เปิด Panel
+        resultText.text = "You Got " + monsterName + " !";
         resultPanel.SetActive(true);
+
+        CheckRollButtonState();
+        UpdateMonsterUI();
+    }
+
+    // 🟢 อัปเดตฟังก์ชันดึงเงินมาแสดงบน Text
+    private void UpdateCreditText()
+    {
+        if (creditText == null) return;
+
+        int currentCredit = 0;
+
+        if (GameTurnManager.CurrentPlayer != null)
+        {
+            currentCredit = GameTurnManager.CurrentPlayer.PlayerCredit;
+        }
+        else if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
+        {
+            currentCredit = GameData.Instance.selectedPlayer.Credit;
+        }
+        else
+        {
+            currentCredit = PlayerPrefs.GetInt("PlayerCredit", 0);
+        }
+
+        creditText.text = "Credit: " + currentCredit.ToString();
+    }
+
+    private void CheckRollButtonState()
+    {
+        bool hasFire = PlayerPrefs.GetInt("MonsterFire", 0) == 1;
+        bool hasWater = PlayerPrefs.GetInt("MonsterWater", 0) == 1;
+        bool hasEarth = PlayerPrefs.GetInt("MonsterEarth", 0) == 1;
+        bool hasWind = PlayerPrefs.GetInt("MonsterWind", 0) == 1;
+        bool hasLight = PlayerPrefs.GetInt("MonsterLight", 0) == 1;
+        bool hasDark = PlayerPrefs.GetInt("MonsterDark", 0) == 1;
+
+        if (hasFire && hasWater && hasEarth && hasWind && hasLight && hasDark)
+        {
+            rollButton.interactable = false; 
+        }
+        else
+        {
+            rollButton.interactable = true; 
+        }
     }
 
     private void HideAllImages()
@@ -78,7 +194,7 @@ public class RandomUnlock : MonoBehaviour
         earthImage.SetActive(false);
         windImage.SetActive(false);
         lightImage.SetActive(false);
-        darkImage.SetActive(false);
+        fireImage.SetActive(false);
     }
 
     private void ResetAllMonsters()
@@ -91,14 +207,14 @@ public class RandomUnlock : MonoBehaviour
         PlayerPrefs.SetInt("MonsterDark", 0);
         PlayerPrefs.Save();
     }
-    private void UpdateMonsterUI()
-{
-    waterImage.SetActive(PlayerPrefs.GetInt("MonsterFire") == 1);
-    waterImage.SetActive(PlayerPrefs.GetInt("MonsterWater") == 1);
-    earthImage.SetActive(PlayerPrefs.GetInt("MonsterEarth") == 1);
-    windImage.SetActive(PlayerPrefs.GetInt("MonsterWind") == 1);
-    lightImage.SetActive(PlayerPrefs.GetInt("MonsterLight") == 1);
-    darkImage.SetActive(PlayerPrefs.GetInt("MonsterDark") == 1);
-}
 
+    private void UpdateMonsterUI()
+    {
+        fireImage.SetActive(PlayerPrefs.GetInt("MonsterFire", 0) == 1);
+        waterImage.SetActive(PlayerPrefs.GetInt("MonsterWater", 0) == 1);
+        earthImage.SetActive(PlayerPrefs.GetInt("MonsterEarth", 0) == 1);
+        windImage.SetActive(PlayerPrefs.GetInt("MonsterWind", 0) == 1);
+        lightImage.SetActive(PlayerPrefs.GetInt("MonsterLight", 0) == 1);
+        darkImage.SetActive(PlayerPrefs.GetInt("MonsterDark", 0) == 1);
+    }
 }
