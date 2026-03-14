@@ -662,7 +662,8 @@ public class GameEventManager : MonoBehaviour
     {
         PlayerState p = target.GetComponent<PlayerState>();
         if (p != null) p.PlayerHealth += 10;
-        ShowPanel("DrawCard", true);
+        ShowPanel("DrawCard", false);
+        StartCoroutine(WaitAndEndTurn());
     }
 
     private void LavaEffect(GameObject target)
