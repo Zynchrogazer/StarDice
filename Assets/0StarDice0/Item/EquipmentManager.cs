@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
-
+using System;
 public class EquipmentManager : MonoBehaviour
 {
     // สร้าง Singleton เพื่อให้เรียกใช้ได้ง่ายจากที่ไหนก็ได้
@@ -82,6 +82,32 @@ public class EquipmentManager : MonoBehaviour
     {
         equipmentMap.TryGetValue(id, out var data);
         return data;
+    }
+
+    public static void ClearSavedOwnershipStates()
+    {
+        foreach (ItemID id in Enum.GetValues(typeof(ItemID)))
+        {
+            if (id == ItemID.None)
+            {
+                continue;
+            }
+
+            PlayerPrefs.DeleteKey(OwnershipPrefKeyPrefix + id);
+        }
+
+        if (Instance != null)
+        {
+            foreach (var item in Instance.allEquipmentList)
+            {
+                if (item == null)
+                {
+                    continue;
+                }
+
+                item.isOwned = false;
+            }
+        }
     }
 
     private void LoadOwnershipStates()

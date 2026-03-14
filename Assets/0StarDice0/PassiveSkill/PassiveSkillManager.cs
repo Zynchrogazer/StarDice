@@ -15,8 +15,11 @@ public class PassiveSkillManager : MonoBehaviour
     public int starBonusPerLevel = 1;
     public int attackBonusPerLevel = 5;
 
-    private const string StarSkillLvKeyPrefix = "StarSkillLv";
-    private const string AtkSkillLvKeyPrefix = "AtkSkillLv";
+     private const string StarSkillLvKey = "StarSkillLv_SHARED";
+    private const string AtkSkillLvKey = "AtkSkillLv_SHARED";
+    private const string SpdSkillLvKey = "SpdSkillLv_SHARED";
+    private const string DefSkillLvKey = "DefSkillLv_SHARED";
+    private bool isDataLoaded;
     private string loadedSaveKeySuffix = string.Empty;
 
     private void Awake()
@@ -154,7 +157,7 @@ public class PassiveSkillManager : MonoBehaviour
     {
         starSkillLevel = PlayerPrefs.GetInt(GetStarSkillSaveKey(), 0);
         attackSkillLevel = PlayerPrefs.GetInt(GetAttackSkillSaveKey(), 0);
-        loadedSaveKeySuffix = GetPlayerScopeSuffix();
+        isDataLoaded = true;
     }
 
     [ContextMenu("Reset Save")]
@@ -169,24 +172,37 @@ public class PassiveSkillManager : MonoBehaviour
 
     private void EnsureLoadedForCurrentPlayer()
     {
-        string suffix = GetPlayerScopeSuffix();
-        if (suffix == loadedSaveKeySuffix) return;
+        if (isDataLoaded) return;
         LoadData();
     }
 
+
     private string GetStarSkillSaveKey()
     {
-        return BuildPlayerScopedKey(StarSkillLvKeyPrefix);
+        return StarSkillLvKey;
     }
 
     private string GetAttackSkillSaveKey()
     {
-        return BuildPlayerScopedKey(AtkSkillLvKeyPrefix);
+        return AtkSkillLvKey;
     }
 
-    private string BuildPlayerScopedKey(string prefix)
+    private string GetSpeedSkillSaveKey()
     {
-        return $"{prefix}_{GetPlayerScopeSuffix()}";
+        return SpdSkillLvKey;
+    }
+
+    private string GetDefenseSkillSaveKey()
+    {
+        return DefSkillLvKey;
+    }
+
+     public static void ClearSavedProgress()
+    {
+        PlayerPrefs.DeleteKey(StarSkillLvKey);
+        PlayerPrefs.DeleteKey(AtkSkillLvKey);
+        PlayerPrefs.DeleteKey(SpdSkillLvKey);
+        PlayerPrefs.DeleteKey(DefSkillLvKey);
     }
 
     private PlayerStatAggregator ResolvePlayerStatAggregator()
@@ -197,16 +213,5 @@ public class PassiveSkillManager : MonoBehaviour
         return playerStatAggregator;
     }
 
-    private string GetPlayerScopeSuffix()
-    {
-        string fallback = "default";
-        if (GameData.Instance?.selectedPlayer == null)
-        {
-            return fallback;
-        }
-
-        return !string.IsNullOrWhiteSpace(GameData.Instance.selectedPlayer.playerName)
-            ? GameData.Instance.selectedPlayer.playerName
-            : GameData.Instance.selectedPlayer.name;
-    }
+    
 }

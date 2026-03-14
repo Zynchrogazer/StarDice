@@ -6,7 +6,7 @@ using UnityEngine.Serialization;
 
 public class PlayerData : ScriptableObject
 {
-    private const string CreditSaveKeyPrefix = "PLAYER_CREDIT_";
+    private const string SharedCreditSaveKey = "PLAYER_CREDIT_SHARED";
 
     public string playerName;
     public ElementType element;
@@ -35,7 +35,7 @@ public class PlayerData : ScriptableObject
     public int maxExp = 100;   // EXP ที่ต้องใช้ในการอัปเวลครั้งแรก
     // ------------------------------------
 
-    [SerializeField] private int credit = 50;
+    [SerializeField] private int credit = 0;
     
 
     public event Action<int> OnCreditChanged;
@@ -47,7 +47,11 @@ public class PlayerData : ScriptableObject
 
     public int Credit
     {
-        get => credit;
+        get
+        {
+            LoadCredit();
+            return credit;
+        }
         set
         {
             if (credit == value) return;
@@ -56,6 +60,7 @@ public class PlayerData : ScriptableObject
             OnCreditChanged?.Invoke(credit);
         }
     }
+
 
     [Obsolete("PlayerData no longer stores runtime HP. Use PlayerState.PlayerHealth instead.")]
     public int CurrentHealth => GetMaxHealth();
@@ -83,11 +88,7 @@ public class PlayerData : ScriptableObject
         NormalizeMaxHpFields();
     }
 
-    private string GetCreditSaveKey()
-    {
-        string playerKey = string.IsNullOrEmpty(playerName) ? name : playerName;
-        return $"{CreditSaveKeyPrefix}{playerKey}";
-    }
+     private string GetCreditSaveKey() => SharedCreditSaveKey;
 
     private void LoadCredit()
     {

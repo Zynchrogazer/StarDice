@@ -44,7 +44,7 @@ public class RandomUnlock : MonoBehaviour
 
     public void RollMonster()
     {
-        int randomNum = Random.Range(1, 6); // สุ่ม 1-5
+        int randomNum = Random.Range(0, 6); // สุ่ม 1-5
         string monsterName = "";
 
         // ซ่อนรูปทั้งหมดก่อน
@@ -52,11 +52,12 @@ public class RandomUnlock : MonoBehaviour
 
         switch (randomNum)
         {
-            case 1: monsterName = "MonsterWater"; waterImage.SetActive(true); break;
-            case 2: monsterName = "MonsterEarth"; earthImage.SetActive(true); break;
-            case 3: monsterName = "MonsterWind"; windImage.SetActive(true); break;
-            case 4: monsterName = "MonsterLight"; lightImage.SetActive(true); break;
-            case 5: monsterName = "MonsterDark"; darkImage.SetActive(true); break;
+            case 1: monsterName = "MonsterFire"; waterImage.SetActive(true); break;
+            case 2: monsterName = "MonsterWater"; waterImage.SetActive(true); break;
+            case 3: monsterName = "MonsterEarth"; earthImage.SetActive(true); break;
+            case 4: monsterName = "MonsterWind"; windImage.SetActive(true); break;
+            case 5: monsterName = "MonsterLight"; lightImage.SetActive(true); break;
+            case 6: monsterName = "MonsterDark"; darkImage.SetActive(true); break;
         }
 
         // บันทึกว่าได้ตัวนี้แล้ว
@@ -72,6 +73,7 @@ public class RandomUnlock : MonoBehaviour
 
     private void HideAllImages()
     {
+        darkImage.SetActive(false);
         waterImage.SetActive(false);
         earthImage.SetActive(false);
         windImage.SetActive(false);
@@ -81,6 +83,7 @@ public class RandomUnlock : MonoBehaviour
 
     private void ResetAllMonsters()
     {
+        PlayerPrefs.SetInt("MonsterFire", 0);
         PlayerPrefs.SetInt("MonsterWater", 0);
         PlayerPrefs.SetInt("MonsterEarth", 0);
         PlayerPrefs.SetInt("MonsterWind", 0);
@@ -90,6 +93,7 @@ public class RandomUnlock : MonoBehaviour
     }
     private void UpdateMonsterUI()
 {
+    waterImage.SetActive(PlayerPrefs.GetInt("MonsterFire") == 1);
     waterImage.SetActive(PlayerPrefs.GetInt("MonsterWater") == 1);
     earthImage.SetActive(PlayerPrefs.GetInt("MonsterEarth") == 1);
     windImage.SetActive(PlayerPrefs.GetInt("MonsterWind") == 1);
