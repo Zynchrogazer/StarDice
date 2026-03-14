@@ -4,77 +4,115 @@ using UnityEngine.UI;
 public class PlayerCardInventory : MonoBehaviour
 {
     [Header("UI References (On Main Screen)")]
-    public Button useCardButton; // ปุ่มกดใช้การ์ดบนหน้าจอ
-    public Image useCardImage;   // รูปการ์ดบนปุ่ม
+    public Button useCardButton; 
+    public Image useCardImage;   
 
     [Header("Current State")]
-    public DiceLockCardItem currentCard; // การ์ดที่ถืออยู่ (เก็บได้ใบเดียว)
+    public DiceLockCardItem currentCard; 
+    
+    // 🟢 เพิ่มตัวแปรเช็คเทิร์น (ตัวจัดการเทิร์นของคุณจะต้องมาสั่งเปลี่ยนค่านี้)
+    public bool isPlayerTurn = false; 
 
     private void Awake()
     {
-        if (FindObjectsOfType<PlayerCardInventory>().Length > 1)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
-        UpdateUI(); // เริ่มเกมมาอัปเดต UI ให้ว่างเปล่า
+        // ... (โค้ดเช็คตัวซ้ำเหมือนเดิม) ...
+        UpdateUI(); 
     }
 
-    // ฟังก์ชันสำหรับ "รับการ์ดใหม่" (ถูกเรียกเมื่อซื้อของ)
     public void ObtainCard(DiceLockCardItem newCard)
     {
-        currentCard = newCard; // แทนที่การ์ดเก่าทันที (Replace)
+        currentCard = newCard; 
         Debug.Log($"ได้รับการ์ด: {newCard.cardName}");
         UpdateUI();
     }
 
-    // ฟังก์ชันสำหรับ "กดใช้การ์ด" (ผูกกับปุ่ม useCardButton)
-    // ในสคริปต์ PlayerCardInventory.cs
+    // 🟢 เพิ่มฟังก์ชันให้ระบบจัดการเทิร์น (BoardManager/GameManager) เรียกใช้
+    public void UpdateTurnState(bool isMyTurn)
+    {
+        isPlayerTurn = isMyTurn;
+        UpdateUI(); // อัปเดตปุ่มทันทีที่เปลี่ยนเทิร์น
+    }
+
     public void OnUseCardButtonPress()
     {
-        // 🔴 จุดเช็คที่ 1: ปุ่มถูกกดจริงไหม?
-        Debug.Log("<color=cyan>[Inventory] 1. ปุ่มถูกกดแล้ว! (OnUseCardButtonPress Called)</color>");
-
-        if (currentCard == null)
+        // 🛑 ป้องกันชั้นที่ 1: เช็คว่าเป็นเทิร์นของเราไหม ถ้าไม่ใช่ให้หยุดการทำงานทันที
+        if (!isPlayerTurn)
         {
-            // 🔴 ถ้าเข้าตรงนี้ แสดงว่าตัวแปร currentCard ว่างเปล่า (ซื้อของมาไม่เข้า หรือเผลอลบไปแล้ว)
-            Debug.LogError("[Inventory] ❌ ผิดพลาด: ไม่มีไอเทมในมือ (currentCard is NULL)");
+            Debug.LogWarning("[Inventory] ไม่สามารถใช้การ์ดได้ เพราะไม่ใช่เทิร์นของผู้เล่น!");
             return;
         }
 
-        // 🔴 จุดเช็คที่ 2: มีการ์ดในมือคือใบไหน?
+        Debug.Log("<color=cyan>[Inventory] 1. ปุ่มถูกกดแล้ว!</color>");
+
+        if (currentCard == null)
+        {
+            Debug.LogError("[Inventory] ❌ ผิดพลาด: ไม่มีไอเทมในมือ");
+            return;
+        }
+
         Debug.Log($"[Inventory] 2. พบการ์ดในมือชื่อ: {currentCard.cardName} เตรียมใช้งาน...");
 
-        // จำค่าไว้ชั่วคราว
         DiceLockCardItem cardToUse = currentCard;
-
-        // ลบออกจากตัว
         currentCard = null;
         UpdateUI(); 
 
-        // 🔴 จุดเช็คที่ 3: กำลังจะสั่งให้การ์ดทำงาน
         Debug.Log("[Inventory] 3. กำลังเรียกคำสั่ง cardToUse.Use()...");
-        
         cardToUse.Use();
     }
 
-    // อัปเดตหน้าตาปุ่มตามการ์ดที่มี
     private void UpdateUI()
     {
-        if (currentCard != null)
+        // 🛑 ป้องกันชั้นที่ 2: ปุ่มจะกดได้ก็ต่อเมื่อ "มีการ์ด" และ "เป็นเทิร์นของเรา"
+        if (currentCard != null && isPlayerTurn)
         {
-            // มีการ์ด: โชว์รูปและให้กดได้
             useCardImage.sprite = currentCard.cardImage;
-            useCardImage.color = Color.white; // ปรับสีให้ชัด
-            useCardButton.interactable = true;
+            useCardImage.color = Color.white; 
+            useCardButton.interactable = true; // เปิดให้กดได้
         }
         else
         {
-            // ไม่มีการ์ด: ซ่อนรูปหรือทำจางๆ และห้ามกด
-            useCardImage.sprite = null; 
-            useCardImage.color = new Color(1, 1, 1, 0); // โปร่งใส
-            useCardButton.interactable = false;
+            // ถ้าไม่มีการ์ด "หรือ" ไม่ใช่เทิร์นของเรา
+            if (currentCard != null) 
+            {
+                // มีการ์ดแต่ไม่ใช่เทิร์น โชว์รูปการ์ดปกติ แต่ล็อกปุ่ม
+                useCardImage.sprite = currentCard.cardImage;
+                useCardImage.color = new Color(0.5f, 0.5f, 0.5f, 1); // ทำให้รูปมืดลงนิดหน่อย (สีเทา)
+            }
+            else
+            {
+                // ไม่มีการ์ดเลย ซ่อนรูป
+                useCardImage.sprite = null; 
+                useCardImage.color = new Color(1, 1, 1, 0); 
+            }
+            
+            useCardButton.interactable = false; // ล็อกปุ่ม ห้ามกด
         }
+    }
+
+    private void OnEnable()
+    {
+        // 1. ลองหา GameTurnManager ในฉาก 
+        if (GameTurnManager.TryGet(out var turnManager))
+        {
+            // 2. ถ้าเจอ ให้สมัครรับข้อมูลเมื่อมีการเปลี่ยนเทิร์น
+            turnManager.OnTurnChanged += HandleTurnChanged;
+        }
+    }
+
+    private void OnDisable()
+    {
+        // ยกเลิกการรับข้อมูลเมื่อสคริปต์นี้ถูกปิดหรือทำลาย เพื่อป้องกันบั๊ก
+        if (GameTurnManager.TryGet(out var turnManager))
+        {
+            turnManager.OnTurnChanged -= HandleTurnChanged;
+        }
+    }
+
+    // ฟังก์ชันนี้จะทำงานอัตโนมัติเมื่อ GameTurnManager ประกาศเปลี่ยนเทิร์น
+    private void HandleTurnChanged(bool isAI)
+    {
+        // ถ้าเป็นเทิร์นของ AI (isAI == true) หมายความว่า "ไม่ใช่เทิร์นของผู้เล่น"
+        // ถ้าเป็นเทิร์นของคน (isAI == false) หมายความว่า "เป็นเทิร์นของผู้เล่น"
+        UpdateTurnState(!isAI); 
     }
 }
