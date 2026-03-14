@@ -10,7 +10,7 @@ public class SkillManager : MonoBehaviour
     public int defaultSkillPoints = 5; // เก็บไว้เผื่อระบบเก่า
     private int fallbackAppliedStarBonus = 0;
 
-    private const string UnlockedSkillsSaveKeyPrefix = "PassiveUnlockedSkills";
+    private const string UnlockedSkillsSaveKey = "PassiveUnlockedSkills_SHARED";
     private string loadedSaveKey = string.Empty;
 
     private void Awake()
@@ -216,14 +216,12 @@ public class SkillManager : MonoBehaviour
 
     private string GetUnlockedSkillsSaveKey()
     {
-        string fallback = "default";
-        string playerKey = GameData.Instance?.selectedPlayer != null
-            ? (!string.IsNullOrWhiteSpace(GameData.Instance.selectedPlayer.playerName)
-                ? GameData.Instance.selectedPlayer.playerName
-                : GameData.Instance.selectedPlayer.name)
-            : fallback;
+        return UnlockedSkillsSaveKey;
+    }
 
-        return $"{UnlockedSkillsSaveKeyPrefix}_{playerKey}";
+    public static void ClearSavedUnlockedSkills()
+    {
+        PlayerPrefs.DeleteKey(UnlockedSkillsSaveKey);
     }
 
     private PlayerStatAggregator ResolvePlayerStatAggregator()

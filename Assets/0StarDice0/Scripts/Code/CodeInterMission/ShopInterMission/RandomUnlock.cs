@@ -3,10 +3,6 @@ using UnityEngine.UI;
 using TMPro;
 public class RandomUnlock : MonoBehaviour
 {
-    [Header("Cost")]
-    [Tooltip("ค่าใช้จ่ายต่อการสุ่ม 1 ครั้ง")]
-    public int price = 10000;
-
     [Header("UI Setup")]
     public GameObject resultPanel;
     public TMP_Text resultText;
@@ -44,32 +40,11 @@ public class RandomUnlock : MonoBehaviour
     resultPanel.SetActive(true);
 });
 
-        RefreshRollButtonState();
-
-    }
-
-    private void OnEnable()
-    {
-        RegisterCreditListener();
-        RefreshRollButtonState();
-    }
-
-    private void OnDisable()
-    {
-        UnregisterCreditListener();
     }
 
     public void RollMonster()
     {
-        if (!TrySpendIntermissionCredit(price, out int remainingCredit))
-        {
-            resultText.text = $"Credit ไม่พอ (ต้องใช้ {price}, มี {GetCurrentCredit()})";
-            resultPanel.SetActive(true);
-            RefreshRollButtonState();
-            return;
-        }
-
-        int randomNum = Random.Range(1, 6); // สุ่ม 1-5
+        int randomNum = Random.Range(0, 6); // สุ่ม 1-5
         string monsterName = "";
 
         // ซ่อนรูปทั้งหมดก่อน
@@ -77,11 +52,12 @@ public class RandomUnlock : MonoBehaviour
 
         switch (randomNum)
         {
-            case 1: monsterName = "MonsterWater"; waterImage.SetActive(true); break;
-            case 2: monsterName = "MonsterEarth"; earthImage.SetActive(true); break;
-            case 3: monsterName = "MonsterWind"; windImage.SetActive(true); break;
-            case 4: monsterName = "MonsterLight"; lightImage.SetActive(true); break;
-            case 5: monsterName = "MonsterDark"; darkImage.SetActive(true); break;
+            case 1: monsterName = "MonsterFire"; waterImage.SetActive(true); break;
+            case 2: monsterName = "MonsterWater"; waterImage.SetActive(true); break;
+            case 3: monsterName = "MonsterEarth"; earthImage.SetActive(true); break;
+            case 4: monsterName = "MonsterWind"; windImage.SetActive(true); break;
+            case 5: monsterName = "MonsterLight"; lightImage.SetActive(true); break;
+            case 6: monsterName = "MonsterDark"; darkImage.SetActive(true); break;
         }
 
         // บันทึกว่าได้ตัวนี้แล้ว
@@ -89,16 +65,15 @@ public class RandomUnlock : MonoBehaviour
         PlayerPrefs.Save();
 
         // อัพเดตข้อความ
-        resultText.text = "You Got " + monsterName + $" !\n(จ่าย {price}, เหลือ {remainingCredit})";
+        resultText.text = "You Got" + monsterName + " !";
 
         // เปิด Panel
         resultPanel.SetActive(true);
-
-        RefreshRollButtonState();
     }
 
     private void HideAllImages()
     {
+        darkImage.SetActive(false);
         waterImage.SetActive(false);
         earthImage.SetActive(false);
         windImage.SetActive(false);
@@ -108,6 +83,7 @@ public class RandomUnlock : MonoBehaviour
 
     private void ResetAllMonsters()
     {
+        PlayerPrefs.SetInt("MonsterFire", 0);
         PlayerPrefs.SetInt("MonsterWater", 0);
         PlayerPrefs.SetInt("MonsterEarth", 0);
         PlayerPrefs.SetInt("MonsterWind", 0);
@@ -117,67 +93,12 @@ public class RandomUnlock : MonoBehaviour
     }
     private void UpdateMonsterUI()
 {
+    waterImage.SetActive(PlayerPrefs.GetInt("MonsterFire") == 1);
     waterImage.SetActive(PlayerPrefs.GetInt("MonsterWater") == 1);
     earthImage.SetActive(PlayerPrefs.GetInt("MonsterEarth") == 1);
     windImage.SetActive(PlayerPrefs.GetInt("MonsterWind") == 1);
     lightImage.SetActive(PlayerPrefs.GetInt("MonsterLight") == 1);
     darkImage.SetActive(PlayerPrefs.GetInt("MonsterDark") == 1);
 }
-
-    private void RegisterCreditListener()
-    {
-        if (GameData.Instance == null || GameData.Instance.selectedPlayer == null) return;
-        GameData.Instance.selectedPlayer.OnCreditChanged += HandleCreditChanged;
-    }
-
-    private void UnregisterCreditListener()
-    {
-        if (GameData.Instance == null || GameData.Instance.selectedPlayer == null) return;
-        GameData.Instance.selectedPlayer.OnCreditChanged -= HandleCreditChanged;
-    }
-
-    private void HandleCreditChanged(int _)
-    {
-        RefreshRollButtonState();
-    }
-
-    private void RefreshRollButtonState()
-    {
-        if (rollButton == null) return;
-        rollButton.interactable = GetCurrentCredit() >= Mathf.Max(1, price);
-    }
-
-    private int GetCurrentCredit()
-    {
-        if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
-        {
-            return Mathf.Max(0, GameData.Instance.selectedPlayer.Credit);
-        }
-
-        return 0;
-    }
-
-    private bool TrySpendIntermissionCredit(int amount, out int remainingCredit)
-    {
-        remainingCredit = GetCurrentCredit();
-        if (amount <= 0)
-        {
-            Debug.LogWarning($"[RandomUnlock] ราคา roll ไม่ถูกต้อง ({amount}) จึงไม่อนุญาตให้สุ่ม");
-            return false;
-        }
-
-        if (GameData.Instance == null || GameData.Instance.selectedPlayer == null)
-        {
-            return false;
-        }
-
-        if (!GameData.Instance.selectedPlayer.TrySpendCredit(amount))
-        {
-            return false;
-        }
-
-        remainingCredit = GameData.Instance.selectedPlayer.Credit;
-        return true;
-    }
 
 }
