@@ -3,6 +3,7 @@ using UnityEngine;
 using System.Text.RegularExpressions;
 using System.Linq;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -783,7 +784,16 @@ public class RouteManager : MonoBehaviour
     public List<int> initialRockTileIDs = new List<int>();
     [Tooltip("สถานะหินที่กำลังใช้งานในเกม")]
     public List<RockObstacleState> activeRockObstacles = new List<RockObstacleState>();
+    [Header("Rock Obstacle Spawn Cycle")]
+    [Tooltip("เปิดเพื่อให้สุ่มเสกหินใหม่ทุก ๆ N เทิร์น")]
+    public bool enableRandomRockSpawnByTurn = true;
+    [Min(1)]
+    [Tooltip("จำนวนเทิร์นต่อการสุ่มเสกหิน 1 ก้อน")]
+    public int randomRockSpawnIntervalTurns = 5;
+    [Tooltip("ถ้าเปิด จะทำงานเฉพาะฉาก MainEarth")]
+    public bool randomRockOnlyInMainEarth = true;
 
+    private int turnStartCounter;
     private readonly Dictionary<int, RockObstacleState> rockObstacleMap = new Dictionary<int, RockObstacleState>();
 
     private void Start()
@@ -802,6 +812,110 @@ public class RouteManager : MonoBehaviour
         {
             ActivateRockObstacle(tileID);
         }
+    }
+private void OnEnable()
+    {
+        if (!Application.isPlaying)
+        {
+            return;
+        }
+
+        if (GameTurnManager.TryGet(out var gameTurnManager))
+        {
+            gameTurnManager.OnTurnChanged += HandleTurnChanged;
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (!Application.isPlaying)
+        {
+            return;
+        }
+
+        if (GameTurnManager.TryGet(out var gameTurnManager))
+        {
+            gameTurnManager.OnTurnChanged -= HandleTurnChanged;
+        }
+    }
+
+    private void HandleTurnChanged(bool isAITurn)
+    {
+        if (!enableRandomRockSpawnByTurn)
+        {
+            return;
+        }
+
+        if (randomRockSpawnIntervalTurns <= 0)
+        {
+            randomRockSpawnIntervalTurns = 1;
+        }
+
+        if (randomRockOnlyInMainEarth)
+        {
+            string currentSceneName = SceneManager.GetActiveScene().name;
+            if (!string.Equals(currentSceneName, "MainEarth"))
+            {
+                return;
+            }
+        }
+
+        turnStartCounter++;
+        if (turnStartCounter % randomRockSpawnIntervalTurns != 0)
+        {
+            return;
+        }
+
+        if (!TrySpawnRandomRockObstacle())
+        {
+            Debug.Log("[RouteManager] ไม่มีช่องว่างสำหรับสุ่มวางหินเพิ่ม");
+        }
+    }
+
+    private bool TrySpawnRandomRockObstacle()
+    {
+        if (nodeConnections == null || nodeConnections.Count == 0)
+        {
+            return false;
+        }
+
+        List<int> candidateTileIds = new List<int>();
+        for (int i = 0; i < nodeConnections.Count; i++)
+        {
+            NodeConnection nodeData = nodeConnections[i];
+            if (nodeData == null || nodeData.node == null)
+            {
+                continue;
+            }
+
+            int tileId = nodeData.tileID;
+            if (tileId <= 0 || IsRockObstacleActive(tileId))
+            {
+                continue;
+            }
+
+            if (nodeData.type == TileType.Start || nodeData.type == TileType.Shop || nodeData.type == TileType.Teleport)
+            {
+                continue;
+            }
+
+            candidateTileIds.Add(tileId);
+        }
+
+        if (candidateTileIds.Count == 0)
+        {
+            return false;
+        }
+
+        int randomIndex = Random.Range(0, candidateTileIds.Count);
+        int targetTileId = candidateTileIds[randomIndex];
+        bool activated = ActivateRockObstacle(targetTileId);
+        if (activated)
+        {
+            Debug.Log($"🪨 สุ่มเสกหินที่ tile {targetTileId} (ทุก {randomRockSpawnIntervalTurns} เทิร์น)");
+        }
+
+        return activated;
     }
 
     public bool IsRockObstacleActive(int tileID)
