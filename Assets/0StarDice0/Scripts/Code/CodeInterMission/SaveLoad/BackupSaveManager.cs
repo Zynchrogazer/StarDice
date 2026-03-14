@@ -190,7 +190,7 @@ public class BackupSaveManager : MonoBehaviour
 
         foreach (string key in keysToBackup) PlayerPrefs.DeleteKey(key);
         PlayerPrefs.DeleteKey("CurrentDeckData");
-        PlayerData.ResetSharedCredit();
+        //PlayerData.ResetSharedCredit();
         SkillManager.ClearSavedUnlockedSkills();
         PassiveSkillManager.ClearSavedProgress();
         PlayerDataManager.ClearSavedEquipSlots();
