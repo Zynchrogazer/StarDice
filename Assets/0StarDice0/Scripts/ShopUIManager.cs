@@ -1,30 +1,29 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.Serialization;
-using TMPro;
 
 public class ShopUIManager : MonoBehaviour
 {
-    [FormerlySerializedAs("PlayerCredit")]
-    [SerializeField] private int playerCredit = 0;
-    public TMP_Text creditText;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
+    [Header("UI")]
+    [SerializeField] private TMP_Text creditText;
+    [SerializeField] private string creditPrefix = "Credit: ";
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    [Header("Data Source")]
+    [Tooltip("Optional fallback when GameData.Instance.selectedPlayer is not available.")]
+    [SerializeField] private PlayerData fallbackPlayerData;
+
+    [FormerlySerializedAs("PlayerCredit")]
+    [SerializeField, Min(0)] private int playerCredit;
+
+    private PlayerData boundPlayerData;
+
     public int PlayerCredit
     {
         get
         {
-            if (TryResolveCreditData(out PlayerData data))
+            if (TryResolvePlayerData(out PlayerData data))
             {
-                playerCredit = Mathf.Max(0, data.Credit);
+                return Mathf.Max(0, data.Credit);
             }
 
             return Mathf.Max(0, playerCredit);
@@ -34,31 +33,105 @@ public class ShopUIManager : MonoBehaviour
             int normalizedValue = Mathf.Max(0, value);
             playerCredit = normalizedValue;
 
-            if (TryResolveCreditData(out PlayerData data))
+            if (TryResolvePlayerData(out PlayerData data))
             {
                 data.SetCredit(normalizedValue);
             }
 
-            OnStatsUpdated?.Invoke();
+            RefreshCreditText();
         }
     }
 
-     private bool TryResolveCreditData(out PlayerData data)
+    private void Awake()
     {
-        data = selectedPlayerPreset;
+        TryFindCreditText();
+    }
 
-        if (data != null)
+    private void OnEnable()
+    {
+        RebindPlayerData();
+        RefreshCreditText();
+    }
+
+    private void OnDisable()
+    {
+        UnbindPlayerData();
+    }
+
+    private void Update()
+    {
+        if (HasPlayerDataChanged())
         {
-            return true;
+            RebindPlayerData();
+            RefreshCreditText();
         }
+    }
 
+    private bool HasPlayerDataChanged()
+    {
+        return ResolvePreferredPlayerData() != boundPlayerData;
+    }
+
+    private void RebindPlayerData()
+    {
+        PlayerData nextData = ResolvePreferredPlayerData();
+        if (nextData == boundPlayerData) return;
+
+        UnbindPlayerData();
+
+        boundPlayerData = nextData;
+        if (boundPlayerData != null)
+        {
+            boundPlayerData.OnCreditChanged += HandleCreditChanged;
+            playerCredit = Mathf.Max(0, boundPlayerData.Credit);
+        }
+    }
+
+    private void UnbindPlayerData()
+    {
+        if (boundPlayerData == null) return;
+
+        boundPlayerData.OnCreditChanged -= HandleCreditChanged;
+        boundPlayerData = null;
+    }
+
+    private void HandleCreditChanged(int newCredit)
+    {
+        playerCredit = Mathf.Max(0, newCredit);
+        RefreshCreditText();
+    }
+
+    private PlayerData ResolvePreferredPlayerData()
+    {
         if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
         {
-            data = GameData.Instance.selectedPlayer;
-            selectedPlayerPreset = data;
-            return true;
+            return GameData.Instance.selectedPlayer;
         }
 
-        return false;
+        return fallbackPlayerData;
+    }
+
+    private bool TryResolvePlayerData(out PlayerData data)
+    {
+        data = ResolvePreferredPlayerData();
+        return data != null;
+    }
+
+    private void TryFindCreditText()
+    {
+        if (creditText != null) return;
+
+        creditText = GetComponentInChildren<TMP_Text>(true);
+    }
+
+    public void RefreshCreditText()
+    {
+        if (creditText == null)
+        {
+            TryFindCreditText();
+            if (creditText == null) return;
+        }
+
+        creditText.text = $"{creditPrefix}{PlayerCredit}";
     }
 }
