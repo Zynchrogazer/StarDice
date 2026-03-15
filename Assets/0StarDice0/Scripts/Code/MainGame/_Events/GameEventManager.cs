@@ -378,6 +378,7 @@ public class GameEventManager : MonoBehaviour
             case "lava": LavaEffect(target); break;
             case "move": RandomMoveEffect(target); break;
             case "windteleport": WindTeleportEffect(target); break;
+            case "mainlighthealgimmick": TriggerMainLightHealGimmickEvent(); break;
             case "iceeffect": ApplyIceEffect(target); break;
             case "minigamefappy":
             case "level 1":
@@ -390,6 +391,20 @@ public class GameEventManager : MonoBehaviour
                 else ResolveGameTurnManager()?.RequestEndTurn();
                 break;
         }
+    }
+
+
+    private void TriggerMainLightHealGimmickEvent()
+    {
+        RouteManager routeManager = ResolveRouteManager();
+        if (routeManager != null && routeManager.TriggerMainLightHealGimmick())
+        {
+            ResolveGameTurnManager()?.RequestEndTurn();
+            return;
+        }
+
+        Debug.LogWarning("[GameEventManager] Trigger mainlighthealgimmick ไม่สำเร็จ");
+        ResolveGameTurnManager()?.RequestEndTurn();
     }
 
     private void ApplyIceEffect(GameObject target)
@@ -468,157 +483,98 @@ public class GameEventManager : MonoBehaviour
    public ItemID EarthLegendaryArmor = ItemID.EarthLegendaryArmor;
    public ItemID DarkLegendaryRing = ItemID.DarkLegendaryRing;
     private void ApplyTreasureBoxEffect(GameObject target)
+{
+    PlayerState p = target.GetComponent<PlayerState>();
+    if (p == null) return;
+
+    if (!eventPanels.TryGetValue("openchestpanel", out var panel))
     {
-        PlayerState p = target.GetComponent<PlayerState>();
-        if (p == null) return;
-
-        // 1. เปิด Panel กล่องสมบัติ (ต้องมั่นใจว่าใน Unity ตั้งชื่อ Panel ว่า "treasurebox" หรือชื่อที่คุณใช้)
-        // autoClose = false เพราะเราจะคุมการปิดเอง
-        if (!eventPanels.TryGetValue("openchestpanel", out var panel))
-        {
-            Debug.LogError("หา Panel 'openchestpanel' ไม่เจอ!");
-            ResolveGameTurnManager().RequestEndTurn();
-            return;
-        }
-
-        SafeSetActive(panel, true);
-
-        // 2. หาตัว BoxOpener ใน Panel นั้น
-        if (!TryGetComponentInChildrenSafe(panel, out BoxOpener boxScript))
-        {
-            Debug.LogError("ใน Panel ไม่มีสคริปต์ BoxOpener หรือ panel ถูกทำลายระหว่างทาง!");
-            StartCoroutine(WaitAndEndTurn());
-            return;
-        }
-
-        // 3. คำนวณรางวัล และเลือกรูป
-        Sprite resultSprite = null;
-        p.PlayerCredit += 100;
-        resultSprite = creditSprite;
-        Debug.Log("Treasure: Got Credit");
-
-        int roll = Random.Range(1, 101);
-        if (roll < 51)
-        {
-            int randomItem = Random.Range(0, 6);
-
-            if (randomItem == 0)
-            {
-                EquipmentManager.Instance.UnlockItem(Sword);
-                showImage.sprite = itemImages[0];
-                SafeSetActive(showImage != null ? showImage.gameObject : null, true);
-                Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
-            }
-            else if(randomItem == 1){
-                EquipmentManager.Instance.UnlockItem(Armor);
-                showImage.sprite = itemImages[1];
-                SafeSetActive(showImage != null ? showImage.gameObject : null, true);
-                Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
-            }
-            else if(randomItem == 2){
-                EquipmentManager.Instance.UnlockItem(DawnRing);
-                showImage.sprite = itemImages[2];
-                SafeSetActive(showImage != null ? showImage.gameObject : null, true);
-                Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
-            }
-            else if(randomItem == 3){
-                EquipmentManager.Instance.UnlockItem(WhiteFeather);
-                showImage.sprite = itemImages[3];
-                SafeSetActive(showImage != null ? showImage.gameObject : null, true);
-                Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
-            }
-            else if(randomItem == 4){
-                EquipmentManager.Instance.UnlockItem(RecoverRing);
-                showImage.sprite = itemImages[4];
-                SafeSetActive(showImage != null ? showImage.gameObject : null, true);
-                Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
-            }
-            else if(randomItem == 5){
-                EquipmentManager.Instance.UnlockItem(HearthNeckless);
-                showImage.sprite = itemImages[5];
-                SafeSetActive(showImage != null ? showImage.gameObject : null, true);
-                Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
-            }
-        }
-        else if (roll < 71 && roll > 50)
-        {
-            int randomItem = Random.Range(0, 3);
-
-            if (randomItem == 0)
-            {
-                EquipmentManager.Instance.UnlockItem(KnightSword);
-                showImage.sprite = itemImages[6];
-                SafeSetActive(showImage != null ? showImage.gameObject : null, true);
-                Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
-            }
-            else if(randomItem == 1){
-                EquipmentManager.Instance.UnlockItem(KnightArmor);
-                showImage.sprite = itemImages[7];
-                SafeSetActive(showImage != null ? showImage.gameObject : null, true);
-                Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
-            }
-            else if(randomItem == 2){
-                EquipmentManager.Instance.UnlockItem(DawnRing);
-                showImage.sprite = itemImages[8];
-                SafeSetActive(showImage != null ? showImage.gameObject : null, true);
-                Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
-            }
-        }
-        else if (roll > 99)
-        {
-            int randomItem = Random.Range(0, 6);
-
-            if (randomItem == 0)
-            {
-                EquipmentManager.Instance.UnlockItem(LightSpear);
-                showImage.sprite = itemImages[9];
-                SafeSetActive(showImage != null ? showImage.gameObject : null, true);
-                Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
-            }
-            else if(randomItem == 1){
-                EquipmentManager.Instance.UnlockItem(FireLegendarySword);
-                showImage.sprite = itemImages[10];
-                SafeSetActive(showImage != null ? showImage.gameObject : null, true);
-                Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
-            }
-            else if(randomItem == 2){
-                EquipmentManager.Instance.UnlockItem(WaterLegendaryArmor);
-                showImage.sprite = itemImages[11];
-                SafeSetActive(showImage != null ? showImage.gameObject : null, true);
-                Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
-            }
-            else if(randomItem == 3){
-                EquipmentManager.Instance.UnlockItem(WindSpear);
-                showImage.sprite = itemImages[12];
-                SafeSetActive(showImage != null ? showImage.gameObject : null, true);
-                Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
-            }
-            else if(randomItem == 4){
-                EquipmentManager.Instance.UnlockItem(EarthLegendaryArmor);
-                showImage.sprite = itemImages[13];
-                SafeSetActive(showImage != null ? showImage.gameObject : null, true);
-                Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
-            }
-            else if(randomItem == 5){
-                EquipmentManager.Instance.UnlockItem(DarkLegendaryRing);
-                showImage.sprite = itemImages[14];
-                SafeSetActive(showImage != null ? showImage.gameObject : null, true);
-                Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
-            }
-            else
-            {
-                showImage.sprite = itemImages[15];
-                SafeSetActive(showImage != null ? showImage.gameObject : null, true);
-                Debug.Log("ผู้เล่นไม่ได้ไอเท็ม");
-            }
-        }
-
-        boxScript.OpenBox(resultSprite, () =>
-        {
-            SafeSetActive(panel, false); // ปิดหน้าต่าง
-            ResolveGameTurnManager().RequestEndTurn(); // จบเทิร์น
-        });
+        Debug.LogError("หา Panel 'openchestpanel' ไม่เจอ!");
+        ResolveGameTurnManager().RequestEndTurn();
+        return;
     }
+
+    SafeSetActive(panel, true);
+
+    if (!TryGetComponentInChildrenSafe(panel, out BoxOpener boxScript))
+    {
+        Debug.LogError("ใน Panel ไม่มีสคริปต์ BoxOpener หรือ panel ถูกทำลายระหว่างทาง!");
+        StartCoroutine(WaitAndEndTurn());
+        return;
+    }
+
+    p.PlayerCredit += 100;
+    Sprite resultSprite = creditSprite;
+    Debug.Log("Treasure: Got Credit");
+
+    Sprite targetItemSprite = null; // ตัวแปรสำหรับเก็บรูปไอเท็มที่จะโชว์
+
+    int roll = Random.Range(1, 101); // สุ่ม 1-100
+
+    if (roll <= 50)
+    {
+        int randomItem = Random.Range(0, 6);
+        if (randomItem == 0) { EquipmentManager.Instance.UnlockItem(Sword); targetItemSprite = itemImages[0]; }
+        else if (randomItem == 1) { EquipmentManager.Instance.UnlockItem(Armor); targetItemSprite = itemImages[1]; }
+        else if (randomItem == 2) { EquipmentManager.Instance.UnlockItem(DawnRing); targetItemSprite = itemImages[2]; }
+        else if (randomItem == 3) { EquipmentManager.Instance.UnlockItem(WhiteFeather); targetItemSprite = itemImages[3]; }
+        else if (randomItem == 4) { EquipmentManager.Instance.UnlockItem(RecoverRing); targetItemSprite = itemImages[4]; }
+        else if (randomItem == 5) { EquipmentManager.Instance.UnlockItem(HearthNeckless); targetItemSprite = itemImages[5]; }
+    }
+    else if (roll > 50 && roll <= 70)
+    {
+        int randomItem = Random.Range(0, 3);
+        if (randomItem == 0) { EquipmentManager.Instance.UnlockItem(KnightSword); targetItemSprite = itemImages[6]; }
+        else if (randomItem == 1) { EquipmentManager.Instance.UnlockItem(KnightArmor); targetItemSprite = itemImages[7]; }
+        else if (randomItem == 2) { EquipmentManager.Instance.UnlockItem(DawnRing); targetItemSprite = itemImages[8]; }
+    }
+    else if (roll >= 100) // roll > 99 ก็คือ 100
+    {
+        int randomItem = Random.Range(0, 6);
+        if (randomItem == 0) { EquipmentManager.Instance.UnlockItem(LightSpear); targetItemSprite = itemImages[9]; }
+        else if (randomItem == 1) { EquipmentManager.Instance.UnlockItem(FireLegendarySword); targetItemSprite = itemImages[10]; }
+        else if (randomItem == 2) { EquipmentManager.Instance.UnlockItem(WaterLegendaryArmor); targetItemSprite = itemImages[11]; }
+        else if (randomItem == 3) { EquipmentManager.Instance.UnlockItem(WindSpear); targetItemSprite = itemImages[12]; }
+        else if (randomItem == 4) { EquipmentManager.Instance.UnlockItem(EarthLegendaryArmor); targetItemSprite = itemImages[13]; }
+        else if (randomItem == 5) { EquipmentManager.Instance.UnlockItem(DarkLegendaryRing); targetItemSprite = itemImages[14]; }
+    }
+    else 
+    {
+      
+        targetItemSprite = itemImages[15]; 
+        Debug.Log("ผู้เล่นไม่ได้ไอเท็ม (ได้แค่เงิน)");
+    }
+
+    // 🟢 ถ้าสุ่มได้ไอเท็ม ให้เรียก Coroutine หน่วงเวลา 5 วินาที
+    if (targetItemSprite != null)
+    {
+        Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว! (กำลังรอโชว์รูป...)");
+        StartCoroutine(ShowItemImageAfterDelay(targetItemSprite, 2f));
+    }
+
+    // เปิดกล่องแอนิเมชันตามปกติ
+    boxScript.OpenBox(resultSprite, () =>
+    {
+        SafeSetActive(panel, false);
+        ResolveGameTurnManager().RequestEndTurn();
+    });
+}
+
+// 🟢 ฟังก์ชัน Coroutine สำหรับหน่วงเวลาโชว์รูป
+private IEnumerator ShowItemImageAfterDelay(Sprite itemSprite, float delayTime)
+{
+    // ซ่อนรูปไว้ก่อนเผื่อมันเปิดค้างอยู่
+    if (showImage != null) SafeSetActive(showImage.gameObject, false);
+    
+    yield return new WaitForSeconds(delayTime); // รอเวลา
+
+    // พอครบเวลา ค่อยใส่รูปแล้วเปิดให้มองเห็น
+    if (showImage != null)
+    {
+        showImage.sprite = itemSprite;
+        SafeSetActive(showImage.gameObject, true);
+    }
+}
 
     private void TrapEffect(GameObject target)
     {
@@ -662,8 +618,20 @@ public class GameEventManager : MonoBehaviour
     {
         PlayerState p = target.GetComponent<PlayerState>();
         if (p != null) p.PlayerHealth += 10;
-        ShowPanel("DrawCard", true);
+        ShowPanel("DrawCard", false);
+       
     }
+
+public void OnCardSelected()
+{
+    
+    if (eventPanels.TryGetValue("drawcard", out var panel) && panel != null)
+    {
+        SafeSetActive(panel, false);
+    }
+
+    StartCoroutine(WaitAndEndTurn());
+}
 
     private void LavaEffect(GameObject target)
     {

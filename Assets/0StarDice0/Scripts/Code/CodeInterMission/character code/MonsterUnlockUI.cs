@@ -8,6 +8,7 @@ public class MonsterUnlockUI : MonoBehaviour
     public Button windButton;
     public Button lightButton;
     public Button darkButton;
+    public Button fireButton;
 
     void Start()
     {
@@ -17,6 +18,7 @@ public class MonsterUnlockUI : MonoBehaviour
         windButton.interactable = false;
         lightButton.interactable = false;
         darkButton.interactable = false;
+        fireButton.interactable = false;
 
         // ปลดล็อคถ้าเคยสุ่มได้
         if (PlayerPrefs.GetInt("MonsterWater", 0) == 1) waterButton.interactable = true;
@@ -24,5 +26,6 @@ public class MonsterUnlockUI : MonoBehaviour
         if (PlayerPrefs.GetInt("MonsterWind", 0) == 1) windButton.interactable = true;
         if (PlayerPrefs.GetInt("MonsterLight", 0) == 1) lightButton.interactable = true;
         if (PlayerPrefs.GetInt("MonsterDark", 0) == 1) darkButton.interactable = true;
+        if (PlayerPrefs.GetInt("MonsterFire", 0) == 1) fireButton.interactable = true;
     }
 }

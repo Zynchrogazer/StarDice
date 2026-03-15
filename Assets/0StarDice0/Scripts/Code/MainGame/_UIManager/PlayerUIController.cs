@@ -25,13 +25,6 @@ public class PlayerUIController : MonoBehaviour
     [Tooltip("ข้อความในกล่อง tooltip debuff (optional)")]
     public TMP_Text debuffTooltipText;
 
-    [Header("Debuff Sprite Tags (TMP Rich Text)")]
-    [Tooltip("ตัวอย่าง: <sprite name=\"burn\"> ถ้าเว้นว่างจะ fallback เป็น emoji")]
-    public string burnSpriteTag = "<sprite name=\"burn\">";
-    [Tooltip("ตัวอย่าง: <sprite name=\"ice\"> ถ้าเว้นว่างจะ fallback เป็น emoji")]
-    public string iceSpriteTag = "<sprite name=\"ice\">";
-
-
     // ตัวแปรสำหรับจำตัวละครที่เป็น "คนเล่น" (Human)
     private PlayerState myPlayer;
     private ElementButtonManager elementButtonManager;
@@ -123,7 +116,7 @@ public class PlayerUIController : MonoBehaviour
         {
             entries.Add(new DebuffUIEntry(
                 "burn",
-                ResolveDebuffIconMarkup(burnSpriteTag, "🔥"),
+                "🔥",
                 myPlayer.BurnDebuffAppliedOrder,
                 $"Burn: รับความเสียหายตอนเริ่มเทิร์น\nคงเหลือ: {myPlayer.DebuffBurnTurnsRemaining} เทิร์น"));
         }
@@ -132,7 +125,7 @@ public class PlayerUIController : MonoBehaviour
         {
             entries.Add(new DebuffUIEntry(
                 "ice",
-                ResolveDebuffIconMarkup(iceSpriteTag, "❄️"),
+                "❄️",
                 myPlayer.IceDebuffAppliedOrder,
                 "Ice: ทอยเต๋าครั้งถัดไปจะเหลือครึ่งหนึ่ง\nคงเหลือ: 1 ครั้ง"));
         }
@@ -145,14 +138,6 @@ public class PlayerUIController : MonoBehaviour
         });
 
         return entries;
-    }
-
-    private static string ResolveDebuffIconMarkup(string spriteTag, string fallbackEmoji)
-    {
-        if (!string.IsNullOrWhiteSpace(spriteTag) && spriteTag.Contains("<sprite"))
-            return spriteTag;
-
-        return fallbackEmoji;
     }
 
     private static string BuildDebuffIconRichText(List<DebuffUIEntry> entries)

@@ -32,24 +32,6 @@
 - ถ้าอยากผูกแบบ auto-find ให้ชื่อ object มีคำว่า `debuff`
 - แต่แนะนำให้ลากผูกใน Inspector โดยตรงเพื่อชัวร์ที่สุด
 
-
-## 2.1) เตรียม Sprite Asset สำหรับ TMP (แบบ KISS)
-
-> ถ้าอยากให้เป็น "img sprite" ใน `TMP_Text` ให้ใช้ TMP Sprite Asset แล้วอ้างด้วย `<sprite name="...">`
-
-1. เตรียมไฟล์รูป icon (เช่น `burn.png`, `ice.png`) และ import เข้า Unity
-2. ตั้งค่า Texture เป็น `Sprite (2D and UI)`
-3. ไปที่ `Window > TextMeshPro > Sprite Importer`
-4. เลือก texture ที่มี icon แล้วกด Generate เป็น `TMP Sprite Asset`
-5. ที่ `DebuffIconText` (TMP) ให้ตั้งช่อง **Sprite Asset** เป็น asset ที่สร้างไว้
-6. ใน `PlayerUIController` ตั้งค่า:
-   - `Burn Sprite Tag` = `<sprite name="burn">`
-   - `Ice Sprite Tag` = `<sprite name="ice">`
-
-หมายเหตุ:
-- ชื่อใน `name="..."` ต้องตรงกับชื่อ sprite entry ใน TMP Sprite Asset
-- ถ้าตั้ง tag ผิด/ไม่ตั้ง ระบบจะ fallback ไป emoji อัตโนมัติ
-
 ---
 
 ## 3) เตรียม Tooltip Panel
@@ -95,7 +77,7 @@
 
 1. เข้า Play Mode
 2. ทำให้ผู้เล่นติด Burn ก่อน แล้วติด Ice ตาม
-3. เช็กว่า icon sprite เรียงซ้าย→ขวา ตามลำดับการติด (ถ้าใช้ fallback จะเห็น `🔥  ❄️`)
+3. เช็กว่า icon เรียงเป็น `🔥  ❄️`
 4. เอาเมาส์ชี้ที่ `🔥` ต้องเห็นข้อความ Burn + เทิร์นคงเหลือ
 5. เอาเมาส์ชี้ที่ `❄️` ต้องเห็นข้อความ Ice + คงเหลือ 1 ครั้ง
 6. รอ Burn หมด แล้วเช็กว่า `❄️` เลื่อนมาอยู่ซ้าย (แทนที่ตำแหน่งเดิม)

@@ -6153,6 +6153,7 @@ MonoBehaviour:
   useCardButton: {fileID: 4763767491478071844}
   useCardImage: {fileID: 7347871010572734387}
   currentCard: {fileID: 0}
+  isPlayerTurn: 0
 --- !u!4 &774621610684717079
 Transform:
   m_ObjectHideFlags: 0
@@ -12045,6 +12046,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Canvas
       objectReference: {fileID: 0}
+    - target: {fileID: 2794970196056107942, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 9222571919214096350}
     - target: {fileID: 3017469373648889625, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
@@ -12133,6 +12138,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5090596672490720841, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 9222571919214096350}
     - target: {fileID: 7614960429042702973, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
@@ -12142,6 +12151,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+--- !u!114 &1477739672992296934 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 286983589677044495, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+  m_PrefabInstance: {fileID: 1477739672992296933}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!198 &1482926551627656868
 ParticleSystem:
   m_ObjectHideFlags: 0
@@ -100565,8 +100585,8 @@ MonoBehaviour:
     connectedNodes:
     - {fileID: 3911577038798882200}
     tileID: 2
-    type: 1
-    eventName: randomevent
+    type: 12
+    eventName: treasurebox
     lockRandomType: 0
   - node: {fileID: 3911577038798882200}
     connectedNodes:
@@ -101001,6 +101021,14 @@ MonoBehaviour:
   rockObstaclePrefab: {fileID: 0}
   initialRockTileIDs: 
   activeRockObstacles: []
+  enableRandomRockSpawnByTurn: 1
+  randomRockSpawnIntervalTurns: 5
+  randomRockOnlyInMainEarth: 1
+  enableMainLightHealGimmick: 1
+  mainLightHealOnlyInMainLight: 1
+  mainLightHealDurationTurns: 3
+  mainLightHealMinTiles: 5
+  mainLightHealMaxTiles: 10
 --- !u!23 &6475558988761587858
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -152639,8 +152667,24 @@ MonoBehaviour:
   windTeleportTargetIDs: 
   windTeleportPanelName: windteleportpanel
   creditSprite: {fileID: 21300000, guid: 3fbf596981ae71d42a5da57968062796, type: 3}
-  itemImages: []
-  showImage: {fileID: 0}
+  itemImages:
+  - {fileID: 21300000, guid: 1328fdac4f9659944ba1f9ef1a937afc, type: 3}
+  - {fileID: 21300000, guid: 6ac270cb5af314a42af64960c696a8a1, type: 3}
+  - {fileID: 21300000, guid: dc1846ef57c4e5247a2cd5e71a39cdea, type: 3}
+  - {fileID: 21300000, guid: 498f84560c1f9f84aa58687338bc7229, type: 3}
+  - {fileID: 21300000, guid: f2c25ec43a8949a4f97735170fad1e8c, type: 3}
+  - {fileID: 21300000, guid: 3fe45cc5b469cae44bd818a9d149827b, type: 3}
+  - {fileID: 21300000, guid: e8d3852a2c56c412d8d062edc558ed5a, type: 3}
+  - {fileID: 21300000, guid: fb282987f1a8d854abe31fdea956eb6d, type: 3}
+  - {fileID: 21300000, guid: a4d06be3926015446a1254d42f72f569, type: 3}
+  - {fileID: 21300000, guid: 3390647031b5c794eba542e6cd263c27, type: 3}
+  - {fileID: 21300000, guid: 38eef48158e7a4a82a57ea9b7bf250ef, type: 3}
+  - {fileID: 21300000, guid: 8c63f7691890fda43b180ec76e7c7aff, type: 3}
+  - {fileID: 21300000, guid: a97713e2dc9954f50a114bc9926267ed, type: 3}
+  - {fileID: 21300000, guid: 4c16caeddfd7a73488c836b4b12c7502, type: 3}
+  - {fileID: 21300000, guid: 9aaeab259ac13ad408630bf32f00794b, type: 3}
+  - {fileID: 21300000, guid: 3fbf596981ae71d42a5da57968062796, type: 3}
+  showImage: {fileID: 1477739672992296934}
   Sword: 1
   Armor: 2
   DawnRing: 3

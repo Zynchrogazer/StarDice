@@ -4,13 +4,13 @@ using UnityEngine.UI;
 
 public class ShopPackManager : MonoBehaviour
 {
-    private static readonly int[] DefaultPackPrices = { 60, 100, 150, 220 };
+    private static readonly int[] DefaultPackPrices = { 10, 100, 150, 220 };
     public List<CardData> allCards;       // ScriptableObject 47 ใบ
     public Button[] packButtons = new Button[4]; // ปุ่มซื้อซอง 4 ปุ่ม
 
     [Header("Pack Prices")]
     [Tooltip("ราคาแต่ละซองตามลำดับปุ่ม (ต้อง > 0) หากตั้งเป็น 0/ติดลบ หรือใส่ไม่ครบ จะใช้ค่าเริ่มต้นของแต่ละซอง") ]
-    public int[] packPrices = new int[] { 60, 100, 150, 220 };
+    public int[] packPrices = new int[] { 10, 100, 150, 220 };
 
     [Header("Pack Result UI")]
     public GameObject packResultPanel; // Panel แสดงผลการ์ด
@@ -133,7 +133,8 @@ public class ShopPackManager : MonoBehaviour
     private bool TrySpendIntermissionCredit(int amount, out int remainingCredit)
     {
         remainingCredit = GetCurrentCredit();
-        if (amount <= 0)
+        
+        if (amount < 0)
         {
             Debug.LogWarning($"[ShopPackManager] ราคา pack ไม่ถูกต้อง ({amount}) จึงไม่อนุญาตให้ซื้อ");
             return false;
@@ -144,9 +145,12 @@ public class ShopPackManager : MonoBehaviour
             return false;
         }
 
-        if (!GameData.Instance.selectedPlayer.TrySpendCredit(amount))
+        if (amount > 0)
         {
-            return false;
+            if (!GameData.Instance.selectedPlayer.TrySpendCredit(amount))
+            {
+                return false;
+            }
         }
 
         remainingCredit = GameData.Instance.selectedPlayer.Credit;

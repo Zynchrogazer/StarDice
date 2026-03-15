@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
-
+using System;
 public class EquipmentManager : MonoBehaviour
 {
     // สร้าง Singleton เพื่อให้เรียกใช้ได้ง่ายจากที่ไหนก็ได้
@@ -84,6 +84,32 @@ public class EquipmentManager : MonoBehaviour
         return data;
     }
 
+    public static void ClearSavedOwnershipStates()
+    {
+        foreach (ItemID id in Enum.GetValues(typeof(ItemID)))
+        {
+            if (id == ItemID.None)
+            {
+                continue;
+            }
+
+            PlayerPrefs.DeleteKey(OwnershipPrefKeyPrefix + id);
+        }
+
+        if (Instance != null)
+        {
+            foreach (var item in Instance.allEquipmentList)
+            {
+                if (item == null)
+                {
+                    continue;
+                }
+
+                item.isOwned = false;
+            }
+        }
+    }
+
     private void LoadOwnershipStates()
     {
         foreach (var pair in equipmentMap)
@@ -94,5 +120,25 @@ public class EquipmentManager : MonoBehaviour
                 pair.Value.isOwned = PlayerPrefs.GetInt(key) == 1;
             }
         }
+    }
+
+
+    [ContextMenu("Reset All Equipment Save")]
+    public void ResetAllEquipmentSave()
+    {
+        foreach (var item in allEquipmentList)
+        {
+            if (item != null)
+            {
+            
+                item.isOwned = false; 
+
+            
+                PlayerPrefs.DeleteKey(OwnershipPrefKeyPrefix + item.itemID); 
+            }
+        }
+        
+        PlayerPrefs.Save(); 
+        Debug.Log("<color=red>รีเซ็ตไอเท็มและลบเซฟเก่าทิ้งทั้งหมดเรียบร้อยแล้ว!</color>");
     }
 }

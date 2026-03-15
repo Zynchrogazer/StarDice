@@ -127,22 +127,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 982064258108183007, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
-      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
-      value: 
-      objectReference: {fileID: 0}
     - target: {fileID: 1777269012667938593, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
       propertyPath: m_Name
       value: Canvas
       objectReference: {fileID: 0}
-    - target: {fileID: 3017469373648889625, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+    - target: {fileID: 2794970196056107942, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 3462586120824983271, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
-      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
-      value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 9222571919214096350}
     - target: {fileID: 3573629180107837215, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
       propertyPath: m_Pivot.x
       value: 0
@@ -223,10 +215,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 7614960429042702973, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+    - target: {fileID: 5090596672490720841, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 9222571919214096350}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -303,6 +295,17 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 133693192813705968, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
   m_PrefabInstance: {fileID: 1127151008}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1622986221 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 286983589677044495, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+  m_PrefabInstance: {fileID: 1127151008}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &12513198618797514
 GameObject:
   m_ObjectHideFlags: 0
@@ -1546,6 +1549,7 @@ MonoBehaviour:
   useCardButton: {fileID: 0}
   useCardImage: {fileID: 0}
   currentCard: {fileID: 0}
+  isPlayerTurn: 0
 --- !u!114 &760953086989148684
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6853,7 +6857,7 @@ MonoBehaviour:
   isAI: 0
   PlayerHealth: 0
   MaxHealth: 50
-  PlayerCredit: 0
+  playerCredit: 0
   PlayerStar: 0
   CurrentAttack: 0
   CurrentSpeed: 0
@@ -8623,6 +8627,14 @@ MonoBehaviour:
   rockObstaclePrefab: {fileID: 9143513972507117436, guid: b0bcfd81642f56843a0adb5b660509d4, type: 3}
   initialRockTileIDs: 
   activeRockObstacles: []
+  enableRandomRockSpawnByTurn: 1
+  randomRockSpawnIntervalTurns: 5
+  randomRockOnlyInMainEarth: 1
+  enableMainLightHealGimmick: 1
+  mainLightHealOnlyInMainLight: 1
+  mainLightHealDurationTurns: 3
+  mainLightHealMinTiles: 5
+  mainLightHealMaxTiles: 10
 --- !u!23 &5924655552752355843
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -12340,7 +12352,7 @@ MonoBehaviour:
   isAI: 1
   PlayerHealth: 0
   MaxHealth: 20
-  PlayerCredit: 0
+  playerCredit: 0
   PlayerStar: 0
   CurrentAttack: 0
   CurrentSpeed: 0
@@ -12755,8 +12767,24 @@ MonoBehaviour:
   windTeleportTargetIDs: 
   windTeleportPanelName: windteleportpanel
   creditSprite: {fileID: 21300000, guid: 3fbf596981ae71d42a5da57968062796, type: 3}
-  itemImages: []
-  showImage: {fileID: 0}
+  itemImages:
+  - {fileID: 21300000, guid: 1328fdac4f9659944ba1f9ef1a937afc, type: 3}
+  - {fileID: 21300000, guid: 6ac270cb5af314a42af64960c696a8a1, type: 3}
+  - {fileID: 21300000, guid: dc1846ef57c4e5247a2cd5e71a39cdea, type: 3}
+  - {fileID: 21300000, guid: 498f84560c1f9f84aa58687338bc7229, type: 3}
+  - {fileID: 21300000, guid: f2c25ec43a8949a4f97735170fad1e8c, type: 3}
+  - {fileID: 21300000, guid: 3fe45cc5b469cae44bd818a9d149827b, type: 3}
+  - {fileID: 21300000, guid: e8d3852a2c56c412d8d062edc558ed5a, type: 3}
+  - {fileID: 21300000, guid: fb282987f1a8d854abe31fdea956eb6d, type: 3}
+  - {fileID: 21300000, guid: a4d06be3926015446a1254d42f72f569, type: 3}
+  - {fileID: 21300000, guid: 3390647031b5c794eba542e6cd263c27, type: 3}
+  - {fileID: 21300000, guid: 38eef48158e7a4a82a57ea9b7bf250ef, type: 3}
+  - {fileID: 21300000, guid: 8c63f7691890fda43b180ec76e7c7aff, type: 3}
+  - {fileID: 21300000, guid: a97713e2dc9954f50a114bc9926267ed, type: 3}
+  - {fileID: 21300000, guid: 4c16caeddfd7a73488c836b4b12c7502, type: 3}
+  - {fileID: 21300000, guid: 9aaeab259ac13ad408630bf32f00794b, type: 3}
+  - {fileID: 21300000, guid: 3fbf596981ae71d42a5da57968062796, type: 3}
+  showImage: {fileID: 1622986221}
   Sword: 1
   Armor: 2
   DawnRing: 3
