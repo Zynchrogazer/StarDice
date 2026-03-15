@@ -31,13 +31,7 @@ public class PlayerState : MonoBehaviour
     public bool DebuffBurn = false;
     public int DebuffBurnTurnsRemaining = 0;
     public bool hasIceEffect = false;
-    private int burnDebuffAppliedOrder = 0;
-    private int iceDebuffAppliedOrder = 0;
-    private static int debuffApplySequence = 0;
     public ElementType PlayerElement { get; set; }
-
-    public int BurnDebuffAppliedOrder => burnDebuffAppliedOrder;
-    public int IceDebuffAppliedOrder => iceDebuffAppliedOrder;
 
     [Header("Battle Stats")]
     public int WinCount = 0;
@@ -228,37 +222,14 @@ public class PlayerState : MonoBehaviour
     {
         if (!hasIceEffect) return false;
         hasIceEffect = false;
-        iceDebuffAppliedOrder = 0;
         OnStatsUpdated?.Invoke();
         return true;
-    }
-
-    public void ApplyIceDebuff()
-    {
-        if (!hasIceEffect)
-        {
-            iceDebuffAppliedOrder = NextDebuffApplyOrder();
-        }
-
-        hasIceEffect = true;
-        OnStatsUpdated?.Invoke();
     }
 
     public void ApplyBurnDebuff(int turns)
     {
         DebuffBurn = turns > 0;
         DebuffBurnTurnsRemaining = Mathf.Max(0, turns);
-
-        if (DebuffBurn)
-        {
-            if (burnDebuffAppliedOrder <= 0)
-                burnDebuffAppliedOrder = NextDebuffApplyOrder();
-        }
-        else
-        {
-            burnDebuffAppliedOrder = 0;
-        }
-
         OnStatsUpdated?.Invoke();
     }
 
@@ -270,18 +241,8 @@ public class PlayerState : MonoBehaviour
 
         DebuffBurnTurnsRemaining = Mathf.Max(0, DebuffBurnTurnsRemaining - 1);
         DebuffBurn = DebuffBurnTurnsRemaining > 0;
-        if (!DebuffBurn)
-            burnDebuffAppliedOrder = 0;
         OnStatsUpdated?.Invoke();
         return true;
-    }
-
-    private static int NextDebuffApplyOrder()
-    {
-        debuffApplySequence++;
-        if (debuffApplySequence >= int.MaxValue - 4)
-            debuffApplySequence = 1;
-        return debuffApplySequence;
     }
 
     // --- Level & EXP Logic (New) ---
@@ -375,8 +336,6 @@ public class PlayerState : MonoBehaviour
             DebuffBurn = false;
             DebuffBurnTurnsRemaining = 0;
             hasIceEffect = false;
-            burnDebuffAppliedOrder = 0;
-            iceDebuffAppliedOrder = 0;
             OnStatsUpdated?.Invoke();
             return;
         }
@@ -397,8 +356,6 @@ public class PlayerState : MonoBehaviour
         DebuffBurn = false;
         DebuffBurnTurnsRemaining = 0;
         hasIceEffect = false;
-        burnDebuffAppliedOrder = 0;
-        iceDebuffAppliedOrder = 0;
         OnStatsUpdated?.Invoke();
     }
 
@@ -478,8 +435,6 @@ public class PlayerState : MonoBehaviour
         hasIceEffect = false;
         DebuffBurn = false;
         DebuffBurnTurnsRemaining = 0;
-        burnDebuffAppliedOrder = 0;
-        iceDebuffAppliedOrder = 0;
         RuntimeAttackModifier = 0;
         RuntimeMaxHealthModifier = 0;
         RuntimeStarModifier = 0;

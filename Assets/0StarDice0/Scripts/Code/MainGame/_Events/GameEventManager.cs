@@ -412,7 +412,7 @@ public class GameEventManager : MonoBehaviour
         PlayerState p = target.GetComponent<PlayerState>();
         if (p != null)
         {
-            p.ApplyIceDebuff(); // ✅ ติดสถานะแช่แข็ง
+            p.hasIceEffect = true; // ✅ ติดสถานะแช่แข็ง
             Debug.Log($"<color=cyan>❄️ Player {target.name} ติดสถานะ Ice Effect! (ทอยครั้งหน้าหารครึ่ง)</color>");
         }
 
