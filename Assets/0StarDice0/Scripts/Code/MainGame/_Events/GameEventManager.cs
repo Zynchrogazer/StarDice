@@ -597,7 +597,7 @@ private IEnumerator ShowItemImageAfterDelay(Sprite itemSprite, float delayTime)
     private void StarGain(GameObject target)
     {
         PlayerState p = target.GetComponent<PlayerState>();
-        if (p != null) p.PlayerStar += 15;
+        if (p != null) p.AddStars(15);
         ShowPanel("starpanel", true);
     }
 
@@ -605,7 +605,7 @@ private IEnumerator ShowItemImageAfterDelay(Sprite itemSprite, float delayTime)
     {
         PlayerState p = target.GetComponent<PlayerState>();
         if (p == null) return;
-        p.PlayerStar = Mathf.Max(0, p.PlayerStar - Random.Range(5, 11));
+        p.RemoveStars(Random.Range(5, 11));
         ShowPanel("droppanel", true);
     }
 
