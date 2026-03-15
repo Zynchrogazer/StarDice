@@ -378,6 +378,7 @@ public class GameEventManager : MonoBehaviour
             case "lava": LavaEffect(target); break;
             case "move": RandomMoveEffect(target); break;
             case "windteleport": WindTeleportEffect(target); break;
+            case "mainlighthealgimmick": TriggerMainLightHealGimmickEvent(); break;
             case "iceeffect": ApplyIceEffect(target); break;
             case "minigamefappy":
             case "level 1":
@@ -390,6 +391,20 @@ public class GameEventManager : MonoBehaviour
                 else ResolveGameTurnManager()?.RequestEndTurn();
                 break;
         }
+    }
+
+
+    private void TriggerMainLightHealGimmickEvent()
+    {
+        RouteManager routeManager = ResolveRouteManager();
+        if (routeManager != null && routeManager.TriggerMainLightHealGimmick())
+        {
+            ResolveGameTurnManager()?.RequestEndTurn();
+            return;
+        }
+
+        Debug.LogWarning("[GameEventManager] Trigger mainlighthealgimmick ไม่สำเร็จ");
+        ResolveGameTurnManager()?.RequestEndTurn();
     }
 
     private void ApplyIceEffect(GameObject target)

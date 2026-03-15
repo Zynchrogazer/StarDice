@@ -66,6 +66,14 @@ public class RockObstacleState
 }
 
 [System.Serializable]
+public class TemporaryTileChange
+{
+    public int tileID;
+    public TileType originalType;
+    public string originalEventName;
+}
+
+[System.Serializable]
 public struct TileGenSettings
 {
     public string name;
@@ -793,7 +801,24 @@ public class RouteManager : MonoBehaviour
     [Tooltip("ถ้าเปิด จะทำงานเฉพาะฉาก MainEarth")]
     public bool randomRockOnlyInMainEarth = true;
 
+    [Header("MainLight Heal Tile Gimmick")]
+    [Tooltip("เปิดเพื่อใช้งานกิมมิคช่อง Heal ของ MainLight")]
+    public bool enableMainLightHealGimmick = true;
+    [Tooltip("ถ้าเปิด จะให้กิมมิคทำงานเฉพาะฉาก MainLight")]
+    public bool mainLightHealOnlyInMainLight = true;
+    [Min(1)]
+    [Tooltip("ระยะเวลา (เทิร์น) ที่ช่อง Heal ชั่วคราวจะคงอยู่ก่อนคืนค่ากลับ")]
+    public int mainLightHealDurationTurns = 3;
+    [Min(1)]
+    [Tooltip("จำนวนช่อง Heal ต่ำสุดต่อการ Trigger")]
+    public int mainLightHealMinTiles = 5;
+    [Min(1)]
+    [Tooltip("จำนวนช่อง Heal สูงสุดต่อการ Trigger")]
+    public int mainLightHealMaxTiles = 10;
+
     private int turnStartCounter;
+    private int mainLightHealTurnsLeft;
+    private readonly List<TemporaryTileChange> activeMainLightHealChanges = new List<TemporaryTileChange>();
     private readonly Dictionary<int, RockObstacleState> rockObstacleMap = new Dictionary<int, RockObstacleState>();
 
     private void Start()
@@ -813,7 +838,8 @@ public class RouteManager : MonoBehaviour
             ActivateRockObstacle(tileID);
         }
     }
-private void OnEnable()
+
+    private void OnEnable()
     {
         if (!Application.isPlaying)
         {
@@ -840,6 +866,12 @@ private void OnEnable()
     }
 
     private void HandleTurnChanged(bool isAITurn)
+    {
+        HandleRockSpawnTurnTick();
+        HandleMainLightHealTurnTick();
+    }
+
+    private void HandleRockSpawnTurnTick()
     {
         if (!enableRandomRockSpawnByTurn)
         {
@@ -870,6 +902,160 @@ private void OnEnable()
         {
             Debug.Log("[RouteManager] ไม่มีช่องว่างสำหรับสุ่มวางหินเพิ่ม");
         }
+    }
+
+    private void HandleMainLightHealTurnTick()
+    {
+        if (mainLightHealTurnsLeft <= 0)
+        {
+            return;
+        }
+
+        mainLightHealTurnsLeft--;
+        if (mainLightHealTurnsLeft > 0)
+        {
+            return;
+        }
+
+        RestoreMainLightHealTiles();
+        Debug.Log("💚 MainLight Heal Gimmick หมดเวลาแล้ว คืนค่าช่องเดิมเรียบร้อย");
+    }
+
+    [ContextMenu("Trigger MainLight Heal Gimmick")]
+    public bool TriggerMainLightHealGimmick()
+    {
+        if (!enableMainLightHealGimmick)
+        {
+            return false;
+        }
+
+        if (mainLightHealOnlyInMainLight)
+        {
+            string currentSceneName = SceneManager.GetActiveScene().name;
+            if (!string.Equals(currentSceneName, "MainLight"))
+            {
+                return false;
+            }
+        }
+
+        if (mainLightHealDurationTurns <= 0)
+        {
+            mainLightHealDurationTurns = 1;
+        }
+
+        if (mainLightHealMinTiles <= 0)
+        {
+            mainLightHealMinTiles = 1;
+        }
+
+        if (mainLightHealMaxTiles < mainLightHealMinTiles)
+        {
+            mainLightHealMaxTiles = mainLightHealMinTiles;
+        }
+
+        if (activeMainLightHealChanges.Count > 0)
+        {
+            RestoreMainLightHealTiles();
+        }
+
+        int randomTileCount = Random.Range(mainLightHealMinTiles, mainLightHealMaxTiles + 1);
+        int changedCount = ApplyTemporaryHealTiles(randomTileCount);
+        if (changedCount <= 0)
+        {
+            return false;
+        }
+
+        mainLightHealTurnsLeft = mainLightHealDurationTurns;
+        Debug.Log($"💚 Trigger MainLight Heal Gimmick: เปลี่ยน {changedCount} ช่อง เป็นเวลา {mainLightHealDurationTurns} เทิร์น");
+        return true;
+    }
+
+    private int ApplyTemporaryHealTiles(int desiredCount)
+    {
+        if (nodeConnections == null || nodeConnections.Count == 0)
+        {
+            return 0;
+        }
+
+        List<NodeConnection> candidates = new List<NodeConnection>();
+        for (int i = 0; i < nodeConnections.Count; i++)
+        {
+            NodeConnection nodeData = nodeConnections[i];
+            if (nodeData == null || nodeData.node == null)
+            {
+                continue;
+            }
+
+            if (nodeData.type == TileType.Heal ||
+                nodeData.type == TileType.Start ||
+                nodeData.type == TileType.Shop ||
+                nodeData.type == TileType.Teleport ||
+                nodeData.type == TileType.Boss ||
+                nodeData.type == TileType.SpecialBoss)
+            {
+                continue;
+            }
+
+            candidates.Add(nodeData);
+        }
+
+        if (candidates.Count == 0)
+        {
+            return 0;
+        }
+
+        activeMainLightHealChanges.Clear();
+        int targetCount = Mathf.Min(desiredCount, candidates.Count);
+
+        for (int i = 0; i < targetCount; i++)
+        {
+            int randomIndex = Random.Range(i, candidates.Count);
+            NodeConnection temp = candidates[i];
+            candidates[i] = candidates[randomIndex];
+            candidates[randomIndex] = temp;
+
+            NodeConnection chosenNode = candidates[i];
+            activeMainLightHealChanges.Add(new TemporaryTileChange
+            {
+                tileID = chosenNode.tileID,
+                originalType = chosenNode.type,
+                originalEventName = chosenNode.eventName
+            });
+
+            chosenNode.type = TileType.Heal;
+            chosenNode.eventName = GetDefaultEventName(TileType.Heal);
+            ApplyTileVisual(chosenNode);
+        }
+
+        RebuildNodeDataMap();
+        return activeMainLightHealChanges.Count;
+    }
+
+    private void RestoreMainLightHealTiles()
+    {
+        if (activeMainLightHealChanges.Count == 0)
+        {
+            mainLightHealTurnsLeft = 0;
+            return;
+        }
+
+        for (int i = 0; i < activeMainLightHealChanges.Count; i++)
+        {
+            TemporaryTileChange change = activeMainLightHealChanges[i];
+            NodeConnection nodeData = GetNodeData(change.tileID);
+            if (nodeData == null)
+            {
+                continue;
+            }
+
+            nodeData.type = change.originalType;
+            nodeData.eventName = change.originalEventName;
+            ApplyTileVisual(nodeData);
+        }
+
+        activeMainLightHealChanges.Clear();
+        mainLightHealTurnsLeft = 0;
+        RebuildNodeDataMap();
     }
 
     private bool TrySpawnRandomRockObstacle()
