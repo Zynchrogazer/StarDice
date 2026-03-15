@@ -232,6 +232,8 @@ public class MemoryGameManager : MonoBehaviour
         }
     }
 
+    int rewardAmount = 0; // 🔴 เปลี่ยนจำนวนเงินตรงนี้
+
     // ---------------------------------------------------------
     // [เพิ่มใหม่] ฟังก์ชันสำหรับเช็คคะแนนและแจกไอเทมพร้อมโชว์รูป
     // ---------------------------------------------------------
@@ -240,6 +242,18 @@ public class MemoryGameManager : MonoBehaviour
         // ปรับตัวเลขคะแนนตรงนี้ได้ตามต้องการเลยครับ
         if (score >= 8000) 
         {
+rewardAmount = 500;
+if (GameTurnManager.CurrentPlayer != null)
+{
+    PlayerState p = GameTurnManager.CurrentPlayer.GetComponent<PlayerState>();
+    if (p != null) p.PlayerCredit += rewardAmount;
+}
+
+
+if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
+{
+    GameData.Instance.selectedPlayer.AddCredit(rewardAmount);
+}
             int roll = Random.Range(1, 101);
             
             if (roll < 21)
@@ -283,6 +297,18 @@ public class MemoryGameManager : MonoBehaviour
         }
         else if (score >= 5000) 
         {
+            rewardAmount = 300;
+if (GameTurnManager.CurrentPlayer != null)
+{
+    PlayerState p = GameTurnManager.CurrentPlayer.GetComponent<PlayerState>();
+    if (p != null) p.PlayerCredit += rewardAmount;
+}
+
+
+if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
+{
+    GameData.Instance.selectedPlayer.AddCredit(rewardAmount);
+}
             // ได้คะแนน 4000 - 7999 ได้รองเท้า
                     int roll = Random.Range(1, 101);
             
@@ -306,6 +332,18 @@ public class MemoryGameManager : MonoBehaviour
         }
         else if (score >= 2000) 
         {
+            rewardAmount = 100;
+if (GameTurnManager.CurrentPlayer != null)
+{
+    PlayerState p = GameTurnManager.CurrentPlayer.GetComponent<PlayerState>();
+    if (p != null) p.PlayerCredit += rewardAmount;
+}
+
+
+if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
+{
+    GameData.Instance.selectedPlayer.AddCredit(rewardAmount);
+}
             // ได้คะแนนน้อย (0 - 3999) ได้แหวน
            int roll = Random.Range(1, 101);
             

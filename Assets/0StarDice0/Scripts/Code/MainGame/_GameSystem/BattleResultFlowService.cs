@@ -6,8 +6,8 @@ public static class BattleResultFlowService
 {
     private const string RuntimeHubSceneName = "RuntimeHub";
     private const string InterMissionSceneName = "InterMission";
-    private const int DefaultMinReward = 30;
-    private const int DefaultMaxReward = 120;
+    private const int DefaultMinReward = 50;
+    private const int DefaultMaxReward = 300;
 
     private static CoroutineRunner runner;
     private static bool isProcessingTransition;
