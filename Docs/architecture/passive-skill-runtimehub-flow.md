@@ -229,3 +229,21 @@
 4. ตอนกด back ถ้าเป็น additive ให้ unload scene ปัจจุบัน
 
 แนวคิดนี้ทำให้ scene มี logic น้อย (KISS) และยังรักษาหลัก single authority ของ stat ที่ `PlayerStatAggregator`
+
+## อัปเดตความหมาย `Bonus Star` (Current Behavior)
+
+ตั้งแต่ flow ล่าสุด `Bonus Star` จาก passive tree ถูกตีความเป็น **โบนัสต่อครั้งที่ได้รับดาว** (per gain) ไม่ใช่การบวกยอดดาวคงเหลือแบบ one-shot
+
+- เมื่อรีเฟรชสเตต `PlayerStatAggregator` จะคำนวณผลรวม `passiveStarBonus` แล้ว set เข้า `PlayerState.PassiveStarGainBonus`
+- เวลาผู้เล่น "ได้รับดาว" ให้เรียก `PlayerState.AddStars(baseAmount)`
+  - ระบบจะเพิ่มดาวจริงเป็น `baseAmount + GetPerGainStarBonus()`
+- เวลาผู้เล่น "เสีย/ลดดาว" ให้เรียก `PlayerState.RemoveStars(amount)`
+  - ระบบจะหักตามจำนวนที่ระบุเท่านั้น (โบนัสดาวไม่ถูกนำมาชดเชย)
+
+### ตัวอย่าง
+- มี `Bonus Star +1` และผู้เล่นได้รับดาวฐาน 2 ดวง -> ได้จริง 3 ดวง
+- ถ้าผู้เล่นเสียดาว 5 ดวง -> หัก 5 ดวงตามเดิม (ไม่ลดเหลือ 4)
+
+### Guardrail การใช้งาน
+- หลีกเลี่ยงการแก้ `PlayerStar` ตรง ๆ ใน gameplay code
+- ใช้ `AddStars`/`RemoveStars` เพื่อให้ behavior สอดคล้องและยิง `OnStatsUpdated` เสมอ

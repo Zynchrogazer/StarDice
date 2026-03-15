@@ -113,7 +113,7 @@ public class PlayerStatAggregator : MonoBehaviour
 
         int finalAttack = baseData.attackDamage + passiveAttackBonus + equipmentAttackBonus + player.RuntimeAttackModifier;
         int finalMaxHealth = Mathf.Max(1, baseData.maxHP + passiveMaxHealthBonus + player.RuntimeMaxHealthModifier);
-        int finalStarBonus = passiveStarBonus + player.RuntimeStarModifier;
+        int finalStarBonus = Mathf.Max(0, passiveStarBonus);
         int finalSpeed = Mathf.Max(0, baseData.speed + passiveSpeedBonus + equipmentSpeedBonus);
         int finalDefense = Mathf.Max(0, baseData.def + passiveDefenseBonus + equipmentDefenseBonus);
 
@@ -127,9 +127,7 @@ public class PlayerStatAggregator : MonoBehaviour
         int hpDelta = player.MaxHealth - previousMaxHealth;
         player.PlayerHealth = Mathf.Clamp(player.PlayerHealth + hpDelta, 0, player.MaxHealth);
 
-        int starDelta = finalStarBonus - player.AppliedStarBonusTotal;
-        player.PlayerStar = Mathf.Max(0, player.PlayerStar + starDelta);
-        player.AppliedStarBonusTotal = finalStarBonus;
+        player.PassiveStarGainBonus = finalStarBonus;
 
         player.NotifyStatsUpdated();
     }
