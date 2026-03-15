@@ -27,7 +27,7 @@ public class PlayerState : MonoBehaviour
     public int RuntimeAttackModifier = 0;
     public int RuntimeMaxHealthModifier = 0;
     public int RuntimeStarModifier = 0;
-    public int AppliedStarBonusTotal = 0;
+    public int PassiveStarGainBonus = 0;
     public bool DebuffBurn = false;
     public int DebuffBurnTurnsRemaining = 0;
     public bool hasIceEffect = false;
@@ -90,6 +90,33 @@ public class PlayerState : MonoBehaviour
             OnStatsUpdated?.Invoke();
         }
     }
+    public int GetPerGainStarBonus()
+    {
+        return Mathf.Max(0, PassiveStarGainBonus + RuntimeStarModifier);
+    }
+
+    public int AddStars(int baseAmount)
+    {
+        int clampedBase = Mathf.Max(0, baseAmount);
+        if (clampedBase <= 0)
+            return 0;
+
+        int totalGain = clampedBase + GetPerGainStarBonus();
+        PlayerStar = Mathf.Max(0, PlayerStar + totalGain);
+        OnStatsUpdated?.Invoke();
+        return totalGain;
+    }
+
+    public int RemoveStars(int amount)
+    {
+        int clampedAmount = Mathf.Max(0, amount);
+        int before = PlayerStar;
+        PlayerStar = Mathf.Max(0, PlayerStar - clampedAmount);
+        int removed = before - PlayerStar;
+        OnStatsUpdated?.Invoke();
+        return removed;
+    }
+
     private bool isDefeatHandling = false;
     private void Awake()
     {
@@ -161,7 +188,7 @@ public class PlayerState : MonoBehaviour
         RuntimeAttackModifier = 0;
         RuntimeMaxHealthModifier = 0;
         RuntimeStarModifier = 0;
-        AppliedStarBonusTotal = 0;
+        PassiveStarGainBonus = 0;
         // 2. โหลดเครดิต (ถ้าต้องการใช้ค่าเริ่มต้นจาก Data)
         PlayerCredit = data.Credit;
 
@@ -483,7 +510,7 @@ public class PlayerState : MonoBehaviour
         RuntimeAttackModifier = 0;
         RuntimeMaxHealthModifier = 0;
         RuntimeStarModifier = 0;
-        AppliedStarBonusTotal = 0;
+        PassiveStarGainBonus = 0;
 
         if (sourceData != null && sourceData.allSkills != null)
         {

@@ -245,10 +245,9 @@ public class PlayerPathWalker : MonoBehaviour
         if (myState == null) return;
 
         int starGain = Random.Range(1, 4);
-        myState.PlayerStar += starGain;
-        myState.NotifyStatsUpdated();
+        int totalGain = myState.AddStars(starGain);
 
-        Debug.Log($"[PathWalker] {name} gained +{starGain} stars at move start (total: {myState.PlayerStar}).");
+        Debug.Log($"[PathWalker] {name} gained +{totalGain} stars at move start (base: {starGain}, bonus: +{myState.GetPerGainStarBonus()}, total: {myState.PlayerStar}).");
     }
 
     public void SetChoiceUIManager(ChoiceUIManager ui) { this.choiceUIManager = ui; }
