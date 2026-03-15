@@ -3,46 +3,57 @@ using UnityEngine;
 public class TileClickable : MonoBehaviour
 {
     [Header("Settings")]
-    public Renderer targetRenderer;
+    [Tooltip("ปล่อยว่างไว้ได้เลย! ระบบจะหา Renderer ทั้งหมดในตัวมันและลูกๆ ให้อัตโนมัติ")]
+    public Renderer[] targetRenderers;
 
     [Header("Highlight Config")]
-    public Color highlightColor = Color.green; // เลือกสี (เช่น สีเขียว)
+    public Color highlightColor = Color.green; // เลือกสี
     [Range(0f, 1f)] 
-    public float transparency = 0.5f; // 0.0 = หายไปเลย, 0.5 = โปร่งครึ่งนึง, 1.0 = ทึบตัน
+    public float transparency = 0.5f; 
     
-    // ตัวแปรภายใน
-    private Material originalMat;
-    private Material highlightMat;
+    // ต้องเปลี่ยนมาเก็บ Material เป็น Array เพื่อให้ตรงกับจำนวน Renderer
+    private Material[] originalMats;
+    private Material[] highlightMats;
     private bool isSelectable = false;
 
     void Start()
     {
-        // 1. หา Renderer
-        if (targetRenderer == null) targetRenderer = GetComponent<Renderer>();
-        if (targetRenderer == null) targetRenderer = GetComponentInChildren<Renderer>();
-
-        if (targetRenderer != null)
+        // 1. ถ้าขี้เกียจลากใส่ ให้ระบบดึง Renderer ทั้งหมดในตัวมันและลูกๆ มาให้อัตโนมัติ!
+        if (targetRenderers == null || targetRenderers.Length == 0)
         {
-            // 2. จำ Material เดิม
-            originalMat = targetRenderer.material;
+            targetRenderers = GetComponentsInChildren<Renderer>();
+        }
 
-            // 3. สร้าง Material ใหม่ โดยบังคับใช้ Shader ที่โปร่งแสงได้แน่นอน
-            // "Sprites/Default" รองรับการเปลี่ยนสีและความโปร่งใสได้ดีที่สุดสำหรับกรณีนี้
-            highlightMat = new Material(Shader.Find("Sprites/Default"));
-            
-            // พยายามก๊อปปี้รูปเดิมมาแปะด้วย (ถ้ามี) จะได้เห็นลายพื้นเดิม
-            if (originalMat.HasProperty("_MainTex"))
+        if (targetRenderers.Length > 0)
+        {
+            // เตรียม Array ให้มีขนาดเท่ากับจำนวน Renderer ที่หาเจอ
+            originalMats = new Material[targetRenderers.Length];
+            highlightMats = new Material[targetRenderers.Length];
+
+            for (int i = 0; i < targetRenderers.Length; i++)
             {
-                highlightMat.mainTexture = originalMat.mainTexture;
-            }
-            else if (originalMat.HasProperty("_BaseMap")) // สำหรับ URP
-            {
-                highlightMat.mainTexture = originalMat.GetTexture("_BaseMap");
+                Renderer r = targetRenderers[i];
+                
+                // 2. จำ Material เดิมของแต่ละชิ้น
+                originalMats[i] = r.material;
+
+                // 3. สร้าง Material ใหม่ให้แต่ละชิ้น
+                highlightMats[i] = new Material(Shader.Find("Sprites/Default"));
+                
+                // ก๊อปปี้ Texture เดิม
+                if (originalMats[i].HasProperty("_MainTex"))
+                {
+                    highlightMats[i].mainTexture = originalMats[i].mainTexture;
+                }
+                else if (originalMats[i].HasProperty("_BaseMap"))
+                {
+                    highlightMats[i].mainTexture = originalMats[i].GetTexture("_BaseMap");
+                }
             }
         }
         else
         {
-            Debug.LogError($"❌ [TileClickable] หา Renderer ไม่เจอใน {name}");
+            Debug.LogWarning($"⚠️ [TileClickable] หา Renderer ไม่เจอเลยใน {name} (อาจจะเป็น GameObject เปล่าๆ)");
         }
     }
 
@@ -50,21 +61,26 @@ public class TileClickable : MonoBehaviour
     {
         isSelectable = active;
         
-        if (targetRenderer != null && highlightMat != null)
+        if (targetRenderers == null || targetRenderers.Length == 0) return;
+
+        // วนลูปเปลี่ยนสีให้ครบทุก Renderer
+        for (int i = 0; i < targetRenderers.Length; i++)
         {
+            Renderer r = targetRenderers[i];
+            if (r == null || highlightMats[i] == null) continue;
+
             if (active)
             {
-                // คำนวณสีพร้อมค่า Alpha (ความโปร่ง)
                 Color finalColor = highlightColor;
-                finalColor.a = transparency; // ใส่ค่าความโปร่งที่ตั้งไว้
+                finalColor.a = transparency;
                 
-                highlightMat.color = finalColor; // ตั้งค่าสี
-                targetRenderer.material = highlightMat; // สลับเป็นอันใหม่
+                highlightMats[i].color = finalColor; 
+                r.material = highlightMats[i]; 
             }
             else
             {
                 // คืนค่าอันเดิม
-                targetRenderer.material = originalMat;
+                r.material = originalMats[i];
             }
         }
     }

@@ -692,9 +692,23 @@ public class RouteManager : MonoBehaviour
                 // ใช้คำสั่ง TeleportToNode ที่มีอยู่จริงในสคริปต์
                 walker.TeleportToNode(selectedNode);
                 Debug.Log($"🛸 Warped {GameTurnManager.CurrentPlayer.name} to {selectedNode.name}");
+        
+                GameEventManager eventManager = FindObjectOfType<GameEventManager>();
+        
+        if (eventManager != null)
+        {
+            // 🟢 2. สั่งให้ผู้จัดการ รัน Coroutine ของตัวผู้จัดการเอง!
+            eventManager.StartCoroutine(eventManager.WaitAndEndTurn());
+        }
+        else
+        {
+            Debug.LogError("หา GameEventManager ไม่เจอ! ลืมลากใส่ฉากหรือเปล่า?");
+        }
             }
         }
     }
+
+    
 
     #region Public API
     /// <summary>

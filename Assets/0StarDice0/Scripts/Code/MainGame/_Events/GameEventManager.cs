@@ -393,7 +393,19 @@ public class GameEventManager : MonoBehaviour
         }
     }
 
+public void OnClickCloseShopButton()
+{
+    if (eventPanels.TryGetValue("shop", out var panel) && panel != null)
+    {
+        SafeSetActive(panel, false);
+    }
+    else if (shopPanel != null)
+    {
+        SafeSetActive(shopPanel, false);
+    }
 
+    StartCoroutine(WaitAndEndTurn());
+}
     private void TriggerMainLightHealGimmickEvent()
     {
         RouteManager routeManager = ResolveRouteManager();
@@ -1282,7 +1294,7 @@ public void OnCardSelected()
         ResolveGameTurnManager()?.RequestEndTurn();
     }
 
-    private IEnumerator WaitAndEndTurn()
+    public IEnumerator WaitAndEndTurn()
     {
         yield return new WaitForSeconds(1.5f);
         ResolveGameTurnManager()?.RequestEndTurn();
