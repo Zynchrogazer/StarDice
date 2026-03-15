@@ -153,12 +153,27 @@ public class QuickMathManager : MonoBehaviour
         GiveRewardBasedOnScore(); 
     }
 
+   int rewardAmount = 0;
+
     void GiveRewardBasedOnScore()
     {
+        
         int roll = Random.Range(1, 101); // สุ่มเลข 1-100 ไว้ใช้ร่วมกันทุกเงื่อนไข
 
         if (score >= 2000) 
         {
+            rewardAmount = 500;
+if (GameTurnManager.CurrentPlayer != null)
+{
+    PlayerState p = GameTurnManager.CurrentPlayer.GetComponent<PlayerState>();
+    if (p != null) p.PlayerCredit += rewardAmount;
+}
+
+
+if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
+{
+    GameData.Instance.selectedPlayer.AddCredit(rewardAmount);
+}
             if (roll <= 20) // 1-20 (20%)
             {
                 EquipmentManager.Instance.UnlockItem(KnightSword);
@@ -197,6 +212,18 @@ public class QuickMathManager : MonoBehaviour
         }
         else if (score >= 1000) 
         {
+            rewardAmount = 300;
+if (GameTurnManager.CurrentPlayer != null)
+{
+    PlayerState p = GameTurnManager.CurrentPlayer.GetComponent<PlayerState>();
+    if (p != null) p.PlayerCredit += rewardAmount;
+}
+
+
+if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
+{
+    GameData.Instance.selectedPlayer.AddCredit(rewardAmount);
+}
             if (roll <= 40) // 1-40 (40%)
             {
                 EquipmentManager.Instance.UnlockItem(HearthNeckless);
@@ -217,6 +244,18 @@ public class QuickMathManager : MonoBehaviour
         }
         else if (score >= 500) 
         {
+            rewardAmount = 100;
+if (GameTurnManager.CurrentPlayer != null)
+{
+    PlayerState p = GameTurnManager.CurrentPlayer.GetComponent<PlayerState>();
+    if (p != null) p.PlayerCredit += rewardAmount;
+}
+
+
+if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
+{
+    GameData.Instance.selectedPlayer.AddCredit(rewardAmount);
+}
             // แบ่งโอกาส 4 ชิ้น ชิ้นละ 25% ให้เท่าๆ กัน
             if (roll <= 20) 
             {

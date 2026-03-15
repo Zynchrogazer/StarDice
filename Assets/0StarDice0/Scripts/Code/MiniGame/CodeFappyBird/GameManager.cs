@@ -99,6 +99,9 @@ public class GameManager : MonoBehaviour
     // ---------------------------------------------------------
     // [เพิ่มใหม่] ฟังก์ชันเช็คคะแนนและแจกของ
     // ---------------------------------------------------------
+
+   int rewardAmount = 0;
+
     void GiveRewardBasedOnScore()
     {
         int roll = Random.Range(1, 101); // สุ่มเลข 1-100
@@ -106,6 +109,18 @@ public class GameManager : MonoBehaviour
         // ปรับเป็น 6000 เพื่อให้สอดคล้องกับเงื่อนไขจบเกมใน Update()
         if (score >= 6000) 
         {
+            rewardAmount = 500;
+if (GameTurnManager.CurrentPlayer != null)
+{
+    PlayerState p = GameTurnManager.CurrentPlayer.GetComponent<PlayerState>();
+    if (p != null) p.PlayerCredit += rewardAmount;
+}
+
+
+if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
+{
+    GameData.Instance.selectedPlayer.AddCredit(rewardAmount);
+}
             if (roll <= 20) 
             {
                 EquipmentManager.Instance.UnlockItem(KnightSword);
@@ -143,6 +158,18 @@ public class GameManager : MonoBehaviour
         }
         else if (score >= 4000) 
         {
+            rewardAmount = 300;
+if (GameTurnManager.CurrentPlayer != null)
+{
+    PlayerState p = GameTurnManager.CurrentPlayer.GetComponent<PlayerState>();
+    if (p != null) p.PlayerCredit += rewardAmount;
+}
+
+
+if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
+{
+    GameData.Instance.selectedPlayer.AddCredit(rewardAmount);
+}
             if (roll <= 40) 
             {
                 EquipmentManager.Instance.UnlockItem(HearthNeckless);
@@ -163,6 +190,18 @@ public class GameManager : MonoBehaviour
         }
         else if (score >= 2000) 
         {
+            rewardAmount = 100;
+if (GameTurnManager.CurrentPlayer != null)
+{
+    PlayerState p = GameTurnManager.CurrentPlayer.GetComponent<PlayerState>();
+    if (p != null) p.PlayerCredit += rewardAmount;
+}
+
+
+if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
+{
+    GameData.Instance.selectedPlayer.AddCredit(rewardAmount);
+}
             if (roll <= 20) 
             {
                 EquipmentManager.Instance.UnlockItem(WhiteFeather);
