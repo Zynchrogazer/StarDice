@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 7607092516074102434}
   - component: {fileID: 578610283975062707}
   - component: {fileID: 3484888295418762199}
+  - component: {fileID: 180120938190538982}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -109,6 +110,19 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &180120938190538982
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 480367600859981736}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 14cf92533715c32479e41ad6112074eb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  standUpright: 1
 --- !u!1 &1634736934703218726
 GameObject:
   m_ObjectHideFlags: 0
@@ -158,10 +172,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 92cd66f82ed8fd6449e7e7ac45a21819, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 5
+  moveSpeed: 4
   delayAfterNodeArrival: 0.2
   walkSound: {fileID: 8300000, guid: 1dc14e8284609614790e5de6a1015c4e, type: 3}
-  landSound: {fileID: 0}
+  landSound: {fileID: 8300000, guid: c7c9cb4df1519cf4c9b829d4821d86c9, type: 3}
   soundVolume: 0.8
   eventManager: {fileID: 0}
   currentNodeID: 0
@@ -181,7 +195,7 @@ MonoBehaviour:
   isAI: 0
   PlayerHealth: 0
   MaxHealth: 50
-  PlayerCredit: 0
+  playerCredit: 0
   PlayerStar: 0
   CurrentAttack: 0
   CurrentSpeed: 0
@@ -189,7 +203,7 @@ MonoBehaviour:
   RuntimeAttackModifier: 0
   RuntimeMaxHealthModifier: 0
   RuntimeStarModifier: 0
-  AppliedStarBonusTotal: 0
+  PassiveStarGainBonus: 0
   DebuffBurn: 0
   DebuffBurnTurnsRemaining: 0
   hasIceEffect: 0
@@ -210,7 +224,7 @@ AudioSource:
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 0}
   m_PlayOnAwake: 1
-  m_Volume: 1
+  m_Volume: 0.5
   m_Pitch: 1
   Loop: 0
   Mute: 0

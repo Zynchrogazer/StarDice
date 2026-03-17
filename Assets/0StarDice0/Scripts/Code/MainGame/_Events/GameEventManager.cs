@@ -992,7 +992,8 @@ public void OnCardSelected()
             if (existingBattleScene.IsValid() && existingBattleScene.isLoaded)
             {
                 SceneManager.SetActiveScene(existingBattleScene);
-                TryApplyBattleSkybox(existingBattleScene);
+                // NOTE: KISS option — let Lighting Settings drive skybox per scene.
+                // TryApplyBattleSkybox(existingBattleScene);
             }
             else if (hidBoardForLoadedBattle)
             {
@@ -1022,7 +1023,8 @@ public void OnCardSelected()
         if (loadedBattleScene.IsValid() && loadedBattleScene.isLoaded)
         {
             SceneManager.SetActiveScene(loadedBattleScene);
-            TryApplyBattleSkybox(loadedBattleScene);
+            // NOTE: KISS option — let Lighting Settings drive skybox per scene.
+            // TryApplyBattleSkybox(loadedBattleScene);
             Debug.Log($"[EventManager] โหลด battle scene '{battleSceneName}' แบบ additive สำเร็จ และซ่อน BoardGame ชั่วคราว");
         }
         else if (hidBoardScene)
