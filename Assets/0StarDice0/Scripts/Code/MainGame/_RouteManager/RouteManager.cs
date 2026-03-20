@@ -830,7 +830,7 @@ public class RouteManager : MonoBehaviour
     [Tooltip("จำนวนช่อง Heal สูงสุดต่อการ Trigger")]
     public int mainLightHealMaxTiles = 10;
 
-    private int turnStartCounter;
+
     private int mainLightHealTurnsLeft;
     private readonly List<TemporaryTileChange> activeMainLightHealChanges = new List<TemporaryTileChange>();
     private readonly Dictionary<int, RockObstacleState> rockObstacleMap = new Dictionary<int, RockObstacleState>();
@@ -853,72 +853,7 @@ public class RouteManager : MonoBehaviour
         }
     }
 
-    private void OnEnable()
-    {
-        if (!Application.isPlaying)
-        {
-            return;
-        }
-
-        if (GameTurnManager.TryGet(out var gameTurnManager))
-        {
-            gameTurnManager.OnTurnChanged += HandleTurnChanged;
-        }
-    }
-
-    private void OnDisable()
-    {
-        if (!Application.isPlaying)
-        {
-            return;
-        }
-
-        if (GameTurnManager.TryGet(out var gameTurnManager))
-        {
-            gameTurnManager.OnTurnChanged -= HandleTurnChanged;
-        }
-    }
-
-    private void HandleTurnChanged(bool isAITurn)
-    {
-        HandleRockSpawnTurnTick();
-        HandleMainLightHealTurnTick();
-    }
-
-    private void HandleRockSpawnTurnTick()
-    {
-        if (!enableRandomRockSpawnByTurn)
-        {
-            return;
-        }
-
-        if (randomRockSpawnIntervalTurns <= 0)
-        {
-            randomRockSpawnIntervalTurns = 1;
-        }
-
-        if (randomRockOnlyInMainEarth)
-        {
-            string currentSceneName = SceneManager.GetActiveScene().name;
-            if (!string.Equals(currentSceneName, "MainEarth"))
-            {
-                return;
-            }
-        }
-
-        turnStartCounter++;
-        if (turnStartCounter % randomRockSpawnIntervalTurns != 0)
-        {
-            return;
-        }
-
-        if (!TrySpawnRandomRockObstacle())
-        {
-            Debug.Log("[RouteManager] ไม่มีช่องว่างสำหรับสุ่มวางหินเพิ่ม");
-        }
-    }
-
-    private void HandleMainLightHealTurnTick()
+    public void TickMainLightHealGimmickTurn()
     {
         if (mainLightHealTurnsLeft <= 0)
         {
@@ -1072,7 +1007,7 @@ public class RouteManager : MonoBehaviour
         RebuildNodeDataMap();
     }
 
-    private bool TrySpawnRandomRockObstacle()
+    public bool TrySpawnRandomRockObstacle()
     {
         if (nodeConnections == null || nodeConnections.Count == 0)
         {
@@ -1235,6 +1170,17 @@ public class RouteManager : MonoBehaviour
             if (bossPrefab != null && targetNode.node != null)
             {
                 Instantiate(bossPrefab, targetNode.node.position, Quaternion.identity);
+                 GameEventManager eventManager = FindObjectOfType<GameEventManager>();
+        
+        if (eventManager != null)
+        {
+            // 🟢 2. สั่งให้ผู้จัดการ รัน Coroutine ของตัวผู้จัดการเอง!
+            eventManager.StartCoroutine(eventManager.WaitAndEndTurn());
+        }
+        else
+        {
+            Debug.LogError("หา GameEventManager ไม่เจอ! ลืมลากใส่ฉากหรือเปล่า?");
+        }
             }
         }
         else

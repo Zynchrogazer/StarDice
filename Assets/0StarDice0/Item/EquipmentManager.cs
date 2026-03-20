@@ -1,15 +1,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+
 public class EquipmentManager : MonoBehaviour
 {
-    // สร้าง Singleton เพื่อให้เรียกใช้ได้ง่ายจากที่ไหนก็ได้
     public static EquipmentManager Instance;
 
     [Header("ใส่ EquipmentData ทั้ง 39 อันที่นี่")]
     public List<EquipmentData> allEquipmentList; 
 
-    // ตัวแปร Dictionary เพื่อให้ค้นหาไอเท็มไวขึ้น (ไม่ต้องวนลูปทุกครั้ง)
     private Dictionary<ItemID, EquipmentData> equipmentMap = new Dictionary<ItemID, EquipmentData>();
     private const string OwnershipPrefKeyPrefix = "EquipmentOwned_";
 
@@ -26,7 +25,6 @@ public class EquipmentManager : MonoBehaviour
             return;
         }
 
-        // แปลง List เป็น Dictionary ตอนเริ่มเกมเพื่อให้ค้นหาไว
         foreach (var item in allEquipmentList)
         {
             if (item != null && !equipmentMap.ContainsKey(item.itemID))
@@ -38,30 +36,62 @@ public class EquipmentManager : MonoBehaviour
         LoadOwnershipStates();
     }
 
-    // --- ฟังก์ชันที่คุณต้องการ: สั่งให้ isOwned เป็น true ---
-    public void UnlockItem(ItemID idToUnlock)
+    // --- แก้ไข: เปลี่ยนจาก void เป็น bool เพื่อให้บอกได้ว่า "ได้ของใหม่" หรือ "ได้ของซ้ำ" ---
+    // รับค่า duplicateReward เข้ามาด้วย เผื่ออยากให้ไอเท็มแต่ละชิ้นให้เงินคืนไม่เท่ากัน (ค่าเริ่มต้น 150)
+    public bool UnlockItem(ItemID idToUnlock, int duplicateReward = 300)
     {
         if (equipmentMap.ContainsKey(idToUnlock))
         {
             EquipmentData item = equipmentMap[idToUnlock];
             
-            // ตั้งค่าเป็น True
+            // 1. เช็คว่าถ้ามีไอเท็มชิ้นนี้อยู่แล้ว
+            if (item.isOwned)
+            {
+                Debug.Log($"[EquipmentManager] ได้ไอเท็มซ้ำ: {item.itemName}! เปลี่ยนเป็นเงิน {duplicateReward} แทน");
+                GiveCreditToPlayer(duplicateReward); // เรียกใช้ฟังก์ชันแจกเงิน
+                return false; // คืนค่า false บ่งบอกว่าได้ของซ้ำ
+            }
+
+            // 2. ถ้ายังไม่มี ให้ตั้งค่าเป็น True
             item.isOwned = true;
             PlayerPrefs.SetInt(OwnershipPrefKeyPrefix + idToUnlock, 1);
             PlayerPrefs.Save();
             
-            Debug.Log($"ปลดล็อกไอเท็มสำเร็จ: {item.itemName} ({item.itemID})");
-
-            // แนะนำ: ควรมีระบบ Save ข้อมูลตรงนี้ด้วย
-            // SaveSystem.SaveOwnership(idToUnlock); 
+            Debug.Log($"[EquipmentManager] ปลดล็อกไอเท็มใหม่สำเร็จ: {item.itemName} ({item.itemID})");
+            return true; // คืนค่า true บ่งบอกว่าได้ของใหม่
         }
         else
         {
-            Debug.LogWarning($"ไม่พบไอเท็ม ID: {idToUnlock} ในระบบ");
+            Debug.LogWarning($"[EquipmentManager] ไม่พบไอเท็ม ID: {idToUnlock} ในระบบ");
+            return false;
         }
     }
 
-    // ฟังก์ชันเสริม: เช็คว่ามีไอเท็มนี้หรือยัง
+    // --- ฟังก์ชันใหม่: ค้นหาตัวผู้เล่นหลัก และแจกเงิน ---
+    private void GiveCreditToPlayer(int amount)
+    {
+        // อิงจากโค้ดเดิมของคุณ ซิงค์ข้อมูลกับ GameData ก่อนเพื่อความชัวร์เวลาเปลี่ยนด่าน
+        if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
+        {
+            GameData.Instance.selectedPlayer.AddCredit(amount);
+        }
+
+        // ค้นหา PlayerState ในฉากปัจจุบัน (เผื่อไว้ในกรณีที่ใช้แค่ใน Scene ไม่ได้พึ่ง GameData)
+        PlayerState[] players = FindObjectsOfType<PlayerState>(true);
+        foreach (PlayerState player in players)
+        {
+            // หาคนที่ไม่ใช่ AI
+            if (!player.isAI)
+            {
+                player.PlayerCredit += amount;
+                Debug.Log($"[EquipmentManager] โอนเงินชดเชย +{amount} เข้ากระเป๋า {player.gameObject.name} สำเร็จ (ตอนนี้มี {player.PlayerCredit})");
+                return; 
+            }
+        }
+
+        Debug.LogWarning("[EquipmentManager] หา PlayerState ผู้เล่นหลักไม่เจอ! เงินชดเชยไม่ได้ถูกเพิ่ม");
+    }
+
     public bool CheckIfOwned(ItemID id)
     {
         if (equipmentMap.ContainsKey(id))
@@ -71,7 +101,6 @@ public class EquipmentManager : MonoBehaviour
         return false;
     }
     
-    // ฟังก์ชันสำหรับ Debug: กดปุ่มเรียกใช้
     [ContextMenu("Test Unlock Sword")]
     public void TestUnlockSword()
     {
@@ -84,33 +113,35 @@ public class EquipmentManager : MonoBehaviour
         return data;
     }
 
-    public static void ClearSavedOwnershipStates()
+   public static void ClearSavedOwnershipStates()
     {
+        // 1. ลบไฟล์เซฟทิ้ง
         foreach (ItemID id in Enum.GetValues(typeof(ItemID)))
         {
-            if (id == ItemID.None)
-            {
-                continue;
-            }
-
+            if (id == ItemID.None) continue;
             PlayerPrefs.DeleteKey(OwnershipPrefKeyPrefix + id);
         }
 
+        // 2. ล้างค่าใน Instance (ถ้ามี)
         if (Instance != null)
         {
             foreach (var item in Instance.allEquipmentList)
             {
-                if (item == null)
-                {
-                    continue;
-                }
-
+                if (item == null) continue;
                 item.isOwned = false;
             }
         }
+
+        // 3. 🟢 เพิ่มประกันความเสี่ยง: กวาดล้าง ScriptableObject ทั้งโปรเจกต์
+        // (เผื่อถูกเรียกตอนที่ Instance ยังไม่เกิด เช่น หน้า Main Menu)
+        EquipmentData[] allData = Resources.FindObjectsOfTypeAll<EquipmentData>();
+        foreach (var item in allData)
+        {
+            if (item != null) item.isOwned = false;
+        }
     }
 
-    private void LoadOwnershipStates()
+ private void LoadOwnershipStates()
     {
         foreach (var pair in equipmentMap)
         {
@@ -119,9 +150,13 @@ public class EquipmentManager : MonoBehaviour
             {
                 pair.Value.isOwned = PlayerPrefs.GetInt(key) == 1;
             }
+            else
+            {
+                // 🟢 เพิ่ม else เข้ามา: ถ้าไม่มีไฟล์เซฟ (เช่น เพิ่งกด New game) ต้องริบของคืน!
+                pair.Value.isOwned = false; 
+            }
         }
     }
-
 
     [ContextMenu("Reset All Equipment Save")]
     public void ResetAllEquipmentSave()
@@ -130,10 +165,7 @@ public class EquipmentManager : MonoBehaviour
         {
             if (item != null)
             {
-            
                 item.isOwned = false; 
-
-            
                 PlayerPrefs.DeleteKey(OwnershipPrefKeyPrefix + item.itemID); 
             }
         }

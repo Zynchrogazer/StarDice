@@ -5,6 +5,7 @@ using UnityEngine.SceneManagement;
 
 public enum NormaType { Stars, Wins }
 
+
 public class NormaSystem : MonoBehaviour
 {
     private static NormaSystem cachedManager;
@@ -471,5 +472,26 @@ public class NormaSystem : MonoBehaviour
         {
             Debug.LogError("ไม่เจอ RouteManager! ไม่สามารถเสกบอสได้");
         }
+    }
+
+    // เช็คว่าพร้อมอัปเลเวลไหม (แค่เช็คเฉยๆ คืนค่าเป็น true/false)
+// เช็คว่าพร้อมอัปเลเวลไหม
+    public bool CanLevelUp()
+    {
+        if (GameTurnManager.CurrentPlayer == null || GameTurnManager.CurrentPlayer.isAI)
+            return false;
+
+        // 🛑 เพิ่มบรรทัดนี้: ถ้า Rank ปัจจุบันถึงขั้นสูงสุดแล้ว (เช่น Rank 6) ให้ตอบว่าห้ามอัปเลเวลอีก!
+        if (currentNormaRank >= maxNormaRank)
+        {
+            return false; 
+        }
+
+        if (selectedNorma == NormaType.Stars)
+            return GameTurnManager.CurrentPlayer.PlayerStar >= targetAmount;
+        else if (selectedNorma == NormaType.Wins)
+            return GameTurnManager.CurrentPlayer.WinCount >= targetAmount;
+
+        return false;
     }
 }

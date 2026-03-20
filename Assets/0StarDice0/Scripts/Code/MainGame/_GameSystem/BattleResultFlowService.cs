@@ -12,7 +12,7 @@ public static class BattleResultFlowService
     private static CoroutineRunner runner;
     private static bool isProcessingTransition;
 
-    public static void HandleRewardAndReturnToBoard(int minReward = DefaultMinReward, int maxReward = DefaultMaxReward)
+   public static void HandleRewardAndReturnToBoard(int minReward = DefaultMinReward, int maxReward = DefaultMaxReward)
     {
         if (isProcessingTransition) return;
 
@@ -36,19 +36,45 @@ public static class BattleResultFlowService
             Debug.LogWarning("[BattleResultFlow] Could not find human PlayerState for reward flow.");
         }
 
-        string targetBoardScene = PlayerPrefs.GetString(GameEventManager.LastBoardSceneKey, "TestMain");
-        PlayerPrefs.SetInt(GameTurnManager.PendingBattleReturnKey, 1);
-        PlayerPrefs.Save();
+        // ---------------------------------------------------------
+        // 🟢 เช็คสวิตช์ว่า "นี่คือการสู้บอสใช่หรือไม่?"
+        // ---------------------------------------------------------
+        bool isBossBattle = PlayerPrefs.GetInt("IsBossBattle", 0) == 1;
 
-        StartTransition(ReturnToSceneKeepingRuntimeHub(targetBoardScene));
+        if (isBossBattle)
+        {
+            Debug.Log("👑 [BattleResultFlow] ปราบบอสสำเร็จ! จบเกม กลับหน้า InterMission");
+            
+            // ปิดสวิตช์กลับเป็น 0 เพื่อไม่ให้รอบต่อไปบั๊ก
+            PlayerPrefs.SetInt("IsBossBattle", 0);
+            PlayerPrefs.Save();
+
+            // ส่งกลับหน้าล็อบบี้ / เมนูเตรียมตัว
+            StartTransition(ReturnToSceneKeepingRuntimeHub(InterMissionSceneName));
+        }
+        else
+        {
+            Debug.Log("⚔️ [BattleResultFlow] ชนะมอนสเตอร์ปกติ กลับไปกระดาน");
+            
+            // โค้ดเดิม: ส่งกลับหน้ากระดาน
+            string targetBoardScene = PlayerPrefs.GetString(GameEventManager.LastBoardSceneKey, "TestMain");
+            PlayerPrefs.SetInt(GameTurnManager.PendingBattleReturnKey, 1);
+            PlayerPrefs.Save();
+
+            StartTransition(ReturnToSceneKeepingRuntimeHub(targetBoardScene));
+        }
     }
 
     public static void HandleRestartToInterMission()
     {
         if (isProcessingTransition) return;
+        
+        // 🟢 เคลียร์ค่าสวิตช์บอสทิ้งด้วย (เผื่อผู้เล่นสู้บอสแพ้ หรือกดยอมแพ้)
+        PlayerPrefs.SetInt("IsBossBattle", 0);
+        PlayerPrefs.Save();
+
         StartTransition(ReturnToSceneKeepingRuntimeHub(InterMissionSceneName));
     }
-
     private static PlayerState ResolveHumanPlayerState()
     {
         if (GameTurnManager.TryGet(out var gameTurnManager) && gameTurnManager.allPlayers != null)

@@ -49,9 +49,16 @@ public class MainMenuController : MonoBehaviour
         PlayerPrefs.DeleteKey("SelectedMonster");
         PlayerPrefs.SetInt("HasChosenMainCharacter", 0);
 
+        PlayerPrefs.SetInt("levelReached", 1);
+
         ResetCardAvailabilityToCommonOnly();
         PlayerPrefs.DeleteKey("CurrentDeckData");
         ResetEquippedItemsForNewGame();
+
+        // ---------------------------------------------------------
+        // เพิ่มบรรทัดนี้เข้าไป เพื่อเรียกคำสั่งรีเซ็ต Equipment ให้ isOwned เป็น false
+        EquipmentManager.ClearSavedOwnershipStates();
+        // ---------------------------------------------------------
 
         if (RunSessionStore.TryGet(out var runSessionStore))
         {

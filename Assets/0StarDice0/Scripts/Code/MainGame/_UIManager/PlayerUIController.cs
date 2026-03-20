@@ -18,8 +18,18 @@ public class PlayerUIController : MonoBehaviour
     public TMP_Text atkText;
     public TMP_Text spdText;
     public TMP_Text defText;
-    [Tooltip("Text สำหรับแสดง icon debuff แบบเรียงซ้าย->ขวา")]
+    [Tooltip("Legacy Text สำหรับแสดง icon debuff แบบเรียงซ้าย->ขวา")]
     public TMP_Text debuffText;
+    [Tooltip("Parent สำหรับสร้าง icon debuff แบบ Sprite Image (แนะนำให้ใช้) ")]
+    public Transform debuffIconContainer;
+    [Tooltip("Prefab ของ icon debuff (optional) ถ้าไม่ใส่จะสร้าง Image ให้อัตโนมัติ")]
+    public GameObject debuffIconPrefab;
+    [Tooltip("ขนาด icon debuff กรณีสร้างอัตโนมัติ")]
+    public Vector2 debuffIconSize = new Vector2(32f, 32f);
+    [Tooltip("Sprite icon สำหรับ Burn debuff")]
+    public Sprite burnDebuffSprite;
+    [Tooltip("Sprite icon สำหรับ Ice debuff")]
+    public Sprite iceDebuffSprite;
     [Tooltip("กล่อง tooltip ที่จะโชว์ตอน hover icon debuff (optional)")]
     public GameObject debuffTooltipRoot;
     [Tooltip("ข้อความในกล่อง tooltip debuff (optional)")]
@@ -31,6 +41,7 @@ public class PlayerUIController : MonoBehaviour
     private Transform boundStatusRoot;
     private DebuffTooltipHoverHandler debuffTooltipHoverHandler;
     private bool hasAttemptedTooltipAutoBind;
+    private readonly List<DebuffSpriteIconHoverHandler> debuffIconHandlers = new List<DebuffSpriteIconHoverHandler>();
 
     private void Update()
     {
@@ -77,11 +88,46 @@ public class PlayerUIController : MonoBehaviour
         int resolvedCredit = ResolvePersistentCredit();
         SetCreditUI(resolvedCredit);
 
-        if (starText != null)
-            starText.text = $"{myPlayer.PlayerStar}";
+        // -------------------------------------------------------------------
+        // 🟢 แก้ไขตรงนี้: ไปดึงข้อมูลเควสจาก NormaSystem มาโชว์ด้วย
+        // -------------------------------------------------------------------
+if (starText != null || winText != null)
+        {
+            int reqStars = 999;
+            int reqWins = 999;
+            NormaType activeQuest = NormaType.Stars; // ตัวแปรเก็บว่าตอนนี้ทำเควสอะไรอยู่
+            
+            if (NormaSystem.TryGet(out var normaSystem))
+            {
+                int nextRank = normaSystem.currentNormaRank + 1;
+                if (nextRank > normaSystem.maxNormaRank) nextRank = normaSystem.maxNormaRank;
+                
+                reqStars = normaSystem.GetRequirement(nextRank, NormaType.Stars);
+                reqWins = normaSystem.GetRequirement(nextRank, NormaType.Wins);
+                
+                // ถามระบบว่าตอนนี้ผู้เล่นเลือกเควสอะไรไว้
+                activeQuest = normaSystem.selectedNorma; 
+            }
 
-        if (winText != null)
-            winText.text = $"{myPlayer.WinCount}";
+            // --- จัดการข้อความ ดาว ---
+            if (starText != null)
+            {
+                if (activeQuest == NormaType.Stars)
+                    starText.text = $"Star: {myPlayer.PlayerStar} / {reqStars}"; // ถ้าเลือกดาว ให้โชว์เป้าหมาย
+                else
+                    starText.text = $"Star: {myPlayer.PlayerStar}"; // ถ้าไม่ได้เลือก โชว์แค่ดาวที่มี
+            }
+
+            // --- จัดการข้อความ ชนะต่อสู้ ---
+            if (winText != null)
+            {
+                if (activeQuest == NormaType.Wins)
+                    winText.text = $"Battle: {myPlayer.WinCount} / {reqWins}"; // ถ้าเลือกต่อสู้ ให้โชว์เป้าหมาย
+                else
+                    winText.text = $"Battle: {myPlayer.WinCount}"; // ถ้าไม่ได้เลือก โชว์แค่จำนวนที่ชนะ
+            }
+        }
+        // -------------------------------------------------------------------
 
         if (levelText != null)
             levelText.text = $"Lv. {myPlayer.PlayerLevel}";
@@ -95,17 +141,10 @@ public class PlayerUIController : MonoBehaviour
         if (defText != null)
             defText.text = $"DEF: {myPlayer.CurrentDefense}";
 
-        if (debuffText != null)
-        {
-            EnsureDebuffTooltipHandler();
-            List<DebuffUIEntry> debuffEntries = BuildDebuffEntries();
-            debuffText.text = BuildDebuffIconRichText(debuffEntries);
-
-            if (debuffTooltipHoverHandler != null)
-                debuffTooltipHoverHandler.SetEntries(debuffEntries);
-        }
+        List<DebuffUIEntry> debuffEntries = BuildDebuffEntries();
+        RefreshDebuffSpriteIcons(debuffEntries);
+        RefreshDebuffTextFallback(debuffEntries);
     }
-
     private List<DebuffUIEntry> BuildDebuffEntries()
     {
         List<DebuffUIEntry> entries = new List<DebuffUIEntry>(2);
@@ -117,6 +156,7 @@ public class PlayerUIController : MonoBehaviour
             entries.Add(new DebuffUIEntry(
                 "burn",
                 "🔥",
+                burnDebuffSprite,
                 myPlayer.BurnDebuffAppliedOrder,
                 $"Burn: รับความเสียหายตอนเริ่มเทิร์น\nคงเหลือ: {myPlayer.DebuffBurnTurnsRemaining} เทิร์น"));
         }
@@ -126,6 +166,7 @@ public class PlayerUIController : MonoBehaviour
             entries.Add(new DebuffUIEntry(
                 "ice",
                 "❄️",
+                iceDebuffSprite,
                 myPlayer.IceDebuffAppliedOrder,
                 "Ice: ทอยเต๋าครั้งถัดไปจะเหลือครึ่งหนึ่ง\nคงเหลือ: 1 ครั้ง"));
         }
@@ -140,6 +181,113 @@ public class PlayerUIController : MonoBehaviour
         return entries;
     }
 
+    private void RefreshDebuffSpriteIcons(List<DebuffUIEntry> entries)
+    {
+        if (debuffIconContainer == null)
+            return;
+
+        EnsureSpriteIconPool(entries != null ? entries.Count : 0);
+
+        int entryCount = entries != null ? entries.Count : 0;
+        for (int i = 0; i < debuffIconHandlers.Count; i++)
+        {
+            bool shouldShow = i < entryCount;
+            GameObject iconObject = debuffIconHandlers[i] != null ? debuffIconHandlers[i].gameObject : null;
+            if (iconObject == null)
+                continue;
+
+            if (!shouldShow)
+            {
+                iconObject.SetActive(false);
+                continue;
+            }
+
+            DebuffUIEntry entry = entries[i];
+            debuffIconHandlers[i].Bind(debuffTooltipRoot, debuffTooltipText, entry.Tooltip);
+            debuffIconHandlers[i].SetSprite(entry.IconSprite);
+            iconObject.name = $"DebuffIcon_{entry.Key}";
+            iconObject.SetActive(entry.IconSprite != null);
+        }
+
+        if (entryCount == 0)
+            HideSpriteTooltipIfNeeded();
+    }
+
+    private void RefreshDebuffTextFallback(List<DebuffUIEntry> entries)
+    {
+        if (debuffText == null)
+            return;
+
+        bool isUsingSpriteIcons = debuffIconContainer != null;
+        debuffText.gameObject.SetActive(!isUsingSpriteIcons);
+        if (isUsingSpriteIcons)
+            return;
+
+        EnsureDebuffTooltipHandler();
+        debuffText.text = BuildDebuffIconRichText(entries);
+
+        if (debuffTooltipHoverHandler != null)
+            debuffTooltipHoverHandler.SetEntries(entries);
+    }
+
+    private void EnsureSpriteIconPool(int requiredCount)
+    {
+        while (debuffIconHandlers.Count < requiredCount)
+        {
+            DebuffSpriteIconHoverHandler handler = CreateDebuffSpriteIcon();
+            if (handler == null)
+                break;
+
+            debuffIconHandlers.Add(handler);
+        }
+    }
+
+    private DebuffSpriteIconHoverHandler CreateDebuffSpriteIcon()
+    {
+        GameObject iconObject;
+        if (debuffIconPrefab != null)
+        {
+            iconObject = Instantiate(debuffIconPrefab, debuffIconContainer);
+        }
+        else
+        {
+            iconObject = new GameObject("DebuffIcon", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(LayoutElement));
+            iconObject.transform.SetParent(debuffIconContainer, false);
+            RectTransform rectTransform = iconObject.transform as RectTransform;
+            if (rectTransform != null)
+                rectTransform.sizeDelta = debuffIconSize;
+
+            LayoutElement layoutElement = iconObject.GetComponent<LayoutElement>();
+            if (layoutElement != null)
+            {
+                layoutElement.preferredWidth = debuffIconSize.x;
+                layoutElement.preferredHeight = debuffIconSize.y;
+                layoutElement.minWidth = debuffIconSize.x;
+                layoutElement.minHeight = debuffIconSize.y;
+            }
+
+            Image image = iconObject.GetComponent<Image>();
+            if (image != null)
+                image.preserveAspect = true;
+        }
+
+        DebuffSpriteIconHoverHandler handler = iconObject.GetComponent<DebuffSpriteIconHoverHandler>();
+        if (handler == null)
+            handler = iconObject.AddComponent<DebuffSpriteIconHoverHandler>();
+
+        if (handler.TargetImage == null)
+            handler.CacheImageReference();
+
+        iconObject.SetActive(false);
+        return handler;
+    }
+
+    private void HideSpriteTooltipIfNeeded()
+    {
+        if (debuffTooltipRoot != null)
+            debuffTooltipRoot.SetActive(false);
+    }
+
     private static string BuildDebuffIconRichText(List<DebuffUIEntry> entries)
     {
         if (entries == null || entries.Count == 0)
@@ -152,7 +300,7 @@ public class PlayerUIController : MonoBehaviour
             sb.Append("<link=");
             sb.Append(entry.Key);
             sb.Append('>');
-            sb.Append(entry.Icon);
+            sb.Append(entry.LegacyIconText);
             sb.Append("</link>");
 
             if (i < entries.Count - 1)
@@ -178,16 +326,18 @@ public class PlayerUIController : MonoBehaviour
 
     public readonly struct DebuffUIEntry
     {
-        public DebuffUIEntry(string key, string icon, int order, string tooltip)
+        public DebuffUIEntry(string key, string legacyIconText, Sprite iconSprite, int order, string tooltip)
         {
             Key = key;
-            Icon = icon;
+            LegacyIconText = legacyIconText;
+            IconSprite = iconSprite;
             Order = order;
             Tooltip = tooltip;
         }
 
         public string Key { get; }
-        public string Icon { get; }
+        public string LegacyIconText { get; }
+        public Sprite IconSprite { get; }
         public int Order { get; }
         public string Tooltip { get; }
     }
@@ -230,7 +380,7 @@ public class PlayerUIController : MonoBehaviour
         Transform activeStatusRoot = ResolveActiveStatusRoot();
         RebindIfStatusRootChanged(activeStatusRoot);
 
-        if (!hasAttemptedTooltipAutoBind && debuffText != null)
+        if (!hasAttemptedTooltipAutoBind && (debuffText != null || debuffIconContainer != null))
         {
             hasAttemptedTooltipAutoBind = true;
 
@@ -242,7 +392,7 @@ public class PlayerUIController : MonoBehaviour
         }
 
         if (hpText != null && creditText != null && starText != null && winText != null && levelText != null
-            && atkText != null && spdText != null && defText != null && debuffText != null)
+            && atkText != null && spdText != null && defText != null && (debuffText != null || debuffIconContainer != null))
         {
             // secondaryCreditText เป็น optional
             return;
@@ -253,28 +403,34 @@ public class PlayerUIController : MonoBehaviour
         {
             TMP_Text[] statusTexts = activeStatusRoot.GetComponentsInChildren<TMP_Text>(true);
             AssignTextsByName(statusTexts, preferActiveOnly: false);
+            AutoAssignDebuffIconContainer(activeStatusRoot);
             return;
         }
 
         // KISS: หาใน scope ของตัวเองก่อน (ลดโอกาสไปจับ UI ของธาตุ/หน้าต่างอื่น)
         TMP_Text[] localTexts = GetComponentsInChildren<TMP_Text>(true);
         AssignTextsByName(localTexts, preferActiveOnly: true);
+        AutoAssignDebuffIconContainer(transform);
 
         if (hpText != null && creditText != null && starText != null && winText != null && levelText != null
-            && atkText != null && spdText != null && defText != null && debuffText != null)
+            && atkText != null && spdText != null && defText != null && (debuffText != null || debuffIconContainer != null))
             return;
 
         // fallback: ค่อยค้นทั้ง scene แต่ยัง prefer เฉพาะ object ที่ active
         TMP_Text[] activeSceneTexts = FindObjectsByType<TMP_Text>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
         AssignTextsByName(activeSceneTexts, preferActiveOnly: true);
+        if (debuffIconContainer == null)
+            debuffIconContainer = FindTransformByName("debufficoncontainer", includeInactive: false);
 
         if (hpText != null && creditText != null && starText != null && winText != null && levelText != null
-            && atkText != null && spdText != null && defText != null && debuffText != null)
+            && atkText != null && spdText != null && defText != null && (debuffText != null || debuffIconContainer != null))
             return;
 
         // fallback สุดท้าย: รวม inactive เผื่อบาง panel เปิดภายหลัง
         TMP_Text[] allTexts = FindObjectsByType<TMP_Text>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         AssignTextsByName(allTexts, preferActiveOnly: false);
+        if (debuffIconContainer == null)
+            debuffIconContainer = FindTransformByName("debufficoncontainer", includeInactive: true);
     }
 
     private void RebindIfStatusRootChanged(Transform activeStatusRoot)
@@ -296,8 +452,31 @@ public class PlayerUIController : MonoBehaviour
         spdText = null;
         defText = null;
         debuffText = null;
+        debuffIconContainer = null;
         debuffTooltipHoverHandler = null;
         hasAttemptedTooltipAutoBind = false;
+        debuffIconHandlers.Clear();
+    }
+
+    private void AutoAssignDebuffIconContainer(Transform searchRoot)
+    {
+        if (debuffIconContainer != null || searchRoot == null)
+            return;
+
+        Transform[] transforms = searchRoot.GetComponentsInChildren<Transform>(true);
+        for (int i = 0; i < transforms.Length; i++)
+        {
+            Transform candidate = transforms[i];
+            if (candidate == null || candidate == searchRoot)
+                continue;
+
+            string loweredName = candidate.name.ToLower();
+            if (loweredName.Contains("debuff") && loweredName.Contains("icon") && loweredName.Contains("container"))
+            {
+                debuffIconContainer = candidate;
+                return;
+            }
+        }
     }
 
     private Transform ResolveActiveStatusRoot()
@@ -398,6 +577,23 @@ public class PlayerUIController : MonoBehaviour
             if (txt == null) continue;
             if (txt.name.ToLower().Contains(keyword.ToLower()))
                 return txt;
+        }
+
+        return null;
+    }
+
+    private static Transform FindTransformByName(string keyword, bool includeInactive)
+    {
+        if (string.IsNullOrEmpty(keyword))
+            return null;
+
+        Transform[] transforms = FindObjectsByType<Transform>(includeInactive ? FindObjectsInactive.Include : FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+        for (int i = 0; i < transforms.Length; i++)
+        {
+            Transform t = transforms[i];
+            if (t == null) continue;
+            if (t.name.ToLower().Contains(keyword.ToLower()))
+                return t;
         }
 
         return null;
