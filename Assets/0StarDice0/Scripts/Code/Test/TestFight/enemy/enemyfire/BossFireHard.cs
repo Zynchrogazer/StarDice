@@ -3062,7 +3062,7 @@ StartCoroutine(DelayedEnemyTurn());
 
        burnPlayer2 = 3;
         enemySkill5Cooldown = 6;
-        ShowSkillEffectOnce(51);
+        ShowSkillEffectOnce(50);
         PlaySoundEffect(3);
         //ShowSkillEffectOnce(6); 
     }

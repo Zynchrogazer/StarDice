@@ -515,7 +515,7 @@ public void OnClickCloseShopButton()
         return;
     }
 
-    p.PlayerCredit += 300;
+    p.PlayerCredit += 100;
     Sprite resultSprite = creditSprite;
     Debug.Log("Treasure: Got Credit");
 
