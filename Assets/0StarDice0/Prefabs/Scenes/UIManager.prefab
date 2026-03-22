@@ -66,6 +66,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4368973437954284956}
+  - component: {fileID: 4899641596940858081}
+  - component: {fileID: 8404951470289726877}
   m_Layer: 0
   m_Name: UIManager
   m_TagString: Untagged
@@ -93,6 +95,49 @@ Transform:
   - {fileID: 6707314237572030868}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4899641596940858081
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 950561801771189057}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a9d7cff48b6828c42b447371de04d2c8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  elementPanelRegistry: {fileID: 8404951470289726877}
+  fallbackPanelRefs: {fileID: 0}
+  debuffIconPrefab: {fileID: 0}
+  debuffIconSize: {x: 64, y: 64}
+  burnDebuffSprite: {fileID: 695775810, guid: 080cb6d98b00c2645b2c41df5f69bc78, type: 3}
+  iceDebuffSprite: {fileID: 1401011104, guid: 080cb6d98b00c2645b2c41df5f69bc78, type: 3}
+--- !u!114 &8404951470289726877
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 950561801771189057}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 498089f6219999aa11f40b1d68949c19, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  entries:
+  - element: 3
+    panelRefs: {fileID: 0}
+  - element: 1
+    panelRefs: {fileID: 0}
+  - element: 0
+    panelRefs: {fileID: 0}
+  - element: 2
+    panelRefs: {fileID: 0}
+  - element: 5
+    panelRefs: {fileID: 0}
+  - element: 4
+    panelRefs: {fileID: 0}
 --- !u!1 &1885222399592981739
 GameObject:
   m_ObjectHideFlags: 0

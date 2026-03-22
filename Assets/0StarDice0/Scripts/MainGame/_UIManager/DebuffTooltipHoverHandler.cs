@@ -21,7 +21,7 @@ public class DebuffTooltipHoverHandler : MonoBehaviour, IPointerEnterHandler, IP
             tooltipRoot.SetActive(false);
     }
 
-    public void SetEntries(List<PlayerUIController.DebuffUIEntry> entries)
+    public void SetEntries(List<PlayerDebuffPresenter.DebuffUIEntry> entries)
     {
         tooltipByKey.Clear();
         if (entries == null)
@@ -29,7 +29,7 @@ public class DebuffTooltipHoverHandler : MonoBehaviour, IPointerEnterHandler, IP
 
         for (int i = 0; i < entries.Count; i++)
         {
-            PlayerUIController.DebuffUIEntry entry = entries[i];
+            PlayerDebuffPresenter.DebuffUIEntry entry = entries[i];
             if (!string.IsNullOrEmpty(entry.Key) && !tooltipByKey.ContainsKey(entry.Key))
                 tooltipByKey.Add(entry.Key, entry.Tooltip ?? string.Empty);
         }

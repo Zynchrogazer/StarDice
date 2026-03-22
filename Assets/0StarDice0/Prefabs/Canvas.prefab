@@ -2082,6 +2082,7 @@ GameObject:
   - component: {fileID: 1455448071946093796}
   - component: {fileID: 8459624867379136542}
   - component: {fileID: 8309990983340164783}
+  - component: {fileID: 447185852148531436}
   m_Layer: 5
   m_Name: ShopUI
   m_TagString: Untagged
@@ -2192,6 +2193,33 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   scrollRect: {fileID: 8459624867379136542}
+--- !u!114 &447185852148531436
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 133693192813705968}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f84230084bb9927461c7e57e7d54ab22, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  additionalSearchRoots: []
+  statusMaxHpText: {fileID: 0}
+  statusAttackText: {fileID: 0}
+  statusSpeedText: {fileID: 0}
+  statusDefenseText: {fileID: 0}
+  hudCurrentHpText: {fileID: 0}
+  hudCreditText: {fileID: 0}
+  hudLevelText: {fileID: 0}
+  shopCreditText: {fileID: 5327990623640716574}
+  questWinText: {fileID: 0}
+  questStarText: {fileID: 0}
+  debuffLegacyText: {fileID: 0}
+  debuffIconContainer: {fileID: 0}
+  debuffTooltipRoot: {fileID: 0}
+  debuffTooltipText: {fileID: 0}
 --- !u!1 &137362583615964392
 GameObject:
   m_ObjectHideFlags: 0
@@ -14421,6 +14449,7 @@ GameObject:
   - component: {fileID: 1397559932606888226}
   - component: {fileID: 9211909270918835781}
   - component: {fileID: 7992528594562620863}
+  - component: {fileID: 7238393183201076076}
   m_Layer: 5
   m_Name: ' ButtonopenstatusEarth'
   m_TagString: Untagged
@@ -14537,11 +14566,38 @@ MonoBehaviour:
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 5
+          m_IntArgument: 4
           m_FloatArgument: 0
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!114 &7238393183201076076
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 768229277530564885}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f84230084bb9927461c7e57e7d54ab22, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  additionalSearchRoots: []
+  statusMaxHpText: {fileID: 2758491704783139558}
+  statusAttackText: {fileID: 8629710800854984396}
+  statusSpeedText: {fileID: 3069762124095114477}
+  statusDefenseText: {fileID: 8531476701954717683}
+  hudCurrentHpText: {fileID: 0}
+  hudCreditText: {fileID: 0}
+  hudLevelText: {fileID: 0}
+  shopCreditText: {fileID: 0}
+  questWinText: {fileID: 0}
+  questStarText: {fileID: 0}
+  debuffLegacyText: {fileID: 0}
+  debuffIconContainer: {fileID: 0}
+  debuffTooltipRoot: {fileID: 0}
+  debuffTooltipText: {fileID: 0}
 --- !u!1 &773752625095826438
 GameObject:
   m_ObjectHideFlags: 0
@@ -36354,8 +36410,9 @@ GameObject:
   - component: {fileID: 817319639734460363}
   - component: {fileID: 8874048522805290847}
   - component: {fileID: 6313439923406879190}
+  - component: {fileID: 41021199132746375}
   m_Layer: 5
-  m_Name: ' Buttonopenstatusfire'
+  m_Name: ' ButtonopenstatusFire'
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -36475,6 +36532,33 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!114 &41021199132746375
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1843991810688266553}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f84230084bb9927461c7e57e7d54ab22, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  additionalSearchRoots: []
+  statusMaxHpText: {fileID: 8140982831040811182}
+  statusAttackText: {fileID: 8884604548895931998}
+  statusSpeedText: {fileID: 6856070255541612225}
+  statusDefenseText: {fileID: 1869335499762829265}
+  hudCurrentHpText: {fileID: 0}
+  hudCreditText: {fileID: 0}
+  hudLevelText: {fileID: 0}
+  shopCreditText: {fileID: 0}
+  questWinText: {fileID: 0}
+  questStarText: {fileID: 0}
+  debuffLegacyText: {fileID: 0}
+  debuffIconContainer: {fileID: 0}
+  debuffTooltipRoot: {fileID: 0}
+  debuffTooltipText: {fileID: 0}
 --- !u!1 &1845006556487724811
 GameObject:
   m_ObjectHideFlags: 0
@@ -84114,7 +84198,7 @@ GameObject:
   - component: {fileID: 3560198660698596501}
   - component: {fileID: 7910491653526705867}
   m_Layer: 5
-  m_Name: Credit
+  m_Name: Text_Credit
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -90575,7 +90659,7 @@ GameObject:
   - component: {fileID: 1606656333333431084}
   - component: {fileID: 8633455023325299189}
   m_Layer: 5
-  m_Name: HP
+  m_Name: Text_HP
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -97245,8 +97329,9 @@ GameObject:
   - component: {fileID: 7757835217354222787}
   - component: {fileID: 5848338327104191786}
   - component: {fileID: 2315063927842815315}
+  - component: {fileID: 4057872952560694450}
   m_Layer: 5
-  m_Name: ' Buttonopenstatuswater'
+  m_Name: ' ButtonopenstatusWater'
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -97366,6 +97451,33 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!114 &4057872952560694450
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4572828342262831265}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f84230084bb9927461c7e57e7d54ab22, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  additionalSearchRoots: []
+  statusMaxHpText: {fileID: 3244118678814569628}
+  statusAttackText: {fileID: 6588313406884433725}
+  statusSpeedText: {fileID: 2928342961833413454}
+  statusDefenseText: {fileID: 6283492707096330423}
+  hudCurrentHpText: {fileID: 0}
+  hudCreditText: {fileID: 0}
+  hudLevelText: {fileID: 0}
+  shopCreditText: {fileID: 0}
+  questWinText: {fileID: 0}
+  questStarText: {fileID: 0}
+  debuffLegacyText: {fileID: 0}
+  debuffIconContainer: {fileID: 0}
+  debuffTooltipRoot: {fileID: 0}
+  debuffTooltipText: {fileID: 0}
 --- !u!1 &4583160369415018327
 GameObject:
   m_ObjectHideFlags: 0
@@ -99401,81 +99513,6 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_Sprite: {fileID: 21300000, guid: 83103c1a4aac1d84d9b0a42de85f0911, type: 3}
-  m_Type: 0
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
---- !u!1 &4680644326423357414
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 5387392640821379028}
-  - component: {fileID: 5389790675953609464}
-  - component: {fileID: 7571143646712877409}
-  m_Layer: 5
-  m_Name: profile
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &5387392640821379028
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4680644326423357414}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 2508540867271092999}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: -523, y: -156}
-  m_SizeDelta: {x: 166, y: 148}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!222 &5389790675953609464
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4680644326423357414}
-  m_CullTransparentMesh: 1
---- !u!114 &7571143646712877409
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4680644326423357414}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 0.1601721, b: 0, a: 1}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 026b4f1f4626a084b92dc724bd2f6dfb, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -109136,6 +109173,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2508540867271092999}
+  - component: {fileID: 7718108716061357191}
   m_Layer: 5
   m_Name: PlayerUI
   m_TagString: Untagged
@@ -109156,12 +109194,10 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4753258950678403774}
-  - {fileID: 5387392640821379028}
-  - {fileID: 8317140221747720226}
   - {fileID: 6250133351567862565}
   - {fileID: 7514021583748744}
-  - {fileID: 9178870703030575172}
   - {fileID: 7451177390579848630}
+  - {fileID: 9178870703030575172}
   - {fileID: 7477128588043870537}
   - {fileID: 8990489592017243446}
   - {fileID: 2095128058241994094}
@@ -109175,6 +109211,33 @@ RectTransform:
   m_AnchoredPosition: {x: 650, y: 282}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &7718108716061357191
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5178810054092652825}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f84230084bb9927461c7e57e7d54ab22, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  additionalSearchRoots: []
+  statusMaxHpText: {fileID: 0}
+  statusAttackText: {fileID: 0}
+  statusSpeedText: {fileID: 0}
+  statusDefenseText: {fileID: 0}
+  hudCurrentHpText: {fileID: 8633455023325299189}
+  hudCreditText: {fileID: 7910491653526705867}
+  hudLevelText: {fileID: 1777111605741541746}
+  shopCreditText: {fileID: 0}
+  questWinText: {fileID: 0}
+  questStarText: {fileID: 0}
+  debuffLegacyText: {fileID: 0}
+  debuffIconContainer: {fileID: 342469640803314363}
+  debuffTooltipRoot: {fileID: 44478517939995297}
+  debuffTooltipText: {fileID: 7756978010551295844}
 --- !u!1 &5183259185697693869
 GameObject:
   m_ObjectHideFlags: 0
@@ -128898,6 +128961,7 @@ GameObject:
   - component: {fileID: 4742662500033828124}
   - component: {fileID: 6745625516633702738}
   - component: {fileID: 3011251609831948466}
+  - component: {fileID: 3605958823763824496}
   m_Layer: 5
   m_Name: ' ButtonopenstatusDark'
   m_TagString: Untagged
@@ -129019,6 +129083,33 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!114 &3605958823763824496
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6119707503173652114}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f84230084bb9927461c7e57e7d54ab22, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  additionalSearchRoots: []
+  statusMaxHpText: {fileID: 4350394895344601355}
+  statusAttackText: {fileID: 3490155485915962602}
+  statusSpeedText: {fileID: 6887539575223673043}
+  statusDefenseText: {fileID: 1001557341491202712}
+  hudCurrentHpText: {fileID: 0}
+  hudCreditText: {fileID: 0}
+  hudLevelText: {fileID: 0}
+  shopCreditText: {fileID: 0}
+  questWinText: {fileID: 0}
+  questStarText: {fileID: 0}
+  debuffLegacyText: {fileID: 0}
+  debuffIconContainer: {fileID: 0}
+  debuffTooltipRoot: {fileID: 0}
+  debuffTooltipText: {fileID: 0}
 --- !u!1 &6122171920717428333
 GameObject:
   m_ObjectHideFlags: 0
@@ -132652,6 +132743,7 @@ GameObject:
   - component: {fileID: 5057923641200793929}
   - component: {fileID: 2960966082453673268}
   - component: {fileID: 2020483161106589923}
+  - component: {fileID: 2997247708037144309}
   m_Layer: 5
   m_Name: ' ButtonopenstatusLight'
   m_TagString: Untagged
@@ -132773,6 +132865,33 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!114 &2997247708037144309
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6289529236693428255}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f84230084bb9927461c7e57e7d54ab22, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  additionalSearchRoots: []
+  statusMaxHpText: {fileID: 1242419835051859658}
+  statusAttackText: {fileID: 2216991593703565565}
+  statusSpeedText: {fileID: 3538037844748033482}
+  statusDefenseText: {fileID: 8591798994053718818}
+  hudCurrentHpText: {fileID: 0}
+  hudCreditText: {fileID: 0}
+  hudLevelText: {fileID: 0}
+  shopCreditText: {fileID: 0}
+  questWinText: {fileID: 0}
+  questStarText: {fileID: 0}
+  debuffLegacyText: {fileID: 0}
+  debuffIconContainer: {fileID: 0}
+  debuffTooltipRoot: {fileID: 0}
+  debuffTooltipText: {fileID: 0}
 --- !u!1 &6292022396325443578
 GameObject:
   m_ObjectHideFlags: 0
@@ -137636,6 +137755,7 @@ GameObject:
   - component: {fileID: 9144954828391982385}
   - component: {fileID: 1256403773832909946}
   - component: {fileID: 7793019988478237563}
+  - component: {fileID: 7353017938083949708}
   m_Layer: 5
   m_Name: ' ButtonopenstatusWind'
   m_TagString: Untagged
@@ -137752,11 +137872,38 @@ MonoBehaviour:
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 4
+          m_IntArgument: 5
           m_FloatArgument: 0
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!114 &7353017938083949708
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6529433285649571693}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f84230084bb9927461c7e57e7d54ab22, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  additionalSearchRoots: []
+  statusMaxHpText: {fileID: 1216520613232296465}
+  statusAttackText: {fileID: 8185719327825816678}
+  statusSpeedText: {fileID: 390888191677518900}
+  statusDefenseText: {fileID: 6637861524423541129}
+  hudCurrentHpText: {fileID: 0}
+  hudCreditText: {fileID: 0}
+  hudLevelText: {fileID: 0}
+  shopCreditText: {fileID: 0}
+  questWinText: {fileID: 0}
+  questStarText: {fileID: 0}
+  debuffLegacyText: {fileID: 0}
+  debuffIconContainer: {fileID: 0}
+  debuffTooltipRoot: {fileID: 0}
+  debuffTooltipText: {fileID: 0}
 --- !u!1 &6529867047124089227
 GameObject:
   m_ObjectHideFlags: 0
@@ -140354,7 +140501,7 @@ GameObject:
   - component: {fileID: 8330381386173538610}
   - component: {fileID: 1607091117051447760}
   m_Layer: 5
-  m_Name: open status text
+  m_Name: Text_OpenStatus
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -140367,16 +140514,16 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6643901450283907839}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 2508540867271092999}
+  m_Father: {fileID: 4753258950678403774}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -390, y: -147}
+  m_AnchoredPosition: {x: 6.846924, y: 60}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &8330381386173538610
@@ -151433,7 +151580,7 @@ GameObject:
   - component: {fileID: 4026681567994943653}
   - component: {fileID: 1777111605741541746}
   m_Layer: 5
-  m_Name: level
+  m_Name: Text_Level
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -174365,6 +174512,7 @@ GameObject:
   - component: {fileID: 5873803227468332761}
   - component: {fileID: 5828201075298880729}
   - component: {fileID: 8860830087301950389}
+  - component: {fileID: 3310547147703825529}
   m_Layer: 5
   m_Name: QuestUI
   m_TagString: Untagged
@@ -174437,6 +174585,33 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &3310547147703825529
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8255372818487794473}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f84230084bb9927461c7e57e7d54ab22, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  additionalSearchRoots: []
+  statusMaxHpText: {fileID: 0}
+  statusAttackText: {fileID: 0}
+  statusSpeedText: {fileID: 0}
+  statusDefenseText: {fileID: 0}
+  hudCurrentHpText: {fileID: 0}
+  hudCreditText: {fileID: 0}
+  hudLevelText: {fileID: 0}
+  shopCreditText: {fileID: 0}
+  questWinText: {fileID: 5525047469955271997}
+  questStarText: {fileID: 622961222175018936}
+  debuffLegacyText: {fileID: 0}
+  debuffIconContainer: {fileID: 0}
+  debuffTooltipRoot: {fileID: 0}
+  debuffTooltipText: {fileID: 0}
 --- !u!1 &8255923056756799316
 GameObject:
   m_ObjectHideFlags: 0
@@ -175842,7 +176017,7 @@ GameObject:
   - component: {fileID: 2225079462728518797}
   - component: {fileID: 778380088248304477}
   m_Layer: 5
-  m_Name: bgprofile
+  m_Name: PlayerProfile
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -175863,6 +176038,7 @@ RectTransform:
   - {fileID: 7244005693099231978}
   - {fileID: 3683179416142261874}
   - {fileID: 5742101532390264152}
+  - {fileID: 8317140221747720226}
   m_Father: {fileID: 2508540867271092999}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
