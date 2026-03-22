@@ -27,14 +27,14 @@ public class PlayerDebuffPresenter
         debuffIconHandlers.Clear();
     }
 
-    public void Present(PlayerStatusPanelRefs panelRefs, PlayerState player)
+    public void Present(PlayerGlobalHudRefs hudRefs, PlayerState player)
     {
-        if (panelRefs == null || player == null)
+        if (hudRefs == null || player == null)
             return;
 
         List<DebuffUIEntry> entries = BuildEntries(player);
-        RefreshSpriteIcons(panelRefs, entries);
-        RefreshTextFallback(panelRefs, entries);
+        RefreshSpriteIcons(hudRefs, entries);
+        RefreshTextFallback(hudRefs, entries);
     }
 
     private List<DebuffUIEntry> BuildEntries(PlayerState player)
@@ -71,12 +71,12 @@ public class PlayerDebuffPresenter
         return entries;
     }
 
-    private void RefreshSpriteIcons(PlayerStatusPanelRefs panelRefs, List<DebuffUIEntry> entries)
+    private void RefreshSpriteIcons(PlayerGlobalHudRefs hudRefs, List<DebuffUIEntry> entries)
     {
-        if (panelRefs.debuffIconContainer == null)
+        if (hudRefs.debuffIconContainer == null)
             return;
 
-        EnsureSpriteIconPool(panelRefs.debuffIconContainer, entries.Count);
+        EnsureSpriteIconPool(hudRefs.debuffIconContainer, entries.Count);
 
         for (int i = 0; i < debuffIconHandlers.Count; i++)
         {
@@ -93,28 +93,28 @@ public class PlayerDebuffPresenter
             }
 
             DebuffUIEntry entry = entries[i];
-            handler.Bind(panelRefs.debuffTooltipRoot, panelRefs.debuffTooltipText, entry.Tooltip);
+            handler.Bind(hudRefs.debuffTooltipRoot, hudRefs.debuffTooltipText, entry.Tooltip);
             handler.SetSprite(entry.IconSprite);
             iconObject.name = $"DebuffIcon_{entry.Key}";
             iconObject.SetActive(entry.IconSprite != null);
         }
 
-        if (entries.Count == 0 && panelRefs.debuffTooltipRoot != null)
-            panelRefs.debuffTooltipRoot.SetActive(false);
+        if (entries.Count == 0 && hudRefs.debuffTooltipRoot != null)
+            hudRefs.debuffTooltipRoot.SetActive(false);
     }
 
-    private void RefreshTextFallback(PlayerStatusPanelRefs panelRefs, List<DebuffUIEntry> entries)
+    private void RefreshTextFallback(PlayerGlobalHudRefs hudRefs, List<DebuffUIEntry> entries)
     {
-        if (panelRefs.debuffLegacyText == null)
+        if (hudRefs.debuffLegacyText == null)
             return;
 
-        bool isUsingSpriteIcons = panelRefs.debuffIconContainer != null;
-        panelRefs.debuffLegacyText.gameObject.SetActive(!isUsingSpriteIcons);
+        bool isUsingSpriteIcons = hudRefs.debuffIconContainer != null;
+        hudRefs.debuffLegacyText.gameObject.SetActive(!isUsingSpriteIcons);
         if (isUsingSpriteIcons)
             return;
 
-        EnsureDebuffTooltipHandler(panelRefs);
-        panelRefs.debuffLegacyText.text = BuildDebuffIconRichText(entries);
+        EnsureDebuffTooltipHandler(hudRefs);
+        hudRefs.debuffLegacyText.text = BuildDebuffIconRichText(entries);
         if (debuffTooltipHoverHandler != null)
             debuffTooltipHoverHandler.SetEntries(entries);
     }
@@ -172,18 +172,18 @@ public class PlayerDebuffPresenter
         return handler;
     }
 
-    private void EnsureDebuffTooltipHandler(PlayerStatusPanelRefs panelRefs)
+    private void EnsureDebuffTooltipHandler(PlayerGlobalHudRefs hudRefs)
     {
-        if (panelRefs.debuffLegacyText == null)
+        if (hudRefs.debuffLegacyText == null)
             return;
 
         if (debuffTooltipHoverHandler == null)
-            debuffTooltipHoverHandler = panelRefs.debuffLegacyText.GetComponent<DebuffTooltipHoverHandler>();
+            debuffTooltipHoverHandler = hudRefs.debuffLegacyText.GetComponent<DebuffTooltipHoverHandler>();
 
         if (debuffTooltipHoverHandler == null)
-            debuffTooltipHoverHandler = panelRefs.debuffLegacyText.gameObject.AddComponent<DebuffTooltipHoverHandler>();
+            debuffTooltipHoverHandler = hudRefs.debuffLegacyText.gameObject.AddComponent<DebuffTooltipHoverHandler>();
 
-        debuffTooltipHoverHandler.Bind(panelRefs.debuffLegacyText, panelRefs.debuffTooltipRoot, panelRefs.debuffTooltipText);
+        debuffTooltipHoverHandler.Bind(hudRefs.debuffLegacyText, hudRefs.debuffTooltipRoot, hudRefs.debuffTooltipText);
     }
 
     private static string BuildDebuffIconRichText(List<DebuffUIEntry> entries)
