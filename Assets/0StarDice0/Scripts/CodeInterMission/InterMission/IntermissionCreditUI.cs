@@ -44,7 +44,7 @@ public class IntermissionCreditUI : MonoBehaviour
         // Intermission (นอกด่าน) ใช้เครดิตจากข้อมูลถาวรเท่านั้น
         if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
         {
-            credit = GameData.Instance.selectedPlayer.Credit;
+            credit = GameData.Instance.GetSelectedPlayerCredit();
         }
 
         creditText.text = $"{prefix}{credit}";

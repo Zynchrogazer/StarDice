@@ -243,17 +243,7 @@ public class MemoryGameManager : MonoBehaviour
         if (score >= 8000) 
         {
 rewardAmount = 500;
-if (GameTurnManager.CurrentPlayer != null)
-{
-    PlayerState p = GameTurnManager.CurrentPlayer.GetComponent<PlayerState>();
-    if (p != null) p.PlayerCredit += rewardAmount;
-}
-
-
-if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
-{
-    GameData.Instance.selectedPlayer.AddCredit(rewardAmount);
-}
+MiniGameRewardService.TryGrantFixedCreditReward(rewardAmount, "CodeSpot/MemoryGameManager");
             int roll = Random.Range(1, 101);
             
             if (roll < 21)
@@ -298,17 +288,7 @@ if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
         else if (score >= 5000) 
         {
             rewardAmount = 300;
-if (GameTurnManager.CurrentPlayer != null)
-{
-    PlayerState p = GameTurnManager.CurrentPlayer.GetComponent<PlayerState>();
-    if (p != null) p.PlayerCredit += rewardAmount;
-}
-
-
-if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
-{
-    GameData.Instance.selectedPlayer.AddCredit(rewardAmount);
-}
+MiniGameRewardService.TryGrantFixedCreditReward(rewardAmount, "CodeSpot/MemoryGameManager");
             // ได้คะแนน 4000 - 7999 ได้รองเท้า
                     int roll = Random.Range(1, 101);
             
@@ -333,17 +313,7 @@ if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
         else if (score >= 2000) 
         {
             rewardAmount = 100;
-if (GameTurnManager.CurrentPlayer != null)
-{
-    PlayerState p = GameTurnManager.CurrentPlayer.GetComponent<PlayerState>();
-    if (p != null) p.PlayerCredit += rewardAmount;
-}
-
-
-if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
-{
-    GameData.Instance.selectedPlayer.AddCredit(rewardAmount);
-}
+MiniGameRewardService.TryGrantFixedCreditReward(rewardAmount, "CodeSpot/MemoryGameManager");
             // ได้คะแนนน้อย (0 - 3999) ได้แหวน
            int roll = Random.Range(1, 101);
             
@@ -383,4 +353,5 @@ if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
             showImage.gameObject.SetActive(false);
         }
     }
+
 }

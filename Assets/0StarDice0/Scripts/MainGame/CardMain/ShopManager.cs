@@ -105,10 +105,6 @@ public class ShopManager : MonoBehaviour
         }
 
         buyer.PlayerCredit -= card.price;
-        if (GameData.Instance?.selectedPlayer != null)
-        {
-            GameData.Instance.selectedPlayer.SetCredit(buyer.PlayerCredit);
-        }
         playerCardInventory.ObtainCard(card);
         RefreshCreditText();
         Debug.Log($"[Shop] ซื้อ {card.cardName} สำเร็จ เหลือเครดิต {buyer.PlayerCredit}");

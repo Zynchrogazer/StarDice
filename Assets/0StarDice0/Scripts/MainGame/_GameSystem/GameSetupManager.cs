@@ -48,9 +48,15 @@ public class GameSetupManager : MonoBehaviour
         // แต่ถ้ายังอยู่ที่เดิม ก็ใช้บรรทัดนี้:
         int currentCredit = GameTurnManager.CurrentPlayer.PlayerCredit;
 
-        Debug.Log($"<color=lightblue>[GameSetupManager]</color> Updating persistent data for {currentData.playerName}: Credit={currentCredit}");
+        Debug.Log($"<color=lightblue>[GameSetupManager]</color> Updating persistent progress for {currentData.playerName}: Credit={currentCredit}");
 
-        // บันทึกลง ScriptableObject ที่เราดึงมา (GameData.selectedPlayer)
-        currentData.SetCredit(currentCredit);
+        if (GameData.Instance != null)
+        {
+            GameData.Instance.SetSelectedPlayerCredit(currentCredit);
+            GameData.Instance.SetSelectedPlayerLevelProgress(
+                GameTurnManager.CurrentPlayer.PlayerLevel,
+                GameTurnManager.CurrentPlayer.CurrentExp,
+                GameTurnManager.CurrentPlayer.MaxExp);
+        }
     }
 }

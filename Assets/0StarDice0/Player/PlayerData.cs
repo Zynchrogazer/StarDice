@@ -3,11 +3,9 @@ using UnityEngine;
 using UnityEngine.Serialization;
 
 [CreateAssetMenu(fileName = "NewPlayer", menuName = "Battle/PlayerData")]
-
 public class PlayerData : ScriptableObject
 {
-    private const string SharedCreditSaveKey = "PLAYER_CREDIT_SHARED";
-
+    public string playerId;
     public string playerName;
     public ElementType element;
     public Sprite playerSprite;
@@ -17,10 +15,9 @@ public class PlayerData : ScriptableObject
     public int attackDamage = 10;
     public int speed = 10;
     public int def = 1;
-    public SkillData[] skills = new SkillData[3]; // 3 สกิลพิเศษ
-    public SkillData[] allSkills = new SkillData[10]; //สกิลทั้งหมด
+    public SkillData[] skills = new SkillData[3];
+    public SkillData[] allSkills = new SkillData[10];
     public ElementType elementType;
-
 
     [Header("Player Stats")]
     [Obsolete("Use maxHP as the source of truth.")]
@@ -29,17 +26,17 @@ public class PlayerData : ScriptableObject
     [SerializeField, HideInInspector]
     private int legacyCurrentHealth;
 
-    [Header("Level System")]
-    public int level = 1;      // เลเวลเริ่มต้น
-    public int currentExp = 0; // EXP เริ่มต้น
-    public int maxExp = 100;   // EXP ที่ต้องใช้ในการอัปเวลครั้งแรก
-    // ------------------------------------
-
-    [SerializeField] private int credit = 0;
-    
+    [Header("Persistent Progress Defaults")]
+    [FormerlySerializedAs("level")]
+    public int startingLevel = 1;
+    [FormerlySerializedAs("currentExp")]
+    public int startingCurrentExp = 0;
+    [FormerlySerializedAs("maxExp")]
+    public int startingMaxExp = 100;
+    [FormerlySerializedAs("credit")]
+    public int startingCredit = 0;
 
     public event Action<int> OnCreditChanged;
-    public event Action OnDied;
 
     [FormerlySerializedAs("turnsToSkip")]
     [SerializeField, HideInInspector]
@@ -47,20 +44,50 @@ public class PlayerData : ScriptableObject
 
     public int Credit
     {
-        get
-        {
-            LoadCredit();
-            return credit;
-        }
+        get => ResolveProgress()?.Credit ?? Mathf.Max(0, startingCredit);
         set
         {
-            if (credit == value) return;
-            credit = Mathf.Max(0, value);
-            SaveCredit();
-            OnCreditChanged?.Invoke(credit);
+            PlayerProgress progress = ResolveOrCreateProgress();
+            if (progress == null) return;
+            progress.SetCredit(value);
         }
     }
 
+    [Obsolete("Use PlayerProgress.Level or PlayerState.PlayerLevel instead.")]
+    public int level
+    {
+        get => ResolveProgress()?.Level ?? Mathf.Max(1, startingLevel);
+        set
+        {
+            PlayerProgress progress = ResolveOrCreateProgress();
+            if (progress == null) return;
+            progress.SetLevelProgress(value, currentExp, maxExp);
+        }
+    }
+
+    [Obsolete("Use PlayerProgress.CurrentExp or PlayerState.CurrentExp instead.")]
+    public int currentExp
+    {
+        get => ResolveProgress()?.CurrentExp ?? Mathf.Max(0, startingCurrentExp);
+        set
+        {
+            PlayerProgress progress = ResolveOrCreateProgress();
+            if (progress == null) return;
+            progress.SetLevelProgress(level, value, maxExp);
+        }
+    }
+
+    [Obsolete("Use PlayerProgress.MaxExp or PlayerState.MaxExp instead.")]
+    public int maxExp
+    {
+        get => ResolveProgress()?.MaxExp ?? Mathf.Max(1, startingMaxExp);
+        set
+        {
+            PlayerProgress progress = ResolveOrCreateProgress();
+            if (progress == null) return;
+            progress.SetLevelProgress(level, currentExp, value);
+        }
+    }
 
     [Obsolete("PlayerData no longer stores runtime HP. Use PlayerState.PlayerHealth instead.")]
     public int CurrentHealth => GetMaxHealth();
@@ -68,12 +95,10 @@ public class PlayerData : ScriptableObject
     private void OnEnable()
     {
         NormalizeMaxHpFields();
-        LoadCredit();
     }
 
     private void NormalizeMaxHpFields()
     {
-        // maxHP is the source of truth. Keep legacy maxHealth synchronized for compatibility.
         if (maxHP <= 0 && maxHealth > 0)
         {
             maxHP = maxHealth;
@@ -81,6 +106,10 @@ public class PlayerData : ScriptableObject
 
         maxHP = Mathf.Max(1, maxHP);
         maxHealth = maxHP;
+        startingLevel = Mathf.Max(1, startingLevel);
+        startingCurrentExp = Mathf.Max(0, startingCurrentExp);
+        startingMaxExp = Mathf.Max(1, startingMaxExp);
+        startingCredit = Mathf.Max(0, startingCredit);
     }
 
     private void OnValidate()
@@ -88,34 +117,36 @@ public class PlayerData : ScriptableObject
         NormalizeMaxHpFields();
     }
 
-     private string GetCreditSaveKey() => SharedCreditSaveKey;
-
-    private void LoadCredit()
+    private PlayerProgress ResolveProgress()
     {
-        string saveKey = GetCreditSaveKey();
-        if (!PlayerPrefs.HasKey(saveKey))
+        if (GameData.Instance != null && GameData.Instance.selectedPlayer == this)
         {
-            return;
+            GameData.Instance.EnsureSelectedPlayerProgressLoaded();
+            return GameData.Instance.SelectedPlayerProgress;
         }
 
-        credit = Mathf.Max(0, PlayerPrefs.GetInt(saveKey, credit));
+        return PlayerProgressService.LoadForPlayer(this);
     }
 
-    private void SaveCredit()
+    private PlayerProgress ResolveOrCreateProgress()
     {
-        PlayerPrefs.SetInt(GetCreditSaveKey(), credit);
-        PlayerPrefs.Save();
-    }
+        if (GameData.Instance != null && GameData.Instance.selectedPlayer == this)
+        {
+            GameData.Instance.EnsureSelectedPlayerProgressLoaded();
+            return GameData.Instance.SelectedPlayerProgress;
+        }
 
-    private void Die()
-    {
-        Debug.LogError($"[PlayerData] {playerName} has died!");
-        // TODO: Game over logic, show UI, trigger event ฯลฯ
+        return PlayerProgressService.LoadForPlayer(this);
     }
 
     public int GetMaxHealth()
     {
         return Mathf.Max(1, maxHP);
+    }
+
+    internal void NotifyCreditChangedFromProgress(int newCredit)
+    {
+        OnCreditChanged?.Invoke(Mathf.Max(0, newCredit));
     }
 
     [Obsolete("PlayerData should not store runtime HP. Update PlayerState.PlayerHealth instead.")]
@@ -124,26 +155,33 @@ public class PlayerData : ScriptableObject
         Debug.LogWarning($"[PlayerData] Ignored SetHealth({newHealth}) on {playerName}. Runtime HP now belongs to PlayerState.");
     }
 
-    /// <summary>
-    /// เมธอดสำหรับตั้งค่าเครดิตโดยตรง และเรียก Event
-    /// </summary>
     public void SetCredit(int newAmount)
     {
-        this.Credit = newAmount; // ใช้ Property เพื่อให้ Event OnCreditChanged ทำงาน
+        PlayerProgress progress = ResolveOrCreateProgress();
+        if (progress == null) return;
+        int previousCredit = progress.Credit;
+        progress.SetCredit(newAmount);
+        if (previousCredit != progress.Credit)
+        {
+            NotifyCreditChangedFromProgress(progress.Credit);
+        }
     }
 
     public void AddCredit(int amount)
     {
         if (amount <= 0) return;
-        Credit += amount;
+        SetCredit(Credit + amount);
     }
 
     public bool TrySpendCredit(int amount)
     {
         if (amount <= 0) return true;
-        if (Credit < amount) return false;
 
-        Credit -= amount;
+        PlayerProgress progress = ResolveOrCreateProgress();
+        if (progress == null) return false;
+        if (!progress.TrySpendCredit(amount)) return false;
+
+        NotifyCreditChangedFromProgress(progress.Credit);
         return true;
     }
 
@@ -161,7 +199,6 @@ public class PlayerData : ScriptableObject
         {
             SkillData skill = allSkills[i];
             if (skill == null) continue;
-
             skill.isLocked = i >= unlockedCount;
         }
 
@@ -171,8 +208,4 @@ public class PlayerData : ScriptableObject
         skills[1] = allSkills[1];
         skills[2] = allSkills[2];
     }
-
-
-
-
 }

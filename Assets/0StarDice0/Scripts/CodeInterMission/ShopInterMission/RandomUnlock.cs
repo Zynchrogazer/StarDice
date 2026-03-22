@@ -67,7 +67,7 @@ public class RandomUnlock : MonoBehaviour
         }
         else if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
         {
-            currentCredit = GameData.Instance.selectedPlayer.Credit; // ดึงจากเซฟหลัก
+            currentCredit = GameData.Instance.GetSelectedPlayerCredit(); // ดึงจากเซฟหลัก
         }
         else
         {
@@ -109,7 +109,7 @@ public class RandomUnlock : MonoBehaviour
         }
         else if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
         {
-            GameData.Instance.selectedPlayer.SetCredit(currentCredit); // เซฟลง GameData โดยตรง
+            GameData.Instance.SetSelectedPlayerCredit(currentCredit); // เซฟลง GameData โดยตรง
         }
         else
         {
@@ -158,7 +158,7 @@ public class RandomUnlock : MonoBehaviour
         }
         else if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
         {
-            currentCredit = GameData.Instance.selectedPlayer.Credit;
+            currentCredit = GameData.Instance.GetSelectedPlayerCredit();
         }
         else
         {

@@ -3,8 +3,8 @@ using UnityEngine.UI;
 
 public class CharacterSelectUI : MonoBehaviour
 {
-    public PlayerData[] allCharacters;   // ตัวละครทั้งหมด
-    public Button[] characterButtons;    // ปุ่มที่วางใน Scene
+    public PlayerData[] allCharacters;
+    public Button[] characterButtons;
     [SerializeField] private CharacterSelectManager characterSelectManager;
 
     void Start()
@@ -28,22 +28,18 @@ public class CharacterSelectUI : MonoBehaviour
         for (int i = 0; i < characterButtons.Length; i++)
         {
             int index = i;
-
-            // ลบ Listener เก่า แล้วผูกใหม่
             characterButtons[i].onClick.RemoveAllListeners();
             characterButtons[i].onClick.AddListener(() => OnButtonClick(index));
 
-            // ตั้งสีปุ่มตาม Data
-            if (characterSelectManager.selectedPlayer == allCharacters[i])
-                characterButtons[i].image.color = Color.gray; // ปุ่มถูกเลือก
+            if (characterSelectManager.SelectedPlayer == allCharacters[i])
+                characterButtons[i].image.color = Color.gray;
             else
-                characterButtons[i].image.color = Color.white; // ปุ่มไม่ถูกเลือก
+                characterButtons[i].image.color = Color.white;
         }
     }
 
     void OnButtonClick(int index)
     {
-        // อัปเดต Data
         if (characterSelectManager == null)
         {
             Debug.LogError("[CharacterSelectUI] CharacterSelectManager หายไประหว่างทำงาน");
@@ -51,8 +47,6 @@ public class CharacterSelectUI : MonoBehaviour
         }
 
         characterSelectManager.SelectCharacter(allCharacters[index]);
-
-        // Refresh UI สีปุ่ม
         SetupButtons();
     }
 }

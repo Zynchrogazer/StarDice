@@ -2,7 +2,7 @@
 //[RequireComponent(typeof(PlayerMovement), typeof(PlayerPathWalker))]
 public class PlayerController : MonoBehaviour
 {
- 
+    [SerializeField] private PlayerState playerState;
     public PlayerData playerData;
     public PlayerData GetData()
     {
@@ -15,18 +15,34 @@ public class PlayerController : MonoBehaviour
 
     private void OnEnable()
     {
-        if (playerData != null)
+        PlayerState resolvedPlayerState = ResolvePlayerState();
+        if (resolvedPlayerState != null)
         {
-            playerData.OnDied += HandlePlayerDeath;
+            resolvedPlayerState.OnDied += HandlePlayerDeath;
         }
     }
 
     private void OnDisable()
     {
-        if (playerData != null)
+        if (playerState != null)
         {
-            playerData.OnDied -= HandlePlayerDeath;
+            playerState.OnDied -= HandlePlayerDeath;
         }
+    }
+
+    private PlayerState ResolvePlayerState()
+    {
+        if (playerState == null)
+        {
+            playerState = GetComponent<PlayerState>();
+        }
+
+        if (playerState == null)
+        {
+            playerState = GameTurnManager.CurrentPlayer;
+        }
+
+        return playerState;
     }
 
     private void HandlePlayerDeath()

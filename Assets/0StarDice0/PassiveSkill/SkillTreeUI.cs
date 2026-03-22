@@ -87,7 +87,7 @@ public class SkillTreeUI : MonoBehaviour
 
         int playerCredit = GameTurnManager.CurrentPlayer != null
             ? GameTurnManager.CurrentPlayer.PlayerCredit
-            : (GameData.Instance?.selectedPlayer != null ? GameData.Instance.selectedPlayer.Credit : 0);
+            : (GameData.Instance?.selectedPlayer != null ? GameData.Instance.GetSelectedPlayerCredit() : 0);
 
         if (creditText != null) creditText.text = $"Credit: {playerCredit}";
         if (goldText != null) goldText.text = $"Credit: {playerCredit}";

@@ -14,8 +14,8 @@ public static class PlayerGlobalHudPresenter
 
     private static int ResolvePersistentCredit(PlayerState player)
     {
-        if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
-            return UnityEngine.Mathf.Max(0, GameData.Instance.selectedPlayer.Credit);
+        if (GameData.Instance != null)
+            return GameData.Instance.GetSelectedPlayerCredit(player.PlayerCredit);
 
         if (player.selectedPlayerPreset != null)
             return UnityEngine.Mathf.Max(0, player.selectedPlayerPreset.Credit);

@@ -224,17 +224,7 @@ public class GameManagerLevel3 : MonoBehaviour
         if (score >= 1500) // เกณฑ์ระดับสูง
         {
             rewardAmount = 500;
-if (GameTurnManager.CurrentPlayer != null)
-{
-    PlayerState p = GameTurnManager.CurrentPlayer.GetComponent<PlayerState>();
-    if (p != null) p.PlayerCredit += rewardAmount;
-}
-
-
-if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
-{
-    GameData.Instance.selectedPlayer.AddCredit(rewardAmount);
-}
+MiniGameRewardService.TryGrantFixedCreditReward(rewardAmount, "CodeCard/GameManagerLevel3");
             if (roll <= 20) 
             {
                 EquipmentManager.Instance.UnlockItem(KnightSword);
@@ -273,17 +263,7 @@ if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
         else if (score >= 1000) // เกณฑ์ระดับกลาง
         {
             rewardAmount = 300;
-if (GameTurnManager.CurrentPlayer != null)
-{
-    PlayerState p = GameTurnManager.CurrentPlayer.GetComponent<PlayerState>();
-    if (p != null) p.PlayerCredit += rewardAmount;
-}
-
-
-if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
-{
-    GameData.Instance.selectedPlayer.AddCredit(rewardAmount);
-}
+MiniGameRewardService.TryGrantFixedCreditReward(rewardAmount, "CodeCard/GameManagerLevel3");
             if (roll <= 40) 
             {
                 EquipmentManager.Instance.UnlockItem(HearthNeckless);
@@ -305,17 +285,7 @@ if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
         else if( score >=500) // เกณฑ์ระดับเริ่มต้น (น้อยกว่า 500 หรือจบแบบ Game Over)
         {
             rewardAmount = 100;
-if (GameTurnManager.CurrentPlayer != null)
-{
-    PlayerState p = GameTurnManager.CurrentPlayer.GetComponent<PlayerState>();
-    if (p != null) p.PlayerCredit += rewardAmount;
-}
-
-
-if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
-{
-    GameData.Instance.selectedPlayer.AddCredit(rewardAmount);
-}
+MiniGameRewardService.TryGrantFixedCreditReward(rewardAmount, "CodeCard/GameManagerLevel3");
             if (roll <= 20) 
             {
                 EquipmentManager.Instance.UnlockItem(WhiteFeather);
@@ -352,4 +322,5 @@ if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
                 showImage.gameObject.SetActive(false); 
             }
     }
+
 }

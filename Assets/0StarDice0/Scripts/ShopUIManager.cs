@@ -23,7 +23,7 @@ public class ShopUIManager : MonoBehaviour
         {
             if (TryResolvePlayerData(out PlayerData data))
             {
-                return Mathf.Max(0, data.Credit);
+                return GameData.Instance != null ? GameData.Instance.GetSelectedPlayerCredit(data.Credit) : Mathf.Max(0, data.Credit);
             }
 
             return Mathf.Max(0, playerCredit);
@@ -35,7 +35,14 @@ public class ShopUIManager : MonoBehaviour
 
             if (TryResolvePlayerData(out PlayerData data))
             {
-                data.SetCredit(normalizedValue);
+                if (GameData.Instance != null)
+                {
+                    GameData.Instance.SetSelectedPlayerCredit(normalizedValue);
+                }
+                else
+                {
+                    data.SetCredit(normalizedValue);
+                }
             }
 
             RefreshCreditText();
@@ -83,7 +90,7 @@ public class ShopUIManager : MonoBehaviour
         if (boundPlayerData != null)
         {
             boundPlayerData.OnCreditChanged += HandleCreditChanged;
-            playerCredit = Mathf.Max(0, boundPlayerData.Credit);
+            playerCredit = GameData.Instance != null ? GameData.Instance.GetSelectedPlayerCredit(boundPlayerData.Credit) : Mathf.Max(0, boundPlayerData.Credit);
         }
     }
 
