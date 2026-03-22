@@ -70,23 +70,22 @@ public class EquipmentManager : MonoBehaviour
     // --- ฟังก์ชันใหม่: ค้นหาตัวผู้เล่นหลัก และแจกเงิน ---
     private void GiveCreditToPlayer(int amount)
     {
-        // อิงจากโค้ดเดิมของคุณ ซิงค์ข้อมูลกับ GameData ก่อนเพื่อความชัวร์เวลาเปลี่ยนด่าน
-        if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
-        {
-            GameData.Instance.selectedPlayer.AddCredit(amount);
-        }
-
-        // ค้นหา PlayerState ในฉากปัจจุบัน (เผื่อไว้ในกรณีที่ใช้แค่ใน Scene ไม่ได้พึ่ง GameData)
         PlayerState[] players = FindObjectsOfType<PlayerState>(true);
         foreach (PlayerState player in players)
         {
-            // หาคนที่ไม่ใช่ AI
             if (!player.isAI)
             {
                 player.PlayerCredit += amount;
                 Debug.Log($"[EquipmentManager] โอนเงินชดเชย +{amount} เข้ากระเป๋า {player.gameObject.name} สำเร็จ (ตอนนี้มี {player.PlayerCredit})");
-                return; 
+                return;
             }
+        }
+
+        if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
+        {
+            GameData.Instance.AddSelectedPlayerCredit(amount);
+            Debug.Log($"[EquipmentManager] โอนเงินชดเชย +{amount} ผ่าน GameData สำเร็จ");
+            return;
         }
 
         Debug.LogWarning("[EquipmentManager] หา PlayerState ผู้เล่นหลักไม่เจอ! เงินชดเชยไม่ได้ถูกเพิ่ม");

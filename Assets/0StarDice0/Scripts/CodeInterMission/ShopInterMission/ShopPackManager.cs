@@ -124,7 +124,7 @@ public class ShopPackManager : MonoBehaviour
     {
         if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
         {
-            return Mathf.Max(0, GameData.Instance.selectedPlayer.Credit);
+            return Mathf.Max(0, GameData.Instance.GetSelectedPlayerCredit());
         }
 
         return 0;
@@ -147,13 +147,13 @@ public class ShopPackManager : MonoBehaviour
 
         if (amount > 0)
         {
-            if (!GameData.Instance.selectedPlayer.TrySpendCredit(amount))
+            if (!GameData.Instance.TrySpendSelectedPlayerCredit(amount))
             {
                 return false;
             }
         }
 
-        remainingCredit = GameData.Instance.selectedPlayer.Credit;
+        remainingCredit = GameData.Instance.GetSelectedPlayerCredit();
         return true;
     }
 

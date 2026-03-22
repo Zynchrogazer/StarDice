@@ -16,12 +16,6 @@ public class BoardgameTestAddCreditButton : MonoBehaviour
 
         player.PlayerCredit += Mathf.Max(0, bonusCredit);
 
-        // sync กลับข้อมูลหลัก เพื่อให้ตอนออก Intermission เครดิตยังคงอยู่
-        if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
-        {
-            GameData.Instance.selectedPlayer.AddCredit(Mathf.Max(0, bonusCredit));
-        }
-
         Debug.Log($"[BoardgameTestAddCreditButton] เพิ่มเครดิตทดสอบ +{bonusCredit} -> ตอนนี้ {player.PlayerCredit}");
     }
 

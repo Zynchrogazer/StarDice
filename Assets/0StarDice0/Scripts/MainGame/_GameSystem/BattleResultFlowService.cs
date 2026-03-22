@@ -24,11 +24,6 @@ public static class BattleResultFlowService
             int reward = Random.Range(minReward, maxReward + 1);
             rewardTarget.PlayerCredit += reward;
 
-            if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
-            {
-                GameData.Instance.selectedPlayer.AddCredit(reward);
-            }
-
             Debug.Log($"[BattleResultFlow] Reward claimed +{reward} credit");
         }
         else

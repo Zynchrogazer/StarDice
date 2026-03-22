@@ -52,10 +52,8 @@ public class PlayerState : MonoBehaviour
     public PlayerData selectedPlayerPreset { get; private set; }
     public List<CardData> selectedCards { get; private set; } = new List<CardData>();
 
-    // Snapshot ของค่าถาวรจาก PlayerData (ใช้รีเซ็ตเมื่อออกจาก Board)
-    private int persistentLevelSnapshot = 1;
-    private int persistentCurrentExpSnapshot = 0;
-    private int persistentMaxExpSnapshot = 100;
+    // Snapshot ของค่าถาวรจาก persistence (ใช้รีเซ็ตเมื่อออกจาก Board)
+    [SerializeField] private PlayerProgressSnapshot persistentProgressSnapshot = new PlayerProgressSnapshot();
 
     // Runtime skill unlock state (ใช้เฉพาะรอบ Boardgame เท่านั้น)
     private readonly HashSet<int> runtimeUnlockedSkillIndexes = new HashSet<int>();
@@ -70,9 +68,9 @@ public class PlayerState : MonoBehaviour
     {
         get
         {
-            if (TryResolveCreditData(out PlayerData data))
+            if (TryResolveSelectedProgress(out PlayerProgress progress))
             {
-                playerCredit = Mathf.Max(0, data.Credit);
+                playerCredit = Mathf.Max(0, progress.Credit);
             }
 
             return Mathf.Max(0, playerCredit);
@@ -82,9 +80,9 @@ public class PlayerState : MonoBehaviour
             int normalizedValue = Mathf.Max(0, value);
             playerCredit = normalizedValue;
 
-            if (TryResolveCreditData(out PlayerData data))
+            if (TryResolveSelectedProgress(out PlayerProgress progress))
             {
-                data.SetCredit(normalizedValue);
+                progress.SetCredit(normalizedValue);
             }
 
             OnStatsUpdated?.Invoke();
@@ -155,23 +153,15 @@ public class PlayerState : MonoBehaviour
     }
 
 
-    private bool TryResolveCreditData(out PlayerData data)
+    private bool TryResolveSelectedProgress(out PlayerProgress progress)
     {
-        data = selectedPlayerPreset;
+        progress = PlayerStateProgressCoordinator.ResolveSelectedProgress(this);
+        return progress != null;
+    }
 
-        if (data != null)
-        {
-            return true;
-        }
-
-        if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
-        {
-            data = GameData.Instance.selectedPlayer;
-            selectedPlayerPreset = data;
-            return true;
-        }
-
-        return false;
+    internal void BindSelectedPlayerPreset(PlayerData data)
+    {
+        selectedPlayerPreset = data;
     }
 
     public void LoadFromPlayerData(PlayerData data)
@@ -189,18 +179,26 @@ public class PlayerState : MonoBehaviour
         RuntimeMaxHealthModifier = 0;
         RuntimeStarModifier = 0;
         PassiveStarGainBonus = 0;
-        // 2. โหลดเครดิต (ถ้าต้องการใช้ค่าเริ่มต้นจาก Data)
-        PlayerCredit = data.Credit;
-
-        // 3. ✅ โหลดข้อมูล Level จาก PlayerData
-        PlayerLevel = data.level;
-        CurrentExp = data.currentExp;
-        MaxExp = data.maxExp;
+        // 2. โหลดเครดิต/ความก้าวหน้าถาวรจาก PlayerProgress
+        if (TryResolveSelectedProgress(out PlayerProgress progress))
+        {
+            playerCredit = progress.Credit;
+            PlayerLevel = progress.Level;
+            CurrentExp = progress.CurrentExp;
+            MaxExp = progress.MaxExp;
+        }
+        else
+        {
+            playerCredit = data.startingCredit;
+            PlayerLevel = data.startingLevel;
+            CurrentExp = data.startingCurrentExp;
+            MaxExp = data.startingMaxExp;
+        }
 
         // กันเหนียว: ถ้า MaxExp เป็น 0 ให้ตั้งค่าเริ่มต้น
         if (MaxExp <= 0) MaxExp = 100;
 
-        CachePersistentProgressSnapshot(data);
+        PlayerStateProgressCoordinator.CaptureSnapshot(this, data, persistentProgressSnapshot);
         InitializeRuntimeSkillUnlocks(data.allSkills != null ? data.allSkills.Length : 0);
         EnsureRuntimeSkillUnlocksMatchLevel();
 
@@ -214,7 +212,7 @@ public class PlayerState : MonoBehaviour
 
     public void SetSelectedCards(List<CardData> cards)
     {
-        selectedCards = new List<CardData>(cards);
+        selectedCards = cards != null ? new List<CardData>(cards) : new List<CardData>();
     }
 
     // --- Combat Logic ---
@@ -360,36 +358,16 @@ public class PlayerState : MonoBehaviour
         GainExp(50);
     }
 
-    private void CachePersistentProgressSnapshot(PlayerData data)
-    {
-        if (data == null) return;
-
-        persistentLevelSnapshot = Mathf.Max(1, data.level);
-        persistentCurrentExpSnapshot = Mathf.Max(0, data.currentExp);
-        persistentMaxExpSnapshot = data.maxExp > 0 ? data.maxExp : 100;
-    }
-
-    private void RestorePersistentProgressToPlayerData()
-    {
-        if (selectedPlayerPreset == null) return;
-
-        selectedPlayerPreset.level = persistentLevelSnapshot;
-        selectedPlayerPreset.currentExp = persistentCurrentExpSnapshot;
-        selectedPlayerPreset.maxExp = persistentMaxExpSnapshot;
-    }
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         if (isAI || scene.name != IntermissionSceneName) return;
 
         // เครดิตเป็นค่าถาวร -> sync กลับข้อมูลหลัก
-        if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
-        {
-            GameData.Instance.selectedPlayer.SetCredit(PlayerCredit);
-        }
+        PlayerStateProgressCoordinator.SyncPersistentCredit(this);
 
-        // เลเวล/EXP ในบอร์ดเป็นค่าชั่วคราว -> รีเซ็ตและย้ำข้อมูลใน PlayerData
-        RestorePersistentProgressToPlayerData();
+        // เลเวล/EXP ในบอร์ดเป็นค่าชั่วคราว -> รีเซ็ตและย้ำข้อมูลใน persistence
+        PlayerStateProgressCoordinator.RestoreSnapshot(persistentProgressSnapshot);
         ResetInStageProgress();
     }
 
@@ -443,10 +421,7 @@ public class PlayerState : MonoBehaviour
         isDefeatHandling = true;
 
         // ✅ เก็บเครดิตสะสมทั้งหมดกลับข้อมูลหลัก เพื่อให้คงอยู่หลังออกจากด่าน
-        if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
-        {
-            GameData.Instance.selectedPlayer.SetCredit(PlayerCredit);
-        }
+        PlayerStateProgressCoordinator.SyncPersistentCredit(this);
 
         // ✅ รีเซ็ตความก้าวหน้าภายในด่าน (เลเวล/EXP/Win) เมื่อแพ้
         ResetInStageProgress();
@@ -482,9 +457,7 @@ public class PlayerState : MonoBehaviour
 
         if (sourceData != null)
         {
-            PlayerLevel = sourceData.level;
-            CurrentExp = sourceData.currentExp;
-            MaxExp = sourceData.maxExp > 0 ? sourceData.maxExp : 100;
+            PlayerStateProgressCoordinator.ApplyPersistentProgressToRuntime(this, sourceData);
             MaxHealth = sourceData.GetMaxHealth();
             PlayerHealth = MaxHealth;
             CurrentAttack = sourceData.attackDamage;
@@ -493,9 +466,7 @@ public class PlayerState : MonoBehaviour
         }
         else
         {
-            PlayerLevel = 1;
-            CurrentExp = 0;
-            MaxExp = Mathf.Max(MaxExp, 100);
+            PlayerStateProgressCoordinator.ApplyPersistentProgressToRuntime(this, null);
             PlayerHealth = Mathf.Max(PlayerHealth, 1);
             CurrentSpeed = Mathf.Max(CurrentSpeed, 0);
             CurrentDefense = Mathf.Max(CurrentDefense, 0);

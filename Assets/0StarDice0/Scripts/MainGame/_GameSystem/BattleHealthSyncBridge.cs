@@ -119,28 +119,11 @@ public static class BattleHealthSyncBridge
 
         if (GameData.Instance != null)
         {
-            // KISS: เขียนกลับตัวข้อมูลถาวรโดยตรง (previousSelectedPlayerData)
-            // เพื่อกันกรณี GameData.selectedPlayer ยังชี้ runtime clone ระหว่าง cleanup
-            PlayerData persistentTarget = previousSelectedPlayerData != null
-                ? previousSelectedPlayerData
-                : GameData.Instance.selectedPlayer;
-
-            if (persistentTarget != null)
-            {
-                persistentTarget.SetCredit(syncedCredit);
-                persistentTarget.level = currentPlayer.PlayerLevel;
-                persistentTarget.currentExp = currentPlayer.CurrentExp;
-                persistentTarget.maxExp = currentPlayer.MaxExp;
-            }
-
-            // กันค่าใน runtime selectedPlayer ไม่ตรงระหว่างเปลี่ยน scene
-            if (GameData.Instance.selectedPlayer != null && GameData.Instance.selectedPlayer != persistentTarget)
-            {
-                GameData.Instance.selectedPlayer.SetCredit(syncedCredit);
-                GameData.Instance.selectedPlayer.level = currentPlayer.PlayerLevel;
-                GameData.Instance.selectedPlayer.currentExp = currentPlayer.CurrentExp;
-                GameData.Instance.selectedPlayer.maxExp = currentPlayer.MaxExp;
-            }
+            GameData.Instance.SetSelectedPlayerCredit(syncedCredit);
+            GameData.Instance.SetSelectedPlayerLevelProgress(
+                currentPlayer.PlayerLevel,
+                currentPlayer.CurrentExp,
+                currentPlayer.MaxExp);
         }
 
         Debug.Log($"[BattleHealthSyncBridge] Synced runtime battle rewards -> Credit:{syncedCredit}, Lv:{currentPlayer.PlayerLevel}, EXP:{currentPlayer.CurrentExp}/{currentPlayer.MaxExp}");
@@ -214,6 +197,7 @@ public static class BattleHealthSyncBridge
         runtimeData.level = Mathf.Max(1, currentPlayer.PlayerLevel);
         runtimeData.currentExp = Mathf.Max(0, currentPlayer.CurrentExp);
         runtimeData.maxExp = Mathf.Max(1, currentPlayer.MaxExp);
+        runtimeData.SetCredit(currentPlayer.PlayerCredit);
 
         return runtimeData;
     }
