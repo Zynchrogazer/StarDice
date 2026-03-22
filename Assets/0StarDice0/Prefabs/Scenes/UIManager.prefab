@@ -68,6 +68,7 @@ GameObject:
   - component: {fileID: 4368973437954284956}
   - component: {fileID: 4899641596940858081}
   - component: {fileID: 8404951470289726877}
+  - component: {fileID: 5108979340304688292}
   m_Layer: 0
   m_Name: UIManager
   m_TagString: Untagged
@@ -109,6 +110,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   elementPanelRegistry: {fileID: 8404951470289726877}
   fallbackPanelRefs: {fileID: 0}
+  globalHudRefs: {fileID: 5108979340304688292}
   debuffIconPrefab: {fileID: 0}
   debuffIconSize: {x: 64, y: 64}
   burnDebuffSprite: {fileID: 695775810, guid: 080cb6d98b00c2645b2c41df5f69bc78, type: 3}
@@ -138,6 +140,25 @@ MonoBehaviour:
     panelRefs: {fileID: 0}
   - element: 4
     panelRefs: {fileID: 0}
+--- !u!114 &5108979340304688292
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 950561801771189057}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a293c1a130ef4b8fa4ad2d65ab62c5aa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  currentHpText: {fileID: 0}
+  creditText: {fileID: 0}
+  levelText: {fileID: 0}
+  debuffLegacyText: {fileID: 0}
+  debuffIconContainer: {fileID: 0}
+  debuffTooltipRoot: {fileID: 0}
+  debuffTooltipText: {fileID: 0}
 --- !u!1 &1885222399592981739
 GameObject:
   m_ObjectHideFlags: 0

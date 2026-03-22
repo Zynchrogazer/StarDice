@@ -5,7 +5,10 @@
 - Make element-to-panel binding explicit instead of relying on scene-wide discovery.
 - Keep `PlayerUIController` focused on orchestration only.
 - Separate panel references, stat presentation, and debuff presentation by responsibility.
-- Support split UI roots (status, HUD, quest, shop, debuff) without making the runtime binding flow hard to understand.
+- Support split ownership cleanly:
+  - element status panel
+  - shared HUD
+  - existing owners for shop / quest
 
 ## Current Runtime Data Flow
 
@@ -33,15 +36,27 @@ Responsibility:
 
 - Hold references for one element's UI sections:
   - status button
-  - HUD
-  - debuff
 - Optionally auto-fill missing references from the configured search roots.
 
 Why:
 
 - One component answers the question: “Which text belongs to this element's UI?”
 
-### 3. `PlayerStatsPanelPresenter`
+### 3. `PlayerGlobalHudRefs` + `PlayerGlobalHudPresenter`
+
+Responsibility:
+
+- Hold and render shared HUD values that are not per-element:
+  - current HP
+  - credit
+  - level
+  - debuff display / tooltip
+
+Why:
+
+- Shared HUD should not be duplicated across every element panel refs component.
+
+### 4. `PlayerStatsPanelPresenter`
 
 Responsibility:
 
@@ -49,27 +64,27 @@ Responsibility:
 
 Why:
 
-- Keeps formatting and display rules out of `PlayerUIController`.
+- Keeps element status formatting and display rules out of `PlayerUIController`.
 
-### 4. `PlayerDebuffPresenter`
+### 5. `PlayerDebuffPresenter`
 
 Responsibility:
 
 - Build and render debuff state.
-- Manage sprite icons / fallback rich text / tooltips.
+- Manage sprite icons / fallback rich text / tooltips on the shared HUD.
 
 Why:
 
 - Debuff UI changes should not force unrelated changes in the general player UI controller.
 
-### 5. `PlayerUIController`
+### 6. `PlayerUIController`
 
 Responsibility:
 
 - Resolve the player.
 - Resolve the selected element.
 - Ask the registry for the matching panel refs.
-- Call presenters.
+- Call the element presenter, shared HUD presenter, and debuff presenter.
 
 Why:
 
@@ -93,6 +108,7 @@ Why:
 - Add one `PlayerStatusPanelRefs` per element root in Unity.
 - Register each one into `ElementStatusPanelRegistry`.
 - Rebind only the element-owned UI explicitly in the Inspector.
+- Bind shared HUD and shared debuff once through `PlayerGlobalHudRefs`.
 - Leave shop credit with `ShopManager` and quest progress with `NormaUIManager`.
 
 ### Phase B3 - Reduce fallback complexity
@@ -109,11 +125,12 @@ Why:
 For each element panel:
 
 1. Add `PlayerStatusPanelRefs`.
-2. Bind the element-owned UI sections only: status button, HUD, debuff.
+2. Bind the element-owned UI sections only: status button.
 3. Add the refs component to `ElementStatusPanelRegistry`.
 
 For the main UI controller object:
 
 1. Assign `ElementStatusPanelRegistry`.
-2. Assign debuff sprites / optional prefab.
-3. Keep fallback refs only for legacy scenes.
+2. Assign `PlayerGlobalHudRefs` (HP / Credit / Level / Debuff).
+3. Assign debuff sprites / optional prefab.
+4. Keep fallback refs only for legacy scenes.

@@ -7,6 +7,7 @@ public class PlayerUIController : MonoBehaviour
 
     [Header("Legacy/Fallback UI References")]
     [SerializeField] private PlayerStatusPanelRefs fallbackPanelRefs;
+    [SerializeField] private PlayerGlobalHudRefs globalHudRefs;
 
     [Header("Debuff Presentation")]
     public GameObject debuffIconPrefab;
@@ -59,10 +60,14 @@ public class PlayerUIController : MonoBehaviour
     private void RefreshUI()
     {
         if (boundPanelRefs == null)
+        {
+            PlayerGlobalHudPresenter.Present(globalHudRefs, myPlayer);
             return;
+        }
 
         PlayerStatsPanelPresenter.Present(boundPanelRefs, myPlayer);
-        debuffPresenter.Present(boundPanelRefs, myPlayer);
+        PlayerGlobalHudPresenter.Present(globalHudRefs, myPlayer);
+        debuffPresenter.Present(globalHudRefs, myPlayer);
     }
 
     private void EnsureBindings()
