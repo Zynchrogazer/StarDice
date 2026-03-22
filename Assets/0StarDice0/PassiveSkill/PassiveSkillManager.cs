@@ -129,18 +129,16 @@ public class PassiveSkillManager : MonoBehaviour
             }
 
             player.PlayerCredit -= amount;
-            GameData.Instance.selectedPlayer.SetCredit(player.PlayerCredit);
             onSuccess?.Invoke();
             return true;
         }
 
-        PlayerData selectedPlayer = GameData.Instance.selectedPlayer;
-        if (selectedPlayer.Credit < amount)
+        if (GameData.Instance.GetSelectedPlayerCredit() < amount)
         {
             return false;
         }
 
-        selectedPlayer.SetCredit(selectedPlayer.Credit - amount);
+        GameData.Instance.SetSelectedPlayerCredit(GameData.Instance.GetSelectedPlayerCredit() - amount);
         onSuccess?.Invoke();
         return true;
     }

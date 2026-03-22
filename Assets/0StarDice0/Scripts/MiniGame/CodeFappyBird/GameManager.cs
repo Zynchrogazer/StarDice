@@ -110,17 +110,7 @@ public class GameManager : MonoBehaviour
         if (score >= 6000) 
         {
             rewardAmount = 500;
-if (GameTurnManager.CurrentPlayer != null)
-{
-    PlayerState p = GameTurnManager.CurrentPlayer.GetComponent<PlayerState>();
-    if (p != null) p.PlayerCredit += rewardAmount;
-}
-
-
-if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
-{
-    GameData.Instance.selectedPlayer.AddCredit(rewardAmount);
-}
+MiniGameRewardService.TryGrantFixedCreditReward(rewardAmount, "CodeFappyBird/GameManager");
             if (roll <= 20) 
             {
                 EquipmentManager.Instance.UnlockItem(KnightSword);
@@ -159,17 +149,7 @@ if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
         else if (score >= 4000) 
         {
             rewardAmount = 300;
-if (GameTurnManager.CurrentPlayer != null)
-{
-    PlayerState p = GameTurnManager.CurrentPlayer.GetComponent<PlayerState>();
-    if (p != null) p.PlayerCredit += rewardAmount;
-}
-
-
-if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
-{
-    GameData.Instance.selectedPlayer.AddCredit(rewardAmount);
-}
+MiniGameRewardService.TryGrantFixedCreditReward(rewardAmount, "CodeFappyBird/GameManager");
             if (roll <= 40) 
             {
                 EquipmentManager.Instance.UnlockItem(HearthNeckless);
@@ -191,17 +171,7 @@ if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
         else if (score >= 2000) 
         {
             rewardAmount = 100;
-if (GameTurnManager.CurrentPlayer != null)
-{
-    PlayerState p = GameTurnManager.CurrentPlayer.GetComponent<PlayerState>();
-    if (p != null) p.PlayerCredit += rewardAmount;
-}
-
-
-if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
-{
-    GameData.Instance.selectedPlayer.AddCredit(rewardAmount);
-}
+MiniGameRewardService.TryGrantFixedCreditReward(rewardAmount, "CodeFappyBird/GameManager");
             if (roll <= 20) 
             {
                 EquipmentManager.Instance.UnlockItem(WhiteFeather);
@@ -237,4 +207,5 @@ if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
             showImage.gameObject.SetActive(false);
         }
     }
+
 }

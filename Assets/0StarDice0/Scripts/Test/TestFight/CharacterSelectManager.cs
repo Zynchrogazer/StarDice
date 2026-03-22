@@ -1,8 +1,27 @@
 using UnityEngine;
+using UnityEngine.Serialization;
+
 
 public class CharacterSelectManager : MonoBehaviour
 {
-    public PlayerData selectedPlayer;
+    [FormerlySerializedAs("selectedPlayer")]
+    [SerializeField] private PlayerData defaultSelectedPlayer;
+
+    public PlayerData SelectedPlayer
+    {
+        get => GameData.Instance != null ? GameData.Instance.SelectedPlayer : defaultSelectedPlayer;
+        private set
+        {
+            if (GameData.Instance != null)
+            {
+                GameData.Instance.SetSelectedPlayer(value);
+            }
+            else
+            {
+                defaultSelectedPlayer = value;
+            }
+        }
+    }
 
     private void Awake()
     {
@@ -12,35 +31,14 @@ public class CharacterSelectManager : MonoBehaviour
             return;
         }
 
-        SyncWithGameData();
+        if (GameData.Instance != null && GameData.Instance.SelectedPlayer == null && defaultSelectedPlayer != null)
+        {
+            GameData.Instance.SetSelectedPlayer(defaultSelectedPlayer);
+        }
     }
 
     public void SelectCharacter(PlayerData player)
     {
-        selectedPlayer = player;
-
-        if (GameData.Instance != null)
-        {
-            GameData.Instance.SetSelectedPlayer(player);
-        }
-    }
-
-    private void SyncWithGameData()
-    {
-        if (GameData.Instance == null)
-        {
-            return;
-        }
-
-        if (GameData.Instance.selectedPlayer != null)
-        {
-            selectedPlayer = GameData.Instance.selectedPlayer;
-            return;
-        }
-
-        if (selectedPlayer != null)
-        {
-            GameData.Instance.SetSelectedPlayer(selectedPlayer);
-        }
+        SelectedPlayer = player;
     }
 }

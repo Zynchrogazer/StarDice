@@ -223,9 +223,9 @@ public class ChangeSceneButton : MonoBehaviour
                 continue;
             }
 
-            if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
+            if (GameData.Instance != null && GameData.Instance.selectedPlayer == null)
             {
-                GameData.Instance.selectedPlayer.SetCredit(player.PlayerCredit);
+                GameData.Instance.SetSelectedPlayerCredit(player.PlayerCredit);
             }
 
             break;

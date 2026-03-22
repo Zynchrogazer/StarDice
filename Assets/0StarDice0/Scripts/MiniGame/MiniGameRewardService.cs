@@ -11,7 +11,11 @@ public static class MiniGameRewardService
 
     public static bool TryGrantCreditReward(int score, string sourceTag)
     {
-        int reward = CalculateCreditReward(score);
+        return TryGrantFixedCreditReward(CalculateCreditReward(score), sourceTag);
+    }
+
+    public static bool TryGrantFixedCreditReward(int reward, string sourceTag)
+    {
         if (reward <= 0) return false;
 
         GameObject[] taggedObjects = GameObject.FindGameObjectsWithTag("Player");
@@ -24,12 +28,14 @@ public static class MiniGameRewardService
 
             player.PlayerCredit += reward;
 
-            if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
-            {
-                GameData.Instance.selectedPlayer.AddCredit(reward);
-            }
+            Debug.Log($"[MiniGameReward] {sourceTag}: Reward +{reward} credit");
+            return true;
+        }
 
-            Debug.Log($"[MiniGameReward] {sourceTag}: Reward +{reward} credit (score={score})");
+        if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
+        {
+            GameData.Instance.AddSelectedPlayerCredit(reward);
+            Debug.Log($"[MiniGameReward] {sourceTag}: Reward +{reward} credit via GameData fallback");
             return true;
         }
 

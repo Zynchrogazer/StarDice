@@ -152,7 +152,12 @@ public class MainMenuController : MonoBehaviour
                 continue;
             }
 
-            player.SetCredit(clampedCredit);
+            PlayerProgressService.ResetProgressToDefaults(player, clampedCredit);
+        }
+
+        if (GameData.Instance != null)
+        {
+            GameData.Instance.EnsureSelectedPlayerProgressLoaded();
         }
     }
 

@@ -134,7 +134,7 @@ public class SkillManager : MonoBehaviour
 
         if (GameData.Instance?.selectedPlayer != null)
         {
-            return GameData.Instance.selectedPlayer.Credit;
+            return GameData.Instance.GetSelectedPlayerCredit();
         }
 
         return 0;
@@ -156,22 +156,18 @@ public class SkillManager : MonoBehaviour
             }
 
             player.PlayerCredit -= amount;
-            if (GameData.Instance?.selectedPlayer != null)
-            {
-                GameData.Instance.selectedPlayer.SetCredit(player.PlayerCredit);
-            }
             return true;
         }
 
         if (GameData.Instance?.selectedPlayer != null)
         {
-            PlayerData selectedPlayer = GameData.Instance.selectedPlayer;
-            if (selectedPlayer.Credit < amount)
+            int selectedPlayerCredit = GameData.Instance.GetSelectedPlayerCredit();
+            if (selectedPlayerCredit < amount)
             {
                 return false;
             }
 
-            selectedPlayer.SetCredit(selectedPlayer.Credit - amount);
+            GameData.Instance.SetSelectedPlayerCredit(selectedPlayerCredit - amount);
             return true;
         }
 
