@@ -12,7 +12,7 @@ public class QuickMathManager : MonoBehaviour
     public TextMeshProUGUI scoreText;
     public GameObject gameOverPanel;
     public TextMeshProUGUI finalScoreText;
-
+public Button exitButton;
     private float timer = 60f;
     private int score = 0;
     private int difficulty = 1;
@@ -143,7 +143,7 @@ public class QuickMathManager : MonoBehaviour
         scoreText.text = "Score: " + score;
     }
 
-    void EndGame()
+  void EndGame()
     {
         isGameActive = false;
         gameOverPanel.SetActive(true);
@@ -151,6 +151,22 @@ public class QuickMathManager : MonoBehaviour
 
         // เรียกใช้งานการสุ่มแจกไอเทมตอนจบเกม
         GiveRewardBasedOnScore(); 
+
+        // 🟢 เพิ่มส่วนนี้เข้าไปครับ เพื่อสั่งให้ปุ่มทำงาน
+        if (exitButton != null) 
+        {
+            // ล้างคำสั่งเก่าออกก่อนกันเบิ้ล
+            exitButton.onClick.RemoveAllListeners(); 
+            exitButton.onClick.AddListener(() => 
+            {
+                // 1. คืนค่าเวลา (ถ้าในเกมนี้มีการใช้ Time.timeScale = 0)
+                Time.timeScale = 1f; 
+
+                // 2. เรียกใช้ Service กลับหน้ากระดานหลัก
+                // (ใส่ 0, 0 เพราะเราแจกของใน GiveRewardBasedOnScore() ไปแล้ว)
+                BattleResultFlowService.HandleRewardAndReturnToBoard(0, 0,true);
+            });
+        }
     }
 
    int rewardAmount = 0;
@@ -200,6 +216,7 @@ MiniGameRewardService.TryGrantFixedCreditReward(rewardAmount, "CodeMath/QuickMat
                 showImage.gameObject.SetActive(false); 
             }
         }
+        
         else if (score >= 1000) 
         {
             rewardAmount = 300;
@@ -210,7 +227,7 @@ MiniGameRewardService.TryGrantFixedCreditReward(rewardAmount, "CodeMath/QuickMat
                 showImage.sprite = itemImages[5]; 
                 showImage.gameObject.SetActive(true);
             }
-            else if(roll <= 80 && roll> 41)// 41-100 (60%)
+            else if(roll <= 80 )// 41-100 (60%)
             {
                 EquipmentManager.Instance.UnlockItem(RecoverRing);
                 showImage.sprite = itemImages[6]; 

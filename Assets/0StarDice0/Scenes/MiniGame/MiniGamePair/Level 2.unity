@@ -648,18 +648,6 @@ MonoBehaviour:
   front: {fileID: 1947170620}
   back: {fileID: 1822045459}
   isMatched: 0
---- !u!114 &607240797
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 607240794}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dbb5c4176c452ed4ead0827c182e7f88, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &666196443
 GameObject:
   m_ObjectHideFlags: 0
@@ -944,6 +932,7 @@ GameObject:
   - component: {fileID: 900383685}
   - component: {fileID: 900383684}
   - component: {fileID: 900383687}
+  - component: {fileID: 900383688}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -1069,6 +1058,15 @@ MonoBehaviour:
     m_MipBias: 0
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
+--- !u!45 &900383688
+Skybox:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900383683}
+  m_Enabled: 1
+  m_CustomSkybox: {fileID: 2100000, guid: 6bd7edeec0fcfcc4a9120f5096056370, type: 2}
 --- !u!1 &1135051844
 GameObject:
   m_ObjectHideFlags: 0
@@ -2022,9 +2020,6 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 1135051845}
     m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 1990085580252242284, guid: ce19009ab0ff8564199aa7c11c75982e, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 607240797}
     - targetCorrespondingSourceObject: {fileID: 1990085580252242284, guid: ce19009ab0ff8564199aa7c11c75982e, type: 3}
       insertIndex: -1
       addedObject: {fileID: 607240796}

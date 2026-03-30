@@ -206,8 +206,18 @@ public class GameManagerLevel3 : MonoBehaviour
 
     void GoToNextScene()
     {
-        ScoreManager.Instance.ResetScore();
-        UnityEngine.SceneManagement.SceneManager.LoadScene(1); 
+        // 1. เคลียร์คะแนนเดิมของคุณ
+        if (ScoreManager.Instance != null)
+        {
+            ScoreManager.Instance.ResetScore();
+        }
+
+        // 🟢 2. คืนค่าเวลา (กันเหนียว เผื่อมีสคริปต์ไหนไปหยุดเวลาไว้)
+        Time.timeScale = 1f;
+
+        // 🟢 3. เรียกใช้ระบบวาร์ปกลับกระดานหลักดั้งเดิมของคุณ
+        // (ส่ง 0, 0 เพราะด่านนี้น่าจะแจกของเสร็จไปแล้วในโค้ดส่วนอื่น)
+        BattleResultFlowService.HandleRewardAndReturnToBoard(0, 0,true); 
     }
 
     // ---------------------------------------------------------

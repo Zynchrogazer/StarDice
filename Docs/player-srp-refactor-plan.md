@@ -96,6 +96,93 @@ The codebase now has the core ownership split in place:
 2. Move orchestration into services/facades.
 3. Remove fallback chains where a clear owner can be injected.
 
+## Reference checklist by phase (Phase 1 -> Latest)
+
+Use this section as a copy/paste reference when tracking rollout status in notes, tickets, or QA sheets.
+
+### Phase 1 checklist - Replace direct progress usage in call sites
+**Code checklist**
+- [ ] Replace selected-player credit reads with `GameData.GetSelectedPlayerCredit()`.
+- [ ] Replace selected-player credit writes with `GameData.SetSelectedPlayerCredit()`, `AddSelectedPlayerCredit()`, or `TrySpendSelectedPlayerCredit()`.
+- [ ] Remove new direct usages of `GameData.selectedPlayer.Credit`, `SetCredit`, `AddCredit`, `TrySpendCredit` from gameplay/UI code.
+- [ ] Keep `PlayerData` compatibility wrappers only for unchanged legacy code paths.
+
+**Files/features to re-check**
+- [ ] shop and intermission credit display
+- [ ] skill purchase / passive skill spending
+- [ ] random unlock / shop pack spending
+- [ ] HUD credit display
+- [ ] mini-game reward credit grant
+
+**QA checklist**
+- [ ] Spend credit in shop and verify persistent credit decreases once.
+- [ ] Earn credit from mini-game and verify board/intermission show the same value.
+- [ ] Re-enter scene and verify selected-player credit stays consistent.
+
+### Phase 2 checklist - Extract progress coordination from `GameData`
+**Code checklist**
+- [ ] `GameData` exposes facade methods only; it should not own raw `PlayerPrefs` logic.
+- [ ] `PlayerProgressService` owns selected-player load/save/reset behavior.
+- [ ] Reset/default-progress flow goes through the service, not ad-hoc scene code.
+- [ ] Selected-player progress can be reloaded by calling `EnsureSelectedPlayerProgressLoaded()`.
+
+**Files/features to re-check**
+- [ ] `GameData` lifecycle (`Awake`, selected-player assignment, scene persistence)
+- [ ] `PlayerProgressService` load/reset paths
+- [ ] main menu reset/new-run flow
+
+**QA checklist**
+- [ ] Start game from normal entry scene and verify `GameData` survives scene changes.
+- [ ] Reset progress and verify selected player returns to starting credit/level/EXP.
+- [ ] Swap selected player and verify the newly selected player's progress loads correctly.
+
+### Phase 3 checklist - Extract persistence lifecycle from `PlayerState`
+**Code checklist**
+- [ ] `PlayerState` resolves persistent progress via `PlayerStateProgressCoordinator`.
+- [ ] Snapshot capture/restore uses `PlayerProgressSnapshot` instead of mutating `PlayerData` directly.
+- [ ] Runtime HP/stats stay local to `PlayerState`.
+- [ ] Defeat / board reset / scene return flow restores level/EXP through the coordinator path.
+
+**Files/features to re-check**
+- [ ] `PlayerState` load and reset flow
+- [ ] `PlayerStateProgressCoordinator` resolve / capture / restore flow
+- [ ] battle return and defeat handling
+
+**QA checklist**
+- [ ] Enter board scene and verify level/EXP load from persistent progress.
+- [ ] Lose/exit/reset and verify snapshot restore behaves as expected.
+- [ ] Return from battle and confirm runtime HP sync does not corrupt persistent level/EXP.
+
+### Phase 4 checklist - Thin managers/presenters
+**Code checklist**
+- [ ] `ShopUIManager` becomes a thin view/presenter host only.
+- [ ] `GameSetupManager` becomes a scene adapter that calls one setup/sync service.
+- [ ] `CharacterSelectManager` / `CharacterSelectUI` use a dedicated selection service.
+- [ ] `BattleHealthSyncBridge` is split into smaller adapters/services and reduced reflection-heavy paths.
+- [ ] `PlayerGlobalHudPresenter` / `PlayerController` stay as thin runtime adapters only.
+
+**Files/features to re-check**
+- [ ] shop HUD binding
+- [ ] board setup flow
+- [ ] character selection flow
+- [ ] battle result panel binding
+- [ ] legacy battle scene integration
+
+**QA checklist**
+- [ ] All scenes still work without relying on hidden fallback chains.
+- [ ] UI refresh is event-driven where practical; no unnecessary polling remains.
+- [ ] New scene setup is understandable from Inspector wiring alone.
+
+### Latest manual regression checklist (use before sign-off)
+- [ ] Select a player from the main character select flow.
+- [ ] Enter a board scene and verify HUD HP / credit / level.
+- [ ] Spend credit in intermission/shop and confirm value persists.
+- [ ] Earn credit from at least one mini-game and verify the same selected player receives it.
+- [ ] Enter a battle and return to the board.
+- [ ] Verify battle HP sync works and reward credit/EXP/level sync back correctly.
+- [ ] Restart the game / re-enter Play Mode and verify the same selected-player progress reloads.
+- [ ] Run isolated-scene fallback tests only where explicitly supported (shop, character select, board setup).
+
 ## Concrete refactor backlog by script
 
 ### Priority 1 - `ShopUIManager`

@@ -402,6 +402,21 @@ public static class BattleHealthSyncBridge
 
     private static bool IsBattleScene(Scene scene)
     {
+        // ---------------------------------------------------------
+        // 🟢 1. เพิ่มการเช็คชื่อฉากว่าเป็น Minigame หรือไม่
+        // ---------------------------------------------------------
+        string sName = scene.name.ToLower();
+        if (sName == "minigamefappy" || 
+            sName == "level 1" || 
+            sName == "minigamespotmemory" || 
+            sName == "minigamemath")
+        {
+            return true; // ถ้าเป็น 1 ใน 4 เกมนี้ ให้สคริปต์ทำงานและผูกปุ่มกลับกระดานให้เลย!
+        }
+
+        // ---------------------------------------------------------
+        // ⚔️ 2. เช็คว่าเป็นฉากต่อสู้ปกติหรือไม่ (โค้ดค้นหา BattleSystem เดิม)
+        // ---------------------------------------------------------
         foreach (GameObject root in scene.GetRootGameObjects())
         {
             if (root == null) continue;

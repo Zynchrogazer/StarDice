@@ -86,7 +86,7 @@ public class PlayerPathWalker : MonoBehaviour
         StartCoroutine(MoveTurnCoroutine());
     }
 
-    private IEnumerator MoveTurnCoroutine()
+   private IEnumerator MoveTurnCoroutine()
     {
         isExecutingTurn = true;
         
@@ -99,28 +99,68 @@ public class PlayerPathWalker : MonoBehaviour
             List<Transform> choices = routeManager.GetAllConnectedNodes(CurrentNodeTransform);
             Transform nextNode = null;
 
-            if (choices.Count == 0) break;
-            else if (choices.Count == 1) nextNode = choices[0];
-            else
+            // -----------------------------------------------------------------------
+            // 🌪️ ลูกเล่น MainWind: AI เดินย้อนศร (ถอยหลัง)
+            // -----------------------------------------------------------------------
+            bool isMainWindGimmick = (myState != null && myState.isAI && SceneManager.GetActiveScene().name == "MainWind");
+
+            if (isMainWindGimmick)
             {
-                // === ระบบทางแยก ===
-                if (myState != null && myState.isAI)
+                // ค้นหาช่องทาง "ถอยหลัง" (สแกนหาว่าช่องไหนมีเส้นเชื่อมโยงมาหาช่องที่เรายืนอยู่)
+                Transform backwardNode = null;
+                foreach (var nc in routeManager.nodeConnections)
                 {
-                    nextNode = choices[Random.Range(0, choices.Count)];
-                    yield return new WaitForSeconds(0.5f);
+                    if (nc != null && nc.connectedNodes.Contains(CurrentNodeTransform))
+                    {
+                        backwardNode = nc.node;
+                        break; // เจอทางถอยหลังแล้ว หยุดหา
+                    }
+                }
+
+                if (backwardNode != null)
+                {
+                    nextNode = backwardNode; // เซ็ตเป้าหมายเป็นช่องด้านหลัง
                 }
                 else
                 {
-                    if (choiceUIManager != null)
+                    // ถ้าถอยไม่ได้แล้ว (เช่น ถอยจนมาสุดที่ช่อง Start) 
+                    // ให้มันยอมแพ้แล้วเดินไปข้างหน้าแทน
+                    nextNode = choices.Count > 0 ? choices[Random.Range(0, choices.Count)] : null;
+                }
+
+                yield return new WaitForSeconds(0.5f); // AI ทำเป็นคิดแป๊บนึง
+            }
+            else
+            {
+                // -----------------------------------------------------------------------
+                // 🚶‍♂️ ระบบทางแยกปกติ (เดินไปข้างหน้า) สำหรับคนเล่น และ AI ในฉากอื่นๆ
+                // -----------------------------------------------------------------------
+                if (choices.Count == 0) break;
+                else if (choices.Count == 1) nextNode = choices[0];
+                else
+                {
+                    // === ระบบทางแยก ===
+                    if (myState != null && myState.isAI)
                     {
-                        chosenNodeFromUI = null;
-                        choiceUIManager.DisplayChoices(choices, OnPathChosen);
-                        yield return new WaitUntil(() => chosenNodeFromUI != null);
-                        nextNode = chosenNodeFromUI;
+                        nextNode = choices[Random.Range(0, choices.Count)];
+                        yield return new WaitForSeconds(0.5f);
                     }
-                    else nextNode = choices[0];
+                    else
+                    {
+                        if (choiceUIManager != null)
+                        {
+                            chosenNodeFromUI = null;
+                            choiceUIManager.DisplayChoices(choices, OnPathChosen);
+                            yield return new WaitUntil(() => chosenNodeFromUI != null);
+                            nextNode = chosenNodeFromUI;
+                        }
+                        else nextNode = choices[0];
+                    }
                 }
             }
+
+            // ถ้าไม่มีทางให้เดินแล้ว (สุดแมพ)
+            if (nextNode == null) break; 
 
             int nextTileID = routeManager.ExtractNumberFromName(nextNode.name);
 
@@ -142,7 +182,7 @@ public class PlayerPathWalker : MonoBehaviour
         }
 
         isExecutingTurn = false;
-        CheckFinalNodeEvent(); // ✅ เดินจบแล้ว ไปเช็ค Event ต่อ
+        CheckFinalNodeEvent(); 
     }
 
     private void CheckFinalNodeEvent()
@@ -293,6 +333,8 @@ public class PlayerPathWalker : MonoBehaviour
         {
             Debug.LogError("[Card Effect] ไม่พบ Node ปลายทางใน RouteManager! ระบบเดินอาจผิดพลาด");
         }
+
+        CheckFinalNodeEvent();
 
         // 3. (Optional) Play Sound
         // AudioManager.Instance.PlaySfx("WarpSound");

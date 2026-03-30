@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Collections;
-
+using System.Collections.Generic;
 public class BoardManager : MonoBehaviour
 {
     // 🆔 บัตรประชาชน: สุ่มเลขประจำตัวให้ BoardManager ตัวนี้
@@ -99,28 +99,53 @@ public class BoardManager : MonoBehaviour
     }
 
     // 🟢 รับ Event ตกช่อง -> ตัดสินใจว่าจะทำอะไรต่อ
-    private void HandleTileEffect(NodeConnection nodeData, GameObject playerObject)
+   private void HandleTileEffect(NodeConnection nodeData, GameObject playerObject)
     {
-        // 🔥 ให้มันแสดงเลข ID ตอนทำงานด้วย
         Debug.Log($"[BoardManager #{myID}] 🏁 {playerObject.name} landed on Tile ID: {nodeData.tileID}");
         
-
-        // -----------------------------------------------------------------------
-        // ⚔️ 1. เงื่อนไขที่ 1: ตกใส่ผู้เล่น (PvP)
-        // -----------------------------------------------------------------------
-        // อันนี้ AI ต้องทำเสมอ (ตามโจทย์) ถ้าเจอคนยืนอยู่ สู้ทันที!
         if (CheckForBattle(playerObject, nodeData.tileID))
         {
-            return; // ตัดเข้าฉากสู้ -> จบฟังก์ชัน
+            return; 
         }
 
-        // เช็คว่าเป็น AI หรือเปล่า?
         PlayerState pState = playerObject.GetComponent<PlayerState>();
         bool isAI = (pState != null && pState.isAI);
 
         // -----------------------------------------------------------------------
-        // 🔮 2. ตัดสินใจตามประเภทช่อง
+        // 🟢 ลูกเล่นพิเศษฉาก MainWater: AI เหยียบช่อง iceeffect แล้วแยกร่าง!
         // -----------------------------------------------------------------------
+       if (isAI && nodeData.eventName == "iceeffect")
+        {
+            string currentSceneName = SceneManager.GetActiveScene().name;
+            if (currentSceneName == "MainWater")
+            {
+                // 1. นับจำนวน AI ทั้งหมดที่มีอยู่บนกระดานตอนนี้
+                int currentAICount = 0;
+                PlayerState[] allPlayersInScene = FindObjectsOfType<PlayerState>();
+                foreach (PlayerState p in allPlayersInScene)
+                {
+                    if (p.isAI) currentAICount++;
+                }
+
+                // 2. เช็คเงื่อนไข: ต้องไม่ใช่ร่างโคลนมาเหยียบซ้ำ และ AI รวมต้องน้อยกว่า 3 ตัว
+                if (!playerObject.name.EndsWith("_Clone"))
+                {
+                    if (currentAICount < 3)
+                    {
+                        Debug.Log($"❄️ [MainWater Gimmick] AI เหยียบช่องน้ำแข็ง! กำลังใช้วิชาแยกเงา... (ปัจจุบันมี AI {currentAICount}/3 ตัว)");
+                        CloneAI(playerObject, nodeData.tileID);
+                    }
+                    else
+                    {
+                        Debug.Log("❄️ [MainWater Gimmick] AI ถึงขีดจำกัดแล้ว (3 ตัว) ไม่สามารถแยกร่างเพิ่มได้อีก!");
+                    }
+                }
+                
+                // จบเทิร์นทันที ข้าม Event การลดเต๋า
+                StartCoroutine(FinishTurnRoutine());
+                return;
+            }
+        }
         switch (nodeData.type)
         {
             // กลุ่มช่องพื้นฐาน (จบเทิร์นเลย)
@@ -239,7 +264,7 @@ public class BoardManager : MonoBehaviour
         }
     }
 
-    private bool CheckForBattle(GameObject currentPlayer, int currentTileID)
+   private bool CheckForBattle(GameObject currentPlayer, int currentTileID)
     {
         PlayerPathWalker[] allPlayers = FindObjectsOfType<PlayerPathWalker>();
         foreach (var otherPlayer in allPlayers)
@@ -247,8 +272,14 @@ public class BoardManager : MonoBehaviour
             if (otherPlayer.gameObject == currentPlayer) continue;
             if (otherPlayer.currentNodeID == currentTileID)
             {
+                GameObject attacker = currentPlayer;
+                GameObject defender = otherPlayer.gameObject;
+
+                // 🟢 รวบรวมร่างโคลนกลับมาเป็นตัวเดียวก่อนตัดเข้าฉากสู้!
+                MergeAllAIClones(ref attacker, ref defender);
+
                 // เจอคนอื่นยืนช่องเดียวกัน -> สู้!
-                StartBattle(currentPlayer, otherPlayer.gameObject);
+                StartBattle(attacker, defender);
                 return true;
             }
         }
@@ -311,5 +342,89 @@ public class BoardManager : MonoBehaviour
     {
         Debug.LogError($"[BoardManager] Failed to load PvP battle scene '{battleSceneName}' additively.");
     }
+    }
+
+    // ==========================================
+    // 👥 โซนเวทมนตร์แยกร่าง/รวมร่าง AI
+    // ==========================================
+    
+    // ฟังก์ชันสำหรับแยกร่าง AI
+    private void CloneAI(GameObject originalAI, int tileID)
+    {
+        // ก๊อปปี้ตัวละครขึ้นมาใหม่
+        GameObject cloneAI = Instantiate(originalAI, originalAI.transform.position, originalAI.transform.rotation);
+        cloneAI.name = originalAI.name + "_Clone"; // เติมชื่อให้รู้ว่าเป็นร่างโคลน
+
+        // บอกร่างโคลนว่าตัวเองยืนอยู่ช่องไหน
+        PlayerPathWalker cloneWalker = cloneAI.GetComponent<PlayerPathWalker>();
+        if (cloneWalker != null)
+        {
+            cloneWalker.currentNodeID = tileID;
+        }
+
+        // ยัดร่างโคลนเข้าคิวใน GameTurnManager เพื่อให้มันทอยเต๋าเดินไล่ล่าในเทิร์นหน้าได้!
+        if (GameTurnManager.TryGet(out var turnManager))
+        {
+            PlayerState cloneState = cloneAI.GetComponent<PlayerState>();
+            if (cloneState != null)
+            {
+                turnManager.allPlayers.Add(cloneState);
+                Debug.Log($"👥 แยกร่างสำเร็จ! นำ {cloneAI.name} เข้าสู่คิวเรียบร้อย");
+            }
+        }
+    }
+
+    // ฟังก์ชันสำหรับสลายร่างโคลนทั้งหมดให้กลับมาเป็นตัวจริง
+    private void MergeAllAIClones(ref GameObject attacker, ref GameObject defender)
+    {
+        PlayerState atkState = attacker.GetComponent<PlayerState>();
+        PlayerState defState = defender.GetComponent<PlayerState>();
+
+        // ถ้าสู้กันเองระหว่างคนเล่น ไม่ต้องทำอะไร
+        bool isAiInvolved = (atkState != null && atkState.isAI) || (defState != null && defState.isAI);
+        if (!isAiInvolved) return;
+
+        PlayerState originalAI = null;
+        List<PlayerState> clones = new List<PlayerState>();
+
+        // แยกหาว่าใครคือตัวจริง ใครคือตัวโคลน
+        foreach (var p in FindObjectsOfType<PlayerState>())
+        {
+            if (p.isAI)
+            {
+                if (p.gameObject.name.EndsWith("_Clone")) clones.Add(p);
+                else originalAI = p;
+            }
+        }
+
+        if (originalAI == null || clones.Count == 0) return; // ไม่มีโคลนให้รวม
+
+        // ถ้าร่างที่เดินไปชน (Attacker) ดันเป็นโคลน ให้เอาตัวจริงมาสวมรอยแทน
+        if (atkState != null && atkState.isAI && attacker.name.EndsWith("_Clone"))
+        {
+            originalAI.transform.position = attacker.transform.position;
+            originalAI.GetComponent<PlayerPathWalker>().currentNodeID = attacker.GetComponent<PlayerPathWalker>().currentNodeID;
+            attacker = originalAI.gameObject; // สลับเป็นตัวจริง
+        }
+
+        // ถ้าร่างที่โดนชน (Defender) เป็นโคลน ให้เอาตัวจริงมาสวมรอยแทน
+        if (defState != null && defState.isAI && defender.name.EndsWith("_Clone"))
+        {
+            originalAI.transform.position = defender.transform.position;
+            originalAI.GetComponent<PlayerPathWalker>().currentNodeID = defender.GetComponent<PlayerPathWalker>().currentNodeID;
+            defender = originalAI.gameObject; // สลับเป็นตัวจริง
+        }
+
+        // เคลียร์ร่างโคลนที่เหลือทิ้งให้หมด!
+        if (GameTurnManager.TryGet(out var turnManager))
+        {
+            foreach (var clone in clones)
+            {
+                turnManager.allPlayers.Remove(clone);
+                Destroy(clone.gameObject);
+            }
+        }
+        
+        Debug.Log("💥 วิชาคลายเงา! AI ทุกตัวสลายร่างโคลนกลับมารวมที่ตัวจริง เพื่อเตรียมต่อสู้แล้ว!");
     }
 }//
