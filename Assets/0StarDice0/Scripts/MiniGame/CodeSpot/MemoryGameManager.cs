@@ -200,7 +200,7 @@ public class MemoryGameManager : MonoBehaviour
         }
     }
 
-    void EndGame()
+   void EndGame()
     {
         // ป้องกันไม่ให้ EndGame ทำงานซ้ำซ้อน
         if(gameOverPanel.activeSelf) return; 
@@ -213,17 +213,21 @@ public class MemoryGameManager : MonoBehaviour
         finalScoreText.text = "Your Score: " + score.ToString();
 
         // ---------------------------------------------------------
-        // [เพิ่มใหม่] เรียกฟังก์ชันคำนวณและแจกไอเทมตอนจบเกม
+        // [คงเดิม] เรียกฟังก์ชันคำนวณและแจกไอเทมตอนจบเกม
         GiveRewardBasedOnScore();
         // ---------------------------------------------------------
 
         nextSceneButton.onClick.RemoveAllListeners();
         nextSceneButton.onClick.AddListener(() =>
         {
-            UnityEngine.SceneManagement.SceneManager.LoadScene(1);
+            // 🟢 1. คืนเวลาให้เป็นปกติ (สำคัญมาก! ป้องกันฉากค้าง)
+            Time.timeScale = 1f;
+
+            // 🟢 2. เรียกใช้ระบบกลับกระดานดั้งเดิมของคุณ
+            // ส่ง (0, 0) เพราะเราสั่ง GiveReward... แจกของไปแล้วในบรรทัดข้างบนครับ
+            BattleResultFlowService.HandleRewardAndReturnToBoard(0, 0,true);
         });
     }
-
     void UpdateScoreUI()
     {
         if (scoreText != null)
@@ -317,25 +321,25 @@ MiniGameRewardService.TryGrantFixedCreditReward(rewardAmount, "CodeSpot/MemoryGa
             // ได้คะแนนน้อย (0 - 3999) ได้แหวน
            int roll = Random.Range(1, 101);
             
-            if (roll < 41)
+            if (roll < 21)
             {
                  EquipmentManager.Instance.UnlockItem(WhiteFeather);
                   showImage.sprite = itemImages[7]; 
                  showImage.gameObject.SetActive(true);
             }
-            else if (roll >21 && roll < 81)
+            else if (roll >21 && roll < 41)
             {
                  EquipmentManager.Instance.UnlockItem(DawnRign);
                   showImage.sprite = itemImages[8]; 
                  showImage.gameObject.SetActive(true);
             }
-             else if (roll >21 && roll < 81)
+             else if (roll >41 && roll < 61)
             {
                  EquipmentManager.Instance.UnlockItem(Armor);
                   showImage.sprite = itemImages[9]; 
                  showImage.gameObject.SetActive(true);
             }
-             else if (roll >21 && roll < 81)
+             else if (roll >61 && roll < 81)
             {
                  EquipmentManager.Instance.UnlockItem(Sword);
                   showImage.sprite = itemImages[10]; 

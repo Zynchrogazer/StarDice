@@ -676,6 +676,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1489963497}
+  - component: {fileID: 1489963498}
   m_Layer: 0
   m_Name: '[PanelSceneManager]'
   m_TagString: Untagged
@@ -698,6 +699,22 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1489963498
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1489963496}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe9cb95bfe0d0814e9a0d40a0a4f365d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  uiElementsToHide:
+  - {fileID: 530681168}
+  - {fileID: 7198492019833097922}
+  - {fileID: 715721849253333129}
 --- !u!1 &1583492657
 GameObject:
   m_ObjectHideFlags: 0
@@ -760,7 +777,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d0cb17b1ca2515940a0d62a8612e640a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  selectedPlayer: {fileID: 0}
+  defaultSelectedPlayer: {fileID: 11400000, guid: fd99dcc01dcbf8e4ab42478e31fc6b15, type: 2}
 --- !u!114 &1583492661
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -773,7 +790,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5de5245487679514998e2698520d12a7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  selectedPlayer: {fileID: 0}
+  _selectedPlayer: {fileID: 0}
+  selectedPlayerProgress:
+    playerId: 
+    credit: 0
+    level: 1
+    currentExp: 0
+    maxExp: 100
   savedDeck: []
   selectedDeck: []
   selectedCards: []
@@ -27374,9 +27397,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1583492662}
-        m_TargetAssemblyTypeName: DeckManager, Assembly-CSharp
-        m_MethodName: ConfirmDeckAndGoNextScene
+      - m_Target: {fileID: 1489963498}
+        m_TargetAssemblyTypeName: RuntimeHubController, Assembly-CSharp
+        m_MethodName: ConfirmAndGoNextScene
         m_Mode: 5
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

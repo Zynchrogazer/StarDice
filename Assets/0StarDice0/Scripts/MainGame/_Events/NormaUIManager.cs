@@ -68,13 +68,14 @@ public class NormaUIManager : MonoBehaviour
         UpdateInfoUI();
     }
 
-    private void Update()
+ private void Update()
     {
-        // ระบบอัปเดตตัวเลขแบบ Real-time: คอยดูว่าดาวหรือจำนวนชนะของผู้เล่นเปลี่ยนไปไหม
-        if (GameTurnManager.CurrentPlayer != null)
+        // 🟢 เปลี่ยนจาก GameTurnManager.CurrentPlayer เป็น GetHumanPlayer()
+        PlayerState human = GetHumanPlayer();
+        if (human != null)
         {
-            int currentStars = GameTurnManager.CurrentPlayer.PlayerStar;
-            int currentWins = GameTurnManager.CurrentPlayer.WinCount;
+            int currentStars = human.PlayerStar;
+            int currentWins = human.WinCount;
 
             // ถ้ามีการได้ดาวเพิ่ม หรือชนะเพิ่ม ให้สั่งอัปเดตหน้าจอทันที!
             if (currentStars != lastStars || currentWins != lastWins)
@@ -148,13 +149,15 @@ public void UpdateInfoUI()
             if (finalPhaseImage != null) finalPhaseImage.gameObject.SetActive(false);
         }
 
-        // --- (โค้ดดึงข้อมูลและอัปเดตตัวเลขตามปกติ) ---
         int currentStars = 0;
         int currentWins = 0;
-        if (GameTurnManager.CurrentPlayer != null)
+        
+        // 🟢 เปลี่ยนมาดึงค่าจาก GetHumanPlayer()
+        PlayerState human = GetHumanPlayer();
+        if (human != null)
         {
-            currentStars = GameTurnManager.CurrentPlayer.PlayerStar;
-            currentWins = GameTurnManager.CurrentPlayer.WinCount;
+            currentStars = human.PlayerStar;
+            currentWins = human.WinCount;
         }
 
         int nextRank = normaSystem.currentNormaRank + 1;
@@ -227,7 +230,8 @@ public void UpdateInfoUI()
         // 2. ดำเนินการส่งเควส
         if (NormaSystem.TryGet(out var normaSystem))
         {
-            PlayerState player = GameTurnManager.CurrentPlayer;
+            // 🟢 เปลี่ยนให้ดึงตัวคนเล่นมาหักทรัพยากร
+            PlayerState player = GetHumanPlayer();
             if (player != null)
             {
                 // 🟢 หักค่าทรัพยากรตามประเภทเควสที่เลือกไว้
@@ -253,5 +257,21 @@ public void UpdateInfoUI()
             // 3. สั่งอัปเลเวลของจริง! (มันจะไปเด้งหน้าต่างเลือกเควสถัดไปต่อให้อัตโนมัติ)
             normaSystem.NormaLevelUp(); 
         }
+    }
+
+    // 🟢 ฟังก์ชันนี้จะควานหา "ผู้เล่นที่เป็นคน" เท่านั้น
+    private PlayerState GetHumanPlayer()
+    {
+        if (GameTurnManager.TryGet(out var turnManager))
+        {
+            foreach (PlayerState p in turnManager.allPlayers)
+            {
+                if (!p.isAI) 
+                {
+                    return p; // เจอคนเล่นแล้ว ส่งข้อมูลกลับไปเลย!
+                }
+            }
+        }
+        return null;
     }
 }

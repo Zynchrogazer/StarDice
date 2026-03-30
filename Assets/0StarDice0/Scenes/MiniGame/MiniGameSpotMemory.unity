@@ -2309,9 +2309,33 @@ MonoBehaviour:
   wrongColor: {r: 1, g: 0, b: 0, a: 1}
   showTime: 2
   gameDuration: 60
-  gameOverPanel: {fileID: 0}
-  finalScoreText: {fileID: 0}
-  nextSceneButton: {fileID: 0}
+  gameOverPanel: {fileID: 1594930817}
+  finalScoreText: {fileID: 7562159}
+  nextSceneButton: {fileID: 2051395099}
+  itemImages:
+  - {fileID: 21300000, guid: e8d3852a2c56c412d8d062edc558ed5a, type: 3}
+  - {fileID: 21300000, guid: fb282987f1a8d854abe31fdea956eb6d, type: 3}
+  - {fileID: 21300000, guid: 7d99a1b04132a7c469a1c960bf90f53a, type: 3}
+  - {fileID: 21300000, guid: 60ea1fc4a185e6346918434b348c9531, type: 3}
+  - {fileID: 21300000, guid: 8c63f7691890fda43b180ec76e7c7aff, type: 3}
+  - {fileID: 21300000, guid: 3fe45cc5b469cae44bd818a9d149827b, type: 3}
+  - {fileID: 21300000, guid: f2c25ec43a8949a4f97735170fad1e8c, type: 3}
+  - {fileID: 21300000, guid: 498f84560c1f9f84aa58687338bc7229, type: 3}
+  - {fileID: 21300000, guid: dc1846ef57c4e5247a2cd5e71a39cdea, type: 3}
+  - {fileID: 21300000, guid: 6ac270cb5af314a42af64960c696a8a1, type: 3}
+  - {fileID: 21300000, guid: 1328fdac4f9659944ba1f9ef1a937afc, type: 3}
+  showImage: {fileID: 1790353757}
+  KnightSword: 7
+  KnightArmor: 8
+  KnightShoes: 9
+  WindLegendaryEye: 29
+  WaterGodArmor: 24
+  HearthNeckless: 6
+  RecoverRing: 5
+  WhiteFeather: 4
+  DawnRign: 3
+  Armor: 2
+  Sword: 1
 --- !u!4 &718645557
 Transform:
   m_ObjectHideFlags: 0
@@ -5726,6 +5750,8 @@ GameObject:
   - component: {fileID: 2086556140}
   - component: {fileID: 2086556139}
   - component: {fileID: 2086556138}
+  - component: {fileID: 2086556142}
+  - component: {fileID: 2086556141}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -5807,6 +5833,59 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!45 &2086556141
+Skybox:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2086556137}
+  m_Enabled: 1
+  m_CustomSkybox: {fileID: 2100000, guid: fd45c611579368249861ec05046390ea, type: 2}
+--- !u!114 &2086556142
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2086556137}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a79441f348de89743a2939f4d699eac1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_RenderShadows: 1
+  m_RequiresDepthTextureOption: 2
+  m_RequiresOpaqueTextureOption: 2
+  m_CameraType: 0
+  m_Cameras: []
+  m_RendererIndex: -1
+  m_VolumeLayerMask:
+    serializedVersion: 2
+    m_Bits: 1
+  m_VolumeTrigger: {fileID: 0}
+  m_VolumeFrameworkUpdateModeOption: 2
+  m_RenderPostProcessing: 0
+  m_Antialiasing: 0
+  m_AntialiasingQuality: 2
+  m_StopNaN: 0
+  m_Dithering: 0
+  m_ClearDepth: 1
+  m_AllowXRRendering: 1
+  m_AllowHDROutput: 1
+  m_UseScreenCoordOverride: 0
+  m_ScreenSizeOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_ScreenCoordScaleBias: {x: 0, y: 0, z: 0, w: 0}
+  m_RequiresDepthTexture: 0
+  m_RequiresColorTexture: 0
+  m_Version: 2
+  m_TaaSettings:
+    m_Quality: 3
+    m_FrameInfluence: 0.1
+    m_JitterScale: 1
+    m_MipBias: 0
+    m_VarianceClampScale: 0.9
+    m_ContrastAdaptiveSharpening: 0
 --- !u!1 &2122800741
 GameObject:
   m_ObjectHideFlags: 0

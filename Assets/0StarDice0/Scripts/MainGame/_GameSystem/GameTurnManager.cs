@@ -149,6 +149,26 @@ public class GameTurnManager : MonoBehaviour
             Debug.Log($"<color=cyan>[Turn] รอ UI ประกาศเทิร์น...</color>");
             OnTurnChanged?.Invoke(currentPlayer.isAI);
 
+            if (currentPlayer.StunTurnsRemaining > 0)
+            {
+                Debug.Log($"<color=blue>❄️ {currentPlayer.name} ถูกแช่แข็ง! ข้ามเทิร์นนี้ (เหลืออีก {currentPlayer.StunTurnsRemaining - 1} เทิร์น)</color>");
+                
+                // ลดจำนวนเทิร์นลง 1
+                currentPlayer.StunTurnsRemaining--;
+                
+                // ถ้าคุณมีไอคอนน้ำแข็ง ก็ให้ปลดออกตอนมันนับถึง 0
+                if (currentPlayer.StunTurnsRemaining <= 0)
+                {
+                    currentPlayer.hasIceEffect = false;
+                    currentPlayer.NotifyStatsUpdated(); // อัปเดต UI
+                }
+
+                // สั่งข้ามเทิร์นทันที!
+                yield return new WaitForSeconds(1.5f); // รอให้ผู้เล่นเห็นสักแป๊บ
+                RequestEndTurn(); // เตะส่งไปคิวถัดไปเลย
+                yield break; // จบการทำงานฟังก์ชันนี้
+            }
+
             if (!currentPlayer.isAI && currentPlayer.TryConsumeBurnDebuff(10))
             {
                 Debug.Log($"<color=orange>🔥 Burn ticks on {currentPlayer.name} (-10 HP)</color>");

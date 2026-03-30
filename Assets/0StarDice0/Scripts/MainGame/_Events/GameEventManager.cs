@@ -384,7 +384,7 @@ public class GameEventManager : MonoBehaviour
             case "level 1":
             case "minigamespotmemory":
             case "minigamemath":
-                StartCoroutine(LoadMinigameSceneCoroutine(eventName));
+                StartCoroutine(LoadBattleSceneAdditiveCoroutine(eventName));
                 break;
             default:
                 if (eventPanels.ContainsKey(eventName.ToLower())) ShowPanel(eventName, true);
@@ -594,10 +594,26 @@ private IEnumerator ShowItemImageAfterDelay(Sprite itemSprite, float delayTime)
         ShowPanel("trappanel", true);
     }
 
-    private void StarGain(GameObject target)
+ private void StarGain(GameObject target)
     {
         PlayerState p = target.GetComponent<PlayerState>();
-        if (p != null) p.AddStars(15);
+        if (p != null) 
+        {
+            int starAmount = 10; // จำนวนดาวปกติที่ช่องนี้จะแจก
+
+            // 🟢 เช็คว่ามีบัฟดาว x2 ติดตัวมาจากการใช้การ์ดหรือเปล่า?
+            if (p.hasDoubleStarBuff)
+            {
+                starAmount *= 2; // เอาดาวมาคูณ 2 (กลายเป็น 30)
+                p.hasDoubleStarBuff = false; // 🛑 ริบบัฟคืน เพื่อให้แสดงผลแค่ครั้งเดียว!
+                
+                Debug.Log($"<color=yellow>🌟 บัฟดาว x2 ทำงาน! ได้รับดาวอัปเกรดเป็น {starAmount} ดวง!</color>");
+            }
+
+            // สั่งบวกดาวเข้ากระเป๋า
+            p.AddStars(starAmount);
+        }
+        
         ShowPanel("starpanel", true);
     }
 
@@ -623,9 +639,19 @@ private IEnumerator ShowItemImageAfterDelay(Sprite itemSprite, float delayTime)
     private void Heal(GameObject target)
     {
         PlayerState p = target.GetComponent<PlayerState>();
-        if (p != null) p.PlayerHealth += 10;
+        if (p != null) 
+        {
+            p.PlayerHealth += 10;
+            
+            if (p.PlayerHealth > p.MaxHealth)
+            {
+                p.PlayerHealth = p.MaxHealth;
+            }
+        }
+        
         ShowPanel("heal", true);
     }
+
     private void Draw(GameObject target)
     {
         PlayerState p = target.GetComponent<PlayerState>();

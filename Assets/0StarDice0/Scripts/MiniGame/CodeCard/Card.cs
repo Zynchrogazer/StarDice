@@ -1,5 +1,5 @@
-using System;
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 
 public class Card : MonoBehaviour
@@ -10,8 +10,6 @@ public class Card : MonoBehaviour
     public bool isMatched = false;
 
     private TMP_Text frontText;
-    private Action<Card> onCardSelected;
-    private Func<bool> canSelectCard;
 
     public void Setup(int id)
     {
@@ -30,12 +28,6 @@ public class Card : MonoBehaviour
         Hide();
     }
 
-    public void ConfigureSelection(Action<Card> onSelected, Func<bool> canSelect)
-    {
-        onCardSelected = onSelected;
-        canSelectCard = canSelect;
-    }
-
     public void Show()
     {
         front.SetActive(true);
@@ -51,10 +43,22 @@ public class Card : MonoBehaviour
     public void OnClick()
     {
         if (isMatched) return;
-        if (onCardSelected == null || canSelectCard == null) return;
-        if (!canSelectCard()) return;
 
-        Show();
-        onCardSelected(this);
+        // เช็คว่า GameManager ตัวไหนกำลังทำงาน
+        if (GameManagerLevel1.Instance != null && !GameManagerLevel1.Instance.IsBusy)
+        {
+            Show();
+            GameManagerLevel1.Instance.OnCardSelected(this);
+        }
+        else if (GameManagerLevel2.Instance != null && !GameManagerLevel2.Instance.IsBusy)
+        {
+            Show();
+            GameManagerLevel2.Instance.OnCardSelected(this);
+        }
+        else if (GameManagerLevel3.Instance != null && !GameManagerLevel3.Instance.IsBusy)
+        {
+            Show();
+            GameManagerLevel3.Instance.OnCardSelected(this);
+        }
     }
 }

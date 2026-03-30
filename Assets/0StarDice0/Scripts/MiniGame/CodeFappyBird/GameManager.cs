@@ -10,7 +10,7 @@ public class GameManager : MonoBehaviour
     public TextMeshProUGUI scoreText;  // ตัวแปรอ้างอิง TextMeshProUGUI
     public GameObject gameOverPanel;  // เพิ่มตัวแปรสำหรับ Game Over Panel
     public TextMeshProUGUI gameOverScoreText; // ใช้ตอนเกมจบ
-
+public Button exitButton;
     private bool isGameOver = false;  // เช็คว่าเกมจบหรือยัง
 
     // ---------------------------------------------------------
@@ -94,6 +94,22 @@ public class GameManager : MonoBehaviour
         UpdateScoreText();  
         GiveRewardBasedOnScore();
         Time.timeScale = 0f;  
+
+        // ------------------------------------------------
+        // 🟢 เพิ่มแค่บล็อกนี้ เพื่อผูกคำสั่งให้ปุ่มออกทำงาน
+        // ------------------------------------------------
+        if (exitButton != null)
+        {
+            exitButton.onClick.RemoveAllListeners();
+            exitButton.onClick.AddListener(() =>
+            {
+                // 1. คืนค่าเวลา (สำคัญมาก! ไม่งั้นฉากมินิเกมจะค้าง)
+                Time.timeScale = 1f; 
+
+                // 2. เรียกคำสั่งวาร์ปกลับกระดาน (0, 0 คือไม่เอาเงินซ้ำซ้อน)
+                BattleResultFlowService.HandleRewardAndReturnToBoard(0, 0,true);
+            });
+        }
     }
 
     // ---------------------------------------------------------

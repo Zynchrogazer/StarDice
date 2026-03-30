@@ -63,6 +63,15 @@ public class PlayerState : MonoBehaviour
     public event System.Action OnDied;
     public event Action OnStatsUpdated;
 
+[Header("Status Effects")]
+    // (พวก DebuffBurn, hasIceEffect เดิมของคุณ...)
+    
+    // 🟢 เพิ่มตัวแปรนี้เพื่อนับเทิร์นที่ต้องหยุดเดิน
+    public int StunTurnsRemaining = 0;
+
+    [Header("Buffs")]
+    // 🟢 เพิ่มตัวแปรนี้สำหรับเช็คบัฟดาว x2
+    public bool hasDoubleStarBuff = false;
 
     public int PlayerCredit
     {
@@ -624,5 +633,40 @@ public class PlayerState : MonoBehaviour
     public void DropStar()
     {
         // ใส่ Logic ทิ้งดาวที่นี่
+    }
+
+    public void CleanseBurn()
+    {
+        // ถ้า false อยู่แล้ว (ไม่ติด Burn) จะไม่เกิดอะไรขึ้น
+        if (!DebuffBurn) 
+        {
+            Debug.Log("[PlayerState] ไม่ได้ติดสถานะ Burn อยู่แล้ว การ์ดไม่ส่งผลอะไร");
+            return; 
+        }
+
+        // ถ้า true ให้ล้างสถานะและรีเซ็ตค่าต่างๆ ที่เกี่ยวข้อง
+        DebuffBurn = false;
+        DebuffBurnTurnsRemaining = 0;
+        burnDebuffAppliedOrder = 0; // รีเซ็ต order ด้วยเพื่อความชัวร์
+        
+        OnStatsUpdated?.Invoke(); // อัปเดต UI
+        Debug.Log("<color=green>[PlayerState] ✨ ล้างสถานะ Burn สำเร็จ!</color>");
+    }
+
+    public void CleanseIce()
+    {
+        // ถ้า false อยู่แล้ว (ไม่ติด Ice) จะไม่เกิดอะไรขึ้น
+        if (!hasIceEffect) 
+        {
+            Debug.Log("[PlayerState] ไม่ได้ติดสถานะ Ice อยู่แล้ว การ์ดไม่ส่งผลอะไร");
+            return; 
+        }
+
+        // ถ้า true ให้ล้างสถานะและรีเซ็ตลำดับ
+        hasIceEffect = false;
+        iceDebuffAppliedOrder = 0; 
+        
+        OnStatsUpdated?.Invoke(); // อัปเดต UI ให้ไอคอนน้ำแข็งหายไป
+        Debug.Log("<color=cyan>[PlayerState] ❄️ ล้างสถานะแช่แข็ง (Ice) สำเร็จ!</color>");
     }
 }

@@ -94,12 +94,12 @@ public class NormaSystem : MonoBehaviour
     private int[] cachedMainWindStarTargets;
     private int[] cachedMainDarkStarTargets;
 
-    private readonly int[] mainFireWinTargets = { 2, 4, 7, 9, 12 };
-    private readonly int[] mainLightWinTargets = { 2, 4, 6, 8, 10 };
-    private readonly int[] mainWaterWinTargets = { 2, 4, 7, 9, 12 };
-    private readonly int[] mainEarthWinTargets = { 2, 5, 8, 11, 14 };
-    private readonly int[] mainWindWinTargets = { 2, 5, 8, 11, 14 };
-    private readonly int[] mainDarkWinTargets = { 2, 5, 8, 11, 14 };
+    private readonly int[] mainFireWinTargets = { 2, 3, 5, 7, 8 };
+    private readonly int[] mainLightWinTargets = { 2, 3, 4, 5, 6 };
+    private readonly int[] mainWaterWinTargets = { 2, 4, 5, 7, 10 };
+    private readonly int[] mainEarthWinTargets = { 2, 5, 7, 9, 12 };
+    private readonly int[] mainWindWinTargets = { 2, 4, 6, 8, 11 };
+    private readonly int[] mainDarkWinTargets = { 2, 5, 8, 10, 13 };
 
     public string GetRequirementText(int rank, NormaType type)
     {
@@ -182,11 +182,11 @@ public class NormaSystem : MonoBehaviour
 
         switch (rank)
         {
-            case 2: return (type == NormaType.Stars) ? 10 : 1;
-            case 3: return (type == NormaType.Stars) ? 30 : 2;
-            case 4: return (type == NormaType.Stars) ? 70 : 5;
-            case 5: return (type == NormaType.Stars) ? 120 : 9;
-            case 6: return (type == NormaType.Stars) ? 180 : 12;
+            case 2: return (type == NormaType.Stars) ? 30 : 1;
+            case 3: return (type == NormaType.Stars) ? 70 : 2;
+            case 4: return (type == NormaType.Stars) ? 100 : 5;
+            case 5: return (type == NormaType.Stars) ? 150 : 9;
+            case 6: return (type == NormaType.Stars) ? 200 : 12;
             default: return 999;
         }
     }
@@ -223,7 +223,7 @@ public class NormaSystem : MonoBehaviour
             if (cachedMainFireStarTargets != null && cachedMainFireStarTargets.Length == NormaQuestCountPerStage)
                 return;
 
-            int totalStars = UnityEngine.Random.Range(55, 71);
+            int totalStars = UnityEngine.Random.Range(85, 101);
             cachedMainFireStarTargets = GenerateCumulativeTargets(totalStars, NormaQuestCountPerStage);
             return;
         }
@@ -233,7 +233,7 @@ public class NormaSystem : MonoBehaviour
             if (cachedMainLightStarTargets != null && cachedMainLightStarTargets.Length == NormaQuestCountPerStage)
                 return;
 
-            int totalStars = UnityEngine.Random.Range(45, 61);
+            int totalStars = UnityEngine.Random.Range(75, 91);
             cachedMainLightStarTargets = GenerateCumulativeTargets(totalStars, NormaQuestCountPerStage);
             return;
         }
@@ -243,7 +243,7 @@ public class NormaSystem : MonoBehaviour
             if (cachedMainWaterStarTargets != null && cachedMainWaterStarTargets.Length == NormaQuestCountPerStage)
                 return;
 
-            int totalStars = UnityEngine.Random.Range(65, 81);
+            int totalStars = UnityEngine.Random.Range(95, 111);
             cachedMainWaterStarTargets = GenerateCumulativeTargets(totalStars, NormaQuestCountPerStage);
             return;
         }
@@ -253,7 +253,7 @@ public class NormaSystem : MonoBehaviour
             if (cachedMainEarthStarTargets != null && cachedMainEarthStarTargets.Length == NormaQuestCountPerStage)
                 return;
 
-            int totalStars = UnityEngine.Random.Range(75, 91);
+            int totalStars = UnityEngine.Random.Range(105, 121);
             cachedMainEarthStarTargets = GenerateCumulativeTargets(totalStars, NormaQuestCountPerStage);
             return;
         }
@@ -263,7 +263,7 @@ public class NormaSystem : MonoBehaviour
             if (cachedMainWindStarTargets != null && cachedMainWindStarTargets.Length == NormaQuestCountPerStage)
                 return;
 
-            int totalStars = UnityEngine.Random.Range(90, 101);
+            int totalStars = UnityEngine.Random.Range(120, 131);
             cachedMainWindStarTargets = GenerateCumulativeTargets(totalStars, NormaQuestCountPerStage);
             return;
         }
@@ -273,7 +273,7 @@ public class NormaSystem : MonoBehaviour
             if (cachedMainDarkStarTargets != null && cachedMainDarkStarTargets.Length == NormaQuestCountPerStage)
                 return;
 
-            int totalStars = UnityEngine.Random.Range(100, 121);
+            int totalStars = UnityEngine.Random.Range(130, 151);
             cachedMainDarkStarTargets = GenerateCumulativeTargets(totalStars, NormaQuestCountPerStage);
             return;
         }

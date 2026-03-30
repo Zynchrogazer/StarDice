@@ -96,6 +96,225 @@ The codebase now has the core ownership split in place:
 2. Move orchestration into services/facades.
 3. Remove fallback chains where a clear owner can be injected.
 
+## Reference checklist by phase (Phase 1 -> Latest)
+
+Use this section as a copy/paste reference when tracking rollout status in notes, tickets, or QA sheets.
+
+### Phase 1 checklist - Replace direct progress usage in call sites
+**Code checklist**
+- [ ] Replace selected-player credit reads with `GameData.GetSelectedPlayerCredit()`.
+- [ ] Replace selected-player credit writes with `GameData.SetSelectedPlayerCredit()`, `AddSelectedPlayerCredit()`, or `TrySpendSelectedPlayerCredit()`.
+- [ ] Remove new direct usages of `GameData.selectedPlayer.Credit`, `SetCredit`, `AddCredit`, `TrySpendCredit` from gameplay/UI code.
+- [ ] Keep `PlayerData` compatibility wrappers only for unchanged legacy code paths.
+
+**Files/features to re-check**
+- [ ] shop and intermission credit display
+- [ ] skill purchase / passive skill spending
+- [ ] random unlock / shop pack spending
+- [ ] HUD credit display
+- [ ] mini-game reward credit grant
+
+**QA checklist**
+- [ ] Spend credit in shop and verify persistent credit decreases once.
+- [ ] Earn credit from mini-game and verify board/intermission show the same value.
+- [ ] Re-enter scene and verify selected-player credit stays consistent.
+
+### Phase 2 checklist - Extract progress coordination from `GameData`
+**Code checklist**
+- [ ] `GameData` exposes facade methods only; it should not own raw `PlayerPrefs` logic.
+- [ ] `PlayerProgressService` owns selected-player load/save/reset behavior.
+- [ ] Reset/default-progress flow goes through the service, not ad-hoc scene code.
+- [ ] Selected-player progress can be reloaded by calling `EnsureSelectedPlayerProgressLoaded()`.
+
+**Files/features to re-check**
+- [ ] `GameData` lifecycle (`Awake`, selected-player assignment, scene persistence)
+- [ ] `PlayerProgressService` load/reset paths
+- [ ] main menu reset/new-run flow
+
+**QA checklist**
+- [ ] Start game from normal entry scene and verify `GameData` survives scene changes.
+- [ ] Reset progress and verify selected player returns to starting credit/level/EXP.
+- [ ] Swap selected player and verify the newly selected player's progress loads correctly.
+
+### Phase 3 checklist - Extract persistence lifecycle from `PlayerState`
+**Code checklist**
+- [ ] `PlayerState` resolves persistent progress via `PlayerStateProgressCoordinator`.
+- [ ] Snapshot capture/restore uses `PlayerProgressSnapshot` instead of mutating `PlayerData` directly.
+- [ ] Runtime HP/stats stay local to `PlayerState`.
+- [ ] Defeat / board reset / scene return flow restores level/EXP through the coordinator path.
+
+**Files/features to re-check**
+- [ ] `PlayerState` load and reset flow
+- [ ] `PlayerStateProgressCoordinator` resolve / capture / restore flow
+- [ ] battle return and defeat handling
+
+**QA checklist**
+- [ ] Enter board scene and verify level/EXP load from persistent progress.
+- [ ] Lose/exit/reset and verify snapshot restore behaves as expected.
+- [ ] Return from battle and confirm runtime HP sync does not corrupt persistent level/EXP.
+
+### Phase 4 checklist - Thin managers/presenters
+**Code checklist**
+- [ ] `ShopUIManager` becomes a thin view/presenter host only.
+- [ ] `GameSetupManager` becomes a scene adapter that calls one setup/sync service.
+- [ ] `CharacterSelectManager` / `CharacterSelectUI` use a dedicated selection service.
+- [ ] `BattleHealthSyncBridge` is split into smaller adapters/services and reduced reflection-heavy paths.
+- [ ] `PlayerGlobalHudPresenter` / `PlayerController` stay as thin runtime adapters only.
+
+**Files/features to re-check**
+- [ ] shop HUD binding
+- [ ] board setup flow
+- [ ] character selection flow
+- [ ] battle result panel binding
+- [ ] legacy battle scene integration
+
+**QA checklist**
+- [ ] All scenes still work without relying on hidden fallback chains.
+- [ ] UI refresh is event-driven where practical; no unnecessary polling remains.
+- [ ] New scene setup is understandable from Inspector wiring alone.
+
+### Latest manual regression checklist (use before sign-off)
+- [ ] Select a player from the main character select flow.
+- [ ] Enter a board scene and verify HUD HP / credit / level.
+- [ ] Spend credit in intermission/shop and confirm value persists.
+- [ ] Earn credit from at least one mini-game and verify the same selected player receives it.
+- [ ] Enter a battle and return to the board.
+- [ ] Verify battle HP sync works and reward credit/EXP/level sync back correctly.
+- [ ] Restart the game / re-enter Play Mode and verify the same selected-player progress reloads.
+- [ ] Run isolated-scene fallback tests only where explicitly supported (shop, character select, board setup).
+
+## Concrete refactor backlog by script
+
+### Priority 1 - `ShopUIManager`
+**Current issue**
+- Mixes UI rendering, selected-player resolution, fallback resolution, and progress writes in one MonoBehaviour.
+
+**Refactor target**
+- Keep `ShopUIManager` as a thin Unity view/component holder only.
+- Extract a presenter/service pair, for example `ShopCreditPresenter` + `ISelectedPlayerCreditService`.
+
+**Concrete steps**
+1. Move credit read/write logic out of `ShopUIManager.PlayerCredit`.
+2. Keep only serialized UI refs (`TMP_Text`, optional fallback test refs) on the MonoBehaviour.
+3. Let a presenter subscribe/unsubscribe to credit changes and push formatted text into the view.
+4. Remove polling in `Update()` and replace it with explicit bind/rebind hooks.
+
+**Done when**
+- `ShopUIManager` no longer calls `GameData.Instance` or `PlayerData.SetCredit()` directly.
+- UI refresh happens through a single presenter/service path.
+
+### Priority 2 - `GameSetupManager`
+**Current issue**
+- Resolves selected player, fallback player, and runtime-to-persistent sync in one class.
+
+**Refactor target**
+- Turn it into a scene entry adapter that calls one application service, for example `BoardPlayerSetupService`.
+
+**Concrete steps**
+1. Extract player selection resolution into `SelectedPlayerContextResolver`.
+2. Extract runtime progress save-back into `BoardProgressSyncService`.
+3. Keep `GameSetupManager` responsible only for Unity lifecycle (`OnEnable`) and logging.
+4. Remove direct knowledge of credit/level/exp fields from the MonoBehaviour.
+
+**Done when**
+- `GameSetupManager` does not directly read `GameTurnManager.CurrentPlayer.PlayerCredit` / level / EXP.
+- Setup and sync behavior can be called from tests without a scene object.
+
+### Priority 3 - `CharacterSelectManager` + `CharacterSelectUI`
+**Current issue**
+- The selection flow is still tightly scene-coupled and uses `GameData` directly.
+
+**Refactor target**
+- Split selection orchestration into a `SelectCharacterService` and keep UI classes focused on button/display behavior.
+
+**Concrete steps**
+1. Move `GameData.Instance.SetSelectedPlayer(...)` orchestration into a dedicated service.
+2. Keep `CharacterSelectManager` as a bridge from button click -> service call.
+3. Keep `CharacterSelectUI` focused on visuals/highlight state only.
+4. Add a small fallback/test bootstrap object for isolated scene play instead of repeating fallback logic in multiple components.
+
+**Done when**
+- Character-select UI no longer needs to know how selected-player persistence is stored.
+- Scene play and isolated test play use the same selection service.
+
+### Priority 4 - `BattleHealthSyncBridge`
+**Current issue**
+- Handles scene events, reflection-based field injection, runtime `PlayerData` cloning, selected-player override, HP sync, and result button wiring all in one static class.
+
+**Refactor target**
+- Split battle bridging into smaller adapters/services and reduce reflection-heavy behavior.
+
+**Concrete steps**
+1. Extract runtime `PlayerData` clone creation into `BattleRuntimePlayerFactory`.
+2. Extract reward/level/EXP sync-back into `BattleProgressSyncService`.
+3. Extract button wiring into a dedicated `BattleResultPanelBinder` or explicit component on result panels.
+4. Replace field-name reflection (`playerHP`, `selectedPlayer`, `winPanel`, `losePanel`) with explicit interfaces/components where possible.
+
+**Done when**
+- The bridge no longer owns reward sync + panel wiring + runtime clone creation in one file.
+- New battle scenes can opt into explicit components instead of naming conventions.
+
+### Priority 5 - `PlayerGlobalHudPresenter` + `PlayerController`
+**Current issue**
+- These are thinner now, but still act as compatibility glue around runtime state.
+
+**Refactor target**
+- Keep them as small adapters only and avoid adding more domain logic to them.
+
+**Concrete steps**
+1. Keep HUD formatting in presenter code only.
+2. Avoid reading persistence fallback chains from the controller/presenter when a single owner can be injected.
+3. Keep `PlayerController` bound to runtime `PlayerState` events only.
+
+**Done when**
+- Both scripts remain small, scene-facing adapters with no persistence orchestration.
+
+## Scripts touched by the player progress refactor
+
+### Core persistence and player domain
+- `Assets/0StarDice0/Player/GameData.cs`
+- `Assets/0StarDice0/Player/PlayerData.cs`
+- `Assets/0StarDice0/Player/PlayerProgress.cs`
+- `Assets/0StarDice0/Player/PlayerProgressService.cs`
+- `Assets/0StarDice0/Scripts/MainGame/_GameSystem/PlayerProgressSnapshot.cs`
+- `Assets/0StarDice0/Scripts/MainGame/_GameSystem/PlayerState.cs`
+- `Assets/0StarDice0/Scripts/MainGame/_GameSystem/PlayerStateProgressCoordinator.cs`
+
+### Board / battle / runtime systems
+- `Assets/0StarDice0/Item/EquipmentManager.cs`
+- `Assets/0StarDice0/Scripts/MainGame/_GameSystem/BattleHealthSyncBridge.cs`
+- `Assets/0StarDice0/Scripts/MainGame/_GameSystem/BattleResultFlowService.cs`
+- `Assets/0StarDice0/Scripts/MainGame/_GameSystem/GameSetupManager.cs`
+- `Assets/0StarDice0/Scripts/MainGame/_Player/PlayerController.cs`
+- `Assets/0StarDice0/Scripts/MainGame/_UIManager/PlayerGlobalHudPresenter.cs`
+
+### Shop / intermission / menu flow
+- `Assets/0StarDice0/Scripts/CodeInterMission/InterMission/IntermissionCreditUI.cs`
+- `Assets/0StarDice0/Scripts/CodeInterMission/ShopInterMission/ChangeSceneButton.cs`
+- `Assets/0StarDice0/Scripts/CodeInterMission/ShopInterMission/RandomUnlock.cs`
+- `Assets/0StarDice0/Scripts/CodeInterMission/ShopInterMission/ShopPackManager.cs`
+- `Assets/0StarDice0/Scripts/MainGame/CardMain/ShopManager.cs`
+- `Assets/0StarDice0/Scripts/ShopUIManager.cs`
+- `Assets/0StarDice0/Scripts/MainMenu/MainMenuController.cs`
+
+### Mini-games and rewards
+- `Assets/0StarDice0/Scripts/MiniGame/CodeCard/GameManagerLevel3.cs`
+- `Assets/0StarDice0/Scripts/MiniGame/CodeFappyBird/GameManager.cs`
+- `Assets/0StarDice0/Scripts/MiniGame/CodeMath/QuickMathManager.cs`
+- `Assets/0StarDice0/Scripts/MiniGame/CodeSpot/MemoryGameManager.cs`
+- `Assets/0StarDice0/Scripts/MiniGame/MiniGameRewardService.cs`
+
+### Passive / skill / test helpers
+- `Assets/0StarDice0/PassiveSkill/PassiveSkillManager.cs`
+- `Assets/0StarDice0/PassiveSkill/SkillManager.cs`
+- `Assets/0StarDice0/PassiveSkill/SkillTreeUI.cs`
+- `Assets/0StarDice0/Scripts/Test/BoardgameTestAddCreditButton.cs`
+- `Assets/0StarDice0/Scripts/Test/TestFight/CharacterSelectManager.cs`
+- `Assets/0StarDice0/Scripts/Test/TestFight/CharacterSelectUI.cs`
+
+### Documentation
+- `Docs/player-srp-refactor-plan.md`
+
 ## Unity checklist for remaining work and scene wiring
 Use this checklist when wiring scenes/prefabs in Unity after the refactor. The goal is to keep Phases 1-3 stable while finishing Phase 4 cleanup.
 

@@ -9,7 +9,7 @@ using UnityEditor;
 #endif
 
 // enum ที่กำหนดประเภทของช่อง
-public enum TileType { Normal , Event, Monster, Trap, Draw, Star, Teleport, Heal, Start, Boss, Minigame, Shop, Treasure, SpecialBoss, Lava}
+public enum TileType { Normal , Event, Monster, Trap, Draw, Star, Teleport, Heal, Start, Boss, Minigame, Shop, Treasure, SpecialBoss, Lava,iceeffect}
 
 
 
@@ -498,7 +498,8 @@ public class RouteManager : MonoBehaviour
         { TileType.Shop, "shop" },
         { TileType.Start, "start" },
         { TileType.Treasure, "treasurebox" },
-        { TileType.Lava, "lava" }
+        { TileType.Lava, "lava" },
+        { TileType.iceeffect, "iceeffect" }
     };
 
     string GetDefaultEventName(TileType type)
