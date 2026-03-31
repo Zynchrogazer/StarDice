@@ -86,6 +86,7 @@ public class GameEventManager : MonoBehaviour
     [Header("References (Refactor Prep)")]
     [SerializeField] private GameTurnManager gameTurnManager;
     [SerializeField] private RouteManager routeManager;
+    [SerializeField] private MainLightHealGimmickController mainLightHealGimmickController;
     private bool isFirstLoad = true;
     private bool hasStartedGame = false;
     public GameObject shopPanel;
@@ -117,6 +118,14 @@ public class GameEventManager : MonoBehaviour
             routeManager = FindFirstObjectByType<RouteManager>();
 
         return routeManager;
+    }
+
+    private MainLightHealGimmickController ResolveMainLightHealGimmickController()
+    {
+        if (mainLightHealGimmickController == null)
+            mainLightHealGimmickController = FindFirstObjectByType<MainLightHealGimmickController>();
+
+        return mainLightHealGimmickController;
     }
 
     #region Unity Lifecycle & Scene Management
@@ -408,14 +417,14 @@ public void OnClickCloseShopButton()
 }
     private void TriggerMainLightHealGimmickEvent()
     {
-        RouteManager routeManager = ResolveRouteManager();
-        if (routeManager != null && routeManager.TriggerMainLightHealGimmick())
+        MainLightHealGimmickController gimmickController = ResolveMainLightHealGimmickController();
+        if (gimmickController != null && gimmickController.TriggerGimmick())
         {
             ResolveGameTurnManager()?.RequestEndTurn();
             return;
         }
 
-        Debug.LogWarning("[GameEventManager] Trigger mainlighthealgimmick ไม่สำเร็จ");
+        Debug.LogWarning("[GameEventManager] Trigger mainlighthealgimmick ไม่สำเร็จ (ไม่พบ controller หรือ trigger ไม่ผ่านเงื่อนไข)");
         ResolveGameTurnManager()?.RequestEndTurn();
     }
 

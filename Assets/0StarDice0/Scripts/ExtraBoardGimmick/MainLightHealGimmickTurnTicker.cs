@@ -3,12 +3,12 @@ using UnityEngine;
 /// <summary>
 /// แยกการนับเทิร์นของ MainLight heal gimmick ออกจาก RouteManager (แนว KISS)
 /// - Subscribe กับ GameTurnManager.OnTurnChanged
-/// - ทุกครั้งที่เปลี่ยนเทิร์น จะเรียก RouteManager.TickMainLightHealGimmickTurn()
+/// - ทุกครั้งที่เปลี่ยนเทิร์น จะเรียก MainLightHealGimmickController.TickTurn(isAITurn)
 /// </summary>
 public class MainLightHealGimmickTurnTicker : MonoBehaviour
 {
     [Header("References")]
-    [SerializeField] private RouteManager routeManager;
+    [SerializeField] private MainLightHealGimmickController healGimmickController;
 
     [Header("Settings")]
     [SerializeField] private bool enableTurnTick = true;
@@ -18,10 +18,8 @@ public class MainLightHealGimmickTurnTicker : MonoBehaviour
 
     private void Awake()
     {
-        if (routeManager == null)
-        {
-            RouteManager.TryGet(out routeManager);
-        }
+        if (healGimmickController == null)
+            healGimmickController = FindFirstObjectByType<MainLightHealGimmickController>();
     }
 
     private void OnEnable()
@@ -65,16 +63,21 @@ public class MainLightHealGimmickTurnTicker : MonoBehaviour
             return;
         }
 
-        if (routeManager == null && !RouteManager.TryGet(out routeManager))
+        if (healGimmickController == null)
+        {
+            healGimmickController = FindFirstObjectByType<MainLightHealGimmickController>();
+        }
+
+        if (healGimmickController == null)
         {
             if (verboseLog)
             {
-                Debug.LogWarning("[MainLightHealGimmickTurnTicker] ไม่พบ RouteManager");
+                Debug.LogWarning("[MainLightHealGimmickTurnTicker] ไม่พบ MainLightHealGimmickController");
             }
 
             return;
         }
 
-        routeManager.TickMainLightHealGimmickTurn();
+        healGimmickController.TickTurn(isAITurn);
     }
 }
