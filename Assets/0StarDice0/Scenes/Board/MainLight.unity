@@ -617,6 +617,72 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0a40572749428194ab8ec1ec2928d74a, type: 3}
+--- !u!1 &1334571130
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1334571133}
+  - component: {fileID: 1334571132}
+  - component: {fileID: 1334571131}
+  m_Layer: 0
+  m_Name: MapLightGimmick
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1334571131
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1334571130}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0500302929cbda344b79f852ccf7745a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  healGimmickController: {fileID: 1334571132}
+  enableTurnTick: 1
+  verboseLog: 0
+--- !u!114 &1334571132
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1334571130}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a7a85a1189c41c293af40f4fcfb5f27, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  routeManager: {fileID: 386945530704649602}
+  enableMainLightHealGimmick: 1
+  mainLightHealOnlyInMainLight: 1
+  mainLightHealDurationTurns: 3
+  mainLightHealMinTiles: 5
+  mainLightHealMaxTiles: 10
+--- !u!4 &1334571133
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1334571130}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 161.33678, y: 963.354, z: 0.04638499}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1665114581 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 286983589677044495, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
@@ -1804,11 +1870,6 @@ MonoBehaviour:
   enableRandomRockSpawnByTurn: 1
   randomRockSpawnIntervalTurns: 5
   randomRockOnlyInMainEarth: 1
-  enableMainLightHealGimmick: 1
-  mainLightHealOnlyInMainLight: 1
-  mainLightHealDurationTurns: 3
-  mainLightHealMinTiles: 5
-  mainLightHealMaxTiles: 10
 --- !u!33 &390451425800785429
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -8112,6 +8173,10 @@ MonoBehaviour:
   PlayerLevel: 1
   CurrentExp: 0
   MaxExp: 100
+  persistentProgressSnapshot:
+    level: 1
+    currentExp: 0
+    maxExp: 100
   StunTurnsRemaining: 0
   hasDoubleStarBuff: 0
 --- !u!33 &5224575792882323382
@@ -15249,6 +15314,10 @@ MonoBehaviour:
   PlayerLevel: 1
   CurrentExp: 0
   MaxExp: 100
+  persistentProgressSnapshot:
+    level: 1
+    currentExp: 0
+    maxExp: 100
   StunTurnsRemaining: 0
   hasDoubleStarBuff: 0
 --- !u!33 &8858863729926362181
@@ -16413,8 +16482,9 @@ MonoBehaviour:
   randomSpinDuration: 2
   spinInterval: 0.1
   isRandomSpinning: 0
-  gameTurnManager: {fileID: 0}
-  routeManager: {fileID: 0}
+  gameTurnManager: {fileID: 3275227872017330278}
+  routeManager: {fileID: 386945530704649602}
+  mainLightHealGimmickController: {fileID: 1334571132}
   shopPanel: {fileID: 0}
   windTeleportTargetIDs: 
   windTeleportPanelName: windteleportpanel
@@ -16460,6 +16530,7 @@ SceneRoots:
   m_Roots:
   - {fileID: 8752118515968625926}
   - {fileID: 9038132338398424683}
+  - {fileID: 1334571133}
   - {fileID: 2561458251498192993}
   - {fileID: 7468745019150449565}
   - {fileID: 3960792586841402057}
