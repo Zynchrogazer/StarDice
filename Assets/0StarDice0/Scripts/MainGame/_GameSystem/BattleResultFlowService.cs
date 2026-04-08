@@ -53,13 +53,27 @@ public static class BattleResultFlowService
             PlayerPrefs.Save();
             StartTransition(ReturnToSceneKeepingRuntimeHub(InterMissionSceneName));
         }
-        else
+      else
         {
             Debug.Log("⚔️ [BattleResultFlow] ชนะมอนสเตอร์ปกติ กลับไปกระดาน");
-            string targetBoardScene = PlayerPrefs.GetString(GameEventManager.LastBoardSceneKey, "TestMain");
+
+            // 🟢 1. ลองดึงค่าแบบ "ไม่ใส่ TestMain เป็นตัวสำรอง" เพื่อดูว่ามันแอบจำอะไรไว้
+            string savedScene = PlayerPrefs.GetString(GameEventManager.LastBoardSceneKey, "");
+
+            // 🟢 2. เช็คเลยว่ามันหาเจอไหม?
+            if (string.IsNullOrEmpty(savedScene))
+            {
+                Debug.LogError($"🚨 [CCTV แฉ!] หาคีย์ LastBoardSceneKey ไม่เจอ หรือค่าว่าง! เลยจำใจบังคับโหลด 'TestMain'");
+                savedScene = "TestMain"; // ยอมใช้ TestMain ไปก่อนกันเกมแครช
+            }
+            else
+            {
+                Debug.Log($"<color=yellow>🚨 [CCTV แฉ!] เจอคีย์แล้ว! ในความจำของ Unity เขียนไว้ว่าต้องกลับด่าน: '{savedScene}'</color>");
+            }
+
             PlayerPrefs.SetInt(GameTurnManager.PendingBattleReturnKey, 1);
             PlayerPrefs.Save();
-            StartTransition(ReturnToSceneKeepingRuntimeHub(targetBoardScene));
+            StartTransition(ReturnToSceneKeepingRuntimeHub(savedScene));
         }
     }
     public static void HandleRestartToInterMission()

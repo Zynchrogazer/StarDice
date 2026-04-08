@@ -195,14 +195,22 @@ public class BoardManager : MonoBehaviour
                 break;
 
             // 🛑 กลุ่มช่องอื่นๆ ทั้งหมด (Trap, Event, Monster, Treasure, Minigame, etc.)
+           // 🛑 กลุ่มช่องอื่นๆ ทั้งหมด (Trap, Event, Monster, Treasure, Minigame, etc.)
             default:
                 if (isAI)
                 {
-                    // 🤖 ถ้าเป็น AI -> "เมินหมด!"
-                    Debug.Log($"[BoardManager] 🤖 AI {playerObject.name} เมินช่อง {nodeData.type} -> จบเทิร์นทันที");
-
-                    // ข้าม Event Manager ไปเลย แล้วจบเทิร์น
-                    StartCoroutine(FinishTurnRoutine());
+                    // 🟢 เพิ่มข้อยกเว้น: ถ้าช่องนั้นคือ "Lava" ให้ AI โดน Event ด้วย!
+                    if (!string.IsNullOrEmpty(nodeData.eventName) && nodeData.eventName.ToLower() == "lava")
+                    {
+                        Debug.Log($"[BoardManager] 🌋 AI {playerObject.name} เหยียบช่อง Lava! ส่งต่อให้ EventManager จัดการ...");
+                        GameEventManager.TryTriggerEvent("lava", playerObject);
+                    }
+                    else
+                    {
+                        // 🤖 ถ้าเป็น AI แล้วเป็นช่องอื่นๆ (หีบ, มอนสเตอร์, มินิเกม) -> "เมินหมด!"
+                        Debug.Log($"[BoardManager] 🤖 AI {playerObject.name} เมินช่อง {nodeData.type} ({nodeData.eventName}) -> จบเทิร์นทันที");
+                        StartCoroutine(FinishTurnRoutine());
+                    }
                 }
                 else
                 {
@@ -264,21 +272,39 @@ public class BoardManager : MonoBehaviour
         }
     }
 
-   private bool CheckForBattle(GameObject currentPlayer, int currentTileID)
+  private bool CheckForBattle(GameObject currentPlayer, int currentTileID)
     {
+        // 1. ดึงข้อมูลว่าคนที่กำลังเดินอยู่ (Attacker) เป็น AI หรือเปล่า
+        PlayerState currentPState = currentPlayer.GetComponent<PlayerState>();
+        bool isCurrentPlayerAI = (currentPState != null && currentPState.isAI);
+
         PlayerPathWalker[] allPlayers = FindObjectsOfType<PlayerPathWalker>();
         foreach (var otherPlayer in allPlayers)
         {
             if (otherPlayer.gameObject == currentPlayer) continue;
+
             if (otherPlayer.currentNodeID == currentTileID)
             {
+                // 2. ดึงข้อมูลคนที่ยืนรออยู่ (Defender)
+                PlayerState otherPState = otherPlayer.GetComponent<PlayerState>();
+                bool isOtherPlayerAI = (otherPState != null && otherPState.isAI);
+
+                // 🛑 กฎเหล็ก: ถ้า "คนเดิน" เป็น AI และ "คนรอ" ก็เป็น AI -> ห้ามตีกันเด็ดขาด!
+                if (isCurrentPlayerAI && isOtherPlayerAI)
+                {
+                    Debug.Log($"🤖 [BoardManager] AI เดินชนกันเอง ({currentPlayer.name} ชนกับ {otherPlayer.gameObject.name}) -> เมินใส่กัน ไม่สู้!");
+                    
+                    // ใช้ continue เพื่อข้ามคนนี้ไปเลย (เผื่อมี "ผู้เล่นคนจริง" ยืนซ้อนอยู่ในช่องนี้อีกคน จะได้ข้ามไปตีคนเล่นแทน!)
+                    continue; 
+                }
+
                 GameObject attacker = currentPlayer;
                 GameObject defender = otherPlayer.gameObject;
 
                 // 🟢 รวบรวมร่างโคลนกลับมาเป็นตัวเดียวก่อนตัดเข้าฉากสู้!
                 MergeAllAIClones(ref attacker, ref defender);
 
-                // เจอคนอื่นยืนช่องเดียวกัน -> สู้!
+                // เจอศัตรูที่ไม่ใช่พวกเดียวกันยืนช่องเดียวกัน -> สู้!
                 StartBattle(attacker, defender);
                 return true;
             }
@@ -291,6 +317,10 @@ public class BoardManager : MonoBehaviour
         Debug.Log($"Loading Battle Scene (PvP): {attacker.name} vs {defender.name}");
 
         string currentSceneName = SceneManager.GetActiveScene().name; 
+
+        PlayerPrefs.SetString(GameEventManager.LastBoardSceneKey, currentSceneName);
+        PlayerPrefs.Save();
+        Debug.Log($"<color=magenta>💾 [BoardManager] บันทึกชื่อด่าน '{currentSceneName}' ก่อนเข้าฉากสู้เรียบร้อย!</color>");
     
     string battleSceneName = "TestFight"; 
 

@@ -29,8 +29,11 @@ public class PlayerState : MonoBehaviour
     public int RuntimeStarModifier = 0;
     public int PassiveStarGainBonus = 0;
     public bool DebuffBurn = false;
+    public int backwardCurseTurns = 0;
     public int DebuffBurnTurnsRemaining = 0;
     public bool hasIceEffect = false;
+    public int poisonDebuffTurns = 0;
+    public int sleepDebuffTurns = 0;
     private int burnDebuffAppliedOrder = 0;
     private int iceDebuffAppliedOrder = 0;
     private static int debuffApplySequence = 0;
@@ -296,6 +299,27 @@ public class PlayerState : MonoBehaviour
         OnStatsUpdated?.Invoke();
     }
 
+    public void ApplySleepDebuff(int turns = 3)
+    {
+        sleepDebuffTurns = turns;
+        Debug.Log($"<color=blue>💤 Zzz... ผู้เล่นติดสถานะหลับ หยุดเดิน {turns} เทิร์น</color>");
+        OnStatsUpdated?.Invoke();
+    }
+
+    public void ApplyBackwardCurse(int turns = 3)
+    {
+        backwardCurseTurns = turns;
+        Debug.Log($"<color=purple>💀 ติดคำสาป! บังคับเดินถอยหลังจำนวน {turns} เทิร์น</color>");
+        OnStatsUpdated?.Invoke();
+    }
+
+    public void ApplyPoisonDebuff(int turns = 3)
+    {
+        poisonDebuffTurns = turns;
+        Debug.Log($"<color=green>☠️ ติดสถานะพิษ! จะโดนดาเมจตามจำนวนก้าวเป็นเวลา {turns} เทิร์น</color>");
+        OnStatsUpdated?.Invoke();
+    }
+
     public bool TryConsumeBurnDebuff(int burnDamage)
     {
         if (!DebuffBurn || DebuffBurnTurnsRemaining <= 0) return false;
@@ -340,9 +364,9 @@ public class PlayerState : MonoBehaviour
         MaxExp = Mathf.CeilToInt(MaxExp * 1.2f); // เวลต่อไปยากขึ้น 20%
 
         // Bonus เมื่อเวลอัป (สไตล์ RPG)
-        MaxHealth += 20;
+        MaxHealth += 5;
         PlayerHealth = MaxHealth; // เลือดเด้งเต็ม
-        CurrentAttack += 2;       // ตีแรงขึ้น
+        CurrentAttack += 1;       // ตีแรงขึ้น
 
         if (PlayerLevel % 2 == 0)
         {
