@@ -278,7 +278,11 @@ public class DeckManager : MonoBehaviour
         // เช็คว่ามีซ้ำไหม
         foreach (var c in cardUse)
         {
-            if (c == card) { Debug.Log("การ์ด " + card.cardName + " ถูกเลือกไปแล้ว"); return; }
+            if (c != null && c.cardName == card.cardName) 
+            { 
+                Debug.Log("การ์ด " + card.cardName + " ถูกเลือกไปแล้ว"); 
+                return; 
+            }
         }
 
         // หาช่องว่างแล้วใส่
@@ -288,8 +292,10 @@ public class DeckManager : MonoBehaviour
             { 
                 cardUse[i] = card; 
                 UpdateUseCardUI(); 
+                SaveCurrentDeck(); 
                 
-                SaveCurrentDeck(); // <--- เพิ่ม: ใส่ปุ๊บเซฟปั๊บ
+                // 🟢 สั่งรีเฟรชคลังการ์ดทันที เพื่อให้ใบที่เพิ่งกดใส่กลายเป็นสีมืด
+                SortAndRefreshCards(); 
                 return; 
             }
         }
@@ -308,8 +314,10 @@ public class DeckManager : MonoBehaviour
         {
             cardUse[index] = null;
             UpdateUseCardUI();
-
-            SaveCurrentDeck(); // <--- เพิ่ม: ลบปุ๊บเซฟปั๊บ
+            SaveCurrentDeck();
+            
+            // 🟢 สั่งรีเฟรชคลังการ์ดทันที เพื่อให้ใบที่เพิ่งถอดออกกลับมาสว่างและกดได้
+            SortAndRefreshCards(); 
         }
     }
 
@@ -398,50 +406,46 @@ public class DeckManager : MonoBehaviour
         }
     }
 
-   public void UpdateUseCardUI()
-{
-    // 1. เช็คว่า Array UI มีอยู่จริงไหม
-    if (useCardImages == null) return;
-
-    // 2. เช็คว่า Array Data มีอยู่จริงไหม (กัน cardUse.Length พัง)
-    if (cardUse == null) 
+ public void UpdateUseCardUI()
     {
-        // ถ้าไม่มีข้อมูลการ์ด ให้เคลียร์รูปทิ้งให้หมด (ถ้าต้องการ) หรือแค่ return
-        return; 
-    }
+        if (useCardImages == null || cardUse == null) return;
 
-    for (int i = 0; i < useCardImages.Length; i++)
-    {
-        // 3. (สำคัญมาก) เช็คว่าช่องใส่รูปใน Inspector ถูกลากใส่หรือยัง?
-        // ถ้าช่องนี้ว่าง (None) ให้ข้ามไปเลย กัน Error
-        if (useCardImages[i] == null) 
+        int usableCount = 0;
+        if (allCards != null)
         {
-            Debug.LogWarning($"DeckManager: ช่อง useCardImages[{i}] ใน Inspector ยังไม่ได้ลากใส่ Image!");
-            continue; 
-        }
-
-        // --- เริ่มการทำงาน ---
-        if (i < cardUse.Length && cardUse[i] != null)
-        {
-            // ใส่รูปการ์ด
-            useCardImages[i].sprite = cardUse[i].icon;
-        }
-        else 
-        {
-            // ใส่รูป Default (ถ้ามี) หรือเคลียร์เป็น null
-            if (defaultSprite != null)
+            foreach (var c in allCards)
             {
-                useCardImages[i].sprite = defaultSprite;
+                if (c != null && c.isUsable) usableCount++;
             }
-            else
+        }
+
+        int maxActiveSlots = Mathf.Min(usableCount, useCardImages.Length);
+        
+        // 🟢 แอบติดกล้องวงจรปิดดูว่ามันนับการ์ดได้กี่ใบ!
+        Debug.Log($"[DeckManager] มีการ์ดที่ใช้ได้ทั้งหมด: {usableCount} ใบ -> จะเปิด UI ทั้งหมด: {maxActiveSlots} ช่อง");
+
+        for (int i = 0; i < useCardImages.Length; i++)
+        {
+            if (useCardImages[i] == null) continue;
+
+            bool isSlotActive = i < maxActiveSlots;
+
+            // 🟢 แก้ตรงนี้! ลบคำว่า .transform.parent ออก ให้มันปิดแค่ช่องของตัวเองพอ
+            useCardImages[i].gameObject.SetActive(isSlotActive); 
+
+            if (!isSlotActive) continue;
+
+            if (i < cardUse.Length && cardUse[i] != null)
             {
-                // ถ้าไม่มี defaultSprite ให้ใส่ null (รูปจะหายไป) หรือปล่อยไว้
-                useCardImages[i].sprite = null; 
+                useCardImages[i].sprite = cardUse[i].icon;
+            }
+            else 
+            {
+                if (defaultSprite != null) useCardImages[i].sprite = defaultSprite;
+                else useCardImages[i].sprite = null; 
             }
         }
     }
-}
-
     public void SortAndRefreshCards()
     {
         if (allCards == null || addButtons == null)
@@ -477,17 +481,32 @@ public class DeckManager : MonoBehaviour
                 btn.onClick.AddListener(() => AddCard(allCards[index])); 
             }
 
-            // จัดการสถานะ isUsable (สีเทา/สีปกติ)
+            // 🟢 1. เช็คว่าการ์ดใบนี้ "ถูกใส่ลงไปในเด็คแล้วหรือยัง?"
+            bool isAlreadyInDeck = false;
+            if (card != null && cardUse != null)
+            {
+                foreach (var c in cardUse)
+                {
+                    if (c != null && c.cardName == card.cardName)
+                    {
+                        isAlreadyInDeck = true;
+                        break;
+                    }
+                }
+            }
+
             Image img = cardObj.GetComponent<Image>();
-            if (card == null || !card.isUsable)
+            
+            // 🟢 2. ปรับเงื่อนไข: ถ้าการ์ดโดนล็อค(ยังไม่ปลด) หรือ "อยู่ในเด็คแล้ว" ให้ปุ่มมืดและกดไม่ได้
+            if (card == null || !card.isUsable || isAlreadyInDeck)
             {
                 btn.interactable = false;
-                if (img != null) img.color = new Color(0.5f, 0.5f, 0.5f, 1f);
+                if (img != null) img.color = new Color(0.5f, 0.5f, 0.5f, 1f); // สีเทามืด
             }
             else
             {
                 btn.interactable = true;
-                if (img != null) img.color = Color.white;
+                if (img != null) img.color = Color.white; // สีสว่างปกติ
             }
         }
     }

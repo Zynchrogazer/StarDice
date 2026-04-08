@@ -59,7 +59,14 @@ public class MainLightHealGimmickController : MonoBehaviour
 
     public void TickTurn(bool isAITurn)
     {
-        TickActiveGimmickDuration();
+        bool restoredThisTurn = TickActiveGimmickDuration();
+        if (restoredThisTurn)
+        {
+            // KISS: ถ้าเพิ่งคืนค่าช่องเดิมในเทิร์นนี้ ให้จบรอบก่อน
+            // เพื่อไม่ให้ restore แล้ว trigger ซ้ำทันทีจนดูเหมือนไม่เคยคืนค่า
+            ResetAutoTriggerCounter();
+            return;
+        }
 
         if (!ShouldTickAutoTrigger(isAITurn))
         {
@@ -81,21 +88,22 @@ public class MainLightHealGimmickController : MonoBehaviour
         }
     }
 
-    private void TickActiveGimmickDuration()
+    private bool TickActiveGimmickDuration()
     {
         if (mainLightHealTurnsLeft <= 0)
         {
-            return;
+            return false;
         }
 
         mainLightHealTurnsLeft--;
         if (mainLightHealTurnsLeft > 0)
         {
-            return;
+            return false;
         }
 
         RestoreMainLightHealTiles();
         Debug.Log("💚 MainLight Heal Gimmick หมดเวลาแล้ว คืนค่าช่องเดิมเรียบร้อย");
+        return true;
     }
 
     private bool ShouldTickAutoTrigger(bool isAITurn)

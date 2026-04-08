@@ -121,6 +121,12 @@ public class RouteManager : MonoBehaviour
     [Tooltip("กำหนดภาพของแต่ละชนิดช่อง (รองรับ Sprite, Material และ Texture)")]
     public List<TileVisualSetting> tileVisualSettings = new List<TileVisualSetting>();
 
+    [Header("Auto Fill Controls")]
+    [Tooltip("เปิด/ปิดการ auto fill eventName จาก TileType ตอน SyncNodes")]
+    public bool autoFillEventNameOnSync = true;
+    [Tooltip("เปิด/ปิดการ auto apply visual/texture จาก TileType ตอน SyncNodes")]
+    public bool autoFillVisualOnSync = true;
+
     [Header("Tile Randomizer")]
     [Tooltip("สุ่มประเภทช่องทุกครั้งเมื่อเริ่มเกม")]
     public bool randomizeTilesOnGameStart = false;
@@ -221,7 +227,10 @@ public class RouteManager : MonoBehaviour
                 ApplyLockFlagsFromTileIdList();
             }
 
-            ApplyTileVisuals();
+            if (autoFillVisualOnSync)
+            {
+                ApplyTileVisuals();
+            }
         }
     }
 
@@ -262,12 +271,43 @@ public class RouteManager : MonoBehaviour
                 nc.eventName = saved.eventName;
                 nc.lockRandomType = saved.lockRandomType;
             }
-            if (string.IsNullOrEmpty(nc.eventName))
+            if (autoFillEventNameOnSync && ShouldAutoAssignEventName(nc.type, nc.eventName))
             {
                 nc.eventName = GetDefaultEventName(nc.type);
             }
+
+            // ให้เปิด/ปิดได้จาก Inspector
+            if (autoFillVisualOnSync)
+            {
+                ApplyTileVisual(nc);
+            }
             nodeConnections.Add(nc);
         }
+    }
+
+    bool ShouldAutoAssignEventName(TileType type, string currentEventName)
+    {
+        if (string.IsNullOrWhiteSpace(currentEventName))
+        {
+            return true;
+        }
+
+        string trimmedEventName = currentEventName.Trim();
+        string defaultForType = GetDefaultEventName(type);
+        if (string.Equals(trimmedEventName, defaultForType, System.StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        foreach (string defaultEvent in DefaultEventNames.Values)
+        {
+            if (string.Equals(trimmedEventName, defaultEvent, System.StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
 

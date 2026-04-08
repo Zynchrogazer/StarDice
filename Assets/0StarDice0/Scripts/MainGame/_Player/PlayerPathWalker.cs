@@ -64,7 +64,7 @@ public class PlayerPathWalker : MonoBehaviour
         if (eventManager == null) eventManager = FindFirstObjectByType<EventManager>();
     }
 
-    public void ExecuteMove(int steps)
+   public void ExecuteMove(int steps)
     {
         // 🛡️ Force Reset ป้องกันสถานะค้างจากเทิร์นก่อน
         if (isExecutingTurn || isMoving)
@@ -74,15 +74,37 @@ public class PlayerPathWalker : MonoBehaviour
             isMoving = false;
         }
 
+
         if (steps <= 0)
         {
-            CheckFinalNodeEvent(); // ถ้าได้ 0 ก้าว ให้เช็ค Event ช่องที่ยืนอยู่ทันที
+            CheckFinalNodeEvent(); 
             return;
         }
 
         GiveTurnStartBonus();
         stepsRemaining = steps;
         previousNodeID = currentNodeID;
+
+        // ---------------------------------------------------------
+        // 🟢 [เพิ่มใหม่] เช็คและหักลบเทิร์นคำสาปก่อนเริ่มเดิน
+        // ---------------------------------------------------------
+        if (myState != null && myState.backwardCurseTurns > 0)
+        {
+            myState.backwardCurseTurns--; // หักไป 1 เทิร์น
+            Debug.Log($"<color=purple>😈 ผู้เล่น {name} ติดคำสาป! บังคับเดินถอยหลัง (เหลืออีก {myState.backwardCurseTurns} เทิร์น)</color>");
+        }
+
+        if (myState != null && myState.poisonDebuffTurns > 0)
+        {
+            // เอาจำนวนก้าวที่ทอยได้ (steps) มาคูณ 2 (เปลี่ยนเลข 2 เป็นเลขอื่นได้ตามใจชอบครับ)
+            int poisonDamage = steps * 2; 
+            
+            myState.TakeDamage(poisonDamage); // สั่งลดเลือด
+            myState.poisonDebuffTurns--; // หักรอบพิษลง 1 เทิร์น
+            
+            Debug.Log($"<color=green>☠️ พิษกำเริบ! ทอยได้ {steps} ก้าว โดนดาเมจ {poisonDamage} (เหลือพิษอีก {myState.poisonDebuffTurns} เทิร์น)</color>");
+        }
+
         StartCoroutine(MoveTurnCoroutine());
     }
 
@@ -102,9 +124,11 @@ public class PlayerPathWalker : MonoBehaviour
             // -----------------------------------------------------------------------
             // 🌪️ ลูกเล่น MainWind: AI เดินย้อนศร (ถอยหลัง)
             // -----------------------------------------------------------------------
-            bool isMainWindGimmick = (myState != null && myState.isAI && SceneManager.GetActiveScene().name == "MainWind");
+           bool isMainWindGimmick = (myState != null && myState.isAI && SceneManager.GetActiveScene().name == "MainWind");
+            bool isCursedToMoveBackward = (myState != null && myState.backwardCurseTurns > 0); // 🟢 เช็คว่าติดคำสาปไหม
 
-            if (isMainWindGimmick)
+            // 🟢 ถ้าเป็น AI ในลมหลัก หรือ ใครก็ตามที่ติดคำสาป ให้เดินถอยหลัง!
+            if (isMainWindGimmick || isCursedToMoveBackward)
             {
                 // ค้นหาช่องทาง "ถอยหลัง" (สแกนหาว่าช่องไหนมีเส้นเชื่อมโยงมาหาช่องที่เรายืนอยู่)
                 Transform backwardNode = null;

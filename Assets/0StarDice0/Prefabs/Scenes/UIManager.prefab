@@ -69,6 +69,7 @@ GameObject:
   - component: {fileID: 4899641596940858081}
   - component: {fileID: 8404951470289726877}
   - component: {fileID: 5108979340304688292}
+  - component: {fileID: 1594534279502797025}
   m_Layer: 0
   m_Name: UIManager
   m_TagString: Untagged
@@ -115,6 +116,9 @@ MonoBehaviour:
   debuffIconSize: {x: 64, y: 64}
   burnDebuffSprite: {fileID: 695775810, guid: 080cb6d98b00c2645b2c41df5f69bc78, type: 3}
   iceDebuffSprite: {fileID: 1401011104, guid: 080cb6d98b00c2645b2c41df5f69bc78, type: 3}
+  curseDebuffSprite: {fileID: -606357570, guid: 080cb6d98b00c2645b2c41df5f69bc78, type: 3}
+  poisonDebuffSprite: {fileID: 2047992146, guid: 080cb6d98b00c2645b2c41df5f69bc78, type: 3}
+  SleepDebuffSprite: {fileID: 1812906440, guid: 080cb6d98b00c2645b2c41df5f69bc78, type: 3}
 --- !u!114 &8404951470289726877
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -159,6 +163,33 @@ MonoBehaviour:
   debuffIconContainer: {fileID: 0}
   debuffTooltipRoot: {fileID: 0}
   debuffTooltipText: {fileID: 0}
+--- !u!114 &1594534279502797025
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 950561801771189057}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79aa5c0e7de9b1242844a9a1ef7bc019, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerState: {fileID: 0}
+  debuffSlots:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  debuffSprites:
+  - {fileID: 695775810, guid: 080cb6d98b00c2645b2c41df5f69bc78, type: 3}
+  - {fileID: 1401011104, guid: 080cb6d98b00c2645b2c41df5f69bc78, type: 3}
+  - {fileID: -606357570, guid: 080cb6d98b00c2645b2c41df5f69bc78, type: 3}
+  - {fileID: 2047992146, guid: 080cb6d98b00c2645b2c41df5f69bc78, type: 3}
+  - {fileID: 1812906440, guid: 080cb6d98b00c2645b2c41df5f69bc78, type: 3}
+  tooltipPanel: {fileID: 0}
+  tooltipText: {fileID: 0}
 --- !u!1 &1885222399592981739
 GameObject:
   m_ObjectHideFlags: 0

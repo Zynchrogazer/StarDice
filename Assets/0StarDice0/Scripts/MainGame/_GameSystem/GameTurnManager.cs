@@ -149,6 +149,20 @@ public class GameTurnManager : MonoBehaviour
             Debug.Log($"<color=cyan>[Turn] รอ UI ประกาศเทิร์น...</color>");
             OnTurnChanged?.Invoke(currentPlayer.isAI);
 
+            if (currentPlayer.sleepDebuffTurns > 0)
+            {
+                Debug.Log($"<color=blue>💤 ข้ามเทิร์น! {currentPlayer.name} กำลังหลับอยู่ (เหลืออีก {currentPlayer.sleepDebuffTurns - 1} เทิร์น)</color>");
+                
+                // หักลบจำนวนเทิร์น และสั่งอัปเดต UI
+                currentPlayer.sleepDebuffTurns--;
+                currentPlayer.NotifyStatsUpdated(); 
+
+                // รอ 1.5 วินาทีให้ผู้เล่นเห็นว่าข้ามเทิร์นเพราะหลับ แล้วส่งไม้ต่อเลย
+                yield return new WaitForSeconds(1.5f); 
+                RequestEndTurn(); 
+                yield break; // หยุดการทำงานของคนนี้ทันที (ไม่ให้ไปทอยเต๋าต่อ)
+            }
+
             if (currentPlayer.StunTurnsRemaining > 0)
             {
                 Debug.Log($"<color=blue>❄️ {currentPlayer.name} ถูกแช่แข็ง! ข้ามเทิร์นนี้ (เหลืออีก {currentPlayer.StunTurnsRemaining - 1} เทิร์น)</color>");
