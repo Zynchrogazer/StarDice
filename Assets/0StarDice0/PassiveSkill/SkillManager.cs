@@ -7,7 +7,7 @@ public class SkillManager : MonoBehaviour
 
     public HashSet<string> unlockedSkillIDs = new HashSet<string>();
 
-    public int defaultSkillPoints = 5; // เก็บไว้เผื่อระบบเก่า
+    public int defaultSkillPoints = 5; /// เก็บไว้เผื่อระบบเก่า
     private int fallbackAppliedStarBonus = 0;
 
     private const string UnlockedSkillsSaveKey = "PassiveUnlockedSkills_SHARED";
@@ -218,6 +218,22 @@ public class SkillManager : MonoBehaviour
     public static void ClearSavedUnlockedSkills()
     {
         PlayerPrefs.DeleteKey(UnlockedSkillsSaveKey);
+
+        SkillManager[] managers = FindObjectsByType<SkillManager>(FindObjectsSortMode.None);
+        for (int i = 0; i < managers.Length; i++)
+        {
+            SkillManager manager = managers[i];
+            if (manager == null)
+            {
+                continue;
+            }
+
+            manager.unlockedSkillIDs.Clear();
+            manager.fallbackAppliedStarBonus = 0;
+            manager.loadedSaveKey = string.Empty;
+            manager.ApplyAllPassiveBonusesToCurrentPlayer();
+            manager.OnSkillTreeUpdated?.Invoke();
+        }
     }
 
     private PlayerStatAggregator ResolvePlayerStatAggregator()

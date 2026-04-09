@@ -44,12 +44,35 @@ public class GameData : MonoBehaviour
         }
     }
 
-    public void SetSelectedPlayer(PlayerData player)
+   public void SetSelectedPlayer(PlayerData player)
     {
         _selectedPlayer = player;
         selectedPlayerProgress = PlayerProgressService.LoadForPlayer(player);
+
+        // 🟢 เพิ่มโค้ดส่วนนี้: บังคับปลดล็อคตัวละครทันทีที่ถูกเลือกใช้งาน
+        if (player != null)
+        {
+            UnlockPlayerInPrefs(player.name);
+        }
     }
 
+    // 🟢 เพิ่มฟังก์ชันนี้เข้าไปใน GameData: เอาไว้เช็คชื่อและเซฟการปลดล็อค
+    private void UnlockPlayerInPrefs(string playerName)
+    {
+        // แปลงชื่อเป็นตัวพิมพ์เล็กทั้งหมด จะได้หาคำง่ายๆ ไม่ต้องสนตัวพิมพ์เล็ก-ใหญ่
+        string nameLower = playerName.ToLower(); 
+
+        // เช็คว่าในชื่อไฟล์ PlayerData มีคำว่าธาตุนั้นๆ ไหม? ถ้ามีก็เซฟปลดล็อคเลย!
+        if (nameLower.Contains("water")) PlayerPrefs.SetInt("MonsterWater", 1);
+        else if (nameLower.Contains("earth")) PlayerPrefs.SetInt("MonsterEarth", 1);
+        else if (nameLower.Contains("wind")) PlayerPrefs.SetInt("MonsterWind", 1);
+        else if (nameLower.Contains("light")) PlayerPrefs.SetInt("MonsterLight", 1);
+        else if (nameLower.Contains("dark")) PlayerPrefs.SetInt("MonsterDark", 1);
+        else if (nameLower.Contains("fire")) PlayerPrefs.SetInt("MonsterFire", 1);
+
+        PlayerPrefs.Save(); // บันทึกข้อมูล
+        Debug.Log($"🔓 [GameData] ปลดล็อคตัวละครอัตโนมัติจากชื่อ: {playerName}");
+    }
     internal void SetSelectedPlayerProgressInternal(PlayerProgress progress)
     {
         selectedPlayerProgress = progress;

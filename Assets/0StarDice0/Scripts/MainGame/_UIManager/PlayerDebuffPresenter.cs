@@ -10,15 +10,21 @@ public class PlayerDebuffPresenter
     private readonly Vector2 debuffIconSize;
     private readonly Sprite burnDebuffSprite;
     private readonly Sprite iceDebuffSprite;
+    private readonly Sprite curseSprite;
+    private readonly Sprite  poisonDebuffSprite;
+    private readonly Sprite SleepDebuffSprite;
     private readonly List<DebuffSpriteIconHoverHandler> debuffIconHandlers = new List<DebuffSpriteIconHoverHandler>();
     private DebuffTooltipHoverHandler debuffTooltipHoverHandler;
 
-    public PlayerDebuffPresenter(GameObject debuffIconPrefab, Vector2 debuffIconSize, Sprite burnDebuffSprite, Sprite iceDebuffSprite)
+    public PlayerDebuffPresenter(GameObject debuffIconPrefab, Vector2 debuffIconSize, Sprite burnDebuffSprite, Sprite iceDebuffSprite, Sprite curseSprite, Sprite  poisonDebuffSprite, Sprite SleepDebuffSprite)
     {
         this.debuffIconPrefab = debuffIconPrefab;
         this.debuffIconSize = debuffIconSize;
         this.burnDebuffSprite = burnDebuffSprite;
         this.iceDebuffSprite = iceDebuffSprite;
+        this.curseSprite = curseSprite;
+        this.poisonDebuffSprite =  poisonDebuffSprite;
+        this.SleepDebuffSprite = SleepDebuffSprite;
     }
 
     public void ResetBindings()
@@ -59,6 +65,37 @@ public class PlayerDebuffPresenter
                 iceDebuffSprite,
                 player.IceDebuffAppliedOrder,
                 "Ice: ทอยเต๋าครั้งถัดไปจะเหลือครึ่งหนึ่ง\nคงเหลือ: 1 ครั้ง"));
+        }
+
+        if (player.backwardCurseTurns > 0)
+        {
+            entries.Add(new DebuffUIEntry(
+                "curse",
+                "😈",  // ไอคอนสำรองกรณีหาตัวรูปไม่เจอ
+                curseSprite, // รูปที่เราลากใส่ไว้ใน Inspector
+                0, 
+                $"Curse: บังคับเดินถอยหลัง\nคงเหลือ: {player.backwardCurseTurns} เทิร์น"));
+        }
+
+        if (player.poisonDebuffTurns > 0)
+        {
+            entries.Add(new DebuffUIEntry(
+                "poison",
+                "☠️",  // ไอคอนหัวกะโหลก
+                poisonDebuffSprite, // ตรงนี้ถ้าคุณมีรูปยาพิษ (poisonSprite) ให้เอามาใส่แทน null นะครับ (ต้องไปทำแบบเดียวกับคำสาปใน PlayerUIController ด้วย)
+                0, 
+                $"Poison: เสียเลือดตามแต้มเต๋า x2\nคงเหลือ: {player.poisonDebuffTurns} เทิร์น"));
+        }
+
+        // 🟢 เช็คว่าติดสถานะหลับอยู่ไหม
+        if (player.sleepDebuffTurns > 0)
+        {
+            entries.Add(new DebuffUIEntry(
+                "sleep",
+                "💤", 
+                SleepDebuffSprite, // หรือใช้รูปไอคอนหลับเฉพาะถ้าคุณมี (เช่น sleepSprite)
+                0, 
+                $"Sleep: หยุดเดินชั่วคราว\nคงเหลือ: {player.sleepDebuffTurns} เทิร์น"));
         }
 
         entries.Sort((left, right) =>

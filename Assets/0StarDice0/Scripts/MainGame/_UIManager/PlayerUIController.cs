@@ -14,6 +14,9 @@ public class PlayerUIController : MonoBehaviour
     public Vector2 debuffIconSize = new Vector2(32f, 32f);
     public Sprite burnDebuffSprite;
     public Sprite iceDebuffSprite;
+public Sprite curseDebuffSprite;
+public Sprite poisonDebuffSprite;
+public Sprite SleepDebuffSprite;
 
     private PlayerState myPlayer;
     private ElementButtonManager elementButtonManager;
@@ -23,7 +26,7 @@ public class PlayerUIController : MonoBehaviour
 
     private void Awake()
     {
-        debuffPresenter = new PlayerDebuffPresenter(debuffIconPrefab, debuffIconSize, burnDebuffSprite, iceDebuffSprite);
+        debuffPresenter = new PlayerDebuffPresenter(debuffIconPrefab, debuffIconSize, burnDebuffSprite, iceDebuffSprite,curseDebuffSprite, poisonDebuffSprite,SleepDebuffSprite);
     }
 
     private void Update()

@@ -435,24 +435,24 @@ public static class BattleHealthSyncBridge
         return false;
     }
 
-    private static PlayerState ResolveBoardPlayerState()
+   private static PlayerState ResolveBoardPlayerState()
     {
+        // 1. เช็คว่าเทิร์นปัจจุบันเป็นของคนเล่นหรือเปล่า
         PlayerState currentPlayer = GameTurnManager.CurrentPlayer;
         if (currentPlayer != null && !currentPlayer.isAI)
         {
             return currentPlayer;
         }
 
+        // 2. 🟢 ถ้าเทิร์นนี้เป็นของ AI (AI เดินมาชนเรา) ให้ควานหา "ผู้เล่นคนจริง" ในฉากแทน
         PlayerState[] allPlayers = Object.FindObjectsOfType<PlayerState>(true);
         foreach (PlayerState player in allPlayers)
         {
             if (player == null || player.isAI) continue;
 
-            // ผู้เล่นบนบอร์ดที่ DontDestroyOnLoad จะมี buildIndex == -1
-            if (player.gameObject.scene.buildIndex == -1)
-            {
-                return player;
-            }
+            // 🛑 ลบเงื่อนไข (buildIndex == -1) ทิ้งไปเลย! 
+            // เจอคนเล่นปุ๊บ ให้ดึงข้อมูลมาใช้ผูกปุ่มกลับด่านทันที ไม่ต้องสนว่าอยู่ Scene ไหน
+            return player; 
         }
 
         return null;

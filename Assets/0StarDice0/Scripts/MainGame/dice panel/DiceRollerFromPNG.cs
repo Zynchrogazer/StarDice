@@ -9,25 +9,23 @@ public class DiceRollerFromPNG : MonoBehaviour
 
     public static bool TryGet(out DiceRollerFromPNG manager)
     {
-        if (cachedManager != null)
-        {
-            manager = cachedManager;
-            return true;
-        }
-
+        if (cachedManager != null) { manager = cachedManager; return true; }
         manager = FindFirstObjectByType<DiceRollerFromPNG>();
-        if (manager != null)
-        {
-            cachedManager = manager;
-        }
+        if (manager != null) { cachedManager = manager; }
         return manager != null;
     }
 
-    [Header("UI References (Optional)")]
-    public Image diceImage;
+    [Header("UI References (Player & AI)")]
+    // 🟢 1. ช่องใหม่สำหรับลากโฟลเดอร์ UI มาใส่แยกกัน!
+    [Tooltip("ลาก GameObject ตัวแม่ที่คลุมเต๋าทั้ง 6 หน้าของผู้เล่นมาใส่ตรงนี้")]
+    public GameObject playerDiceContainer; 
+    
+    [Tooltip("ลาก GameObject ตัวแม่ที่คลุมเต๋าทั้ง 6 หน้าของ AI มาใส่ตรงนี้")]
+    public GameObject aiDiceContainer;     
 
     [Header("Settings")]
     public float rollDuration = 1.0f;
+    public float resultDisplayTime = 1.5f; // เวลาโชว์ผลลัพธ์
 
     [Header("Audio Settings")]
     public AudioSource sfxSource;
@@ -35,17 +33,22 @@ public class DiceRollerFromPNG : MonoBehaviour
     public AudioClip rollResultSound;
 
     private Button rollButton;
-    private GameObject[] dicePanels = new GameObject[6];
     private bool isRolling = false;
     private int pendingMultiplier = 1;
+
+    // 🟢 2. แยกความจำลูกเต๋าเป็น 2 ชุด
+    private GameObject[] playerDicePanels = new GameObject[6];
+    private GameObject[] aiDicePanels = new GameObject[6];
+    
+    // ตัวแปรชี้เป้าว่าตอนนี้ตาใครทอย จะได้โชว์ภาพถูกชุด
+    private GameObject[] currentActivePanels;
+    private GameObject currentActiveContainer;
 
     private void Awake()
     {
         DiceRollerFromPNG[] rollers = FindObjectsByType<DiceRollerFromPNG>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         if (rollers.Length > 1) { Destroy(gameObject); return; }
-
         cachedManager = this;
-
         if (sfxSource == null) sfxSource = GetComponent<AudioSource>();
         if (sfxSource == null) sfxSource = gameObject.AddComponent<AudioSource>();
     }
@@ -55,13 +58,8 @@ public class DiceRollerFromPNG : MonoBehaviour
     private void OnEnable()
     {
         SceneManager.sceneLoaded += OnSceneLoaded;
-        // ✅ ลงทะเบียนฟังข่าว OnBoardSceneReady ด้วย
         GameEventManager.OnBoardSceneReady += RefreshReferences;
-
-        if (gameObject.activeInHierarchy)
-        {
-            RefreshReferences();
-        }
+        if (gameObject.activeInHierarchy) RefreshReferences();
     }
 
     private void OnDisable()
@@ -70,13 +68,7 @@ public class DiceRollerFromPNG : MonoBehaviour
         GameEventManager.OnBoardSceneReady -= RefreshReferences;
     }
 
-    private void OnDestroy()
-    {
-        if (cachedManager == this)
-        {
-            cachedManager = null;
-        }
-    }
+    private void OnDestroy() { if (cachedManager == this) cachedManager = null; }
 
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
@@ -84,61 +76,52 @@ public class DiceRollerFromPNG : MonoBehaviour
         RefreshReferences();
     }
 
-    private IEnumerator CheckStateOnEnable()
-    {
-        yield return new WaitForSeconds(0.2f); // รอให้ Manager ตั้งสติแป๊บนึง
-        if (GameTurnManager.TryGet(out var gameTurnManager) &&
-            gameTurnManager.currentState == GameState.WaitingForRoll)
-        {
-            PlayerState current = GameTurnManager.CurrentPlayer;
-            if (current != null && !current.isAI)
-            {
-                SetRollButtonActive(true);
-                Debug.Log("<color=lime>[DiceRoller] กลับมาที่ซีนหลักและเปิดปุ่มให้ใหม่แล้ว</color>");
-            }
-            else if (current == null)
-            {
-                Debug.LogWarning("[DiceRoller] WaitingForRoll but CurrentPlayer is null.");
-            }
-        }
-    }
-
     private void RefreshReferences()
     {
         isRolling = false;
         rollButton = null;
-
-        // ✅ ตรวจสอบว่า GameObject เปิดใช้งานอยู่หรือไม่ก่อนรัน Coroutine
         if (gameObject.activeInHierarchy)
         {
             StartCoroutine(RetryFindButton());
-            FindAndSetupDicePanels();
+            SetupDicePanels(); // 🟢 สั่งดึงหน้าลูกเต๋าทั้ง 2 ชุด
             StartCoroutine(ApplyInitialState());
-        }
-        else
-        {
-            Debug.LogWarning($"[DiceRoller] {gameObject.name} ปิดอยู่! ข้ามการรัน Coroutine");
         }
     }
 
+    // ==========================================
+    // 🟢 โซนกำหนดว่าตาใครทอย
+    // ==========================================
     public void RollDice()
     {   
-        // ✅ เช็ค State: ต้องเป็นตาคนเล่น (WaitingForRoll) เท่านั้นถึงจะกดได้
         if (!GameTurnManager.TryGet(out var gameTurnManager) || isRolling || gameTurnManager.currentState != GameState.WaitingForRoll) return;
-        StartCoroutine(RollCoroutine());
         
+        // บอกระบบว่าใช้ UI ของผู้เล่นนะ!
+        currentActivePanels = playerDicePanels;
+        currentActiveContainer = playerDiceContainer;
+        
+        StartCoroutine(RollCoroutine());
     }
 
     public void RollDiceForAI()
     {
-        // ✅ เช็ค State: ต้องเป็นตา AI (Rolling) เท่านั้น
         if (!GameTurnManager.TryGet(out var gameTurnManager) || isRolling || gameTurnManager.currentState != GameState.Rolling) return;
+        
+        // บอกระบบว่าใช้ UI ของ AI นะ!
+        currentActivePanels = aiDicePanels;
+        currentActiveContainer = aiDiceContainer;
+        
         StartCoroutine(RollCoroutine());
     }
 
     public void RollDiceWithResult(int forcedResult)
     {
         if (isRolling) return;
+        // กรณีโดนบังคับทอย ให้เช็คว่าเป็นตาใคร
+        if (GameTurnManager.TryGet(out var gameTurnManager) && GameTurnManager.CurrentPlayer != null)
+        {
+            currentActivePanels = GameTurnManager.CurrentPlayer.isAI ? aiDicePanels : playerDicePanels;
+            currentActiveContainer = GameTurnManager.CurrentPlayer.isAI ? aiDiceContainer : playerDiceContainer;
+        }
         StartCoroutine(RollCoroutine(forcedResult));
     }
 
@@ -147,19 +130,21 @@ public class DiceRollerFromPNG : MonoBehaviour
         float elapsed = 0f;
         int finalIndex = 0;
 
-        if (dicePanels == null || dicePanels.Length == 0 || dicePanels[0] == null)
+        // ถ้าหาไม่เจอจริงๆ ให้ดึงชุดของผู้เล่นมากันบัคค้าง
+        if (currentActivePanels == null || currentActivePanels.Length == 0) 
         {
-            FindAndSetupDicePanels();
-            if (dicePanels[0] == null) { elapsed = rollDuration; }
+            currentActivePanels = playerDicePanels;
+            currentActiveContainer = playerDiceContainer;
         }
 
         isRolling = true;
         SetRollButtonActive(false);
+        if (currentActiveContainer != null) currentActiveContainer.SetActive(true); // โชว์กล่องของคนที่กำลังทอย
 
         // --- ช่วง Animation หมุน ---
         while (elapsed < rollDuration)
         {
-            finalIndex = Random.Range(0, dicePanels.Length);
+            finalIndex = Random.Range(0, currentActivePanels.Length);
             ShowOnlyPanel(finalIndex + 1);
             if (sfxSource != null && rollTickSound != null) sfxSource.PlayOneShot(rollTickSound, 0.7f);
             elapsed += 0.1f;
@@ -167,49 +152,78 @@ public class DiceRollerFromPNG : MonoBehaviour
         }
 
         // --- ช่วงสรุปผล ---
-        int finalResult = (forcedResult != -1) ? forcedResult : Random.Range(1, dicePanels.Length + 1);
+        int finalResult = (forcedResult != -1) ? forcedResult : Random.Range(1, currentActivePanels.Length + 1);
 
         PlayerState currentPlayer = GameTurnManager.CurrentPlayer;
         if (currentPlayer != null && currentPlayer.TryConsumeIceDebuff())
         {
             finalResult = Mathf.Max(1, finalResult / 2);
-            Debug.Log($"<color=cyan>❄️ Ice Debuff activated! Dice result reduced to {finalResult}</color>");
         }
 
         ShowOnlyPanel(finalResult);
         if (sfxSource != null && rollResultSound != null) sfxSource.PlayOneShot(rollResultSound, 1.0f);
 
-        Debug.Log($"🎲 ลูกเต๋าออก {finalResult} (Multiplier: x{pendingMultiplier})");
-        yield return new WaitForSeconds(0.5f);
-        int finalnubmber = finalResult* pendingMultiplier;
+        yield return new WaitForSeconds(resultDisplayTime); 
+
+        int finalnubmber = finalResult * pendingMultiplier;
         pendingMultiplier = 1;
 
         HideAllPanels();
         isRolling = false;
 
-        // ✅ จุดสำคัญ: ส่งไม้ต่อให้ GameTurnManager เพื่อเปลี่ยน State เป็น Moving
         if (GameTurnManager.TryGet(out var gameTurnManager))
         {
             gameTurnManager.OnDiceRolled(finalnubmber);
         }
     }
 
-    public void SetPendingMultiplier(int multiplier) { pendingMultiplier = multiplier; }
-
-    public void EnableRollButton() { SetRollButtonActive(true); }
-
     private void ShowOnlyPanel(int value)
     {
-        for (int i = 0; i < dicePanels.Length; i++)
+        for (int i = 0; i < currentActivePanels.Length; i++)
         {
-            if (dicePanels[i] != null) dicePanels[i].SetActive((i + 1) == value);
+            if (currentActivePanels[i] != null) 
+                currentActivePanels[i].SetActive((i + 1) == value);
         }
     }
 
     private void HideAllPanels()
     {
-        foreach (var panel in dicePanels) if (panel != null) panel.SetActive(false);
+        // สั่งปิดซ่อนโฟลเดอร์ของทั้งคู่เลย
+        if (playerDiceContainer != null) playerDiceContainer.SetActive(false);
+        if (aiDiceContainer != null) aiDiceContainer.SetActive(false);
     }
+
+    // 🟢 ระบบดึงภาพหน้าลูกเต๋าแบบใหม่ 2 ชุด
+    private void SetupDicePanels()
+    {
+        if (playerDiceContainer != null)
+        {
+            playerDiceContainer.SetActive(true);
+            for (int i = 0; i < 6 && i < playerDiceContainer.transform.childCount; i++)
+            {
+                playerDicePanels[i] = playerDiceContainer.transform.GetChild(i).gameObject;
+                playerDicePanels[i].SetActive(false);
+            }
+            playerDiceContainer.SetActive(false);
+        }
+
+        if (aiDiceContainer != null)
+        {
+            aiDiceContainer.SetActive(true);
+            for (int i = 0; i < 6 && i < aiDiceContainer.transform.childCount; i++)
+            {
+                aiDicePanels[i] = aiDiceContainer.transform.GetChild(i).gameObject;
+                aiDicePanels[i].SetActive(false);
+            }
+            aiDiceContainer.SetActive(false);
+        }
+    }
+
+    // ==========================================
+    // UI Button & System
+    // ==========================================
+    public void SetPendingMultiplier(int multiplier) { pendingMultiplier = multiplier; }
+    public void EnableRollButton() { SetRollButtonActive(true); }
 
     public void SetRollButtonActive(bool isActive)
     {
@@ -223,17 +237,12 @@ public class DiceRollerFromPNG : MonoBehaviour
 
     private void FindAndSetupRollButton()
     {
-        // 1. พยายามหาด้วย Tag ก่อน (วิธีที่เร็วที่สุด)
         GameObject rollButtonObject = GameObject.FindWithTag("RollButton");
-
-        // 2. ถ้าหาไม่เจอ อาจเป็นเพราะปุ่มถูกปิดอยู่ หรือชื่อไม่ตรง
         if (rollButtonObject == null)
         {
-            // ค้นหาในกลุ่ม Object ทั้งหมด (รวมตัวที่ปิดอยู่ด้วย - ถ้าใช้ Unity เวอร์ชั่นใหม่)
             Button foundButton = Resources.FindObjectsOfTypeAll<Button>().Length > 0
                 ? System.Array.Find(Resources.FindObjectsOfTypeAll<Button>(), b => b.name == "RollButton" || b.CompareTag("RollButton"))
                 : null;
-
             if (foundButton != null) rollButtonObject = foundButton.gameObject;
         }
 
@@ -244,29 +253,6 @@ public class DiceRollerFromPNG : MonoBehaviour
             {
                 rollButton.onClick.RemoveAllListeners();
                 rollButton.onClick.AddListener(RollDice);
-                // Debug.Log("<color=cyan>[DiceRoller] ✅ เชื่อมต่อปุ่ม RollButton สำเร็จ!</color>");
-            }
-        }
-        else
-        {
-            // 🚨 ถ้าหาไม่เจอจริงๆ ให้พิมพ์ Error ออกมาดู
-            Debug.LogError("<color=red>[DiceRoller] ❌ หา RollButton ไม่เจอ! ตรวจสอบว่าปุ่มอยู่ใน Scene และตั้ง Tag 'RollButton' หรือยัง</color>");
-        }
-    }
-
-    private void FindAndSetupDicePanels()
-    {
-        GameObject container = GameObject.Find("DicePanelsContainer");
-        if (container != null)
-        {
-            container.SetActive(true);
-            for (int i = 0; i < 6; i++)
-            {
-                if (i < container.transform.childCount)
-                {
-                    dicePanels[i] = container.transform.GetChild(i).gameObject;
-                    dicePanels[i].SetActive(false);
-                }
             }
         }
     }
@@ -274,21 +260,13 @@ public class DiceRollerFromPNG : MonoBehaviour
     public void ForceEnableButton()
     {
         isRolling = false;
-
-        // ✅ แก้ไข: พยายามหาปุ่มใหม่ทุกครั้งที่ถูกเรียก ถ้ายังไม่มี Reference
-        if (rollButton == null)
-        {
-            FindAndSetupRollButton();
-        }
-
+        if (rollButton == null) FindAndSetupRollButton();
         if (rollButton != null)
         {
             SetRollButtonActive(true);
-            Debug.Log("<color=lime>[DiceRoller] 🔨 UI Restored Success!</color>");
         }
         else
         {
-            // 🚨 ถ้ายังหาไม่เจอ ให้ลองหาแบบครอบคลุม (รวม Object ที่ปิดอยู่)
             Button[] allButtons = Resources.FindObjectsOfTypeAll<Button>();
             foreach (Button b in allButtons)
             {
@@ -299,18 +277,16 @@ public class DiceRollerFromPNG : MonoBehaviour
                     return;
                 }
             }
-            Debug.LogError("<color=red>[DiceRoller] ❌ หา RollButton ไม่เจอจริงๆ ตรวจสอบ Tag ใน Scene ด้วย!</color>");
         }
     }
 
     private IEnumerator RetryFindButton()
     {
         int retryCount = 0;
-        while (rollButton == null && retryCount < 10) // พยายามหา 10 ครั้ง (ประมาณ 1 วินาที)
+        while (rollButton == null && retryCount < 10) 
         {
             FindAndSetupRollButton();
             if (rollButton != null) break;
-
             retryCount++;
             yield return new WaitForSeconds(0.1f);
         }
@@ -318,14 +294,12 @@ public class DiceRollerFromPNG : MonoBehaviour
 
     private IEnumerator ApplyInitialState()
     {
-        yield return new WaitForSeconds(0.3f); // รอให้การค้นหาปุ่มใน Retry เสร็จก่อน
-
+        yield return new WaitForSeconds(0.3f); 
         if (GameTurnManager.TryGet(out var gameTurnManager) &&
             gameTurnManager.currentState == GameState.WaitingForRoll &&
             !GameTurnManager.CurrentPlayer.isAI)
         {
             SetRollButtonActive(true);
-            Debug.Log("<color=lime>[DiceRoller] UI Restored & Active!</color>");
         }
     }
 }

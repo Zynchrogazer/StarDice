@@ -10,6 +10,7 @@ public class ElementButtonManager : MonoBehaviour
     public PlayerData selectedPlayer;
 
     private bool hasInitialized;
+    private PlayerState observedPlayerState;
 
     void Start()
     {
@@ -23,6 +24,13 @@ public class ElementButtonManager : MonoBehaviour
         {
             UpdateButtons();
         }
+
+        BindPlayerStatsListener();
+    }
+
+    private void OnDisable()
+    {
+        UnbindPlayerStatsListener();
     }
 
     void UpdateButtons()
@@ -46,6 +54,7 @@ public class ElementButtonManager : MonoBehaviour
         }
 
         buttons[index].gameObject.SetActive(true);
+        BindPlayerStatsListener();
         ApplyRuntimeStatsToStatusPanels();
         hasInitialized = true;
     }
@@ -106,6 +115,34 @@ public class ElementButtonManager : MonoBehaviour
         }
 
         return null;
+    }
+
+    private void BindPlayerStatsListener()
+    {
+        PlayerState humanPlayer = ResolveHumanPlayerState();
+        if (observedPlayerState == humanPlayer)
+            return;
+
+        UnbindPlayerStatsListener();
+        observedPlayerState = humanPlayer;
+        if (observedPlayerState != null)
+        {
+            observedPlayerState.OnStatsUpdated += HandleObservedPlayerStatsUpdated;
+        }
+    }
+
+    private void UnbindPlayerStatsListener()
+    {
+        if (observedPlayerState == null)
+            return;
+
+        observedPlayerState.OnStatsUpdated -= HandleObservedPlayerStatsUpdated;
+        observedPlayerState = null;
+    }
+
+    private void HandleObservedPlayerStatsUpdated()
+    {
+        ApplyRuntimeStatsToStatusPanels();
     }
 
     private PlayerData ResolveSelectedPlayer()

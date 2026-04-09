@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Collections;
+using UnityEngine.EventSystems;
 
 public class RuntimeHubController : MonoBehaviour
 {
@@ -59,6 +60,66 @@ public class RuntimeHubController : MonoBehaviour
             }
         }
 
+        EnsureSingleEventSystemAndAudioListener(loadedScene);
         isTransitioning = false;
+    }
+
+    private static void EnsureSingleEventSystemAndAudioListener(Scene preferredScene)
+    {
+        EventSystem[] eventSystems = FindObjectsByType<EventSystem>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        EventSystem preferredEventSystem = null;
+        for (int i = 0; i < eventSystems.Length; i++)
+        {
+            EventSystem candidate = eventSystems[i];
+            if (candidate != null && candidate.gameObject.scene == preferredScene)
+            {
+                preferredEventSystem = candidate;
+                break;
+            }
+        }
+
+        if (preferredEventSystem == null && eventSystems.Length > 0)
+        {
+            preferredEventSystem = eventSystems[0];
+        }
+
+        for (int i = 0; i < eventSystems.Length; i++)
+        {
+            EventSystem candidate = eventSystems[i];
+            if (candidate == null)
+            {
+                continue;
+            }
+
+            candidate.enabled = candidate == preferredEventSystem;
+        }
+
+        AudioListener[] audioListeners = FindObjectsByType<AudioListener>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        AudioListener preferredAudioListener = null;
+        for (int i = 0; i < audioListeners.Length; i++)
+        {
+            AudioListener candidate = audioListeners[i];
+            if (candidate != null && candidate.gameObject.scene == preferredScene)
+            {
+                preferredAudioListener = candidate;
+                break;
+            }
+        }
+
+        if (preferredAudioListener == null && audioListeners.Length > 0)
+        {
+            preferredAudioListener = audioListeners[0];
+        }
+
+        for (int i = 0; i < audioListeners.Length; i++)
+        {
+            AudioListener candidate = audioListeners[i];
+            if (candidate == null)
+            {
+                continue;
+            }
+
+            candidate.enabled = candidate == preferredAudioListener;
+        }
     }
 }
