@@ -9,6 +9,7 @@ public class DeckManager : MonoBehaviour
 {
     private static DeckManager cachedManager;
     private const string PrimarySceneName = "RuntimeHub";
+    public const string PendingCommonOnlyResetKey = "PendingCommonOnlyCardReset";
     private static readonly CardData[] EmptyDeck = new CardData[0];
 
     public static bool TryGet(out DeckManager manager)
@@ -49,6 +50,12 @@ public class DeckManager : MonoBehaviour
     {
         if (TryGet(out var manager))
             manager.RemoveCard(slotIndex);
+    }
+
+    public static void MarkPendingCommonOnlyReset()
+    {
+        PlayerPrefs.SetInt(PendingCommonOnlyResetKey, 1);
+        PlayerPrefs.Save();
     }
 
     [Header("Deck Data")]
@@ -147,6 +154,7 @@ public class DeckManager : MonoBehaviour
     {
         // 1. โหลดสถานะการ์ด (ว่าใบไหนใช้ได้/ไม่ได้) จาก PlayerPrefs
         LoadCardStates();
+        ApplyPendingCommonOnlyResetIfNeeded();
 
         // 2. โหลดเด็คที่เคยจัดไว้ล่าสุดจาก PlayerPrefs
         LoadDeckFromPrefs();
@@ -159,6 +167,45 @@ public class DeckManager : MonoBehaviour
         // RuntimeHub เป็นฉากแรกหลังเมนู จึงต้อง bind UI ของฉากปัจจุบันด้วย
         // (ไม่พึ่งเฉพาะ sceneLoaded event อย่างเดียว)
         StartCoroutine(WaitAndBindUI());
+    }
+
+    private void ApplyPendingCommonOnlyResetIfNeeded()
+    {
+        if (PlayerPrefs.GetInt(PendingCommonOnlyResetKey, 0) != 1)
+            return;
+
+        if (ResetAllCardStatesToCommonOnly())
+        {
+            PlayerPrefs.DeleteKey(PendingCommonOnlyResetKey);
+            PlayerPrefs.Save();
+        }
+    }
+
+    private bool ResetAllCardStatesToCommonOnly()
+    {
+        if (allCards == null)
+            return false;
+
+        foreach (CardData card in allCards)
+        {
+            if (card == null || string.IsNullOrWhiteSpace(card.cardName))
+                continue;
+
+            bool isCommon = card.rarity == CardRarity.Common;
+            card.isUsable = isCommon;
+            PlayerPrefs.SetInt("CardState_" + card.cardName, isCommon ? 1 : 0);
+        }
+
+        if (cardUse != null)
+        {
+            for (int i = 0; i < cardUse.Length; i++)
+            {
+                cardUse[i] = null;
+            }
+        }
+
+        PlayerPrefs.DeleteKey("CurrentDeckData");
+        return true;
     }
 
     // --- ส่วนจัดการ PlayerPrefs (Save/Load) ---

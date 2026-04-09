@@ -52,6 +52,7 @@ public class MainMenuController : MonoBehaviour
         PlayerPrefs.SetInt("levelReached", 1);
 
         ResetCardAvailabilityToCommonOnly();
+        DeckManager.MarkPendingCommonOnlyReset();
         PlayerPrefs.DeleteKey("CurrentDeckData");
         ResetEquippedItemsForNewGame();
 

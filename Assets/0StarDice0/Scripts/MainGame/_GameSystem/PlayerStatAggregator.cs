@@ -71,13 +71,25 @@ public class PlayerStatAggregator : MonoBehaviour
 
     public void RefreshCurrentPlayerStats()
     {
-        if (GameTurnManager.CurrentPlayer == null || GameData.Instance?.selectedPlayer == null)
-        {
-            return;
-        }
-
         PlayerState player = GameTurnManager.CurrentPlayer;
-        PlayerData baseData = GameData.Instance.selectedPlayer;
+        if (player == null)
+            return;
+
+        RefreshPlayerStats(player, GameData.Instance != null ? GameData.Instance.selectedPlayer : null);
+    }
+
+    public void RefreshPlayerStats(PlayerState player, PlayerData explicitBaseData = null)
+    {
+        if (player == null)
+            return;
+
+        PlayerData baseData = explicitBaseData;
+        if (baseData == null)
+            baseData = player.selectedPlayerPreset;
+        if (baseData == null && GameData.Instance != null)
+            baseData = GameData.Instance.selectedPlayer;
+        if (baseData == null)
+            return;
 
         int passiveAttackBonus = 0;
         int passiveMaxHealthBonus = 0;
