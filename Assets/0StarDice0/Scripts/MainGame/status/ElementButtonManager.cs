@@ -19,18 +19,31 @@ public class ElementButtonManager : MonoBehaviour
 
     private void OnEnable()
     {
-        // กันกรณี scene โหลดช้ากว่า GameData/PlayerData
-        if (!hasInitialized)
-        {
-            UpdateButtons();
-        }
-
+        // Re-initialize ทุกครั้งที่กลับเข้า scene/object อีกครั้ง
+        // เพื่อกันเคสปุ่ม status ไม่โผล่หลังกลับจาก scene อื่น
+        UpdateButtons();
         BindPlayerStatsListener();
     }
 
     private void OnDisable()
     {
         UnbindPlayerStatsListener();
+    }
+
+    private void Update()
+    {
+        // กัน race condition ตอนเข้า scene: ถ้า selected player ยังไม่พร้อมในเฟรมแรก
+        // ให้ลอง bind ปุ่มใหม่จนกว่าจะ init สำเร็จ
+        if (!hasInitialized)
+        {
+            UpdateButtons();
+            return;
+        }
+
+        if (observedPlayerState == null)
+        {
+            BindPlayerStatsListener();
+        }
     }
 
     void UpdateButtons()
@@ -80,18 +93,7 @@ public class ElementButtonManager : MonoBehaviour
                 {
                     txt.text = $"HP : {playerState.PlayerHealth}";
                 }
-                else if (key.Contains("atk"))
-                {
-                    txt.text = $"ATK : {playerState.CurrentAttack}";
-                }
-                else if (key.Contains("spd") || key.Contains("speed"))
-                {
-                    txt.text = $"SPD : {playerState.CurrentSpeed}";
-                }
-                else if (key.Contains("def"))
-                {
-                    txt.text = $"DEF : {playerState.CurrentDefense}";
-                }
+
             }
         }
     }

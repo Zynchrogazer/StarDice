@@ -216,7 +216,7 @@ public class PlayerState : MonoBehaviour
 
         if (ResolvePlayerStatAggregator() != null)
         {
-            ResolvePlayerStatAggregator().RefreshCurrentPlayerStats();
+            ResolvePlayerStatAggregator().RefreshPlayerStats(this, data);
         }
 
         Debug.Log($"[PlayerState] Loaded: Level {PlayerLevel}, HP {PlayerHealth}/{MaxHealth}");
@@ -528,7 +528,7 @@ public class PlayerState : MonoBehaviour
 
         if (ResolvePlayerStatAggregator() != null)
         {
-            ResolvePlayerStatAggregator().RefreshCurrentPlayerStats();
+            ResolvePlayerStatAggregator().RefreshPlayerStats(this, sourceData);
         }
 
         OnStatsUpdated?.Invoke();
