@@ -2,7 +2,6 @@
 using UnityEngine;
 using System.Text.RegularExpressions;
 using System.Linq;
-using UnityEngine.UI;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -89,6 +88,8 @@ public struct TileVisualSetting
 public class RouteManager : MonoBehaviour
 {
     private static RouteManager cachedManager;
+    private readonly TileVisualCache tileVisualCache = new TileVisualCache();
+    private readonly TileRandomizer tileRandomizer = new TileRandomizer();
 
     public static bool TryGet(out RouteManager manager)
     {
@@ -214,24 +215,64 @@ public class RouteManager : MonoBehaviour
     private void OnValidate()
     {
         // ทำงานใน Editor เท่านั้น เพื่อให้การปรับค่าใน Inspector เห็นผลทันที
-        if (Application.isEditor)
+        if (!Application.isEditor) return;
+
+        tileVisualCache.MarkDirty();
+        SyncNodesIfNeeded();
+        RunEditorAutomation();
+        ApplyTileVisuals();
+    }
+
+    private void SyncNodesIfNeeded()
+    {
+        if (ShouldSyncNodes())
         {
             SyncNodes();
-            if (autoConnectSequential)
-            {
-                ConnectSequential();
-            }
+        }
+    }
 
-            if (autoApplyLockByTileIds)
-            {
-                ApplyLockFlagsFromTileIdList();
-            }
+    private void RunEditorAutomation()
+    {
+        if (autoConnectSequential)
+        {
+            ConnectSequential();
+        }
 
-            if (autoFillVisualOnSync)
+        if (autoApplyLockByTileIds)
+        {
+            ApplyLockFlagsFromTileIdList();
+        }
+    }
+
+    private bool ShouldSyncNodes()
+    {
+        if (nodeConnections == null)
+        {
+            return true;
+        }
+
+        int childCount = transform.childCount;
+        if (nodeConnections.Count != childCount)
+        {
+            return true;
+        }
+
+        HashSet<Transform> childSet = new HashSet<Transform>();
+        foreach (Transform child in transform)
+        {
+            childSet.Add(child);
+        }
+
+        for (int i = 0; i < nodeConnections.Count; i++)
+        {
+            NodeConnection nc = nodeConnections[i];
+            if (nc == null || nc.node == null || !childSet.Contains(nc.node))
             {
-                ApplyTileVisuals();
+                return true;
             }
         }
+
+        return false;
     }
 
     private void SyncNodes()
@@ -367,151 +408,34 @@ public class RouteManager : MonoBehaviour
         var originalUnlockedTypes = unlockedNodes.Select(nc => nc.type).ToList();
         int seedToUse = useDeterministicSeed ? randomSeed : UnityEngine.Random.Range(int.MinValue, int.MaxValue);
         System.Random rng = new System.Random(seedToUse);
-
-        int attempts = Mathf.Max(1, maxRandomizeAttempts);
-        bool success = false;
-
-        for (int attempt = 1; attempt <= attempts; attempt++)
+        var settings = new TileRandomizerSettings
         {
-            RestoreUnlockedTypes(unlockedNodes, originalUnlockedTypes);
+            mode = tileRandomMode,
+            fallbackTileType = fallbackTileType,
+            tileRandomLimits = tileRandomLimits,
+            useLimitAllowList = useLimitAllowList,
+            limitAllowedTypes = limitAllowedTypes,
+            excludeLockedTilesFromLimitCounts = excludeLockedTilesFromLimitCounts,
+            validateInvariantsAfterRandom = validateInvariantsAfterRandom,
+            maxRandomizeAttempts = maxRandomizeAttempts,
+            tileInvariantRules = tileInvariantRules
+        };
 
-            if (tileRandomMode == TileRandomMode.FullShuffle)
-            {
-                ApplyFullShuffle(unlockedNodes, rng);
-            }
-            else
-            {
-                ApplyLimitShuffle(unlockedNodes, rng);
-            }
-
-            if (!validateInvariantsAfterRandom || ValidateTileInvariants())
-            {
-                success = true;
-                break;
-            }
-        }
+        bool success = tileRandomizer.Randomize(
+            nodeConnections,
+            unlockedNodes,
+            originalUnlockedTypes,
+            settings,
+            rng,
+            GetDefaultEventName);
 
         if (!success)
         {
             Debug.LogWarning("[RouteManager] สุ่มครบจำนวนครั้งแล้วแต่ invariant ไม่ผ่าน -> revert เป็นค่าก่อนสุ่ม");
-            RestoreUnlockedTypes(unlockedNodes, originalUnlockedTypes);
         }
 
         ApplyTileVisuals();
         RebuildNodeDataMap();
-    }
-
-    void RestoreUnlockedTypes(List<NodeConnection> unlockedNodes, List<TileType> originalUnlockedTypes)
-    {
-        for (int i = 0; i < unlockedNodes.Count && i < originalUnlockedTypes.Count; i++)
-        {
-            unlockedNodes[i].type = originalUnlockedTypes[i];
-            unlockedNodes[i].eventName = GetDefaultEventName(originalUnlockedTypes[i]);
-        }
-    }
-
-    void ApplyFullShuffle(List<NodeConnection> unlockedNodes, System.Random rng)
-    {
-        List<TileType> types = unlockedNodes.Select(nc => nc.type).ToList();
-
-        for (int i = types.Count - 1; i > 0; i--)
-        {
-            int randomIndex = rng.Next(0, i + 1);
-            TileType temp = types[i];
-            types[i] = types[randomIndex];
-            types[randomIndex] = temp;
-        }
-
-        for (int i = 0; i < unlockedNodes.Count; i++)
-        {
-            unlockedNodes[i].type = types[i];
-            unlockedNodes[i].eventName = GetDefaultEventName(types[i]);
-        }
-    }
-
-    void ApplyLimitShuffle(List<NodeConnection> unlockedNodes, System.Random rng)
-    {
-        Dictionary<TileType, int> maxByType = new Dictionary<TileType, int>();
-        foreach (var limit in tileRandomLimits)
-        {
-            maxByType[limit.type] = limit.maxCount;
-        }
-
-        IEnumerable<NodeConnection> countedNodes = excludeLockedTilesFromLimitCounts
-            ? unlockedNodes
-            : nodeConnections.Where(nc => nc != null && nc.node != null);
-
-        Dictionary<TileType, int> currentCounts = countedNodes
-            .GroupBy(nc => nc.type)
-            .ToDictionary(g => g.Key, g => g.Count());
-
-        var randomOrderNodes = unlockedNodes.OrderBy(_ => rng.Next()).ToList();
-        System.Array allTypes = System.Enum.GetValues(typeof(TileType));
-
-        HashSet<TileType> allowSet = new HashSet<TileType>();
-        if (useLimitAllowList)
-        {
-            foreach (var type in limitAllowedTypes)
-            {
-                allowSet.Add(type);
-            }
-        }
-
-        foreach (var node in randomOrderNodes)
-        {
-            List<TileType> allowedTypes = new List<TileType>();
-            foreach (TileType tileType in allTypes)
-            {
-                if (useLimitAllowList && !allowSet.Contains(tileType))
-                {
-                    continue;
-                }
-
-                int currentCount = currentCounts.ContainsKey(tileType) ? currentCounts[tileType] : 0;
-                if (!maxByType.TryGetValue(tileType, out int maxCount) || currentCount < maxCount)
-                {
-                    allowedTypes.Add(tileType);
-                }
-            }
-
-            TileType selectedType = allowedTypes.Count > 0
-                ? allowedTypes[rng.Next(0, allowedTypes.Count)]
-                : fallbackTileType;
-
-            if (currentCounts.ContainsKey(node.type))
-            {
-                currentCounts[node.type] = Mathf.Max(0, currentCounts[node.type] - 1);
-            }
-
-            node.type = selectedType;
-            node.eventName = GetDefaultEventName(selectedType);
-            currentCounts[selectedType] = (currentCounts.ContainsKey(selectedType) ? currentCounts[selectedType] : 0) + 1;
-        }
-    }
-
-    bool ValidateTileInvariants()
-    {
-        if (tileInvariantRules == null || tileInvariantRules.Count == 0)
-        {
-            return true;
-        }
-
-        Dictionary<TileType, int> counts = nodeConnections
-            .Where(nc => nc != null && nc.node != null)
-            .GroupBy(nc => nc.type)
-            .ToDictionary(g => g.Key, g => g.Count());
-
-        foreach (var rule in tileInvariantRules)
-        {
-            int current = counts.ContainsKey(rule.type) ? counts[rule.type] : 0;
-            int max = rule.maxCount < 0 ? int.MaxValue : rule.maxCount;
-            if (current < rule.minCount || current > max)
-            {
-                return false;
-            }
-        }
-
-        return true;
     }
 
     static readonly Dictionary<TileType, string> DefaultEventNames = new Dictionary<TileType, string>
@@ -598,71 +522,12 @@ public class RouteManager : MonoBehaviour
 
         TileVisualSetting? setting = GetTileVisualSetting(nc.type);
         if (setting == null) return;
-
-        TileVisualSetting visual = setting.Value;
-
-        SpriteRenderer spriteRenderer = nc.node.GetComponent<SpriteRenderer>();
-        if (spriteRenderer != null && visual.sprite != null)
-        {
-            spriteRenderer.sprite = visual.sprite;
-        }
-
-        Image uiImage = nc.node.GetComponent<Image>();
-        if (uiImage != null && visual.sprite != null)
-        {
-            uiImage.sprite = visual.sprite;
-        }
-
-        Renderer meshRenderer = nc.node.GetComponent<Renderer>();
-        if (meshRenderer == null)
-        {
-            meshRenderer = nc.node.GetComponentInChildren<Renderer>();
-        }
-        if (meshRenderer != null)
-        {
-            if (visual.material != null)
-            {
-                meshRenderer.sharedMaterial = visual.material;
-            }
-
-            if (visual.texture != null)
-            {
-                ApplyTextureToRenderer(meshRenderer, visual.texture);
-            }
-        }
+        TileVisualApplier.Apply(nc.node, setting.Value);
     }
 
     TileVisualSetting? GetTileVisualSetting(TileType type)
     {
-        foreach (var setting in tileVisualSettings)
-        {
-            if (setting.type == type)
-            {
-                return setting;
-            }
-        }
-
-        return null;
-    }
-
-    void ApplyTextureToRenderer(Renderer renderer, Texture texture)
-    {
-        if (renderer == null || texture == null) return;
-
-        MaterialPropertyBlock propertyBlock = new MaterialPropertyBlock();
-        renderer.GetPropertyBlock(propertyBlock);
-
-        if (renderer.sharedMaterial != null && renderer.sharedMaterial.HasProperty("_BaseMap"))
-        {
-            propertyBlock.SetTexture("_BaseMap", texture);
-        }
-
-        if (renderer.sharedMaterial != null && renderer.sharedMaterial.HasProperty("_MainTex"))
-        {
-            propertyBlock.SetTexture("_MainTex", texture);
-        }
-
-        renderer.SetPropertyBlock(propertyBlock);
+        return tileVisualCache.Get(type, tileVisualSettings);
     }
     #endregion
     private bool isWarpModeActive = false;

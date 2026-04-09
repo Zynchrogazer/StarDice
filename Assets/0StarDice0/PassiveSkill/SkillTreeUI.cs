@@ -11,6 +11,7 @@ public class SkillTreeUI : MonoBehaviour
 
     [Header("RuntimeHub Services")]
     [SerializeField] private PassiveSkillManager passiveSkillManager;
+    [SerializeField] private SkillManager skillManager;
 
     [Header("UI References")]
     [SerializeField] private TextMeshProUGUI creditText;
@@ -25,6 +26,8 @@ public class SkillTreeUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI attackLevelText;
     [SerializeField] private TextMeshProUGUI attackCostText;
     [SerializeField] private Button upgradeAttackBtn;
+    private PlayerData boundPlayerData;
+    private SkillManager subscribedSkillManager;
 
     private void Awake()
     {
@@ -44,6 +47,11 @@ public class SkillTreeUI : MonoBehaviour
         if (ResolvePassiveSkillManager() != null)
             ResolvePassiveSkillManager().ApplyPassiveBonusToCurrentPlayer();
 
+        subscribedSkillManager = ResolveSkillManager();
+        if (subscribedSkillManager != null)
+            subscribedSkillManager.OnSkillTreeUpdated += RefreshUI;
+
+        BindCreditListener();
         RefreshUI();
     }
 
@@ -54,6 +62,14 @@ public class SkillTreeUI : MonoBehaviour
 
         if (upgradeAttackBtn != null)
             upgradeAttackBtn.onClick.RemoveListener(OnClickUpgradeAttack);
+
+        if (subscribedSkillManager != null)
+        {
+            subscribedSkillManager.OnSkillTreeUpdated -= RefreshUI;
+            subscribedSkillManager = null;
+        }
+
+        UnbindCreditListener();
     }
 
     private void OnClickUpgradeStar()
@@ -76,8 +92,18 @@ public class SkillTreeUI : MonoBehaviour
         return passiveSkillManager;
     }
 
+    private SkillManager ResolveSkillManager()
+    {
+        if (skillManager == null)
+            skillManager = FindFirstObjectByType<SkillManager>();
+
+        return skillManager;
+    }
+
     public void RefreshUI()
     {
+        BindCreditListener();
+
         PassiveSkillManager manager = ResolvePassiveSkillManager();
         if (manager == null)
         {
@@ -93,7 +119,7 @@ public class SkillTreeUI : MonoBehaviour
         if (goldText != null) goldText.text = $"Credit: {playerCredit}";
 
         int starCost = manager.GetStarUpgradeCost();
-        if (starLevelText != null) starLevelText.text = $"Lv. {manager.starSkillLevel} (+{manager.GetStarBonusAmount()} MaxHP)";
+        if (starLevelText != null) starLevelText.text = $"Lv. {manager.starSkillLevel} (+{manager.GetStarGainBonusAmount()} STAR)";
         if (starCostText != null) starCostText.text = $"Cost: {starCost}";
         if (upgradeStarBtn != null) upgradeStarBtn.interactable = playerCredit >= starCost;
 
@@ -101,6 +127,32 @@ public class SkillTreeUI : MonoBehaviour
         if (attackLevelText != null) attackLevelText.text = $"Lv. {manager.attackSkillLevel} (+{manager.GetAttackBonusAmount()} Dmg)";
         if (attackCostText != null) attackCostText.text = $"Cost: {attackCost}";
         if (upgradeAttackBtn != null) upgradeAttackBtn.interactable = playerCredit >= attackCost;
+    }
+
+    private void BindCreditListener()
+    {
+        PlayerData currentSelectedPlayer = GameData.Instance != null ? GameData.Instance.selectedPlayer : null;
+        if (boundPlayerData == currentSelectedPlayer)
+            return;
+
+        UnbindCreditListener();
+        boundPlayerData = currentSelectedPlayer;
+        if (boundPlayerData != null)
+            boundPlayerData.OnCreditChanged += HandleCreditChanged;
+    }
+
+    private void UnbindCreditListener()
+    {
+        if (boundPlayerData == null)
+            return;
+
+        boundPlayerData.OnCreditChanged -= HandleCreditChanged;
+        boundPlayerData = null;
+    }
+
+    private void HandleCreditChanged(int _)
+    {
+        RefreshUI();
     }
 
     [ContextMenu("Validate SkillTreeUI Setup")]

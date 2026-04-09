@@ -94,11 +94,12 @@ public class MainMenuController : MonoBehaviour
 
     private void ResetCardAvailabilityToCommonOnly()
     {
-        HashSet<string> appliedCardKeys = new HashSet<string>(StringComparer.Ordinal);
+        Dictionary<string, bool> resolvedCardStates = new Dictionary<string, bool>(StringComparer.Ordinal);
+        Dictionary<string, List<CardData>> cardsByKey = new Dictionary<string, List<CardData>>(StringComparer.Ordinal);
 
         if (DeckManager.TryGet(out var deckManager) && deckManager.allCards != null)
         {
-            ApplyCardDefaults(deckManager.allCards, appliedCardKeys);
+            CollectCardDefaults(deckManager.allCards, resolvedCardStates, cardsByKey);
 
             if (deckManager.cardUse != null)
             {
@@ -112,11 +113,18 @@ public class MainMenuController : MonoBehaviour
             deckManager.SortAndRefreshCards();
         }
 
+        CardData[] resourceCardData = Resources.LoadAll<CardData>(string.Empty);
+        CollectCardDefaults(resourceCardData, resolvedCardStates, cardsByKey);
+
         CardData[] loadedCardData = Resources.FindObjectsOfTypeAll<CardData>();
-        ApplyCardDefaults(loadedCardData, appliedCardKeys);
+        CollectCardDefaults(loadedCardData, resolvedCardStates, cardsByKey);
+        ApplyCollectedCardDefaults(resolvedCardStates, cardsByKey);
     }
 
-    private static void ApplyCardDefaults(IEnumerable<CardData> cards, HashSet<string> appliedCardKeys)
+    private static void CollectCardDefaults(
+        IEnumerable<CardData> cards,
+        Dictionary<string, bool> resolvedCardStates,
+        Dictionary<string, List<CardData>> cardsByKey)
     {
         if (cards == null)
         {
@@ -130,21 +138,75 @@ public class MainMenuController : MonoBehaviour
                 continue;
             }
 
-            if (!appliedCardKeys.Add(card.cardName))
+            bool isCommonCard = card.rarity == CardRarity.Common;
+            if (resolvedCardStates.TryGetValue(card.cardName, out bool hasCommon))
+            {
+                resolvedCardStates[card.cardName] = hasCommon || isCommonCard;
+            }
+            else
+            {
+                resolvedCardStates[card.cardName] = isCommonCard;
+            }
+
+            if (!cardsByKey.TryGetValue(card.cardName, out List<CardData> sameKeyCards))
+            {
+                sameKeyCards = new List<CardData>();
+                cardsByKey[card.cardName] = sameKeyCards;
+            }
+
+            sameKeyCards.Add(card);
+        }
+    }
+
+    private static void ApplyCollectedCardDefaults(
+        Dictionary<string, bool> resolvedCardStates,
+        Dictionary<string, List<CardData>> cardsByKey)
+    {
+        foreach (KeyValuePair<string, bool> kv in resolvedCardStates)
+        {
+            string cardName = kv.Key;
+            bool shouldBeUsable = kv.Value;
+
+            PlayerPrefs.SetInt("CardState_" + cardName, shouldBeUsable ? 1 : 0);
+
+            if (!cardsByKey.TryGetValue(cardName, out List<CardData> cards))
             {
                 continue;
             }
 
-            bool isCommonCard = card.rarity == CardRarity.Common;
-            card.isUsable = isCommonCard;
-            PlayerPrefs.SetInt("CardState_" + card.cardName, isCommonCard ? 1 : 0);
+            for (int i = 0; i < cards.Count; i++)
+            {
+                if (cards[i] != null)
+                {
+                    cards[i].isUsable = shouldBeUsable;
+                }
+            }
         }
     }
 
     private void ResetAllPlayerCredits()
     {
         int clampedCredit = Mathf.Max(0, resetCreditValue);
-        PlayerData[] players = Resources.FindObjectsOfTypeAll<PlayerData>();
+        HashSet<PlayerData> players = new HashSet<PlayerData>();
+
+        PlayerData[] resourcePlayers = Resources.LoadAll<PlayerData>("PlayerData");
+        for (int i = 0; i < resourcePlayers.Length; i++)
+        {
+            if (resourcePlayers[i] != null)
+            {
+                players.Add(resourcePlayers[i]);
+            }
+        }
+
+        PlayerData[] loadedPlayers = Resources.FindObjectsOfTypeAll<PlayerData>();
+        for (int i = 0; i < loadedPlayers.Length; i++)
+        {
+            if (loadedPlayers[i] != null)
+            {
+                players.Add(loadedPlayers[i]);
+            }
+        }
+
         foreach (PlayerData player in players)
         {
             if (player == null)
