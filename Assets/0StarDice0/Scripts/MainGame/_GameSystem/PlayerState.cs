@@ -10,6 +10,8 @@ using UnityEngine.Serialization;
 public class PlayerState : MonoBehaviour
 {
     [SerializeField] private PlayerStatAggregator playerStatAggregator;
+    private bool isAwaitingAggregatorRefresh;
+    private PlayerData pendingAggregatedRefreshSourceData;
     private const string IntermissionSceneName = "InterMission";
 
     //public static PlayerState Instance { get; private set; }
@@ -162,6 +164,7 @@ public class PlayerState : MonoBehaviour
     {
         OnDied -= HandleDefeat;
         SceneManager.sceneLoaded -= OnSceneLoaded;
+        UnsubscribeFromAggregatorAvailability();
     }
 
 
@@ -214,10 +217,7 @@ public class PlayerState : MonoBehaviour
         InitializeRuntimeSkillUnlocks(data.allSkills != null ? data.allSkills.Length : 0);
         EnsureRuntimeSkillUnlocksMatchLevel();
 
-        if (ResolvePlayerStatAggregator() != null)
-        {
-            ResolvePlayerStatAggregator().RefreshPlayerStats(this, data);
-        }
+        RequestAggregatedStatRefresh(data);
 
         Debug.Log($"[PlayerState] Loaded: Level {PlayerLevel}, HP {PlayerHealth}/{MaxHealth}");
     }
@@ -526,12 +526,47 @@ public class PlayerState : MonoBehaviour
             ResetRuntimeSkillUnlocks();
         }
 
-        if (ResolvePlayerStatAggregator() != null)
-        {
-            ResolvePlayerStatAggregator().RefreshPlayerStats(this, sourceData);
-        }
+        RequestAggregatedStatRefresh(sourceData);
 
         OnStatsUpdated?.Invoke();
+    }
+
+    private void RequestAggregatedStatRefresh(PlayerData sourceData)
+    {
+        PlayerStatAggregator aggregator = ResolvePlayerStatAggregator();
+        if (aggregator != null)
+        {
+            aggregator.RefreshPlayerStats(this, sourceData);
+            return;
+        }
+
+        pendingAggregatedRefreshSourceData = sourceData;
+
+        if (isAwaitingAggregatorRefresh)
+            return;
+
+        PlayerStatAggregator.OnAggregatorAvailable += HandleAggregatorAvailable;
+        isAwaitingAggregatorRefresh = true;
+    }
+
+    private void HandleAggregatorAvailable(PlayerStatAggregator aggregator)
+    {
+        if (aggregator == null)
+            return;
+
+        playerStatAggregator = aggregator;
+        aggregator.RefreshPlayerStats(this, pendingAggregatedRefreshSourceData);
+        UnsubscribeFromAggregatorAvailability();
+    }
+
+    private void UnsubscribeFromAggregatorAvailability()
+    {
+        if (!isAwaitingAggregatorRefresh)
+            return;
+
+        PlayerStatAggregator.OnAggregatorAvailable -= HandleAggregatorAvailable;
+        isAwaitingAggregatorRefresh = false;
+        pendingAggregatedRefreshSourceData = null;
     }
     public void InitializeRuntimeSkillUnlocks(int totalSkills, int defaultUnlockedCount = DefaultUnlockedSkillCount)
     {
