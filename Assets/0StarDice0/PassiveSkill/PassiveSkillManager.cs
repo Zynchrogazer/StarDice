@@ -12,7 +12,7 @@ public class PassiveSkillManager : MonoBehaviour
     public int baseUpgradeCost = 100;   // ราคาเริ่มต้น
     public int attackCostStep = 60;     // เพิ่มราคาสายโจมตีต่อเลเวล
     public int starCostStep = 45;       // เพิ่มราคาสายดาวต่อเลเวล
-    public int starBonusPerLevel = 1;
+    public int starGainBonusPerLevel = 1;
     public int attackBonusPerLevel = 5;
 
      private const string StarSkillLvKey = "StarSkillLv_SHARED";
@@ -71,10 +71,16 @@ public class PassiveSkillManager : MonoBehaviour
         return baseUpgradeCost + 20 + (attackSkillLevel * attackCostStep);
     }
 
-    public int GetStarBonusAmount()
+    public int GetStarGainBonusAmount()
     {
         EnsureLoadedForCurrentPlayer();
-        return starSkillLevel * starBonusPerLevel;
+        return starSkillLevel * starGainBonusPerLevel;
+    }
+
+    // Backward-compatible alias (kept to avoid breaking existing references).
+    public int GetStarBonusAmount()
+    {
+        return GetStarGainBonusAmount();
     }
 
     public int GetAttackBonusAmount()
@@ -99,12 +105,9 @@ public class PassiveSkillManager : MonoBehaviour
         PlayerState player = GameTurnManager.CurrentPlayer;
         PlayerData data = GameData.Instance.selectedPlayer;
 
-        int oldMaxHp = player.MaxHealth;
         player.CurrentAttack = data.attackDamage + GetAttackBonusAmount();
-        player.MaxHealth = data.maxHP + GetStarBonusAmount();
-
-        int hpDelta = player.MaxHealth - oldMaxHp;
-        player.PlayerHealth = Mathf.Clamp(player.PlayerHealth + hpDelta, 0, player.MaxHealth);
+        player.PassiveStarGainBonus = Mathf.Max(0, GetStarGainBonusAmount());
+        player.NotifyStatsUpdated();
     }
 
     private bool TrySpendCurrentPlayerCredit(int amount, System.Action onSuccess)
@@ -201,6 +204,21 @@ public class PassiveSkillManager : MonoBehaviour
         PlayerPrefs.DeleteKey(AtkSkillLvKey);
         PlayerPrefs.DeleteKey(SpdSkillLvKey);
         PlayerPrefs.DeleteKey(DefSkillLvKey);
+
+        PassiveSkillManager[] managers = FindObjectsByType<PassiveSkillManager>(FindObjectsSortMode.None);
+        for (int i = 0; i < managers.Length; i++)
+        {
+            PassiveSkillManager manager = managers[i];
+            if (manager == null)
+            {
+                continue;
+            }
+
+            manager.starSkillLevel = 0;
+            manager.attackSkillLevel = 0;
+            manager.isDataLoaded = false;
+            manager.ApplyPassiveBonusToCurrentPlayer();
+        }
     }
 
     private PlayerStatAggregator ResolvePlayerStatAggregator()

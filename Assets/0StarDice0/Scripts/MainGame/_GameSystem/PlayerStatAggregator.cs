@@ -92,7 +92,7 @@ public class PlayerStatAggregator : MonoBehaviour
         if (passiveManager != null)
         {
             passiveAttackBonus += passiveManager.GetAttackBonusAmount();
-            passiveMaxHealthBonus += passiveManager.GetStarBonusAmount();
+            passiveStarBonus += passiveManager.GetStarGainBonusAmount();
         }
 
         SkillManager resolvedSkillManager = ResolveSkillManager();
