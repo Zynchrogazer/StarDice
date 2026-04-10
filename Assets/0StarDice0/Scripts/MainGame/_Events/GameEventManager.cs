@@ -771,7 +771,8 @@ public void OnCardSelected()
             ResolveGameTurnManager()?.RequestEndTurn();
         }
     }
-   private void RandomMoveEffect(GameObject target)
+
+    private void RandomMoveEffect(GameObject target)
     {
         if (target == null)
         {
@@ -796,28 +797,43 @@ public void OnCardSelected()
     }
 
     // 🟢 ฟังก์ชันสำหรับโชว์เลข -> หน่วงเวลา -> แล้วค่อยเดิน
-    private IEnumerator ShowNumberAndMoveRoutine(PlayerPathWalker walker, int steps)
+   private IEnumerator ShowNumberAndMoveRoutine(PlayerPathWalker walker, int steps)
     {
-        // 1. ถ้ามี UI Text ลากใส่ไว้ ให้เปิดโชว์ข้อความ
-        if (randomMoveText != null)
+        Debug.Log("🚀 [1] เริ่มเข้าสู่ Coroutine โชว์ตัวเลขแล้ว!");
+
+        if (randomMoveText == null)
         {
-            randomMoveText.text = $"+{steps}"; // โชว์ข้อความเช่น "+3"
+            Debug.LogError("❌ [Error] randomMoveText เป็น null! (ลืมลากใส่ใน Inspector หน้า Scene ที่เทสอยู่แน่ๆ)");
+        }
+        else
+        {
+            randomMoveText.text = $"+{steps}";
             randomMoveText.gameObject.SetActive(true);
+            
+            // 🟢 เช็คว่าตัวแม่มันโดนปิดอยู่หรือเปล่า
+            if (!randomMoveText.gameObject.activeInHierarchy)
+            {
+                Debug.LogError("👻 [Error] สั่งเปิด Text แล้ว แต่มันยังล่องหน! (เช็คดูว่า Canvas หรือโฟลเดอร์แม่ของ Text โดนปิดตาไว้หรือเปล่า?)");
+            }
+            else
+            {
+                Debug.Log($"✅ [2] โชว์ข้อความ +{steps} สำเร็จ กำลังจะรอ 1 วินาที...");
+            }
         }
 
-        // 2. หยุดรอ 1 วินาที ให้ผู้เล่นได้เห็นตัวเลขชัดๆ
-        yield return new WaitForSeconds(1.0f);
+        // 🟢 เปลี่ยนมาใช้แบบ Realtime เผื่อเกมคุณติดสถานะ Pause (TimeScale = 0) อยู่
+        yield return new WaitForSecondsRealtime(1.0f); 
 
-        // 3. ปิดข้อความทิ้ง
+        Debug.Log("⌛ [3] รอครบ 1 วินาทีแล้ว กำลังจะปิดข้อความและสั่งเดิน!");
+
         if (randomMoveText != null)
         {
             randomMoveText.gameObject.SetActive(false);
         }
 
-        // 4. สั่งให้ตัวละครเดิน!
         walker.ExecuteMove(steps);
+        Debug.Log("🏃‍♂️ [4] สั่งให้ Walker เดินเรียบร้อย!");
     }
-
     public void TriggerRandomEvent(GameObject target)
     {
         currentEventTarget = target;

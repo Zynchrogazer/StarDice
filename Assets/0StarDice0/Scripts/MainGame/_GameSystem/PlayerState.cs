@@ -384,11 +384,10 @@ public class PlayerState : MonoBehaviour
         if (CurrentExp >= MaxExp) LevelUpRPG();
     }
 
-    public void RecordBattleWin()
+  public void RecordBattleWin(int expReward)
     {
         WinCount++;
-        
-        GainExp(50);
+        GainExp(expReward); // รับค่าแล้วส่งต่อให้หลอด EXP ทันที
     }
 
 

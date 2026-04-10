@@ -107,7 +107,7 @@ public Button exitButton;
                 Time.timeScale = 1f; 
 
                 // 2. เรียกคำสั่งวาร์ปกลับกระดาน (0, 0 คือไม่เอาเงินซ้ำซ้อน)
-                BattleResultFlowService.HandleRewardAndReturnToBoard(0, 0,true);
+                BattleResultFlowService.HandleRewardAndReturnToBoard(0, 0,0,true);
             });
         }
     }
@@ -159,7 +159,8 @@ MiniGameRewardService.TryGrantFixedCreditReward(rewardAmount, "CodeFappyBird/Gam
             }
             else 
             {
-                showImage.gameObject.SetActive(false); 
+                showImage.sprite = itemImages[11]; 
+                 showImage.gameObject.SetActive(true);
             }
         }
         else if (score >= 4000) 
@@ -180,8 +181,8 @@ MiniGameRewardService.TryGrantFixedCreditReward(rewardAmount, "CodeFappyBird/Gam
             }
               else 
             {
-                // หากสุ่มได้เลข 61-89 หรือ 91-99 จะไม่ได้ไอเทมพิเศษอะไร (เกลือ)
-                showImage.gameObject.SetActive(false); 
+              showImage.sprite = itemImages[11]; 
+                 showImage.gameObject.SetActive(true);
             }
         }
         else if (score >= 2000) 
@@ -214,13 +215,14 @@ MiniGameRewardService.TryGrantFixedCreditReward(rewardAmount, "CodeFappyBird/Gam
             }
               else 
             {
-                // หากสุ่มได้เลข 61-89 หรือ 91-99 จะไม่ได้ไอเทมพิเศษอะไร (เกลือ)
-                showImage.gameObject.SetActive(false); 
+              showImage.sprite = itemImages[11]; 
+                 showImage.gameObject.SetActive(true);
             }
         }
         else 
         {
-            showImage.gameObject.SetActive(false);
+            showImage.sprite = itemImages[11]; 
+                 showImage.gameObject.SetActive(true);
         }
     }
 

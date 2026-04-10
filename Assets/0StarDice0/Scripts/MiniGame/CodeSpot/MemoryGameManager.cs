@@ -225,7 +225,7 @@ public class MemoryGameManager : MonoBehaviour
 
             // 🟢 2. เรียกใช้ระบบกลับกระดานดั้งเดิมของคุณ
             // ส่ง (0, 0) เพราะเราสั่ง GiveReward... แจกของไปแล้วในบรรทัดข้างบนครับ
-            BattleResultFlowService.HandleRewardAndReturnToBoard(0, 0,true);
+            BattleResultFlowService.HandleRewardAndReturnToBoard(0, 0,0,true);
         });
     }
     void UpdateScoreUI()
@@ -282,8 +282,8 @@ MiniGameRewardService.TryGrantFixedCreditReward(rewardAmount, "CodeSpot/MemoryGa
             }
               else 
             {
-                // หากสุ่มได้เลข 61-89 หรือ 91-99 จะไม่ได้ไอเทมพิเศษอะไร (เกลือ)
-                showImage.gameObject.SetActive(false); 
+               showImage.sprite = itemImages[11]; 
+                 showImage.gameObject.SetActive(true);
             }
             
 
@@ -310,8 +310,8 @@ MiniGameRewardService.TryGrantFixedCreditReward(rewardAmount, "CodeSpot/MemoryGa
             }
               else 
             {
-                // หากสุ่มได้เลข 61-89 หรือ 91-99 จะไม่ได้ไอเทมพิเศษอะไร (เกลือ)
-                showImage.gameObject.SetActive(false); 
+              showImage.sprite = itemImages[11]; 
+                 showImage.gameObject.SetActive(true);
             }
         }
         else if (score >= 2000) 
@@ -348,13 +348,15 @@ MiniGameRewardService.TryGrantFixedCreditReward(rewardAmount, "CodeSpot/MemoryGa
               else 
             {
                 // หากสุ่มได้เลข 61-89 หรือ 91-99 จะไม่ได้ไอเทมพิเศษอะไร (เกลือ)
-                showImage.gameObject.SetActive(false); 
+                showImage.sprite = itemImages[11]; 
+                 showImage.gameObject.SetActive(true);
+                
             }
         }
         else 
         {
-            // กรณีคะแนนติดลบ ไม่ได้อะไรเลย (เปิดปิดรูปทิ้งไว้)
-            showImage.gameObject.SetActive(false);
+           showImage.sprite = itemImages[11]; 
+                 showImage.gameObject.SetActive(true);
         }
     }
 

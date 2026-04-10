@@ -164,7 +164,7 @@ public Button exitButton;
 
                 // 2. เรียกใช้ Service กลับหน้ากระดานหลัก
                 // (ใส่ 0, 0 เพราะเราแจกของใน GiveRewardBasedOnScore() ไปแล้ว)
-                BattleResultFlowService.HandleRewardAndReturnToBoard(0, 0,true);
+                BattleResultFlowService.HandleRewardAndReturnToBoard(0, 0,0,true);
             });
         }
     }
@@ -212,8 +212,8 @@ MiniGameRewardService.TryGrantFixedCreditReward(rewardAmount, "CodeMath/QuickMat
             }
             else 
             {
-                // หากสุ่มได้เลข 61-89 หรือ 91-99 จะไม่ได้ไอเทมพิเศษอะไร (เกลือ)
-                showImage.gameObject.SetActive(false); 
+                 showImage.sprite = itemImages[11]; 
+                 showImage.gameObject.SetActive(true);
             }
         }
         
@@ -235,8 +235,8 @@ MiniGameRewardService.TryGrantFixedCreditReward(rewardAmount, "CodeMath/QuickMat
             }
               else 
             {
-                // หากสุ่มได้เลข 61-89 หรือ 91-99 จะไม่ได้ไอเทมพิเศษอะไร (เกลือ)
-                showImage.gameObject.SetActive(false); 
+                showImage.sprite = itemImages[11]; 
+                 showImage.gameObject.SetActive(true); 
             }
         }
         else if (score >= 500) 
@@ -271,13 +271,15 @@ MiniGameRewardService.TryGrantFixedCreditReward(rewardAmount, "CodeMath/QuickMat
               else 
             {
                 // หากสุ่มได้เลข 61-89 หรือ 91-99 จะไม่ได้ไอเทมพิเศษอะไร (เกลือ)
-                showImage.gameObject.SetActive(false); 
+                showImage.sprite = itemImages[11]; 
+                 showImage.gameObject.SetActive(true);
             }
         }
         else 
         {
             // คะแนนไม่ถึง 2000 ไม่ได้อะไรเลย
-            showImage.gameObject.SetActive(false);
+            showImage.sprite = itemImages[11]; 
+                 showImage.gameObject.SetActive(true);
         }
     }
 
