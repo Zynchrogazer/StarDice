@@ -219,6 +219,7 @@ public class RouteManager : MonoBehaviour
 
         tileVisualCache.MarkDirty();
         SyncNodesIfNeeded();
+        AutoFillEventNamesForCurrentNodes();
         RunEditorAutomation();
         ApplyTileVisuals();
     }
@@ -323,6 +324,27 @@ public class RouteManager : MonoBehaviour
                 ApplyTileVisual(nc);
             }
             nodeConnections.Add(nc);
+        }
+    }
+
+    private void AutoFillEventNamesForCurrentNodes()
+    {
+        if (!autoFillEventNameOnSync || nodeConnections == null)
+        {
+            return;
+        }
+
+        foreach (NodeConnection nc in nodeConnections)
+        {
+            if (nc == null)
+            {
+                continue;
+            }
+
+            if (ShouldAutoAssignEventName(nc.type, nc.eventName))
+            {
+                nc.eventName = GetDefaultEventName(nc.type);
+            }
         }
     }
 
