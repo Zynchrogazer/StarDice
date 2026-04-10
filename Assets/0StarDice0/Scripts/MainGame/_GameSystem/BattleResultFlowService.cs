@@ -8,11 +8,11 @@ public static class BattleResultFlowService
     private const string InterMissionSceneName = "InterMission";
     private const int DefaultMinReward = 50;
     private const int DefaultMaxReward = 300;
-
     private static CoroutineRunner runner;
     private static bool isProcessingTransition;
 
- public static void HandleRewardAndReturnToBoard(int minReward = DefaultMinReward, int maxReward = DefaultMaxReward, bool isMiniGame = false)
+// 🟢 1. เพิ่มตัวแปร 'int expReward = 50' เข้ามาที่หัวฟังก์ชัน (ใส่ = 50 ไว้เป็นค่าเริ่มต้น โค้ดเก่าเพื่อนจะได้ไม่พัง)
+    public static void HandleRewardAndReturnToBoard(int minReward = DefaultMinReward, int maxReward = DefaultMaxReward, int expReward = 500, bool isMiniGame = false)
     {
         if (isProcessingTransition) return;
 
@@ -21,18 +21,19 @@ public static class BattleResultFlowService
         {
             SyncHPFromBattleToBoard(rewardTarget);
 
-            // 🟢 2. เอาสวิตช์มาครอบไว้! ถ้าไม่ใช่มินิเกม ถึงจะยอมให้ +1 Battle
+            // ถ้าไม่ใช่มินิเกม ถึงจะยอมให้ +1 Battle และ 🟢 แจก EXP 🟢
             if (!isMiniGame)
             {
-                rewardTarget.RecordBattleWin();
-                Debug.Log("[BattleResultFlow] ⚔️ ชนะการต่อสู้จริง! เควสต์ Battle +1");
+                // 🟢 2. ยัด expReward ลงไปในวงเล็บเลยครับ! ท่อส่ง EXP เชื่อมต่อสมบูรณ์แล้ว!
+                rewardTarget.RecordBattleWin(expReward);
+                Debug.Log($"[BattleResultFlow] ⚔️ ชนะการต่อสู้จริง! เควสต์ Battle +1 และได้รับ EXP {expReward}");
             }
             else
             {
-                Debug.Log("[BattleResultFlow] 🎮 จบมินิเกม! ข้ามการบวกแต้ม Battle");
+                Debug.Log("[BattleResultFlow] 🎮 จบมินิเกม! ข้ามการบวกแต้ม Battle และ EXP");
             }
 
-            // แจกรางวัลตามปกติ (โค้ดเดิมของคุณเลยครับ)
+            // แจกเงิน Credit ตามปกติ
             int reward = Random.Range(minReward, maxReward + 1);
             rewardTarget.PlayerCredit += reward;
 
@@ -43,7 +44,7 @@ public static class BattleResultFlowService
             Debug.LogWarning("[BattleResultFlow] Could not find human PlayerState for reward flow.");
         }
 
-        // 🟢 2. เช็คสวิตช์บอส 
+        // เช็คสวิตช์บอส 
         bool isBossBattle = PlayerPrefs.GetInt("IsBossBattle", 0) == 1;
 
         if (isBossBattle)
@@ -53,18 +54,16 @@ public static class BattleResultFlowService
             PlayerPrefs.Save();
             StartTransition(ReturnToSceneKeepingRuntimeHub(InterMissionSceneName));
         }
-      else
+        else
         {
             Debug.Log("⚔️ [BattleResultFlow] ชนะมอนสเตอร์ปกติ กลับไปกระดาน");
 
-            // 🟢 1. ลองดึงค่าแบบ "ไม่ใส่ TestMain เป็นตัวสำรอง" เพื่อดูว่ามันแอบจำอะไรไว้
             string savedScene = PlayerPrefs.GetString(GameEventManager.LastBoardSceneKey, "");
 
-            // 🟢 2. เช็คเลยว่ามันหาเจอไหม?
             if (string.IsNullOrEmpty(savedScene))
             {
                 Debug.LogError($"🚨 [CCTV แฉ!] หาคีย์ LastBoardSceneKey ไม่เจอ หรือค่าว่าง! เลยจำใจบังคับโหลด 'TestMain'");
-                savedScene = "TestMain"; // ยอมใช้ TestMain ไปก่อนกันเกมแครช
+                savedScene = "TestMain"; 
             }
             else
             {

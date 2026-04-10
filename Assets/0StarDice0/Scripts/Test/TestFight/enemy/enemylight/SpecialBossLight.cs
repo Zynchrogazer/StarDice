@@ -2173,6 +2173,11 @@ public PlayerState player;
                  showImage.sprite = itemImages[0]; 
                  showImage.gameObject.SetActive(true);
             }
+              else
+        {
+            showImage.sprite = itemImages[1]; 
+                 showImage.gameObject.SetActive(true);
+        }
            
 
     }

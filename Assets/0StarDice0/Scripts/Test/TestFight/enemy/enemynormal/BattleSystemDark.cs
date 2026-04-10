@@ -1895,7 +1895,7 @@ public PlayerState player;
         
         if (player != null)
         {
-            player.GainExp(expReward);
+             player.GainExp(expReward);
             Debug.Log($"ได้รับ EXP {expReward} หน่วย!");
         }
     }
@@ -2148,6 +2148,11 @@ public PlayerState player;
         {
              EquipmentManager.Instance.UnlockItem(KnightShoes);
              showImage.sprite = itemImages[2]; 
+                 showImage.gameObject.SetActive(true);
+        }
+        else
+        {
+            showImage.sprite = itemImages[3]; 
                  showImage.gameObject.SetActive(true);
         }
 

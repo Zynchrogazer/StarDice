@@ -2152,6 +2152,11 @@ public class EnemyFireDamage : MonoBehaviour
              showImage.sprite = itemImages[2]; 
                  showImage.gameObject.SetActive(true);
         }
+          else
+        {
+            showImage.sprite = itemImages[3]; 
+                 showImage.gameObject.SetActive(true);
+        }
 
     }
     void DamagePlayer(int damage) //<-- ดาเมจศัตรู

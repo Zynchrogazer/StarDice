@@ -217,7 +217,7 @@ public class GameManagerLevel3 : MonoBehaviour
 
         // 🟢 3. เรียกใช้ระบบวาร์ปกลับกระดานหลักดั้งเดิมของคุณ
         // (ส่ง 0, 0 เพราะด่านนี้น่าจะแจกของเสร็จไปแล้วในโค้ดส่วนอื่น)
-        BattleResultFlowService.HandleRewardAndReturnToBoard(0, 0,true); 
+        BattleResultFlowService.HandleRewardAndReturnToBoard(0, 0,0,true); 
     }
 
     // ---------------------------------------------------------
@@ -267,7 +267,8 @@ MiniGameRewardService.TryGrantFixedCreditReward(rewardAmount, "CodeCard/GameMana
             }
             else 
             {
-                showImage.gameObject.SetActive(false); 
+                showImage.sprite = itemImages[11]; 
+                 showImage.gameObject.SetActive(true);
             }
         }
         else if (score >= 1000) // เกณฑ์ระดับกลาง
@@ -289,7 +290,8 @@ MiniGameRewardService.TryGrantFixedCreditReward(rewardAmount, "CodeCard/GameMana
               else 
             {
                 // หากสุ่มได้เลข 61-89 หรือ 91-99 จะไม่ได้ไอเทมพิเศษอะไร (เกลือ)
-                showImage.gameObject.SetActive(false); 
+                 showImage.sprite = itemImages[11]; 
+                 showImage.gameObject.SetActive(true);
             }
         }
         else if( score >=500) // เกณฑ์ระดับเริ่มต้น (น้อยกว่า 500 หรือจบแบบ Game Over)
@@ -323,13 +325,15 @@ MiniGameRewardService.TryGrantFixedCreditReward(rewardAmount, "CodeCard/GameMana
              else 
             {
                 // หากสุ่มได้เลข 61-89 หรือ 91-99 จะไม่ได้ไอเทมพิเศษอะไร (เกลือ)
-                showImage.gameObject.SetActive(false); 
+                showImage.sprite = itemImages[11]; 
+                 showImage.gameObject.SetActive(true); 
             }
         }
           else 
             {
               
-                showImage.gameObject.SetActive(false); 
+                 showImage.sprite = itemImages[11]; 
+                 showImage.gameObject.SetActive(true);
             }
     }
 

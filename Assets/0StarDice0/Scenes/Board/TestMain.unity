@@ -729,6 +729,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 67db9e8f0e2ae9c40bc1e2b64352a6b4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &1985982238 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7797226168848429540, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+  m_PrefabInstance: {fileID: 1477739672992296933}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1986919408 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 8889701211888385168, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
@@ -12752,10 +12763,6 @@ PrefabInstance:
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 9222571919214096350}
-    - target: {fileID: 6698853736404142329, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 6947229625867294994, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
       propertyPath: m_AnchoredPosition.x
       value: -65
@@ -158002,7 +158009,7 @@ MonoBehaviour:
   - draw
   randomMinigameEventKeys:
   - minigamefappy
-  - level 1
+  - level 3
   - minigamespotmemory
   - minigamemath
   randomSpinDuration: 2
@@ -158015,7 +158022,7 @@ MonoBehaviour:
   windTeleportTargetIDs: 
   windTeleportPanelName: windteleportpanel
   creditSprite: {fileID: 21300000, guid: 3fbf596981ae71d42a5da57968062796, type: 3}
-  randomMoveText: {fileID: 1898596979}
+  randomMoveText: {fileID: 1985982238}
   itemImages:
   - {fileID: 21300000, guid: 1328fdac4f9659944ba1f9ef1a937afc, type: 3}
   - {fileID: 21300000, guid: 6ac270cb5af314a42af64960c696a8a1, type: 3}

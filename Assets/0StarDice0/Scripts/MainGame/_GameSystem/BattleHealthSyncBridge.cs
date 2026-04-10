@@ -407,7 +407,7 @@ public static class BattleHealthSyncBridge
         // ---------------------------------------------------------
         string sName = scene.name.ToLower();
         if (sName == "minigamefappy" || 
-            sName == "level 1" || 
+            sName == "Level 3" || 
             sName == "minigamespotmemory" || 
             sName == "minigamemath")
         {

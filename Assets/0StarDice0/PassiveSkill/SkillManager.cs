@@ -79,9 +79,10 @@ public class SkillManager : MonoBehaviour
 
     public void ApplyAllPassiveBonusesToCurrentPlayer()
     {
-        if (ResolvePlayerStatAggregator() != null)
+        PlayerStatAggregator aggregator = ResolvePlayerStatAggregator();
+        if (aggregator != null)
         {
-            ResolvePlayerStatAggregator().RefreshCurrentPlayerStats();
+            aggregator.RefreshCurrentPlayerStats();
             return;
         }
 

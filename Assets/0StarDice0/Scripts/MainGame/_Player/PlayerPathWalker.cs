@@ -74,11 +74,30 @@ public class PlayerPathWalker : MonoBehaviour
             isMoving = false;
         }
 
-
         if (steps <= 0)
         {
             CheckFinalNodeEvent(); 
             return;
+        }
+
+        // ---------------------------------------------------------
+        // 🌪️ [อัปเดตใหม่] ลูกเล่น MainWind: สุ่มคูณก้าวเดินให้ AI
+        // ---------------------------------------------------------
+        if (myState != null && myState.isAI && SceneManager.GetActiveScene().name == "MainWind")
+        {
+            int chance = Random.Range(0, 100); // สุ่มเลข 0-99
+            int multiplier = 1;
+
+            if (chance < 20) multiplier = 2;       // 20% (0-19) -> เดิน x2
+            else if (chance < 40) multiplier = 3;  // 20% (20-39) -> เดิน x3
+            else if (chance < 60) multiplier = 4;  // 20% (40-59) -> เดิน x4
+            // ที่เหลือ 40% (60-99) คือเดินปกติ (x1)
+
+            if (multiplier > 1)
+            {
+                Debug.Log($"<color=teal>🌪️ [MainWind Gimmick] พายุพัดหนุนหลัง AI! เดิน x{multiplier} เท่า! (จาก {steps} ➡ {steps * multiplier} ก้าว)</color>");
+                steps *= multiplier; // จับคูณจำนวนก้าวซะเลย!
+            }
         }
 
         GiveTurnStartBonus();
@@ -86,7 +105,7 @@ public class PlayerPathWalker : MonoBehaviour
         previousNodeID = currentNodeID;
 
         // ---------------------------------------------------------
-        // 🟢 [เพิ่มใหม่] เช็คและหักลบเทิร์นคำสาปก่อนเริ่มเดิน
+        // 🟢 เช็คและหักลบเทิร์นคำสาปก่อนเริ่มเดิน
         // ---------------------------------------------------------
         if (myState != null && myState.backwardCurseTurns > 0)
         {
@@ -96,11 +115,9 @@ public class PlayerPathWalker : MonoBehaviour
 
         if (myState != null && myState.poisonDebuffTurns > 0)
         {
-            // เอาจำนวนก้าวที่ทอยได้ (steps) มาคูณ 2 (เปลี่ยนเลข 2 เป็นเลขอื่นได้ตามใจชอบครับ)
             int poisonDamage = steps * 2; 
-            
-            myState.TakeDamage(poisonDamage); // สั่งลดเลือด
-            myState.poisonDebuffTurns--; // หักรอบพิษลง 1 เทิร์น
+            myState.TakeDamage(poisonDamage); 
+            myState.poisonDebuffTurns--; 
             
             Debug.Log($"<color=green>☠️ พิษกำเริบ! ทอยได้ {steps} ก้าว โดนดาเมจ {poisonDamage} (เหลือพิษอีก {myState.poisonDebuffTurns} เทิร์น)</color>");
         }
@@ -114,7 +131,7 @@ public class PlayerPathWalker : MonoBehaviour
         
         if (choiceUIManager != null) choiceUIManager.HideChoices();
 
-        while (stepsRemaining > 0)
+       while (stepsRemaining > 0)
         {
             if (routeManager == null) break;
 
@@ -122,13 +139,12 @@ public class PlayerPathWalker : MonoBehaviour
             Transform nextNode = null;
 
             // -----------------------------------------------------------------------
-            // 🌪️ ลูกเล่น MainWind: AI เดินย้อนศร (ถอยหลัง)
+            // 💀 ระบบคำสาป: เช็คว่าต้องบังคับเดินถอยหลังไหม?
+            // (เอาเงื่อนไขลม MainWind ออกไปแล้ว)
             // -----------------------------------------------------------------------
-           bool isMainWindGimmick = (myState != null && myState.isAI && SceneManager.GetActiveScene().name == "MainWind");
-            bool isCursedToMoveBackward = (myState != null && myState.backwardCurseTurns > 0); // 🟢 เช็คว่าติดคำสาปไหม
+            bool isCursedToMoveBackward = (myState != null && myState.backwardCurseTurns > 0);
 
-            // 🟢 ถ้าเป็น AI ในลมหลัก หรือ ใครก็ตามที่ติดคำสาป ให้เดินถอยหลัง!
-            if (isMainWindGimmick || isCursedToMoveBackward)
+            if (isCursedToMoveBackward)
             {
                 // ค้นหาช่องทาง "ถอยหลัง" (สแกนหาว่าช่องไหนมีเส้นเชื่อมโยงมาหาช่องที่เรายืนอยู่)
                 Transform backwardNode = null;
@@ -137,27 +153,26 @@ public class PlayerPathWalker : MonoBehaviour
                     if (nc != null && nc.connectedNodes.Contains(CurrentNodeTransform))
                     {
                         backwardNode = nc.node;
-                        break; // เจอทางถอยหลังแล้ว หยุดหา
+                        break; 
                     }
                 }
 
                 if (backwardNode != null)
                 {
-                    nextNode = backwardNode; // เซ็ตเป้าหมายเป็นช่องด้านหลัง
+                    nextNode = backwardNode; 
                 }
                 else
                 {
-                    // ถ้าถอยไม่ได้แล้ว (เช่น ถอยจนมาสุดที่ช่อง Start) 
-                    // ให้มันยอมแพ้แล้วเดินไปข้างหน้าแทน
+                    // ถ้าถอยไม่ได้แล้ว ให้มันยอมแพ้แล้วเดินไปข้างหน้าแทน
                     nextNode = choices.Count > 0 ? choices[Random.Range(0, choices.Count)] : null;
                 }
 
-                yield return new WaitForSeconds(0.5f); // AI ทำเป็นคิดแป๊บนึง
+                yield return new WaitForSeconds(0.5f); 
             }
             else
             {
                 // -----------------------------------------------------------------------
-                // 🚶‍♂️ ระบบทางแยกปกติ (เดินไปข้างหน้า) สำหรับคนเล่น และ AI ในฉากอื่นๆ
+                // 🚶‍♂️ ระบบทางแยกปกติ (เดินไปข้างหน้า)
                 // -----------------------------------------------------------------------
                 if (choices.Count == 0) break;
                 else if (choices.Count == 1) nextNode = choices[0];
@@ -185,12 +200,11 @@ public class PlayerPathWalker : MonoBehaviour
 
             // ถ้าไม่มีทางให้เดินแล้ว (สุดแมพ)
             if (nextNode == null) break; 
-
+            
+            // ... (โค้ดดึง ID ช่องและสั่ง MoveTowards ที่มีอยู่เดิม)
             int nextTileID = routeManager.ExtractNumberFromName(nextNode.name);
-
-            // สั่งเดินไปยังโหนดถัดไป
             yield return StartCoroutine(MoveTowardsCoroutine(nextNode));
-
+            
             currentNodeID = nextTileID;
 
             if (TryBreakRockAndBounceBack(nextTileID))

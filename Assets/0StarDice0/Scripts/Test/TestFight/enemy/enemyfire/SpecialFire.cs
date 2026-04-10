@@ -2151,6 +2151,11 @@ public class SpecialFire : MonoBehaviour
                   showImage.sprite = itemImages[0]; 
                  showImage.gameObject.SetActive(true);
             }
+              else
+        {
+            showImage.sprite = itemImages[1]; 
+                 showImage.gameObject.SetActive(true);
+        }
 
     }
     void DamagePlayer(int damage) //<-- ดาเมจศัตรู

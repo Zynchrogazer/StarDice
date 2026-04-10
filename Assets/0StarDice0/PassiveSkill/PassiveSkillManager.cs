@@ -91,9 +91,10 @@ public class PassiveSkillManager : MonoBehaviour
 
     public void ApplyPassiveBonusToCurrentPlayer()
     {
-        if (ResolvePlayerStatAggregator() != null)
+        PlayerStatAggregator aggregator = ResolvePlayerStatAggregator();
+        if (aggregator != null)
         {
-            ResolvePlayerStatAggregator().RefreshCurrentPlayerStats();
+            aggregator.RefreshCurrentPlayerStats();
             return;
         }
 

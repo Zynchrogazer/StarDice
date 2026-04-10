@@ -2,6 +2,8 @@
 
 public class PlayerStatAggregator : MonoBehaviour
 {
+    public static event System.Action<PlayerStatAggregator> OnAggregatorAvailable;
+
     [SerializeField] private PassiveSkillManager passiveSkillManager;
     [SerializeField] private SkillManager skillManager;
     [SerializeField] private PlayerDataManager playerDataManager;
@@ -16,6 +18,7 @@ public class PlayerStatAggregator : MonoBehaviour
         }
 
         ResolveManagers();
+        OnAggregatorAvailable?.Invoke(this);
     }
 
     private void ResolveManagers()
