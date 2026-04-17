@@ -1964,6 +1964,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3148304929810328094}
   - component: {fileID: 5877947804871668511}
+  - component: {fileID: 5877947804871668512}
   m_Layer: 0
   m_Name: RouteManager
   m_TagString: Untagged
@@ -10299,12 +10300,27 @@ MonoBehaviour:
   maxRandomizeAttempts: 10
   tileInvariantRules: []
   bossPrefab: {fileID: 6058716385546445464, guid: bfc3e47b031eba04aa01cbdf9abfb500, type: 3}
-  rockObstaclePrefab: {fileID: 9143513972507117436, guid: b0bcfd81642f56843a0adb5b660509d4, type: 3}
+  rockObstaclePrefab: {fileID: 2897528730474278519, guid: 7149379b408654e449658f4b8f836463, type: 3}
   initialRockTileIDs: 060000003300000018000000250000002f000000
   activeRockObstacles: []
+--- !u!114 &5877947804871668512
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 310576201593576163}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cdcd085dd7edd5a409ed00716d6e8b15, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  routeManager: {fileID: 5877947804871668511}
   enableRandomRockSpawnByTurn: 1
   randomRockSpawnIntervalTurns: 1
   randomRockOnlyInMainEarth: 1
+  mainEarthSceneName: MainEarth
+  verboseLog: 1
 --- !u!23 &5924655552752355843
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -18891,6 +18907,7 @@ MonoBehaviour:
   windTeleportTargetIDs: 
   windTeleportPanelName: windteleportpanel
   creditSprite: {fileID: 21300000, guid: 3fbf596981ae71d42a5da57968062796, type: 3}
+  randomMoveText: {fileID: 0}
   itemImages:
   - {fileID: 21300000, guid: 1328fdac4f9659944ba1f9ef1a937afc, type: 3}
   - {fileID: 21300000, guid: 6ac270cb5af314a42af64960c696a8a1, type: 3}

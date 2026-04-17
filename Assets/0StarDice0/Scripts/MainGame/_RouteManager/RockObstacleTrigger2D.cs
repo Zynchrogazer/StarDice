@@ -3,6 +3,10 @@
 [RequireComponent(typeof(Collider2D))]
 public class RockObstacleTrigger2D : MonoBehaviour
 {
+    [Header("Legacy Mode")]
+    [Tooltip("ปิดไว้เป็นค่าเริ่มต้น: ให้ใช้การตรวจชนหินผ่าน PlayerPathWalker เพียงทางเดียว")]
+    [SerializeField] private bool enableLegacyTriggerBreak = false;
+
     [Tooltip("tileID ของช่องหิน ถ้าเป็น 0 จะพยายามอ่านจากชื่อ GameObject")]
     public int tileID;
 
@@ -32,6 +36,11 @@ public class RockObstacleTrigger2D : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
+        if (!enableLegacyTriggerBreak)
+        {
+            return;
+        }
+
         if (requirePlayerTag && !other.CompareTag(playerTag))
         {
             return;
