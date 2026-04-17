@@ -725,16 +725,9 @@ public class RouteManager : MonoBehaviour
     public List<int> initialRockTileIDs = new List<int>();
     [Tooltip("สถานะหินที่กำลังใช้งานในเกม")]
     public List<RockObstacleState> activeRockObstacles = new List<RockObstacleState>();
-    [Header("Rock Obstacle Spawn Cycle")]
-    [Tooltip("เปิดเพื่อให้สุ่มเสกหินใหม่ทุก ๆ N เทิร์น")]
-    public bool enableRandomRockSpawnByTurn = true;
-    [Min(1)]
-    [Tooltip("จำนวนเทิร์นต่อการสุ่มเสกหิน 1 ก้อน")]
-    public int randomRockSpawnIntervalTurns = 5;
-    [Tooltip("ถ้าเปิด จะทำงานเฉพาะฉาก MainEarth")]
-    public bool randomRockOnlyInMainEarth = true;
 
     private readonly Dictionary<int, RockObstacleState> rockObstacleMap = new Dictionary<int, RockObstacleState>();
+    private bool isRockObstacleCacheInitialized;
 
     private void Start()
     {
@@ -756,6 +749,8 @@ public class RouteManager : MonoBehaviour
 
     public bool TrySpawnRandomRockObstacle()
     {
+        EnsureRockObstacleCache();
+
         if (nodeConnections == null || nodeConnections.Count == 0)
         {
             return false;
@@ -794,7 +789,7 @@ public class RouteManager : MonoBehaviour
         bool activated = ActivateRockObstacle(targetTileId);
         if (activated)
         {
-            Debug.Log($"🪨 สุ่มเสกหินที่ tile {targetTileId} (ทุก {randomRockSpawnIntervalTurns} เทิร์น)");
+            Debug.Log($"🪨 สุ่มเสกหินที่ tile {targetTileId}");
         }
 
         return activated;
@@ -852,19 +847,11 @@ public class RouteManager : MonoBehaviour
             return null;
         }
 
+        EnsureRockObstacleCache();
+
         if (rockObstacleMap.TryGetValue(tileID, out RockObstacleState cached))
         {
             return cached;
-        }
-
-        for (int i = 0; i < activeRockObstacles.Count; i++)
-        {
-            RockObstacleState state = activeRockObstacles[i];
-            if (state != null && state.tileID == tileID)
-            {
-                rockObstacleMap[tileID] = state;
-                return state;
-            }
         }
 
         if (!createIfMissing)
@@ -876,6 +863,34 @@ public class RouteManager : MonoBehaviour
         activeRockObstacles.Add(newState);
         rockObstacleMap[tileID] = newState;
         return newState;
+    }
+
+    private void EnsureRockObstacleCache()
+    {
+        if (isRockObstacleCacheInitialized)
+        {
+            return;
+        }
+
+        rockObstacleMap.Clear();
+        if (activeRockObstacles != null)
+        {
+            for (int i = 0; i < activeRockObstacles.Count; i++)
+            {
+                RockObstacleState state = activeRockObstacles[i];
+                if (state == null || state.tileID <= 0)
+                {
+                    continue;
+                }
+
+                if (!rockObstacleMap.ContainsKey(state.tileID))
+                {
+                    rockObstacleMap[state.tileID] = state;
+                }
+            }
+        }
+
+        isRockObstacleCacheInitialized = true;
     }
 
     public void SpawnBossTile()
