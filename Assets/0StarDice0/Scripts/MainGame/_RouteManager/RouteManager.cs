@@ -721,6 +721,9 @@ public class RouteManager : MonoBehaviour
     [Header("Rock Obstacle Settings")]
     [Tooltip("Prefab ของหินที่ใช้วางเป็นสิ่งกีดขวาง (optional)")]
     public GameObject rockObstaclePrefab;
+    [Tooltip("ระยะยกหินขึ้นจากตำแหน่ง node (หน่วยโลก)")]
+    [Min(0f)]
+    public float rockObstacleSpawnHeight = 1f;
     [Tooltip("ตำแหน่งช่องที่อยากให้มีหินตั้งแต่เริ่มเกม")]
     public List<int> initialRockTileIDs = new List<int>();
     [Tooltip("สถานะหินที่กำลังใช้งานในเกม")]
@@ -834,7 +837,9 @@ public class RouteManager : MonoBehaviour
 
         if (rockObstaclePrefab != null && state.spawnedObject == null)
         {
-            state.spawnedObject = Instantiate(rockObstaclePrefab, nodeData.node.position, Quaternion.identity, nodeData.node);
+            Vector3 spawnPosition = nodeData.node.position + (Vector3.up * rockObstacleSpawnHeight);
+            state.spawnedObject = Instantiate(rockObstaclePrefab, spawnPosition, Quaternion.identity);
+            state.spawnedObject.transform.SetParent(nodeData.node, true);
         }
 
         return true;
