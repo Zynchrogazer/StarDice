@@ -723,7 +723,7 @@ public class RouteManager : MonoBehaviour
     public GameObject rockObstaclePrefab;
     [Tooltip("ระยะยกหินขึ้นจากตำแหน่ง node (หน่วยโลก)")]
     [Min(0f)]
-    public float rockObstacleSpawnHeight = 1f;
+    public float rockObstacleSpawnHeight = 0.02f;
     [Tooltip("ตำแหน่งช่องที่อยากให้มีหินตั้งแต่เริ่มเกม")]
     public List<int> initialRockTileIDs = new List<int>();
     [Tooltip("สถานะหินที่กำลังใช้งานในเกม")]
@@ -837,12 +837,69 @@ public class RouteManager : MonoBehaviour
 
         if (rockObstaclePrefab != null && state.spawnedObject == null)
         {
-            Vector3 spawnPosition = nodeData.node.position + (Vector3.up * rockObstacleSpawnHeight);
-            state.spawnedObject = Instantiate(rockObstaclePrefab, spawnPosition, Quaternion.identity);
-            state.spawnedObject.transform.SetParent(nodeData.node, true);
+            Quaternion spawnRotation = rockObstaclePrefab.transform.rotation;
+
+            // หมายเหตุ:
+            // อย่า parent หินกับ node โดยตรง เพราะบาง node ในฉากมี scale บางแกนผิดปกติ
+            // ทำให้หินที่ spawn ถูกบีบจนดูแบนคล้าย 2D
+            state.spawnedObject = Instantiate(rockObstaclePrefab, nodeData.node.position, spawnRotation);
+            state.spawnedObject.transform.position = GetRockObstacleSpawnPosition(nodeData.node, state.spawnedObject);
         }
 
         return true;
+    }
+
+    private Vector3 GetRockObstacleSpawnPosition(Transform nodeTransform, GameObject rockInstance)
+    {
+        Vector3 spawnPosition = nodeTransform.position;
+        float targetGroundY = nodeTransform.position.y;
+
+        if (TryGetCombinedBounds(nodeTransform, out Bounds nodeBounds))
+        {
+            spawnPosition.x = nodeBounds.center.x;
+            spawnPosition.z = nodeBounds.center.z;
+            targetGroundY = nodeBounds.max.y;
+        }
+
+        if (rockInstance != null && TryGetCombinedBounds(rockInstance.transform, out Bounds rockBounds))
+        {
+            float rockBottomOffset = rockBounds.min.y - rockInstance.transform.position.y;
+            spawnPosition.y = targetGroundY - rockBottomOffset + rockObstacleSpawnHeight;
+            return spawnPosition;
+        }
+
+        spawnPosition.y = targetGroundY + rockObstacleSpawnHeight;
+        return spawnPosition;
+    }
+
+    private bool TryGetCombinedBounds(Transform root, out Bounds bounds)
+    {
+        Renderer[] renderers = root.GetComponentsInChildren<Renderer>();
+        if (renderers.Length > 0)
+        {
+            bounds = renderers[0].bounds;
+            for (int i = 1; i < renderers.Length; i++)
+            {
+                bounds.Encapsulate(renderers[i].bounds);
+            }
+
+            return true;
+        }
+
+        Collider[] colliders = root.GetComponentsInChildren<Collider>();
+        if (colliders.Length > 0)
+        {
+            bounds = colliders[0].bounds;
+            for (int i = 1; i < colliders.Length; i++)
+            {
+                bounds.Encapsulate(colliders[i].bounds);
+            }
+
+            return true;
+        }
+
+        bounds = default;
+        return false;
     }
 
     private RockObstacleState GetOrCreateRockObstacleState(int tileID, bool createIfMissing)
