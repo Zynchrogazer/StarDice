@@ -87,6 +87,7 @@ public class GameEventManager : MonoBehaviour
     [SerializeField] private GameTurnManager gameTurnManager;
     [SerializeField] private RouteManager routeManager;
     [SerializeField] private MainLightHealGimmickController mainLightHealGimmickController;
+    [SerializeField] private MainDarkDebuffGimmickController mainDarkDebuffGimmickController;
     private bool isFirstLoad = true;
     private bool hasStartedGame = false;
     public GameObject shopPanel;
@@ -127,6 +128,14 @@ public class GameEventManager : MonoBehaviour
             mainLightHealGimmickController = FindFirstObjectByType<MainLightHealGimmickController>();
 
         return mainLightHealGimmickController;
+    }
+
+    private MainDarkDebuffGimmickController ResolveMainDarkDebuffGimmickController()
+    {
+        if (mainDarkDebuffGimmickController == null)
+            mainDarkDebuffGimmickController = FindFirstObjectByType<MainDarkDebuffGimmickController>();
+
+        return mainDarkDebuffGimmickController;
     }
 
     #region Unity Lifecycle & Scene Management
@@ -393,6 +402,10 @@ public class GameEventManager : MonoBehaviour
             case "sleep": SleepEffect(target); break;
             case "windteleport": WindTeleportEffect(target); break;
             case "mainlighthealgimmick": TriggerMainLightHealGimmickEvent(); break;
+            case "maindarkdebuffgimmick":
+            case "darkdebuffgimmick":
+                TriggerMainDarkDebuffGimmickEvent(target);
+                break;
             case "iceeffect": ApplyIceEffect(target); break;
             case "minigamefappy":
             case "level 1":
@@ -431,6 +444,19 @@ public void OnClickCloseShopButton()
 
         Debug.LogWarning("[GameEventManager] Trigger mainlighthealgimmick ไม่สำเร็จ (ไม่พบ controller หรือ trigger ไม่ผ่านเงื่อนไข)");
         ResolveGameTurnManager()?.RequestEndTurn();
+    }
+
+    private void TriggerMainDarkDebuffGimmickEvent(GameObject target)
+    {
+        MainDarkDebuffGimmickController gimmickController = ResolveMainDarkDebuffGimmickController();
+        if (gimmickController != null && gimmickController.TriggerGimmick(target))
+        {
+            ResolveGameTurnManager()?.RequestEndTurn();
+            return;
+        }
+
+        Debug.LogWarning("[GameEventManager] Trigger maindarkdebuffgimmick ไม่สำเร็จ -> fallback ไปใช้ TriggerRandomDebuff");
+        TriggerRandomDebuff(target);
     }
 
     private void ApplyIceEffect(GameObject target)
