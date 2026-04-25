@@ -210,6 +210,8 @@ public class PlayerPathWalker : MonoBehaviour
             if (TryBreakRockAndBounceBack(nextTileID))
             {
                 Debug.Log($"🪨 {name} ชนหินที่ช่อง {nextTileID} หินแตกและเด้งกลับไปช่อง {currentNodeID}");
+                stepsRemaining = 0;
+                break;
             }
 
             previousNodeID = currentNodeID;
