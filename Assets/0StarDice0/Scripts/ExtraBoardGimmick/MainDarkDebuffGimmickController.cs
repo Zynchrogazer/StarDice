@@ -25,7 +25,6 @@ public class MainDarkDebuffGimmickController : MonoBehaviour
     private struct DebuffOption
     {
         public DebuffType type;
-        [Min(0)] public int weight;
         [Min(1)] public int turns;
     }
 
@@ -35,16 +34,15 @@ public class MainDarkDebuffGimmickController : MonoBehaviour
     [SerializeField] private bool enableAutoTriggerByTurn = false;
     [Min(1)] [SerializeField] private int autoTriggerIntervalTurns = 4;
     [SerializeField] private bool autoTriggerOnlyPlayerTurn = false;
-    [SerializeField] private bool verboseLog = false;
 
-    [Header("Debuff Pool (Weighted Random)")]
+    [Header("Debuff Pool (Random 1 Option Per Trigger)")]
     [SerializeField] private List<DebuffOption> debuffPool = new List<DebuffOption>
     {
-        new DebuffOption { type = DebuffType.Ice, weight = 20, turns = 1 },
-        new DebuffOption { type = DebuffType.Burn, weight = 20, turns = 3 },
-        new DebuffOption { type = DebuffType.Curse, weight = 20, turns = 3 },
-        new DebuffOption { type = DebuffType.Poison, weight = 20, turns = 3 },
-        new DebuffOption { type = DebuffType.Sleep, weight = 20, turns = 3 }
+        new DebuffOption { type = DebuffType.Ice, turns = 1 },
+        new DebuffOption { type = DebuffType.Burn, turns = 3 },
+        new DebuffOption { type = DebuffType.Curse, turns = 3 },
+        new DebuffOption { type = DebuffType.Poison, turns = 3 },
+        new DebuffOption { type = DebuffType.Sleep, turns = 3 }
     };
 
     private int autoTriggerTurnsLeft;
@@ -71,11 +69,8 @@ public class MainDarkDebuffGimmickController : MonoBehaviour
         GameObject target = GameTurnManager.CurrentPlayer != null ? GameTurnManager.CurrentPlayer.gameObject : null;
         bool triggered = TriggerGimmick(target);
         ResetAutoTriggerCounter();
-
-        if (verboseLog)
-        {
-            Debug.Log($"[MainDarkDebuffGimmick] Auto trigger result = {triggered}");
-        }
+        if (!triggered)
+            Debug.LogWarning("[MainDarkDebuffGimmick] Auto trigger ไม่สำเร็จ");
     }
 
     [ContextMenu("Trigger MainDark Debuff Gimmick (Current Player)")]
@@ -108,17 +103,20 @@ public class MainDarkDebuffGimmickController : MonoBehaviour
             return false;
         }
 
-        DebuffOption selectedOption;
-        if (!TryPickWeightedDebuff(out selectedOption))
+        if (debuffPool == null || debuffPool.Count == 0)
         {
             return false;
         }
 
-        ApplyDebuff(playerState, selectedOption);
-        if (verboseLog)
+        int randomIndex = Random.Range(0, debuffPool.Count);
+        DebuffOption selectedOption = debuffPool[randomIndex];
+        if (selectedOption.turns <= 0)
         {
-            Debug.Log($"[MainDarkDebuffGimmick] Applied {selectedOption.type} ({selectedOption.turns} turn(s)) to {target.name}");
+            selectedOption.turns = 1;
         }
+
+        ApplyDebuff(playerState, selectedOption);
+        Debug.Log($"[MainDarkDebuffGimmick] Applied {selectedOption.type} ({selectedOption.turns} turn(s)) to {target.name}");
 
         return true;
     }
@@ -165,55 +163,6 @@ public class MainDarkDebuffGimmickController : MonoBehaviour
     private void ResetAutoTriggerCounter()
     {
         autoTriggerTurnsLeft = autoTriggerIntervalTurns > 0 ? autoTriggerIntervalTurns : 1;
-    }
-
-    private bool TryPickWeightedDebuff(out DebuffOption selectedOption)
-    {
-        selectedOption = default;
-
-        if (debuffPool == null || debuffPool.Count == 0)
-        {
-            return false;
-        }
-
-        int totalWeight = 0;
-        for (int i = 0; i < debuffPool.Count; i++)
-        {
-            DebuffOption option = debuffPool[i];
-            if (option.weight > 0)
-            {
-                totalWeight += option.weight;
-            }
-        }
-
-        if (totalWeight <= 0)
-        {
-            return false;
-        }
-
-        int roll = Random.Range(0, totalWeight);
-        int cumulative = 0;
-        for (int i = 0; i < debuffPool.Count; i++)
-        {
-            DebuffOption option = debuffPool[i];
-            if (option.weight <= 0)
-            {
-                continue;
-            }
-
-            cumulative += option.weight;
-            if (roll < cumulative)
-            {
-                selectedOption = option;
-                if (selectedOption.turns <= 0)
-                {
-                    selectedOption.turns = 1;
-                }
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private static void ApplyDebuff(PlayerState playerState, DebuffOption option)

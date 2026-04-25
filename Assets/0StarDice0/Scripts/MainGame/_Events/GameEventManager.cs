@@ -455,8 +455,8 @@ public void OnClickCloseShopButton()
             return;
         }
 
-        Debug.LogWarning("[GameEventManager] Trigger maindarkdebuffgimmick ไม่สำเร็จ -> fallback ไปใช้ TriggerRandomDebuff");
-        TriggerRandomDebuff(target);
+        Debug.LogWarning("[GameEventManager] Trigger maindarkdebuffgimmick ไม่สำเร็จ (ไม่พบ controller หรือ trigger ไม่ผ่านเงื่อนไข)");
+        ResolveGameTurnManager()?.RequestEndTurn();
     }
 
     private void ApplyIceEffect(GameObject target)

@@ -7,8 +7,7 @@
 ## 1) โครงสร้างระบบที่เพิ่ม
 
 - `MainDarkDebuffGimmickController`
-  - ดูแลเฉพาะการสุ่ม debuff และ apply ให้ `PlayerState`
-  - รองรับ weighted random ผ่าน `Debuff Pool`
+  - ดูแลเฉพาะการสุ่ม debuff 1 ชนิดต่อการ trigger และ apply ให้ `PlayerState`
   - รองรับ auto trigger รายเทิร์น
 
 - `MainDarkDebuffGimmickTurnTicker`
@@ -19,7 +18,7 @@
   - เพิ่ม event key:
     - `maindarkdebuffgimmick`
     - `darkdebuffgimmick`
-  - เรียก controller โดยตรง และ fallback ไป `TriggerRandomDebuff` ถ้าไม่พร้อม
+  - เรียก controller โดยตรง (เหมือนแนว light gimmick)
 
 ---
 
@@ -48,7 +47,6 @@
 
 - `Dark Debuff Gimmick Controller` → ลาก component `MainDarkDebuffGimmickController`
 - `Enable Turn Tick` → เปิด
-- `Simulate Turns If No Turn Manager` → เปิดเฉพาะกรณีเทสต์ scene แยก
 
 ### บน `GameEventManager`
 
@@ -74,7 +72,6 @@
 
 แต่ละรายการปรับได้:
 
-- `weight` = น้ำหนักสุ่ม (ยิ่งมากยิ่งมีโอกาสออก)
 - `turns` = จำนวนเทิร์น (Ice ใช้สถานะ 1 ครั้งตามระบบเดิม)
 
 ---
@@ -111,14 +108,13 @@
 
 ## Debuff Pool
 
-- [ ] ใน `Debuff Pool` มีอย่างน้อย 1 รายการที่ `weight > 0`
+- [ ] ใน `Debuff Pool` มีอย่างน้อย 1 รายการ
 - [ ] รายการ Burn/Curse/Poison/Sleep ตั้ง `turns >= 1`
-- [ ] ทดสอบสุ่มอย่างน้อย 10 ครั้งเพื่อดู distribution คร่าว ๆ
+- [ ] ทุกครั้งที่ trigger จะสุ่ม apply เพียง 1 debuff
 
 ## Runtime Behavior
 
 - [ ] ผู้เล่นติด debuff ได้จริง (ดูทั้งผลลัพธ์และ UI)
-- [ ] กรณี controller ไม่พร้อม ระบบ fallback ไป random debuff เดิมได้
 - [ ] ไม่เกิด error / null reference ระหว่าง trigger
 
 ## Auto Trigger (Optional)
@@ -139,12 +135,11 @@
 
 - สุ่มไม่ออกเลย
   - ตรวจว่า `Debuff Pool` ไม่ว่าง
-  - ตรวจว่ามีรายการที่ `weight > 0`
 
 - auto trigger ไม่ทำงาน
   - ตรวจ `Enable Auto Trigger By Turn`
   - ตรวจว่ามี `GameTurnManager`
-  - ถ้าเทสต์ scene แยก ให้เปิด `Simulate Turns If No Turn Manager`
+  - ตรวจว่า `MainDarkDebuffGimmickTurnTicker` ถูก enable อยู่
 
 ---
 
