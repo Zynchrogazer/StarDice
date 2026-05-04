@@ -10432,11 +10432,9 @@ MonoBehaviour:
   tileInvariantRules: []
   bossPrefab: {fileID: 6058716385546445464, guid: 44f5e739987295b4fb69f1eb91fcae84, type: 3}
   rockObstaclePrefab: {fileID: 0}
+  rockObstacleSpawnHeight: 0.02
   initialRockTileIDs: 
   activeRockObstacles: []
-  enableRandomRockSpawnByTurn: 1
-  randomRockSpawnIntervalTurns: 5
-  randomRockOnlyInMainEarth: 1
 --- !u!1 &375762905
 GameObject:
   m_ObjectHideFlags: 0
@@ -19808,6 +19806,10 @@ PrefabInstance:
       propertyPath: m_fontColor.r
       value: 0.86415094
       objectReference: {fileID: 0}
+    - target: {fileID: 6831395664808196562, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6850917529683073044, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
       propertyPath: m_IsActive
       value: 0
@@ -19855,6 +19857,10 @@ PrefabInstance:
     - target: {fileID: 7913704880630016972, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
       propertyPath: m_fontColor.r
       value: 0.86415094
+      objectReference: {fileID: 0}
+    - target: {fileID: 7949458219228500453, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8094541980012112692, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
       propertyPath: m_Sprite
@@ -21944,6 +21950,7 @@ GameObject:
   - component: {fileID: 848879816}
   - component: {fileID: 848879815}
   - component: {fileID: 848879814}
+  - component: {fileID: 848879820}
   m_Layer: 0
   m_Name: _GameSystem
   m_TagString: Untagged
@@ -22019,6 +22026,7 @@ MonoBehaviour:
   gameTurnManager: {fileID: 0}
   routeManager: {fileID: 0}
   mainLightHealGimmickController: {fileID: 0}
+  mainDarkDebuffGimmickController: {fileID: 0}
   shopPanel: {fileID: 0}
   windTeleportTargetIDs: 0200000006000000080000000e0000001200000014000000180000001a0000001c0000001e00000020000000220000002400000026000000280000002a0000002c0000002e00000030000000320000003400000036000000380000003a0000003c0000003e00000040000000420000004400000046000000480000004a0000004c0000004e0000005000000052000000540000005600000058000000
   windTeleportPanelName: windteleportpanel
@@ -22059,6 +22067,14 @@ MonoBehaviour:
   DarkLegendaryRing: 38
   countroundbattle: 0
   countbattle: 0
+  eventAudioSource: {fileID: 848879820}
+  eventSounds:
+  - {fileID: 8300000, guid: 34f9cbd28a9740349b6cc2f5e280dda3, type: 3}
+  - {fileID: 8300000, guid: 79e6baad2fd414b82a6d49ce1568d2e5, type: 3}
+  - {fileID: 8300000, guid: 79180f511d89441b9aa23ccae1992fe0, type: 3}
+  - {fileID: 8300000, guid: 3becec1909f194046945d85ac1077772, type: 3}
+  - {fileID: 8300000, guid: 7f4aa26d5b55226409cda231ffaf869b, type: 3}
+  - {fileID: 8300000, guid: 72127805eb2bc4e7fbf2e02eca266cfa, type: 3}
 --- !u!114 &848879816
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -22129,6 +22145,103 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4a039e00978fad7489790f2a69abf4fa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!82 &848879820
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 848879812}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 24300002, guid: ae12ce1e27b929445bae7d86c23837b5, type: 2}
+  m_audioClip: {fileID: 0}
+  m_Resource: {fileID: 0}
+  m_PlayOnAwake: 1
+  m_Volume: 1
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1 &850076232
 GameObject:
   m_ObjectHideFlags: 0
@@ -25349,6 +25462,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   standUpright: 1
+  yawOffset: 0
 --- !u!114 &982919945 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 3462586120824983271, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
@@ -38358,6 +38472,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   standUpright: 1
+  yawOffset: 0
 --- !u!1 &1505411523
 GameObject:
   m_ObjectHideFlags: 0
@@ -40181,7 +40296,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 628bf7716d88a7545b5f5028901f13ed, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  showTestButtons: 1
+  showTestButtons: 0
 --- !u!4 &1563442516
 Transform:
   m_ObjectHideFlags: 0

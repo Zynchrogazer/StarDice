@@ -33,7 +33,7 @@ public class EnemyDarkbuff: MonoBehaviour
     private bool isPlayerTurn = true; // เริ่มเกมเป็นเทิร์นผู้เล่น
 
     private int burnTurnsLeft = 0;
-
+public bool isBattleOver = false;
     public TMP_Text playerturntext;
     public TMP_Text enemyturntext;
     private int SuperburnTurnsLeft = 0;
@@ -265,12 +265,28 @@ public class EnemyDarkbuff: MonoBehaviour
         yield return new WaitForSeconds(3f);
         effect.SetActive(false); // ✅ ซ่อน
     }
-    public void LoadSelectedCards(List<CardData> cards)
+   public void LoadSelectedCards(List<CardData> cards)
     {
+        // 1. รับค่าการ์ดมาใส่ใน List ของเราก่อน
         selectedCards = new List<CardData>(cards);
+
+        // ---------------------------------------------------------
+        // 🟢 2. ระบบสับการ์ด (Shuffle) ให้ตำแหน่งไม่ซ้ำเดิม
+        // ---------------------------------------------------------
+        for (int i = 0; i < selectedCards.Count; i++)
+        {
+            CardData temp = selectedCards[i];
+            // สุ่มตำแหน่งใหม่ที่จะเอามาสลับ
+            int randomIndex = UnityEngine.Random.Range(i, selectedCards.Count);
+            
+            // ทำการสลับที่กัน
+            selectedCards[i] = selectedCards[randomIndex];
+            selectedCards[randomIndex] = temp;
+        }
+
+        // 3. เรียกใช้ SetupCardsUI เพื่อแสดงผล (ตอนนี้การ์ดจะเรียงแบบสุ่มแล้ว!)
         SetupCardsUI();
     }
-
 
     void SetupCardsUI()
     {
@@ -1883,15 +1899,16 @@ public class EnemyDarkbuff: MonoBehaviour
         StartCoroutine(ShakeEnemy()); // ศัตรูสั่น
         ShowDamageNumber($"-{damageN}"); // แสดงเลขดาเมจ
         UpdateEnemyHPUI();
-
-        if (enemyHP <= 0)
+   if (enemyHP <= 0)
         {
-            GiveExpToPlayer();
-            OpenChest();
-            Debug.Log("ศัตรูแพ้แล้ว!");
-            ShowResultPanelVictory("Victory!");
+            if (isBattleOver) return; // ป้องกันโค้ดรันซ้ำถ้าบังเอิญโดนดาเมจต่อ
+
+            isBattleOver = true; // ล็อคระบบ
+            StartCoroutine(EnemyDeathSequence()); 
         }
+
     }
+ 
 
     public PlayerState player;
     public void GiveExpToPlayer()
@@ -2136,11 +2153,29 @@ public class EnemyDarkbuff: MonoBehaviour
 
         if (enemyHP <= 0)
         {
-            GiveExpToPlayer();
-            OpenChest();
-            Debug.Log("ศัตรูแพ้แล้ว!");
-            ShowResultPanelVictory("Victory!");
+            if (isBattleOver) return; // ป้องกันโค้ดรันซ้ำถ้าบังเอิญโดนดาเมจต่อ
+
+            isBattleOver = true; // ล็อคระบบ
+            StartCoroutine(EnemyDeathSequence()); 
         }
+
+    }
+    // ---------------------------------------------------------
+    // 🟢 2. ฟังก์ชันหน่วงเวลาตอนตาย (นำไปวางไว้ด้านล่าง)
+    // ---------------------------------------------------------
+    private IEnumerator EnemyDeathSequence()
+    {
+        Debug.Log("💀 ศัตรูตายแล้ว! กำลังรอ 1 วินาที...");
+
+        // 1. หน่วงเวลา 1 วินาที
+        yield return new WaitForSeconds(1f);
+
+        Debug.Log("🏆 รอครบ 1 วินาทีแล้ว โชว์หน้าต่าง Victory!");
+
+        // 2. เด้ง Panel และแจกรางวัล
+        GiveExpToPlayer();
+        OpenChest();
+        ShowResultPanelVictory("Victory!");
     }
 
 public Sprite[] itemImages; 
@@ -2448,6 +2483,7 @@ StartCoroutine(DelayedEnemyTurn());
 
     void EnemyTurn()
     {
+         if (isBattleOver) return;
           GameEventManager.TryAddCount1(1);
         playerturntext.gameObject.SetActive(false);
         enemyturntext.gameObject.SetActive(true);

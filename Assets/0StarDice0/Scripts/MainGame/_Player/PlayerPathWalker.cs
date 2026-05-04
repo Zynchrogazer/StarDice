@@ -12,7 +12,7 @@ public class PlayerPathWalker : MonoBehaviour
     [Header("Audio")]
     public AudioClip walkSound;
     public AudioClip landSound;
-
+    public AudioClip hitRockSound;
     private AudioSource audioSource;
 
     [Range(0f, 1f)] public float soundVolume = 0.8f;
@@ -163,8 +163,16 @@ public class PlayerPathWalker : MonoBehaviour
                 }
                 else
                 {
-                    // ถ้าถอยไม่ได้แล้ว ให้มันยอมแพ้แล้วเดินไปข้างหน้าแทน
-                    nextNode = choices.Count > 0 ? choices[Random.Range(0, choices.Count)] : null;
+                    // 🟢 ถ้าถอยไม่ได้แล้ว (ติดกำแพง หรือถึงช่องเริ่มต้น)
+                    Debug.Log($"<color=orange>🛑 {name} ถอยหลังจนสุดทางแล้ว! ลบล้างคำสาปทิ้งและบังคับหยุดเดิน</color>");
+                    
+                    if (myState != null)
+                    {
+                        myState.backwardCurseTurns = 0; // ปลดปล่อยจากคำสาป!
+                    }
+                    
+                    stepsRemaining = 0; // ล้างจำนวนก้าวที่เหลือทิ้ง
+                    break; // เตะออกจากลูปเดิน เพื่อลงไปรัน CheckFinalNodeEvent() แล้วจบเทิร์น
                 }
 
                 yield return new WaitForSeconds(0.5f); 
@@ -209,9 +217,20 @@ public class PlayerPathWalker : MonoBehaviour
 
             if (TryBreakRockAndBounceBack(nextTileID))
             {
-                Debug.Log($"🪨 {name} ชนหินที่ช่อง {nextTileID} หินแตกและเด้งกลับไปช่อง {currentNodeID}");
+                // 1. เล่นเสียงทันทีที่ชน (ตามหลัก KISS: ทำทันทีที่เกิดเงื่อนไข)
+                if (audioSource != null && hitRockSound != null)
+                {
+                    audioSource.PlayOneShot(hitRockSound, soundVolume);
+                }
+
+                Debug.Log($"🪨 {name} ชนหิน! เล่นเสียงแล้วกำลังรอหน่วงเวลาก่อนแสดง Effect...");
+
+                // 2. หน่วงเวลาเพิ่ม (Delay) เพื่อให้ผู้เล่นได้ยินเสียงหรือเห็นอาการชะงักก่อน
+                yield return new WaitForSeconds(0.8f); // ปรับเวลาตามความเหมาะสม (เช่น 0.5 - 1.0 วินาที)
+
+                // 3. จบการเดิน
                 stepsRemaining = 0;
-                break;
+                break; 
             }
 
             previousNodeID = currentNodeID;
@@ -227,39 +246,33 @@ public class PlayerPathWalker : MonoBehaviour
 
     private void CheckFinalNodeEvent()
     {
-        NodeConnection finalNodeData = routeManager?.GetNodeData(currentNodeID);
-        bool hasGameTurnManager = GameTurnManager.TryGet(out var gameTurnManager);
+    // ถ้าถูกเรียกจาก ExecuteMoveFromEvent ให้ข้ามไป
+    // (EventManager จะเรียก TriggerCurrentNodeEvent เองหลังรอเดินจบ)
+    if (suppressFinalNodeEvent)
+    {
+        suppressFinalNodeEvent = false;
+        return;
+    }
 
-        if (finalNodeData != null)
-        {
-            Debug.Log($"[PathWalker] {name} landed on ID: {currentNodeID}. Triggering Event...");
+    NodeConnection finalNodeData = routeManager?.GetNodeData(currentNodeID);
+    bool hasGameTurnManager = GameTurnManager.TryGet(out var gameTurnManager);
 
-            if (audioSource != null && landSound != null)
-            {
-                // ปรับ Pitch กลับเป็นปกติ (เผื่อตอนเดินเราไปสุ่ม Pitch ไว้)
-                //audioSource.pitch = 1.0f;
-                //audioSource.PlayOneShot(landSound, soundVolume);
-            }
+    if (finalNodeData != null)
+    {
+        Debug.Log($"[PathWalker] {name} landed on ID: {currentNodeID}. Triggering Event...");
 
-            // ✅ 1. บอก Manager ให้ล็อค State ไว้ที่ EventProcessing (กัน AI วิ่งแซง)
-            if (hasGameTurnManager)
-                gameTurnManager.SetState(GameState.EventProcessing);
+        if (hasGameTurnManager)
+            gameTurnManager.SetState(GameState.EventProcessing);
 
-            // ✅ 2. ส่งไม้ต่อให้ EventManager (ใช้สคริปต์ EventManager ตัวเดิมของคุณ)
-            if (eventManager != null)
-            {
-                eventManager.RaisePlayerLandedOnNode(finalNodeData, this.gameObject);
-            }
-            else
-            {
-                // ถ้าไม่มี EventManager ให้จบเทิร์นเลย
-                if (hasGameTurnManager) gameTurnManager.RequestEndTurn();
-            }
-        }
+        if (eventManager != null)
+            eventManager.RaisePlayerLandedOnNode(finalNodeData, this.gameObject);
         else
-        {
             if (hasGameTurnManager) gameTurnManager.RequestEndTurn();
-        }
+    }
+    else
+    {
+        if (hasGameTurnManager) gameTurnManager.RequestEndTurn();
+    }
     }
 
     private IEnumerator MoveTowardsCoroutine(Transform targetNode)
@@ -378,5 +391,30 @@ public class PlayerPathWalker : MonoBehaviour
 
         // 3. (Optional) Play Sound
         // AudioManager.Instance.PlaySfx("WarpSound");
+    }
+    // ==========================================
+    // เพิ่ม flag ใหม่ — walker จะไม่ auto-trigger
+    // event เองถ้าถูกเรียกจาก EventManager
+    // ==========================================
+    private bool suppressFinalNodeEvent = false;
+
+    /// <summary>
+    /// เรียกจาก GameEventManager เท่านั้น
+    /// เดินปกติ แต่ไม่ trigger event ตอนจบ (EventManager จะเรียกเอง)
+    /// </summary>
+    public void ExecuteMoveFromEvent(int steps)
+    {
+        suppressFinalNodeEvent = true;
+        ExecuteMove(steps);
+    }
+
+    /// <summary>
+    /// ให้ GameEventManager เรียกหลัง ExecuteMoveFromEvent เดินจบ
+    /// เพื่อ trigger event ของช่องที่ตกค้าง
+    /// </summary>
+    public void TriggerCurrentNodeEvent()
+    {
+        suppressFinalNodeEvent = false;
+        CheckFinalNodeEvent();
     }
 }

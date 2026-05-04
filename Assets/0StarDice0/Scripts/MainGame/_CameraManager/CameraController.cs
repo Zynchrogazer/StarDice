@@ -25,11 +25,16 @@ public class CameraController : MonoBehaviour
     public float middleMousePanSpeed = 0.03f; // ความไวลากกล้องด้วยเมาส์กลาง
     public float keyboardPanSpeed = 8f; // ความไวเลื่อนกล้องด้วยปุ่มลูกศร
     public float maxPanDistance = 10f; // ระยะที่เลื่อนได้สูงสุดจากตัวละครที่กำลังเล่น
+    [Header("Vertical Move")]
+    public float verticalMoveSpeed = 6f; // ความไวเลื่อนกล้องขึ้น/ลง (C/V)
+    public float minVerticalOffset = -5f; // ต่ำกว่าระดับเป้าหมายได้เท่าไร
+    public float maxVerticalOffset = 8f; // สูงกว่าระดับเป้าหมายได้เท่าไร
 
     [Header("State")]
     public Transform target;
     private bool isBattleScene = false;
     private Vector3 panOffset = Vector3.zero;
+    private float verticalOffset = 0f;
 
     private void Awake()
     {
@@ -41,13 +46,32 @@ public class CameraController : MonoBehaviour
 
     }
 
-    private void OnEnable() { SceneManager.sceneLoaded += OnSceneLoaded; }
-    private void OnDisable() { SceneManager.sceneLoaded -= OnSceneLoaded; }
+    private void OnEnable()
+    {
+        SceneManager.sceneLoaded += OnSceneLoaded;
+        SceneManager.activeSceneChanged += OnActiveSceneChanged;
+        RefreshSceneCameraState(SceneManager.GetActiveScene());
+    }
+
+    private void OnDisable()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+        SceneManager.activeSceneChanged -= OnActiveSceneChanged;
+    }
 
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        RouteManager boardSystem = FindObjectOfType<RouteManager>();
-        bool isBoardGameScene = (boardSystem != null);
+        RefreshSceneCameraState(SceneManager.GetActiveScene());
+    }
+
+    private void OnActiveSceneChanged(Scene previousScene, Scene nextScene)
+    {
+        RefreshSceneCameraState(nextScene);
+    }
+
+    private void RefreshSceneCameraState(Scene referenceScene)
+    {
+        bool isBoardGameScene = IsBoardScene(referenceScene);
 
         Camera myCam = GetComponent<Camera>();
         AudioListener myAudio = GetComponent<AudioListener>();
@@ -56,6 +80,7 @@ public class CameraController : MonoBehaviour
         {
             isBattleScene = false;
             panOffset = Vector3.zero;
+            verticalOffset = 0f;
             if (myCam != null) myCam.enabled = true;
             if (myAudio != null) myAudio.enabled = true;
             FindTarget();
@@ -65,9 +90,29 @@ public class CameraController : MonoBehaviour
             isBattleScene = true;
             target = null;
             panOffset = Vector3.zero;
+            verticalOffset = 0f;
             if (myCam != null) myCam.enabled = false;
             if (myAudio != null) myAudio.enabled = false;
         }
+    }
+
+    private static bool IsBoardScene(Scene scene)
+    {
+        if (!scene.IsValid() || !scene.isLoaded)
+        {
+            return false;
+        }
+
+        GameObject[] roots = scene.GetRootGameObjects();
+        for (int i = 0; i < roots.Length; i++)
+        {
+            if (roots[i].GetComponentInChildren<RouteManager>(true) != null)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private void Update()
@@ -103,6 +148,7 @@ public class CameraController : MonoBehaviour
             }
 
             HandlePanInput();
+            HandleVerticalInput();
         }
     }
 
@@ -137,6 +183,19 @@ public class CameraController : MonoBehaviour
         }
     }
 
+    private void HandleVerticalInput()
+    {
+        float verticalInput = 0f;
+        if (Input.GetKey(KeyCode.V)) verticalInput += 1f;
+        if (Input.GetKey(KeyCode.C)) verticalInput -= 1f;
+
+        if (verticalInput != 0f)
+        {
+            verticalOffset += verticalInput * verticalMoveSpeed * Time.deltaTime;
+            verticalOffset = Mathf.Clamp(verticalOffset, minVerticalOffset, maxVerticalOffset);
+        }
+    }
+
     private void LateUpdate()
     {
         if (isBattleScene) return;
@@ -159,7 +218,7 @@ public class CameraController : MonoBehaviour
         // ✨ สูตร: ระยะทางเดิม * ตัวคูณ Zoom
         Vector3 finalOffset = offset * currentZoomMultiplier;
 
-        Vector3 desiredPosition = target.position + finalOffset + panOffset;
+        Vector3 desiredPosition = target.position + finalOffset + panOffset + (Vector3.up * verticalOffset);
         Vector3 smoothedPosition = Vector3.Lerp(transform.position, desiredPosition, smoothSpeed * Time.deltaTime);
         transform.position = smoothedPosition;
 

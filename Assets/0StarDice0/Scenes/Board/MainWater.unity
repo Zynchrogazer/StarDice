@@ -185,8 +185,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4278190080
-  m_fontColor: {r: 0, g: 0, b: 0, a: 1}
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -4353,8 +4353,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4278190080
-  m_fontColor: {r: 0, g: 0, b: 0, a: 1}
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -15240,8 +15240,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4278190080
-  m_fontColor: {r: 0, g: 0, b: 0, a: 1}
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -24917,7 +24917,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 628bf7716d88a7545b5f5028901f13ed, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  showTestButtons: 1
+  showTestButtons: 0
 --- !u!4 &1079063858
 Transform:
   m_ObjectHideFlags: 0
@@ -32239,6 +32239,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   standUpright: 1
+  yawOffset: 0
 --- !u!114 &1295324774 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 5901036743852233159, guid: f4f70568a09330342b88e5c13b680a83, type: 3}
@@ -40697,11 +40698,9 @@ MonoBehaviour:
   tileInvariantRules: []
   bossPrefab: {fileID: 761355516}
   rockObstaclePrefab: {fileID: 0}
+  rockObstacleSpawnHeight: 0.02
   initialRockTileIDs: 
   activeRockObstacles: []
-  enableRandomRockSpawnByTurn: 1
-  randomRockSpawnIntervalTurns: 5
-  randomRockOnlyInMainEarth: 1
 --- !u!1 &1654034453
 GameObject:
   m_ObjectHideFlags: 0
@@ -43324,6 +43323,7 @@ GameObject:
   - component: {fileID: 1767821035}
   - component: {fileID: 1767821034}
   - component: {fileID: 1767821033}
+  - component: {fileID: 1767821039}
   m_Layer: 0
   m_Name: _GameSystem
   m_TagString: Untagged
@@ -43399,10 +43399,12 @@ MonoBehaviour:
   gameTurnManager: {fileID: 0}
   routeManager: {fileID: 0}
   mainLightHealGimmickController: {fileID: 0}
+  mainDarkDebuffGimmickController: {fileID: 0}
   shopPanel: {fileID: 0}
   windTeleportTargetIDs: 
   windTeleportPanelName: windteleportpanel
   creditSprite: {fileID: 0}
+  randomMoveText: {fileID: 0}
   itemImages:
   - {fileID: 21300000, guid: 1328fdac4f9659944ba1f9ef1a937afc, type: 3}
   - {fileID: 21300000, guid: 6ac270cb5af314a42af64960c696a8a1, type: 3}
@@ -43438,6 +43440,14 @@ MonoBehaviour:
   DarkLegendaryRing: 38
   countroundbattle: 0
   countbattle: 0
+  eventAudioSource: {fileID: 1767821039}
+  eventSounds:
+  - {fileID: 8300000, guid: 34f9cbd28a9740349b6cc2f5e280dda3, type: 3}
+  - {fileID: 8300000, guid: 79e6baad2fd414b82a6d49ce1568d2e5, type: 3}
+  - {fileID: 8300000, guid: 79180f511d89441b9aa23ccae1992fe0, type: 3}
+  - {fileID: 8300000, guid: 3becec1909f194046945d85ac1077772, type: 3}
+  - {fileID: 8300000, guid: 7f4aa26d5b55226409cda231ffaf869b, type: 3}
+  - {fileID: 8300000, guid: 72127805eb2bc4e7fbf2e02eca266cfa, type: 3}
 --- !u!114 &1767821035
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -43509,6 +43519,103 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4a039e00978fad7489790f2a69abf4fa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!82 &1767821039
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1767821031}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 24300002, guid: ae12ce1e27b929445bae7d86c23837b5, type: 2}
+  m_audioClip: {fileID: 0}
+  m_Resource: {fileID: 0}
+  m_PlayOnAwake: 1
+  m_Volume: 1
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1 &1769551013
 GameObject:
   m_ObjectHideFlags: 0

@@ -12,13 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 30b2dbf6948e2734d8b177bc29dc449c, type: 3}
   m_Name: MonsterDark
   m_EditorClassIdentifier: 
+  playerId: 
   playerName: MonsterDark
   element: 4
   playerSprite: {fileID: 0}
-  maxHP: 150
-  attackDamage: 12
+  maxHP: 170
+  attackDamage: 22
   speed: 30
-  def: 10
+  def: 50
   skills:
   - {fileID: 11400000, guid: dac51d211a4fed547b156889a2529752, type: 2}
   - {fileID: 11400000, guid: 510545ab810a48640ac7aacbd06ac18a, type: 2}
@@ -35,3 +36,10 @@ MonoBehaviour:
   - {fileID: 11400000, guid: ae58e6d6ed31f8449b71a47b3bd0510a, type: 2}
   - {fileID: 11400000, guid: d264dfc0f3e49614986dcd3359d5afd9, type: 2}
   elementType: 4
+  maxHealth: 170
+  legacyCurrentHealth: 0
+  startingLevel: 1
+  startingCurrentExp: 0
+  startingMaxExp: 100
+  startingCredit: 0
+  legacyTurnsToSkip: 0

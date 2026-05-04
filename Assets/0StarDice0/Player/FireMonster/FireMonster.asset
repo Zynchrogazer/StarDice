@@ -12,13 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 30b2dbf6948e2734d8b177bc29dc449c, type: 3}
   m_Name: FireMonster
   m_EditorClassIdentifier: 
+  playerId: 
   playerName: FireMonster
   element: 3
   playerSprite: {fileID: 0}
   maxHP: 150
-  attackDamage: 1300
+  attackDamage: 2000
   speed: 20
-  def: 20
+  def: 60
   skills:
   - {fileID: 11400000, guid: 47f9420511eb20e4587ee09dddacb999, type: 2}
   - {fileID: 11400000, guid: efb968debdf8e8e4b86d276bd509ee5b, type: 2}
@@ -37,8 +38,8 @@ MonoBehaviour:
   elementType: 3
   maxHealth: 150
   legacyCurrentHealth: 0
-  level: 1
-  currentExp: 0
-  maxExp: 100
-  credit: 50
+  startingLevel: 1
+  startingCurrentExp: 0
+  startingMaxExp: 100
+  startingCredit: 50
   legacyTurnsToSkip: 0

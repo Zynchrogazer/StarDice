@@ -77,6 +77,12 @@ public class GameEventManager : MonoBehaviour
     public float randomSpinDuration = 3f;
     public float spinInterval = 0.3f;
 
+    #if UNITY_EDITOR
+    [Header("--- Debug Lock (Editor Only) ---")]
+    public bool debugLockRandomEvent = false;
+    public string debugLockedEventKey = "";
+    #endif
+
     // --- ตัวแปรภายใน (รักษาชื่อเดิมของคุณไว้ทั้งหมด) ---
     private Dictionary<string, GameObject> eventPanels = new Dictionary<string, GameObject>();
     private Transform panelParent;
@@ -438,6 +444,7 @@ public void OnClickCloseShopButton()
         MainLightHealGimmickController gimmickController = ResolveMainLightHealGimmickController();
         if (gimmickController != null && gimmickController.TriggerGimmick())
         {
+            PlayEventSound(0);
             ResolveGameTurnManager()?.RequestEndTurn();
             return;
         }
@@ -448,9 +455,11 @@ public void OnClickCloseShopButton()
 
     private void TriggerMainDarkDebuffGimmickEvent(GameObject target)
     {
+        
         MainDarkDebuffGimmickController gimmickController = ResolveMainDarkDebuffGimmickController();
         if (gimmickController != null && gimmickController.TriggerGimmick(target))
         {
+            PlayEventSound(1);
             ResolveGameTurnManager()?.RequestEndTurn();
             return;
         }
@@ -467,7 +476,7 @@ public void OnClickCloseShopButton()
             p.ApplyIceDebuff(); // ✅ ติดสถานะแช่แข็ง
             Debug.Log($"<color=cyan>❄️ Player {target.name} ติดสถานะ Ice Effect! (ทอยครั้งหน้าหารครึ่ง)</color>");
         }
-
+        PlayEventSound(1);
         // แสดง Panel แจ้งเตือน (อย่าลืมสร้าง Panel ชื่อ icepanel ใน Unity)
         ShowPanel("icepanel", true);
     }
@@ -480,7 +489,7 @@ public void OnClickCloseShopButton()
             // 🟢 สั่งให้ติดพิษ 3 เทิร์น
             p.ApplyPoisonDebuff(3); 
         }
-
+        PlayEventSound(1);
         // แสดง Panel แจ้งเตือน (อย่าลืมสร้าง Panel ชื่อ poisonpanel ใน Unity นะครับ)
         ShowPanel("poisonpanel", true);
     }
@@ -493,6 +502,7 @@ public void OnClickCloseShopButton()
             p.ApplySleepDebuff(3); // ติดหลับ 3 เทิร์น
         }
 
+        PlayEventSound(1);
         // แสดง Panel แจ้งเตือน (อย่าลืมสร้าง Panel ชื่อ sleeppanel ใน Unity)
         ShowPanel("sleeppanel", true);
     }
@@ -532,6 +542,7 @@ public void OnClickCloseShopButton()
         }
 
         // แสดง Panel และรอจบเทิร์น
+        PlayEventSound(5);
         ShowPanel(windTeleportPanelName, true);
     }
 
@@ -628,6 +639,7 @@ public void OnClickCloseShopButton()
         Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว! (กำลังรอโชว์รูป...)");
         StartCoroutine(ShowItemImageAfterDelay(targetItemSprite, 2f));
     }
+    PlayEventSound(0);
 
     // เปิดกล่องแอนิเมชันตามปกติ
     boxScript.OpenBox(resultSprite, () =>
@@ -656,6 +668,7 @@ private IEnumerator ShowItemImageAfterDelay(Sprite itemSprite, float delayTime)
     private void TrapEffect(GameObject target)
     {
         target.GetComponent<PlayerState>()?.TakeDamage(15);
+        PlayEventSound(3);
         ShowPanel("trappanel", true);
     }
 
@@ -678,7 +691,7 @@ private IEnumerator ShowItemImageAfterDelay(Sprite itemSprite, float delayTime)
             // สั่งบวกดาวเข้ากระเป๋า
             p.AddStars(starAmount);
         }
-        
+        PlayEventSound(2);
         ShowPanel("starpanel", true);
     }
 
@@ -687,6 +700,7 @@ private IEnumerator ShowItemImageAfterDelay(Sprite itemSprite, float delayTime)
         PlayerState p = target.GetComponent<PlayerState>();
         if (p == null) return;
         p.RemoveStars(Random.Range(10, 21));
+        PlayEventSound(1);
         ShowPanel("droppanel", true);
     }
 
@@ -698,6 +712,7 @@ private IEnumerator ShowItemImageAfterDelay(Sprite itemSprite, float delayTime)
             var nodes = ResolveRouteManager().nodeConnections.FindAll(x => x.node != null && x.tileID != walker.currentNodeID);
             if (nodes.Count > 0) walker.TeleportToNode(nodes[Random.Range(0, nodes.Count)].node);
         }
+        PlayEventSound(4);
         ShowPanel("warppanel", true);
     }
 
@@ -713,7 +728,7 @@ private IEnumerator ShowItemImageAfterDelay(Sprite itemSprite, float delayTime)
                 p.PlayerHealth = p.MaxHealth;
             }
         }
-        
+        PlayEventSound(0);
         ShowPanel("heal", true);
     }
 
@@ -788,6 +803,7 @@ public void OnCardSelected()
             
             // 🟢 เติมบรรทัดนี้ลงไป! เพื่อสั่งให้ตัวละครติด Debuff ไฟไหม้ 3 เทิร์น
             p.ApplyBurnDebuff(3); 
+            PlayEventSound(1);
             
             ShowPanel("lavapanel", true);
         }
@@ -798,68 +814,52 @@ public void OnCardSelected()
         }
     }
 
-    private void RandomMoveEffect(GameObject target)
+private void RandomMoveEffect(GameObject target)
+{
+    if (target == null)
     {
-        if (target == null)
-        {
-            ResolveGameTurnManager()?.RequestEndTurn();
-            return;
-        }
-
-        PlayerPathWalker walker = target.GetComponent<PlayerPathWalker>();
-        if (walker == null)
-        {
-            Debug.LogWarning("[EventManager] Random move event หา PlayerPathWalker ไม่เจอ -> จบเทิร์น");
-            ResolveGameTurnManager()?.RequestEndTurn();
-            return;
-        }
-
-        // สุ่มเลข 1 - 6
-        int randomSteps = Random.Range(1, 7);
-        Debug.Log($"[EventManager] Random move event: {target.name} เดินเพิ่ม {randomSteps} ช่อง");
-
-        // 🟢 เรียกใช้ Coroutine เพื่อโชว์เลขก่อนเดิน
-        StartCoroutine(ShowNumberAndMoveRoutine(walker, randomSteps));
+        ResolveGameTurnManager()?.RequestEndTurn();
+        return;
     }
 
-    // 🟢 ฟังก์ชันสำหรับโชว์เลข -> หน่วงเวลา -> แล้วค่อยเดิน
-   private IEnumerator ShowNumberAndMoveRoutine(PlayerPathWalker walker, int steps)
+    PlayerPathWalker walker = target.GetComponent<PlayerPathWalker>();
+    if (walker == null)
     {
-        Debug.Log("🚀 [1] เริ่มเข้าสู่ Coroutine โชว์ตัวเลขแล้ว!");
-
-        if (randomMoveText == null)
-        {
-            Debug.LogError("❌ [Error] randomMoveText เป็น null! (ลืมลากใส่ใน Inspector หน้า Scene ที่เทสอยู่แน่ๆ)");
-        }
-        else
-        {
-            randomMoveText.text = $"+{steps}";
-            randomMoveText.gameObject.SetActive(true);
-            
-            // 🟢 เช็คว่าตัวแม่มันโดนปิดอยู่หรือเปล่า
-            if (!randomMoveText.gameObject.activeInHierarchy)
-            {
-                Debug.LogError("👻 [Error] สั่งเปิด Text แล้ว แต่มันยังล่องหน! (เช็คดูว่า Canvas หรือโฟลเดอร์แม่ของ Text โดนปิดตาไว้หรือเปล่า?)");
-            }
-            else
-            {
-                Debug.Log($"✅ [2] โชว์ข้อความ +{steps} สำเร็จ กำลังจะรอ 1 วินาที...");
-            }
-        }
-
-        // 🟢 เปลี่ยนมาใช้แบบ Realtime เผื่อเกมคุณติดสถานะ Pause (TimeScale = 0) อยู่
-        yield return new WaitForSecondsRealtime(1.0f); 
-
-        Debug.Log("⌛ [3] รอครบ 1 วินาทีแล้ว กำลังจะปิดข้อความและสั่งเดิน!");
-
-        if (randomMoveText != null)
-        {
-            randomMoveText.gameObject.SetActive(false);
-        }
-
-        walker.ExecuteMove(steps);
-        Debug.Log("🏃‍♂️ [4] สั่งให้ Walker เดินเรียบร้อย!");
+        Debug.LogWarning("[EventManager] Random move event หา PlayerPathWalker ไม่เจอ -> จบเทิร์น");
+        ResolveGameTurnManager()?.RequestEndTurn();
+        return;
     }
+
+    int randomSteps = Random.Range(1, 7);
+    Debug.Log($"[EventManager] Random move event: {target.name} เดินเพิ่ม {randomSteps} ช่อง");
+
+    StartCoroutine(ShowPanelAndMoveRoutine(walker, randomSteps));
+}
+
+private IEnumerator ShowPanelAndMoveRoutine(PlayerPathWalker walker, int steps)
+{
+    // 1. เปิด Panel (false = ไม่ให้ Panel สั่งจบเทิร์นเอง)
+    ShowPanel("movepanel", false);
+    PlayEventSound(0);
+
+    // 2. โชว์ Panel 1.5 วินาที
+    yield return new WaitForSeconds(1.5f);
+
+    // 3. ปิด Panel
+    if (eventPanels.TryGetValue("movepanel", out var panel) && panel != null)
+        panel.SetActive(false);
+
+    // 4. สั่งเดินแบบ event mode — walker จะไม่เรียก CheckFinalNodeEvent เอง
+    walker.ExecuteMoveFromEvent(steps);
+
+    // 5. รอจนเดินจบสนิท
+    yield return new WaitUntil(() => !walker.IsExecutingTurn);
+
+    Debug.Log($"[EventManager] RandomMove: {walker.name} เดินเสร็จ -> trigger event ช่องใหม่");
+
+    // 6. เราเรียก event ช่องใหม่เองแทน walker
+    walker.TriggerCurrentNodeEvent();
+}
     public void TriggerRandomEvent(GameObject target)
     {
         currentEventTarget = target;
@@ -969,86 +969,102 @@ public void OnCardSelected()
     }
 
     private IEnumerator RandomEventCoroutine()
+{
+    isRandomSpinning = true;
+
+    try
     {
-        isRandomSpinning = true;
+        // -------------------------------------------------------
+        // เลือก key ที่จะใช้ (debug lock หรือสุ่มปกติ)
+        // -------------------------------------------------------
+        int resultIndex;
+        string selectedKey;
 
-        try
+#if UNITY_EDITOR
+        if (debugLockRandomEvent && !string.IsNullOrEmpty(debugLockedEventKey))
         {
-            int resultIndex = Random.Range(0, randomEventKeys.Length);
-            string selectedKey = randomEventKeys[resultIndex];
+            selectedKey = debugLockedEventKey;
+            resultIndex = System.Array.IndexOf(randomEventKeys, selectedKey);
+            if (resultIndex < 0) resultIndex = 0;
+            Debug.Log($"<color=yellow>[DEBUG] Locked random event -> '{selectedKey}'</color>");
+        }
+        else
+        {
+            resultIndex = Random.Range(0, randomEventKeys.Length);
+            selectedKey = randomEventKeys[resultIndex];
+        }
+#else
+        resultIndex = Random.Range(0, randomEventKeys.Length);
+        selectedKey = randomEventKeys[resultIndex];
+#endif
 
-            if (string.IsNullOrEmpty(selectedKey))
-            {
-                Debug.LogWarning("[EventManager] RandomEvent ได้ key ว่าง -> จบเทิร์น");
-                ResolveGameTurnManager()?.RequestEndTurn();
-                yield break;
-            }
+        if (string.IsNullOrEmpty(selectedKey))
+        {
+            Debug.LogWarning("[EventManager] RandomEvent ได้ key ว่าง -> จบเทิร์น");
+            ResolveGameTurnManager()?.RequestEndTurn();
+            yield break;
+        }
 
-            if (!HasAnyValidPanels(randomEventPanels))
-            {
-                Debug.LogWarning("[EventManager] RandomEvent ไม่มี panel ที่ใช้งานได้ -> ข้ามแอนิเมชันแล้วยิง event ทันที");
-                yield return null;
-                TriggerEvent(selectedKey, currentEventTarget);
-                yield break;
-            }
-
-            int finalPanelIndex = -1;
-            if (randomEventPanels.Length == randomEventKeys.Length)
-            {
-                finalPanelIndex = resultIndex;
-            }
-            else
-            {
-                finalPanelIndex = Random.Range(0, randomEventPanels.Length);
-                Debug.LogWarning("[EventManager] randomEventPanels กับ randomEventKeys จำนวนไม่เท่ากัน -> ใช้การสุ่มรูปแยก");
-            }
-
-            float currentInterval = 0.05f;
-            float slowDownFactor = 1.1f;
-            int totalSpins = 20;
-            int currentPanelIdx = 0;
-
-            for (int i = 0; i < totalSpins; i++)
-            {
-                if (randomEventPanels != null && randomEventPanels.Length > 0)
-                {
-                    if (i == totalSpins - 1 && finalPanelIndex != -1)
-                    {
-                        currentPanelIdx = finalPanelIndex;
-                    }
-                    else
-                    {
-                        currentPanelIdx = (currentPanelIdx + 1) % randomEventPanels.Length;
-                    }
-
-                    for (int p = 0; p < randomEventPanels.Length; p++)
-                    {
-                        SafeSetActive(randomEventPanels[p], p == currentPanelIdx);
-                    }
-                }
-
-                yield return new WaitForSeconds(currentInterval);
-                currentInterval = Mathf.Min(currentInterval * slowDownFactor, 0.5f);
-            }
-
-            Debug.Log($"[EventManager] หยุดที่: {selectedKey} (รอ 3 วินาที)");
-            yield return new WaitForSeconds(3f);
-
-            if (randomEventPanels != null)
-            {
-                foreach (var panel in randomEventPanels)
-                {
-                    SafeSetActive(panel, false);
-                }
-            }
-
+        if (!HasAnyValidPanels(randomEventPanels))
+        {
+            Debug.LogWarning("[EventManager] RandomEvent ไม่มี panel -> ข้ามแอนิเมชันแล้วยิง event ทันที");
+            yield return null;
             TriggerEvent(selectedKey, currentEventTarget);
+            yield break;
         }
-        finally
+
+        int finalPanelIndex;
+        if (randomEventPanels.Length == randomEventKeys.Length)
         {
-            isRandomSpinning = false;
+            finalPanelIndex = resultIndex;
         }
+        else
+        {
+            finalPanelIndex = Random.Range(0, randomEventPanels.Length);
+            Debug.LogWarning("[EventManager] randomEventPanels กับ randomEventKeys จำนวนไม่เท่ากัน -> ใช้การสุ่มรูปแยก");
+        }
+
+        // -------------------------------------------------------
+        // แอนิเมชัน slot spin
+        // -------------------------------------------------------
+        float currentInterval = 0.05f;
+        float slowDownFactor = 1.1f;
+        int totalSpins = 20;
+        int currentPanelIdx = 0;
+
+        for (int i = 0; i < totalSpins; i++)
+        {
+            if (randomEventPanels != null && randomEventPanels.Length > 0)
+            {
+                if (i == totalSpins - 1 && finalPanelIndex != -1)
+                    currentPanelIdx = finalPanelIndex;
+                else
+                    currentPanelIdx = (currentPanelIdx + 1) % randomEventPanels.Length;
+
+                for (int p = 0; p < randomEventPanels.Length; p++)
+                    SafeSetActive(randomEventPanels[p], p == currentPanelIdx);
+            }
+
+            yield return new WaitForSeconds(currentInterval);
+            currentInterval = Mathf.Min(currentInterval * slowDownFactor, 0.2f);
+        }
+
+        Debug.Log($"[EventManager] หยุดที่: '{selectedKey}' (รอ 1.5 วินาที)");
+        yield return new WaitForSeconds(1.5f);
+
+        if (randomEventPanels != null)
+        {
+            foreach (var p in randomEventPanels)
+                SafeSetActive(p, false);
+        }
+
+        TriggerEvent(selectedKey, currentEventTarget);
     }
+    finally
+    {
+        isRandomSpinning = false;
+    }
+}
 
     private IEnumerator RandomMinigameEventCoroutine()
     {
@@ -1549,6 +1565,25 @@ public void OnCardSelected()
         StopAllCoroutines();
         isRandomSpinning = false;
         Debug.Log("<color=orange>[EventManager] 🧹 ล้างสถานะสุ่มค้างเรียบร้อย</color>");
+    }
+public AudioSource eventAudioSource;
+public AudioClip[] eventSounds;
+    // 🟢 ฟังก์ชันใหม่ รับค่าเป็น "ตัวเลข Index"
+    private void PlayEventSound(int soundIndex)
+    {
+        // เช็คว่ามี AudioSource ไหม, Array เสียงมีของหรือเปล่า, และเลขที่ส่งมาต้องไม่เกินช่องที่มี
+        if (eventAudioSource != null && eventSounds != null && soundIndex >= 0 && soundIndex < eventSounds.Length)
+        {
+            AudioClip clipToPlay = eventSounds[soundIndex];
+            if (clipToPlay != null)
+            {
+                eventAudioSource.PlayOneShot(clipToPlay);
+            }
+        }
+        else
+        {
+            Debug.LogWarning($"⚠️ เล่นเสียงไม่ได้! ไม่มีเสียงในช่อง Index {soundIndex} หรือลืมใส่ AudioSource");
+        }
     }
 
    
