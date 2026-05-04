@@ -12,13 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 30b2dbf6948e2734d8b177bc29dc449c, type: 3}
   m_Name: MonsterLight
   m_EditorClassIdentifier: 
+  playerId: 
   playerName: MonsterLight
   element: 5
   playerSprite: {fileID: 0}
   maxHP: 170
-  attackDamage: 12
-  speed: 15
-  def: 25
+  attackDamage: 22
+  speed: 20
+  def: 70
   skills:
   - {fileID: 11400000, guid: 556eda6116c92904485c95df22ba0522, type: 2}
   - {fileID: 11400000, guid: 5d268d130f1042a448eaa290258bda3e, type: 2}
@@ -35,3 +36,10 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 3734de971d1706441b221642cd45a6cc, type: 2}
   - {fileID: 11400000, guid: dbfaedec2beba054bb7c40b5db492c14, type: 2}
   elementType: 5
+  maxHealth: 170
+  legacyCurrentHealth: 0
+  startingLevel: 1
+  startingCurrentExp: 0
+  startingMaxExp: 100
+  startingCredit: 0
+  legacyTurnsToSkip: 0

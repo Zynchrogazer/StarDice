@@ -88,7 +88,7 @@ public class BossDarkHard : MonoBehaviour
     int healPerTurnAmount = 1; // ค่า default
     bool isDodgeActive = false;
     float dodgeChance = 0f;
-
+public bool isBattleOver = false;
     bool isElementalAttackBoosted = false;
     int isElementalAttackBoostedx2 = 0;
     float isElementalAttackBoostedRandom = 0f;
@@ -268,9 +268,26 @@ public class BossDarkHard : MonoBehaviour
         yield return new WaitForSeconds(3f);
         effect.SetActive(false); // ✅ ซ่อน
     }
-    public void LoadSelectedCards(List<CardData> cards)
+   public void LoadSelectedCards(List<CardData> cards)
     {
+        // 1. รับค่าการ์ดมาใส่ใน List ของเราก่อน
         selectedCards = new List<CardData>(cards);
+
+        // ---------------------------------------------------------
+        // 🟢 2. ระบบสับการ์ด (Shuffle) ให้ตำแหน่งไม่ซ้ำเดิม
+        // ---------------------------------------------------------
+        for (int i = 0; i < selectedCards.Count; i++)
+        {
+            CardData temp = selectedCards[i];
+            // สุ่มตำแหน่งใหม่ที่จะเอามาสลับ
+            int randomIndex = UnityEngine.Random.Range(i, selectedCards.Count);
+            
+            // ทำการสลับที่กัน
+            selectedCards[i] = selectedCards[randomIndex];
+            selectedCards[randomIndex] = temp;
+        }
+
+        // 3. เรียกใช้ SetupCardsUI เพื่อแสดงผล (ตอนนี้การ์ดจะเรียงแบบสุ่มแล้ว!)
         SetupCardsUI();
     }
 
@@ -1886,15 +1903,16 @@ public class BossDarkHard : MonoBehaviour
         StartCoroutine(ShakeEnemy()); // ศัตรูสั่น
         ShowDamageNumber($"-{damageN}"); // แสดงเลขดาเมจ
         UpdateEnemyHPUI();
-
-        if (enemyHP <= 0)
+   if (enemyHP <= 0)
         {
-            OpenChest();
-            Debug.Log("ศัตรูแพ้แล้ว!");
-            ShowResultPanelVictory("Victory!");
-        }
-    }
+            if (isBattleOver) return; // ป้องกันโค้ดรันซ้ำถ้าบังเอิญโดนดาเมจต่อ
 
+            isBattleOver = true; // ล็อคระบบ
+            StartCoroutine(EnemyDeathSequence()); 
+        }
+
+    }
+  
 
 
     void DamageEnemy(int damage) //<-- ดาเมจผู้เล่น
@@ -2134,14 +2152,31 @@ public class BossDarkHard : MonoBehaviour
         UpdateEnemyHPUI();
          StartCoroutine(MyDelay());
 
-        if (enemyHP <= 0)
+     if (enemyHP <= 0)
         {
-            OpenChest();
-            Debug.Log("ศัตรูแพ้แล้ว!");
-            ShowResultPanelVictory("Victory!");
-        }
-    }
+            if (isBattleOver) return; // ป้องกันโค้ดรันซ้ำถ้าบังเอิญโดนดาเมจต่อ
 
+            isBattleOver = true; // ล็อคระบบ
+            StartCoroutine(EnemyDeathSequence()); 
+        }
+
+    }
+    // ---------------------------------------------------------
+    // 🟢 2. ฟังก์ชันหน่วงเวลาตอนตาย (นำไปวางไว้ด้านล่าง)
+    // ---------------------------------------------------------
+    private IEnumerator EnemyDeathSequence()
+    {
+        Debug.Log("💀 ศัตรูตายแล้ว! กำลังรอ 1 วินาที...");
+
+        // 1. หน่วงเวลา 1 วินาที
+        yield return new WaitForSeconds(1f);
+
+        Debug.Log("🏆 รอครบ 1 วินาทีแล้ว โชว์หน้าต่าง Victory!");
+
+        // 2. เด้ง Panel และแจกรางวัล
+        OpenChest();
+        ShowResultPanelVictory("Victory!");
+    }
      
     public Sprite[] itemImages; 
     public Image showImage;
@@ -2159,6 +2194,13 @@ public class BossDarkHard : MonoBehaviour
                  showImage.gameObject.SetActive(true);
                  Debug.Log("ผู้เล่นได้รับไอเท็มแล้ว!");
             }
+               else
+        {
+            showImage.sprite = itemImages[1]; 
+                 showImage.gameObject.SetActive(true);
+            Debug.Log("ผู้เล่นไม่ได้รับไอเท็ม");
+        }
+
 
     }
     void DamagePlayer(int damage) //<-- ดาเมจศัตรู
@@ -2439,7 +2481,7 @@ StartCoroutine(DelayedEnemyTurn());
 
     void EnemyTurn()
     {
-
+ if (isBattleOver) return;
         playerturntext.gameObject.SetActive(false);
         enemyturntext.gameObject.SetActive(true);
 

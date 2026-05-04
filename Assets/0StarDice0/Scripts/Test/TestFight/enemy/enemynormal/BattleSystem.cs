@@ -155,6 +155,8 @@ public class BattleSystem : MonoBehaviour
     int EnemyShieldWater = 0;
     int doublereflectNextAttackWind = 0;
 
+    public bool isBattleOver = false;
+
     private List<CardData> selectedCards = new List<CardData>();
     void Start()
     { Debug.Log(">>> BattleSystem เริ่มทำงานแล้วนะ! <<<");
@@ -497,7 +499,7 @@ public class BattleSystem : MonoBehaviour
         // >>> สกิล 3 (บัฟดาเมจ) ธาตุไฟ
         if (skill.effectType == SkillData.SkillEffectType.BuffFire && selectedPlayer.element == ElementType.Fire)
         {
-            DamagePlayer(10); // ลดเลือดตัวเอง
+            DamagePlayer(15); // ลดเลือดตัวเอง
             isDamageBoosted = true; // เปิดบัฟ
             skillCooldowns[skill] = 7;
             Debug.Log("ใช้สกิล 3 ลดเลือดตัวเอง 10 ดาเมจโจมตีจะคูณ 2 ในเทิร์นนี้");
@@ -1418,7 +1420,7 @@ public class BattleSystem : MonoBehaviour
 
         if (skill.effectType == SkillData.SkillEffectType.DamageRandomDark && selectedPlayer.element == ElementType.Dark) // สกิลที่ 2 ของธาตุมืด
         {
-            int randomDamage = Random.Range(20, 61); // สุ่ม 20 ถึง 60
+            int randomDamage = Random.Range(30, 71); // สุ่ม 20 ถึง 60
             finalDamage = randomDamage;
 
             if (enemyElement == ElementType.Light)
@@ -1544,7 +1546,7 @@ public class BattleSystem : MonoBehaviour
 
         if (skill.effectType == SkillData.SkillEffectType.LuckyBadLuckDark && selectedPlayer.element == ElementType.Dark)
         {
-            int randomDamage = Random.Range(10, 101); // สุ่ม 10 ถึง 100
+            int randomDamage = Random.Range(20, 101); // สุ่ม 10 ถึง 100
             finalDamage = randomDamage;
 
             if (enemyElement == ElementType.Light)
@@ -1879,14 +1881,21 @@ public class BattleSystem : MonoBehaviour
         ShowDamageNumber($"-{damageN}"); // แสดงเลขดาเมจ
         UpdateEnemyHPUI();
 
+         // 🟢 1. จุดที่เช็คเลือดตอนตาย (แทนที่ของเดิม)
         if (enemyHP <= 0)
         {
-            GiveExpToPlayer();
-            OpenChest();
-            Debug.Log("ศัตรูแพ้แล้ว!");
-            ShowResultPanelVictory("Victory!");
+            if (isBattleOver) return; // ป้องกันโค้ดรันซ้ำถ้าบังเอิญโดนดาเมจต่อ
+
+            isBattleOver = true; // ล็อคระบบ
+            StartCoroutine(EnemyDeathSequence()); 
         }
+
     }
+    // ---------------------------------------------------------
+    // 🟢 2. ฟังก์ชันหน่วงเวลาตอนตาย (นำไปวางไว้ด้านล่าง)
+    // ---------------------------------------------------------
+  
+
 
 public PlayerState player;
     public void GiveExpToPlayer()
@@ -2095,14 +2104,31 @@ public PlayerState player;
         UpdateEnemyHPUI();
          StartCoroutine(MyDelay());
 
-        if (enemyHP <= 0)
+         if (enemyHP <= 0)
         {
+            if (isBattleOver) return; // ป้องกันโค้ดรันซ้ำถ้าบังเอิญโดนดาเมจต่อ
 
-            OpenChest();
-            GiveExpToPlayer();
-            Debug.Log("ศัตรูแพ้แล้ว!");
-            ShowResultPanelVictory("Victory!");
+            isBattleOver = true; // ล็อคระบบ
+            StartCoroutine(EnemyDeathSequence()); 
         }
+
+    }
+    // ---------------------------------------------------------
+    // 🟢 2. ฟังก์ชันหน่วงเวลาตอนตาย (นำไปวางไว้ด้านล่าง)
+    // ---------------------------------------------------------
+    private IEnumerator EnemyDeathSequence()
+    {
+        Debug.Log("💀 ศัตรูตายแล้ว! กำลังรอ 1 วินาที...");
+
+        // 1. หน่วงเวลา 1 วินาที
+        yield return new WaitForSeconds(1f);
+
+        Debug.Log("🏆 รอครบ 1 วินาทีแล้ว โชว์หน้าต่าง Victory!");
+
+        // 2. เด้ง Panel และแจกรางวัล
+        GiveExpToPlayer();
+        OpenChest();
+        ShowResultPanelVictory("Victory!");
     }
 
   
@@ -2412,10 +2438,9 @@ StartCoroutine(DelayedEnemyTurn());
         UpdateSkillButtons();
     }
 
-    
-
     void EnemyTurn()
     {
+        if (isBattleOver) return;
  GameEventManager.TryAddCount1(1);
         playerturntext.gameObject.SetActive(false);
         enemyturntext.gameObject.SetActive(true);

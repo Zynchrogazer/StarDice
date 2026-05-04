@@ -62,7 +62,7 @@ public class BossWaterHard : MonoBehaviour
     private int enemyDamageReductionTurns = 0;
     private bool isEnemyDamageReduced = false;
     private bool reflectNextAttackWind = false;
-
+public bool isBattleOver = false;
     private bool isShieldActive = false;
     private int shieldTurnsLeft = 0;
     int EnemyBuffLight = 0;
@@ -267,9 +267,26 @@ public class BossWaterHard : MonoBehaviour
 }
 
 
-    public void LoadSelectedCards(List<CardData> cards)
+ public void LoadSelectedCards(List<CardData> cards)
     {
+        // 1. รับค่าการ์ดมาใส่ใน List ของเราก่อน
         selectedCards = new List<CardData>(cards);
+
+        // ---------------------------------------------------------
+        // 🟢 2. ระบบสับการ์ด (Shuffle) ให้ตำแหน่งไม่ซ้ำเดิม
+        // ---------------------------------------------------------
+        for (int i = 0; i < selectedCards.Count; i++)
+        {
+            CardData temp = selectedCards[i];
+            // สุ่มตำแหน่งใหม่ที่จะเอามาสลับ
+            int randomIndex = UnityEngine.Random.Range(i, selectedCards.Count);
+            
+            // ทำการสลับที่กัน
+            selectedCards[i] = selectedCards[randomIndex];
+            selectedCards[randomIndex] = temp;
+        }
+
+        // 3. เรียกใช้ SetupCardsUI เพื่อแสดงผล (ตอนนี้การ์ดจะเรียงแบบสุ่มแล้ว!)
         SetupCardsUI();
     }
 
@@ -1905,15 +1922,16 @@ public class BossWaterHard : MonoBehaviour
         ShowDamageNumber($"-{damageN}"); // แสดงเลขดาเมจ
         UpdateEnemyHPUI();
 
-        if (enemyHP <= 0)
+     if (enemyHP <= 0)
         {
-            OpenChest();
-            WinLevel();
-            Debug.Log("ศัตรูแพ้แล้ว!");
-            ShowResultPanelVictory("Victory!");
-        }
-    }
+            if (isBattleOver) return; // ป้องกันโค้ดรันซ้ำถ้าบังเอิญโดนดาเมจต่อ
 
+            isBattleOver = true; // ล็อคระบบ
+            StartCoroutine(EnemyDeathSequence()); 
+        }
+
+    }
+ 
 
     void DamageEnemy(int damage) //<-- ดาเมจผู้เล่น
     {
@@ -2151,13 +2169,31 @@ public class BossWaterHard : MonoBehaviour
         UpdateEnemyHPUI();
          StartCoroutine(MyDelay());
 
-        if (enemyHP <= 0)
+     if (enemyHP <= 0)
         {
-            OpenChest();
-            WinLevel();
-            Debug.Log("ศัตรูแพ้แล้ว!");
-            ShowResultPanelVictory("Victory!");
+            if (isBattleOver) return; // ป้องกันโค้ดรันซ้ำถ้าบังเอิญโดนดาเมจต่อ
+
+            isBattleOver = true; // ล็อคระบบ
+            StartCoroutine(EnemyDeathSequence()); 
         }
+
+    }
+    // ---------------------------------------------------------
+    // 🟢 2. ฟังก์ชันหน่วงเวลาตอนตาย (นำไปวางไว้ด้านล่าง)
+    // ---------------------------------------------------------
+    private IEnumerator EnemyDeathSequence()
+    {
+        Debug.Log("💀 ศัตรูตายแล้ว! กำลังรอ 1 วินาที...");
+
+        // 1. หน่วงเวลา 1 วินาที
+        yield return new WaitForSeconds(1f);
+
+        Debug.Log("🏆 รอครบ 1 วินาทีแล้ว โชว์หน้าต่าง Victory!");
+
+        // 2. เด้ง Panel และแจกรางวัล
+
+        OpenChest();
+        ShowResultPanelVictory("Victory!");
     }
      public Sprite[] itemImages; 
     public Image showImage;
@@ -2174,6 +2210,13 @@ public class BossWaterHard : MonoBehaviour
                  showImage.sprite = itemImages[0]; 
                  showImage.gameObject.SetActive(true);
             }
+               else
+        {
+            showImage.sprite = itemImages[1]; 
+                 showImage.gameObject.SetActive(true);
+            Debug.Log("ผู้เล่นไม่ได้รับไอเท็ม");
+        }
+
            
     }
     void DamagePlayer(int damage) //<-- ดาเมจศัตรู
@@ -2454,7 +2497,7 @@ StartCoroutine(DelayedEnemyTurn());
 
     void EnemyTurn()
     {
-
+if (isBattleOver) return; 
         playerturntext.gameObject.SetActive(false);
         enemyturntext.gameObject.SetActive(true);
 

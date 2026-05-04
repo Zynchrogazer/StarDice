@@ -7,8 +7,16 @@ public class BlinkTMPText : MonoBehaviour
     public TextMeshProUGUI tmpText;
     public float blinkInterval = 0.5f;
 
-    void Start()
+    // 🟢 เปลี่ยนจาก Start เป็น OnEnable (ทำงานทุกครั้งที่ถูกเปิดขึ้นมาใหม่)
+    void OnEnable()
     {
+        // 1. บังคับให้เปิดตา (โชว์ข้อความ) ก่อนเสมอ ป้องกันอาการค้างตอนดับจากรอบที่แล้ว
+        if (tmpText != null)
+        {
+            tmpText.enabled = true;
+        }
+        
+        // 2. สั่งเริ่มกระพริบใหม่
         StartCoroutine(Blink());
     }
 
@@ -16,8 +24,8 @@ public class BlinkTMPText : MonoBehaviour
     {
         while (true)
         {
+            yield return new WaitForSeconds(blinkInterval); // รอแป๊บนึงก่อนค่อยสลับสถานะ
             tmpText.enabled = !tmpText.enabled;
-            yield return new WaitForSeconds(blinkInterval);
         }
     }
 }
