@@ -14,6 +14,7 @@ public class RockObstacleSpawnByTurn : MonoBehaviour
     [Header("Spawn Settings")]
     [SerializeField] private bool enableRandomRockSpawnByTurn = true;
     [SerializeField, Min(1)] private int randomRockSpawnIntervalTurns = 5;
+    [SerializeField, Min(1)] private int randomRockSpawnCountPerInterval = 1;
 
     [Header("Scene Filter")]
     [SerializeField] private bool randomRockOnlyInMainEarth = true;
@@ -77,6 +78,10 @@ public class RockObstacleSpawnByTurn : MonoBehaviour
         {
             randomRockSpawnIntervalTurns = 1;
         }
+        if (randomRockSpawnCountPerInterval <= 0)
+        {
+            randomRockSpawnCountPerInterval = 1;
+        }
 
         if (randomRockOnlyInMainEarth)
         {
@@ -103,10 +108,14 @@ public class RockObstacleSpawnByTurn : MonoBehaviour
             return;
         }
 
-        bool didSpawn = routeManager.TrySpawnRandomRockObstacle();
-        if (!didSpawn && verboseLog)
+        int spawnedCount = routeManager.TrySpawnRandomRockObstacles(randomRockSpawnCountPerInterval);
+        if (spawnedCount <= 0 && verboseLog)
         {
             Debug.Log("[RockObstacleSpawnByTurn] ไม่มีช่องว่างสำหรับสุ่มวางหินเพิ่ม");
+        }
+        else if (verboseLog)
+        {
+            Debug.Log($"[RockObstacleSpawnByTurn] สุ่มวางหินสำเร็จ {spawnedCount}/{randomRockSpawnCountPerInterval} ก้อน");
         }
     }
 }

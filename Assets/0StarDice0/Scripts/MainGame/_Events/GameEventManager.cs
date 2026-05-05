@@ -1298,11 +1298,6 @@ private IEnumerator ShowPanelAndMoveRoutine(PlayerPathWalker walker, int steps)
         RememberCurrentBoardScene();
         yield return null;
 
-        if (SceneFlowController.TryRequestScene(sceneName))
-        {
-            yield break;
-        }
-
         if (!Application.CanStreamedLevelBeLoaded(sceneName))
         {
             Debug.LogError($"[EventManager] Cannot load minigame scene '{sceneName}'. Check Build Profiles.");
@@ -1310,17 +1305,38 @@ private IEnumerator ShowPanelAndMoveRoutine(PlayerPathWalker walker, int steps)
             yield break;
         }
 
-        yield return LoadSceneAdditiveThenUnloadCurrent(sceneName);
+        yield return LoadMinigameSceneAdditiveCoroutine(sceneName);
     }
 
-    private IEnumerator LoadSceneAdditiveThenUnloadCurrent(string targetSceneName)
+    private IEnumerator LoadMinigameSceneAdditiveCoroutine(string sceneName)
     {
-        Scene currentActiveScene = SceneManager.GetActiveScene();
+        if (SceneManager.GetSceneByName(sceneName).isLoaded)
+        {
+            bool hidBoardForLoadedMinigame = HideBoardSceneRootsForBattle();
+            Scene existingMinigameScene = SceneManager.GetSceneByName(sceneName);
+            if (existingMinigameScene.IsValid() && existingMinigameScene.isLoaded)
+            {
+                SceneManager.SetActiveScene(existingMinigameScene);
+            }
+            else if (hidBoardForLoadedMinigame)
+            {
+                RestoreHiddenBoardSceneRoots();
+            }
 
-        AsyncOperation loadOp = SceneManager.LoadSceneAsync(targetSceneName, LoadSceneMode.Additive);
+            Debug.LogWarning($"[EventManager] Minigame scene '{sceneName}' ถูกโหลดอยู่แล้ว -> ไม่โหลดซ้ำ");
+            yield break;
+        }
+
+        bool hidBoardScene = HideBoardSceneRootsForBattle();
+        AsyncOperation loadOp = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
         if (loadOp == null)
         {
-            Debug.LogError($"[EventManager] Failed to start additive load for '{targetSceneName}'.");
+            Debug.LogError($"[EventManager] Failed to start additive load for '{sceneName}'.");
+            if (hidBoardScene)
+            {
+                RestoreHiddenBoardSceneRoots();
+            }
+
             ResolveGameTurnManager()?.RequestEndTurn();
             yield break;
         }
@@ -1330,23 +1346,23 @@ private IEnumerator ShowPanelAndMoveRoutine(PlayerPathWalker walker, int steps)
             yield return null;
         }
 
-        Scene targetScene = SceneManager.GetSceneByName(targetSceneName);
+        Scene targetScene = SceneManager.GetSceneByName(sceneName);
         if (targetScene.IsValid() && targetScene.isLoaded)
         {
             SceneManager.SetActiveScene(targetScene);
+            Debug.Log($"[EventManager] โหลด minigame scene '{sceneName}' แบบ additive สำเร็จ และซ่อน BoardGame ชั่วคราว");
         }
-
-        if (currentActiveScene.IsValid()
-            && currentActiveScene.isLoaded
-            && !string.Equals(currentActiveScene.name, targetSceneName, System.StringComparison.OrdinalIgnoreCase)
-            && !string.Equals(currentActiveScene.name, "RuntimeHub", System.StringComparison.OrdinalIgnoreCase))
+        else if (hidBoardScene)
         {
-            AsyncOperation unloadOp = SceneManager.UnloadSceneAsync(currentActiveScene);
-            while (unloadOp != null && !unloadOp.isDone)
-            {
-                yield return null;
-            }
+            RestoreHiddenBoardSceneRoots();
+            ResolveGameTurnManager()?.RequestEndTurn();
         }
+    }
+
+    public void ResumeBoardAfterOverlayScene(string boardSceneName)
+    {
+        RestoreHiddenBoardSceneRoots();
+        NotifyBoardSceneReady(boardSceneName);
     }
 
     private string ResolveMinigameSceneName(string minigameKey)

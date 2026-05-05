@@ -46,6 +46,26 @@ public static class MiniGameRewardService
     public static void ReturnToBoardScene()
     {
         string boardScene = PlayerPrefs.GetString(GameEventManager.LastBoardSceneKey, "TestMain");
+
+        Scene loadedBoardScene = SceneManager.GetSceneByName(boardScene);
+        if (loadedBoardScene.IsValid() && loadedBoardScene.isLoaded)
+        {
+            Scene activeScene = SceneManager.GetActiveScene();
+            if (activeScene.IsValid()
+                && activeScene.isLoaded
+                && !string.Equals(activeScene.name, boardScene, System.StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(activeScene.name, "RuntimeHub", System.StringComparison.OrdinalIgnoreCase))
+            {
+                SceneManager.SetActiveScene(loadedBoardScene);
+                SceneManager.UnloadSceneAsync(activeScene);
+            }
+            if (GameEventManager.TryGet(out var eventManager))
+            {
+                eventManager.ResumeBoardAfterOverlayScene(boardScene);
+            }
+            return;
+        }
+
         SceneManager.LoadScene(boardScene);
     }
 }

@@ -955,6 +955,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 7514021583748744, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -542
+      objectReference: {fileID: 0}
+    - target: {fileID: 7514021583748744, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -367
+      objectReference: {fileID: 0}
     - target: {fileID: 469187547379879375, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
       propertyPath: m_Sprite
       value: 
@@ -1307,6 +1315,14 @@ PrefabInstance:
       propertyPath: m_fontColor.r
       value: 0.690566
       objectReference: {fileID: 0}
+    - target: {fileID: 6250133351567862565, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -542
+      objectReference: {fileID: 0}
+    - target: {fileID: 6250133351567862565, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -367
+      objectReference: {fileID: 0}
     - target: {fileID: 6706122638791670448, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
       propertyPath: m_fontColor.b
       value: 0
@@ -1398,6 +1414,22 @@ PrefabInstance:
     - target: {fileID: 7419394588670324598, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
       value: 184.82
+      objectReference: {fileID: 0}
+    - target: {fileID: 7451177390579848630, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -542
+      objectReference: {fileID: 0}
+    - target: {fileID: 7451177390579848630, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -367
+      objectReference: {fileID: 0}
+    - target: {fileID: 7477128588043870537, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -542
+      objectReference: {fileID: 0}
+    - target: {fileID: 7477128588043870537, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -367
       objectReference: {fileID: 0}
     - target: {fileID: 7614960429042702973, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_Target
@@ -1491,10 +1523,26 @@ PrefabInstance:
       propertyPath: m_Sprite
       value: 
       objectReference: {fileID: 21300000, guid: 8cbb0d73089c9c646acf1d05acf1fc1a, type: 3}
+    - target: {fileID: 8990489592017243446, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -542
+      objectReference: {fileID: 0}
+    - target: {fileID: 8990489592017243446, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -367
+      objectReference: {fileID: 0}
     - target: {fileID: 9091255176842305486, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
       propertyPath: m_Sprite
       value: 
       objectReference: {fileID: 21300000, guid: c7671d8099d4af040953aaba1e5105f9, type: 3}
+    - target: {fileID: 9178870703030575172, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -542
+      objectReference: {fileID: 0}
+    - target: {fileID: 9178870703030575172, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -367
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -9720,7 +9768,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &5789735057473832974
 Transform:
   m_ObjectHideFlags: 0
@@ -10572,7 +10620,9 @@ MonoBehaviour:
   bossPrefab: {fileID: 6058716385546445464, guid: bfc3e47b031eba04aa01cbdf9abfb500, type: 3}
   rockObstaclePrefab: {fileID: 2897528730474278519, guid: 7149379b408654e449658f4b8f836463, type: 3}
   rockObstacleSpawnHeight: 0.02
-  initialRockTileIDs: 02000000310000001500000027000000210000003a000000
+  initialRockTileIDs: 
+  randomSpawnRockOnStart: 1
+  randomSpawnRockCountOnStart: 4
   activeRockObstacles: []
 --- !u!114 &5877947804871668512
 MonoBehaviour:
@@ -10588,7 +10638,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   routeManager: {fileID: 5877947804871668511}
   enableRandomRockSpawnByTurn: 1
-  randomRockSpawnIntervalTurns: 1
+  randomRockSpawnIntervalTurns: 5
+  randomRockSpawnCountPerInterval: 2
   randomRockOnlyInMainEarth: 1
   mainEarthSceneName: MainEarth
   verboseLog: 1
@@ -18987,6 +19038,8 @@ MonoBehaviour:
   - minigamemath
   randomSpinDuration: 2
   spinInterval: 0.1
+  debugLockRandomEvent: 0
+  debugLockedEventKey: 
   isRandomSpinning: 0
   gameTurnManager: {fileID: 0}
   routeManager: {fileID: 5877947804871668511}
