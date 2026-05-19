@@ -840,7 +840,7 @@ private IEnumerator ShowPanelAndMoveRoutine(PlayerPathWalker walker, int steps)
 {
     // 1. เปิด Panel (false = ไม่ให้ Panel สั่งจบเทิร์นเอง)
     ShowPanel("movepanel", false);
-    PlayEventSound(0);
+  
 
     // 2. โชว์ Panel 1.5 วินาที
     yield return new WaitForSeconds(1.5f);
@@ -1372,7 +1372,7 @@ private IEnumerator ShowPanelAndMoveRoutine(PlayerPathWalker walker, int steps)
         switch (minigameKey.Trim().ToLower())
         {
             case "minigamefappy": return "MiniGameFappy";
-            case "level 1": return "Level 1";
+            case "level 3": return "Level 3";
             case "minigamespotmemory": return "MiniGameSpotMemory";
             case "minigamemath": return "MiniGameMath";
             default: return null;
@@ -1418,38 +1418,38 @@ private IEnumerator ShowPanelAndMoveRoutine(PlayerPathWalker walker, int steps)
 
        if (currentSceneName == "MainLight")
        {
-           if(bosslevel < 11) battleSceneName = "FinalBoss hard";
-           else if(bosslevel >=11  && bosslevel <= 15) battleSceneName = "FianlBoss medium";
+           if(bosslevel < 10) battleSceneName = "FinalBoss hard";
+           else if(bosslevel >=11  && bosslevel <= 20) battleSceneName = "FianlBoss medium";
            else battleSceneName = "FinalBoss";
        }
        else if (currentSceneName == "TestMain")
        {
-           if(bosslevel < 11) battleSceneName = "bossfire hard";
-           else if(bosslevel >=11  && bosslevel <= 15) battleSceneName = "bossfire medium";
+           if(bosslevel < 10) battleSceneName = "bossfire hard";
+           else if(bosslevel >=11  && bosslevel <= 20) battleSceneName = "bossfire medium";
            else battleSceneName = "bossfire";
        }
        else if (currentSceneName == "MainWater")
        {
-           if(bosslevel < 11) battleSceneName = "boss water hard";
-           else if(bosslevel >=11  && bosslevel <= 15) battleSceneName = "boss water medium";
+           if(bosslevel < 10) battleSceneName = "boss water hard";
+           else if(bosslevel >=11  && bosslevel <= 20) battleSceneName = "boss water medium";
            else battleSceneName = "boss water";
        }
        else if (currentSceneName == "MainWind")
        {
-           if(bosslevel < 11) battleSceneName = "boss wind hard";
-           else if(bosslevel >=11  && bosslevel <= 15) battleSceneName = "boss wind medium";
+           if(bosslevel < 10) battleSceneName = "boss wind hard";
+           else if(bosslevel >=11  && bosslevel <= 20) battleSceneName = "boss wind medium";
            else battleSceneName = "boss wind";
        }
        else if (currentSceneName == "MainEarth")
        {
-           if(bosslevel < 11) battleSceneName = "boss earth hard";
-           else if(bosslevel >=11  && bosslevel <= 15) battleSceneName = "boss earth medium";
+           if(bosslevel < 10) battleSceneName = "boss earth hard";
+           else if(bosslevel >=11  && bosslevel <= 20) battleSceneName = "boss earth medium";
            else battleSceneName = "boss earth";
        }
        else if (currentSceneName == "MainDark")
        {
-           if(bosslevel < 11) battleSceneName = "boss dark hard";
-           else if(bosslevel >=11  && bosslevel <= 15) battleSceneName = "boss dark medium";
+           if(bosslevel < 10) battleSceneName = "boss dark hard";
+           else if(bosslevel >=11  && bosslevel <= 20) battleSceneName = "boss dark medium";
            else battleSceneName = "boss dark";
        }
 

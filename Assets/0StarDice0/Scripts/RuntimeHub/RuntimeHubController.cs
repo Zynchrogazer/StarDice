@@ -122,4 +122,59 @@ public class RuntimeHubController : MonoBehaviour
             candidate.enabled = candidate == preferredAudioListener;
         }
     }
+
+    // ---------------------------------------------------------
+    // 🟢 1. ฟังก์ชันสำหรับเปิด UI ทั้งหมดกลับมา
+    // ---------------------------------------------------------
+   public void RestoreUI()
+    {
+        // 1. เปิด UI ทั้งหมดกลับมา
+        if (uiElementsToHide != null)
+        {
+            foreach (GameObject ui in uiElementsToHide)
+            {
+                if (ui != null) 
+                {
+                    ui.SetActive(true);
+                }
+            }
+        }
+
+        // 🟢 2. สิ่งที่ต้องเพิ่ม: ตามหา EventSystem ที่หลับอยู่ แล้วปลุกมันขึ้นมา!
+        EventSystem currentEventSystem = FindFirstObjectByType<EventSystem>(FindObjectsInactive.Include);
+        if (currentEventSystem != null)
+        {
+            currentEventSystem.enabled = true; // สั่งตื่น!
+        }
+
+        Debug.Log("[RuntimeHubController] เปิด UI และปลุก EventSystem กลับมาทำงานแล้ว!");
+    }
+    // ---------------------------------------------------------
+    // 🟢 2. ให้ระบบดักฟังอัตโนมัติ ว่ามีฉากไหนถูกปิดไปหรือเปล่า
+    // ---------------------------------------------------------
+    private void OnEnable()
+    {
+        // สมัครรับแจ้งเตือนเมื่อมีการ Unload (ปิด) ฉากใดๆ
+        SceneManager.sceneUnloaded += OnSceneUnloaded;
+    }
+
+    private void OnDisable()
+    {
+        // ยกเลิกการรับแจ้งเตือนเมื่อสคริปต์นี้ถูกทำลาย
+        SceneManager.sceneUnloaded -= OnSceneUnloaded;
+    }
+
+    private void OnSceneUnloaded(Scene unloadedScene)
+    {
+        // 1. เช็คว่าฉากที่เพิ่งปิดไป ต้องไม่ใช่ฉากที่สคริปต์นี้อยู่ (ป้องกันมันทำงานตอนเราตั้งใจปิด Hub ทิ้งจริงๆ)
+        // 2. เช็คว่าฉากที่สคริปต์นี้ทำงานอยู่ ต้องชื่อ "InterMission" เท่านั้น!
+        if (unloadedScene != gameObject.scene && gameObject.scene.name == "InterMission")
+        {
+            RestoreUI();
+        }
+        else
+        {
+            Debug.Log($"[RuntimeHubController] ไม่ได้อยู่ในฉาก InterMission (อยู่ฉาก {gameObject.scene.name}) เลยไม่เปิด UI กลับมาครับ");
+        }
+    }
 }

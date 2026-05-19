@@ -163,30 +163,21 @@ public class BattleSystem : MonoBehaviour
  GameEventManager.TryAddCount2(1);
        ApplyEquippedItems();
 
-        if (GameData.Instance != null && GameData.Instance.selectedCards.Count > 0)
-        {
-            List<CardData> myHand = new List<CardData>();
+      List<CardData> myHand = DeckManager.GetShuffledCurrentDeck();
 
-        // 2. วนลูปหยิบการ์ดจาก DeckManager (cardUse คือเด็คที่เราจัดไว้)
-        foreach (var card in DeckManager.CurrentCardUse)
+        // 2. เช็คว่ามีไพ่ติดมาจริงๆ ไหม
+        if (myHand.Count > 0)
         {
-            if (card != null) // เช็คกันเหนียว เผื่อเป็นช่องว่าง
+            // 🟢 3. ถ้าอยากให้เริ่มเกมแล้วจั่วขึ้นมือแค่ 4 ใบแรก ให้ตัดลิสต์ตรงนี้ครับ
+            if (myHand.Count > 4)
             {
-                myHand.Add(card);
+                myHand = myHand.GetRange(0, 4); 
             }
-        }
 
-        // 3. (Optional) ถ้าอยากให้เริ่มเกมจั่วแค่ 3 ใบแรก
-        if (myHand.Count > 4)
-        {
-            // ตัดให้เหลือแค่ 3 ใบแรก
-            myHand = myHand.GetRange(0, 4);
-        }
+            Debug.Log($"[BattleSystem] จั่วการ์ดที่สับแล้วขึ้นมือ จำนวน {myHand.Count} ใบ");
 
-        Debug.Log($"[BattleSystem] เจอการ์ดจาก DeckManager จำนวน {myHand.Count} ใบ");
-
-        // 4. ส่งการ์ดเข้าสู่ระบบ UI ของ BattleSystem
-        LoadSelectedCards(myHand);
+            // 4. ส่งการ์ดที่สับแล้วไปโชว์ที่ UI
+            LoadSelectedCards(myHand);
         }
         else
         {
@@ -262,9 +253,26 @@ public class BattleSystem : MonoBehaviour
         yield return new WaitForSeconds(3f);
         effect.SetActive(false); // ✅ ซ่อน
     }
-    public void LoadSelectedCards(List<CardData> cards)
+ public void LoadSelectedCards(List<CardData> cards)
     {
+        // 1. รับค่าการ์ดมาใส่ใน List ของเราก่อน
         selectedCards = new List<CardData>(cards);
+
+        // ---------------------------------------------------------
+        // 🟢 2. ระบบสับการ์ด (Shuffle) ให้ตำแหน่งไม่ซ้ำเดิม
+        // ---------------------------------------------------------
+        for (int i = 0; i < selectedCards.Count; i++)
+        {
+            CardData temp = selectedCards[i];
+            // สุ่มตำแหน่งใหม่ที่จะเอามาสลับ
+            int randomIndex = UnityEngine.Random.Range(i, selectedCards.Count);
+            
+            // ทำการสลับที่กัน
+            selectedCards[i] = selectedCards[randomIndex];
+            selectedCards[randomIndex] = temp;
+        }
+
+        // 3. เรียกใช้ SetupCardsUI เพื่อแสดงผล (ตอนนี้การ์ดจะเรียงแบบสุ่มแล้ว!)
         SetupCardsUI();
     }
 
@@ -464,6 +472,19 @@ public class BattleSystem : MonoBehaviour
             }
         }
         attackButton.interactable = isPlayerTurn;
+
+        if (cardButtons != null)
+        {
+            for (int i = 0; i < cardButtons.Length; i++)
+            {
+                if (cardButtons[i] != null)
+                {
+                    // ถ้าเป็นเทิร์นผู้เล่น (isPlayerTurn = true) จะกดได้
+                    // ถ้าเป็นเทิร์นศัตรู (isPlayerTurn = false) จะกดไม่ได้
+                    cardButtons[i].interactable = isPlayerTurn;
+                }
+            }
+        }
     }
 
 
@@ -3151,7 +3172,8 @@ StartCoroutine(MyDelay());
                   PlaySoundEffect(3);
                 break;
             case CardEffectType.PermanentAttackBoost05:
-                selectedPlayer.attackDamage *= 1 / 2;
+                int boot05 = 1/2;
+                selectedPlayer.attackDamage += boot05;
                 if (DeckManager.TryGet(out _))
             {
                 DeckManager.TryLockCard(card);
@@ -3880,23 +3902,10 @@ void ApplyEffect(ItemID id)
             int roll = Random.Range(1, 101);
                 if(roll <= 10)
                 {
-                    int damage = 10;
-                    if (enemyElement == ElementType.Wind)
-                    {
-                        damage *= 2;
-                        Debug.Log("ศัตรูธาตุลม โดนไฟคูณ 2");
-                    }
-                    else if (enemyElement == ElementType.Water)
-                    {
-                        damage /= 2;
-                        Debug.Log("ศัตรูธาตุน้ำ โดนไฟลดครึ่ง");
-                    }
-
-                    DamageEnemy(damage);
-                    ShowSkillEffectOnce(0);
-                    PlaySoundEffect(7);
+                     selectedPlayer.attackDamage += 30; // เพิ่มพลังกายภาพโจมตี 5
                 }
                 break;
+              
             case ItemID.FireArmor:
                 if (enemyElement == ElementType.Wind)
                 {
@@ -3914,22 +3923,9 @@ void ApplyEffect(ItemID id)
              int rollburn = Random.Range(1, 101);
                 if(rollburn <= 20)
                 {
-                    int damage = 10;
-                    if (enemyElement == ElementType.Wind)
-                    {
-                        damage *= 2;
-                        Debug.Log("ศัตรูธาตุลม โดนไฟคูณ 2");
-                    }
-                    else if (enemyElement == ElementType.Water)
-                    {
-                        damage /= 2;
-                        Debug.Log("ศัตรูธาตุน้ำ โดนไฟลดครึ่ง");
-                    }
-
-                    DamageEnemy(damage);
-                    ShowSkillEffectOnce(0);
-                    PlaySoundEffect(7);
+                     selectedPlayer.attackDamage += 30; // เพิ่มพลังกายภาพโจมตี 5
                 }
+                break;
             
                 break;
             

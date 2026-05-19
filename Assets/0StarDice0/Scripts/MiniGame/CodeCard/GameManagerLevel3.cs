@@ -17,7 +17,7 @@ public class GameManagerLevel3 : MonoBehaviour
     private Card firstCard, secondCard;
     private int matchedPairs = 0;
     private int mistakes = 0;
-    private int totalPairs = 15; // 15 คู่ = จับคู่ถูกหมดได้ 1500 คะแนน
+    private int totalPairs = 20; // 20 คู่ = จับคู่ถูกหมดได้ 2000 คะแนน
 
     public bool IsBusy = false;
 
@@ -124,8 +124,8 @@ public class GameManagerLevel3 : MonoBehaviour
 
         if (firstCard.cardId == secondCard.cardId)
         {
-            AddScore(100); // ได้ 100 คะแนน
-            ScoreManager.Instance.AddScore(100);
+            AddScore(200); // ได้ 100 คะแนน
+            ScoreManager.Instance.AddScore(200);
             
             firstCard.isMatched = true;
             secondCard.isMatched = true;

@@ -27,18 +27,20 @@ public class SkillSelectUIthree : MonoBehaviour
     public Image skillSlot1; // ลากช่องรูปสกิล 1 มาใส่
     public Image skillSlot2; // ลากช่องรูปสกิล 2 มาใส่
     public Image skillSlot3; // ลากช่องรูปสกิล 3 มาใส่
+
+    private SkillData[] originalSkills;
     void Start()
     {
         ResolvePlayerState();
 
-        // ล็อคสกิล 3–9 เริ่มต้น
-     /*   for (int i = 3; i < playerData.allSkills.Length; i++)
+       if (playerData != null && playerData.skills != null)
         {
-            if (playerData.allSkills[i] != null)
-                playerData.allSkills[i].isLocked = true;
-        }*/
-
-        // ตั้งปุ่มสกิล
+            originalSkills = new SkillData[playerData.skills.Length];
+            for (int i = 0; i < playerData.skills.Length; i++)
+            {
+                originalSkills[i] = playerData.skills[i];
+            }
+        }
         
 
        if (playerData != null && playerData.allSkills.Length >= 3 && playerData.skills.Length >= 3)
@@ -216,5 +218,27 @@ public class SkillSelectUIthree : MonoBehaviour
         }
 
         playerState = fallback;
+    }
+
+    // --- เพิ่มฟังก์ชันสำหรับคืนค่าสกิลกลับไปเป็นแบบเดิม (Restore) ---
+    public void RestoreOriginalSkills()
+    {
+        if (playerData != null && originalSkills != null)
+        {
+            for (int i = 0; i < originalSkills.Length; i++)
+            {
+                if (i < playerData.skills.Length)
+                {
+                    playerData.skills[i] = originalSkills[i];
+                }
+            }
+            Debug.Log("🔄 คืนค่าสกิลเดิมตอนเริ่มด่านเรียบร้อยแล้ว");
+        }
+    }
+
+    // --- เพิ่มฟังก์ชันเพื่อให้คืนค่าอัตโนมัติเมื่อ UI นี้ถูกทำลาย (เช่น ตอนจบด่าน/เปลี่ยน Scene) ---
+    private void OnDestroy()
+    {
+        RestoreOriginalSkills();
     }
 }

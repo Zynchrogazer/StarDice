@@ -48,7 +48,7 @@ public class RandomUnlock : MonoBehaviour
         resetButton.onClick.AddListener(() =>
         {
             ResetAllMonsters();
-            UpdateMonsterUI(); 
+           // UpdateMonsterUI(); 
             resultText.text = "Reset Monster";
             resultPanel.SetActive(true);
             CheckRollButtonState(); 
@@ -142,7 +142,7 @@ public class RandomUnlock : MonoBehaviour
         resultPanel.SetActive(true);
 
         CheckRollButtonState();
-        UpdateMonsterUI();
+        //UpdateMonsterUI();
     }
 
     // 🟢 อัปเดตฟังก์ชันดึงเงินมาแสดงบน Text
@@ -207,7 +207,7 @@ public class RandomUnlock : MonoBehaviour
         PlayerPrefs.SetInt("MonsterDark", 0);
         PlayerPrefs.Save();
     }
-
+/*
     private void UpdateMonsterUI()
     {
         fireImage.SetActive(PlayerPrefs.GetInt("MonsterFire", 0) == 1);
@@ -216,5 +216,5 @@ public class RandomUnlock : MonoBehaviour
         windImage.SetActive(PlayerPrefs.GetInt("MonsterWind", 0) == 1);
         lightImage.SetActive(PlayerPrefs.GetInt("MonsterLight", 0) == 1);
         darkImage.SetActive(PlayerPrefs.GetInt("MonsterDark", 0) == 1);
-    }
+    }*/
 }

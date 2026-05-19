@@ -494,4 +494,25 @@ public class NormaSystem : MonoBehaviour
 
         return false;
     }
+
+    // ---------------------------------------------------------
+    // 🛠️ ปุ่มสำหรับเทส (Debug) ข้ามเควสและเสกบอสทันที
+    // ---------------------------------------------------------
+    public void DebugForceBossSpawn()
+    {
+        Debug.Log("🛠️ [Debug] ใช้สูตรโกง! ดันเลเวลตันและเสกบอสทันที!");
+
+        // 1. ปรับ Rank ให้เป็นขั้นสูงสุดทันที
+        currentNormaRank = maxNormaRank;
+
+        // 2. อัปเดต UI HUD ให้แสดงผลว่าเลเวลตันแล้ว
+        if (ResolveNormaUIManager() != null) 
+        {
+            ResolveNormaUIManager().UpdateInfoUI();
+        }
+
+        // 3. เข้าสู่ Final Phase และเสกบอส
+        Debug.Log("⚠️ FINAL PHASE: Boss has appeared (via Debug Button)!");
+        SpawnFinalBoss();
+    }
 }

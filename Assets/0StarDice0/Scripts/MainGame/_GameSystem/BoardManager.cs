@@ -196,14 +196,22 @@ public class BoardManager : MonoBehaviour
 
             // 🛑 กลุ่มช่องอื่นๆ ทั้งหมด (Trap, Event, Monster, Treasure, Minigame, etc.)
            // 🛑 กลุ่มช่องอื่นๆ ทั้งหมด (Trap, Event, Monster, Treasure, Minigame, etc.)
+          // 🛑 กลุ่มช่องอื่นๆ ทั้งหมด (Trap, Event, Monster, Treasure, Minigame, etc.)
             default:
                 if (isAI)
                 {
-                    // 🟢 เพิ่มข้อยกเว้น: ถ้าช่องนั้นคือ "Lava" ให้ AI โดน Event ด้วย!
-                    if (!string.IsNullOrEmpty(nodeData.eventName) && nodeData.eventName.ToLower() == "lava")
+                    // ดึงชื่อ Event มาทำเป็นตัวพิมพ์เล็กให้หมด จะได้เช็คง่ายๆ
+                    string evtName = string.IsNullOrEmpty(nodeData.eventName) ? "" : nodeData.eventName.ToLower();
+
+                    // 🟢 เพิ่มข้อยกเว้น: ให้ AI โดน Event ลาวา และ Event วาร์ป (ถ้าช่องลมชื่ออื่น ให้เติมตรงนี้ได้เลย)
+                    if (evtName == "lava" || evtName == "warp" || evtName == "windteleport" || evtName == "teleport")
                     {
-                        Debug.Log($"[BoardManager] 🌋 AI {playerObject.name} เหยียบช่อง Lava! ส่งต่อให้ EventManager จัดการ...");
-                        GameEventManager.TryTriggerEvent("lava", playerObject);
+                        // 🟢 ให้ AI จดจำด่านไว้ด้วยเหมือนกันเผื่อต้องโหลดฉาก!
+                        PlayerPrefs.SetString(GameEventManager.LastBoardSceneKey, UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
+                        PlayerPrefs.Save();
+                        
+                        Debug.Log($"[BoardManager] 🌪️ AI {playerObject.name} เหยียบช่อง {evtName}! ส่งต่อให้วาร์ป...");
+                        GameEventManager.TryTriggerEvent(nodeData.eventName, playerObject);
                     }
                     else
                     {
@@ -230,6 +238,11 @@ public class BoardManager : MonoBehaviour
             StartCoroutine(FinishTurnRoutine());
             return;
         }
+
+        string currentSceneName = SceneManager.GetActiveScene().name;
+        PlayerPrefs.SetString(GameEventManager.LastBoardSceneKey, currentSceneName);
+        PlayerPrefs.Save();
+        Debug.Log($"<color=cyan>💾 [BoardManager] บันทึกชื่อด่าน '{currentSceneName}' ก่อนเข้า Event: {nodeData.eventName} เรียบร้อย!</color>");
 
         switch (nodeData.type)
         {
@@ -334,7 +347,7 @@ public class BoardManager : MonoBehaviour
     }
     else if (currentSceneName == "TestMain")
     {
-        string[] randomScenes = { "enemyfire buff", "enemyfire damage", "enemyfire heal", "enemyfire1" };
+        string[] randomScenes = { "enemyfire damage", "enemyfire heal", "enemyfire1" };
         
         int randomIndex = Random.Range(0, randomScenes.Length);
         battleSceneName = randomScenes[randomIndex];

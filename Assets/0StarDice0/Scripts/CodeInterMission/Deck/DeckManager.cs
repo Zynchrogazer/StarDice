@@ -599,4 +599,36 @@ public void LockCard(CardData card)
     
     Debug.Log($"🚫 Card Locked & Removed from Deck: {card.cardName}");
 }
+// ------------------------------------------------------------------
+    // 🟢 ฟังก์ชันนี้สำหรับให้ Scene อื่นๆ (เช่น Battle) ดึงเด็คที่สับแล้วไปใช้งาน
+    // ------------------------------------------------------------------
+    public static List<CardData> GetShuffledCurrentDeck()
+    {
+        List<CardData> shuffledDeck = new List<CardData>();
+
+        // 1. ดึงผู้จัดการ (DeckManager) ขึ้นมา และดึงไพ่ใน cardUse ปัจจุบัน
+        if (TryGet(out var manager) && manager.cardUse != null)
+        {
+            foreach (var card in manager.cardUse)
+            {
+                if (card != null) // กรองช่องว่างออก เอาเฉพาะช่องที่มีไพ่
+                {
+                    shuffledDeck.Add(card);
+                }
+            }
+        }
+
+        // 2. สับไพ่ในลิสต์ใหม่ (ไม่กระทบ cardUse ของเดิมที่หน้าจอ Hub แน่นอน)
+        for (int i = 0; i < shuffledDeck.Count; i++)
+        {
+            CardData temp = shuffledDeck[i];
+            int randomIndex = UnityEngine.Random.Range(i, shuffledDeck.Count);
+            
+            shuffledDeck[i] = shuffledDeck[randomIndex];
+            shuffledDeck[randomIndex] = temp;
+        }
+
+        return shuffledDeck;
+    }
+
 }
