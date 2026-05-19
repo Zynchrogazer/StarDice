@@ -8221,7 +8221,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: 6d13fda6d68721e499eabfaec0d2df37, type: 3}
+  m_Sprite: {fileID: 21300000, guid: ca55c2f1873ea6c469e3f03663613b52, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -8588,6 +8588,11 @@ MonoBehaviour:
   hitRockSound: {fileID: 0}
   soundVolume: 0.8
   eventManager: {fileID: 0}
+  hopHeight: 0.35
+  hopDurationPerTile: 0.2
+  spriteRenderer: {fileID: 0}
+  idleSprite: {fileID: 0}
+  walkStepSprites: []
   currentNodeID: 0
 --- !u!4 &976594066449464221
 Transform:
@@ -120681,6 +120686,12 @@ MonoBehaviour:
   hitRockSound: {fileID: 8300000, guid: 7e26c9daf4c32483b9c2790e662d3f1b, type: 3}
   soundVolume: 0.8
   eventManager: {fileID: 0}
+  hopHeight: 0.35
+  hopDurationPerTile: 0.2
+  spriteRenderer: {fileID: 624021101760724925}
+  idleSprite: {fileID: 21300000, guid: ca55c2f1873ea6c469e3f03663613b52, type: 3}
+  walkStepSprites:
+  - {fileID: 21300000, guid: 6d13fda6d68721e499eabfaec0d2df37, type: 3}
   currentNodeID: 0
 --- !u!114 &7319186221565647527 stripped
 MonoBehaviour:

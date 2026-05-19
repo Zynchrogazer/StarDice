@@ -18,6 +18,15 @@ public class PlayerPathWalker : MonoBehaviour
     [Range(0f, 1f)] public float soundVolume = 0.8f;
     [SerializeField] private EventManager eventManager;
 
+    [Header("Step Hop Animation")]
+    [SerializeField] private float hopHeight = 0.35f;
+    [SerializeField] private float hopDurationPerTile = 0.2f;
+
+    [Header("Walk Sprite Animation")]
+    [SerializeField] private SpriteRenderer spriteRenderer;
+    [SerializeField] private Sprite idleSprite;
+    [SerializeField] private Sprite[] walkStepSprites;
+
     [Header("State")]
     public int currentNodeID;
 
@@ -30,6 +39,7 @@ public class PlayerPathWalker : MonoBehaviour
     private bool isMoving = false;
     private Transform chosenNodeFromUI;
     private int previousNodeID;
+    private int lastWalkSpriteFrame = -1;
 
     public bool IsExecutingTurn => isExecutingTurn;
     public bool IsMoving => isMoving;
@@ -45,6 +55,9 @@ public class PlayerPathWalker : MonoBehaviour
             audioSource.loop = true; // ให้เสียงวนลูปถ้ายาวไม่พอ
             audioSource.playOnAwake = false; // อย่าเพิ่งเล่นตอนเริ่มเกม
         }
+
+        if (spriteRenderer == null)
+            spriteRenderer = GetComponentInChildren<SpriteRenderer>();
     }
 
     private void OnEnable() { SceneManager.sceneLoaded += OnSceneLoaded; }
@@ -281,15 +294,69 @@ public class PlayerPathWalker : MonoBehaviour
         if (audioSource != null && walkSound != null)
         {
             audioSource.PlayOneShot(walkSound);
-            //Debug.Log($"<color=yellow>⭐ PlayWalkingSound");
         }
-        while (Vector3.Distance(transform.position, targetNode.position) > 0.01f)
+
+        lastWalkSpriteFrame = -1;
+
+        Vector3 startPosition = transform.position;
+        Vector3 endPosition = targetNode.position;
+
+        float distance = Vector3.Distance(startPosition, endPosition);
+        float travelDuration = distance > 0.001f ? distance / Mathf.Max(0.01f, moveSpeed) : hopDurationPerTile;
+        travelDuration = Mathf.Max(0.01f, travelDuration);
+
+        float elapsed = 0f;
+
+        while (elapsed < travelDuration)
         {
-            transform.position = Vector3.MoveTowards(transform.position, targetNode.position, moveSpeed * Time.deltaTime);
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / travelDuration);
+
+            Vector3 basePosition = Vector3.Lerp(startPosition, endPosition, t);
+            float yHopOffset = Mathf.Sin(t * Mathf.PI) * hopHeight;
+            transform.position = basePosition + Vector3.up * yHopOffset;
+
+            UpdateWalkStepSprite(t);
             yield return null;
         }
-        transform.position = targetNode.position;
+
+        transform.position = endPosition;
+        SetIdleSprite();
         isMoving = false;
+
+        if (audioSource != null && landSound != null)
+        {
+            audioSource.PlayOneShot(landSound, soundVolume);
+        }
+    }
+
+    private void UpdateWalkStepSprite(float moveProgress)
+    {
+        if (spriteRenderer == null || walkStepSprites == null || walkStepSprites.Length == 0)
+            return;
+
+        // ถ้ามีสไปรต์เดินแค่ภาพเดียว ให้ล็อกภาพนั้นไปเลยเพื่อกันอาการกระพริบ
+        if (walkStepSprites.Length == 1)
+        {
+            if (spriteRenderer.sprite != walkStepSprites[0])
+                spriteRenderer.sprite = walkStepSprites[0];
+            return;
+        }
+
+        int frame = Mathf.FloorToInt(moveProgress * walkStepSprites.Length);
+        frame = Mathf.Clamp(frame, 0, walkStepSprites.Length - 1);
+
+        if (frame == lastWalkSpriteFrame)
+            return;
+
+        lastWalkSpriteFrame = frame;
+        spriteRenderer.sprite = walkStepSprites[frame];
+    }
+
+    private void SetIdleSprite()
+    {
+        if (spriteRenderer != null && idleSprite != null)
+            spriteRenderer.sprite = idleSprite;
     }
 
     public bool TryBreakRockAndBounceBack(int rockTileID)
