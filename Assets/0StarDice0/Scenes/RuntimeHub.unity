@@ -27479,7 +27479,7 @@ MonoBehaviour:
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: MainLight
+          m_StringArgument: MainEarth
           m_BoolArgument: 0
         m_CallState: 2
 --- !u!224 &2571419634352054233
@@ -36837,6 +36837,7 @@ GameObject:
   - component: {fileID: 4130427216360479294}
   - component: {fileID: 7554381345153939656}
   - component: {fileID: 7623471184049695804}
+  - component: {fileID: 7623471184049695805}
   m_Layer: 5
   m_Name: waterimage
   m_TagString: Untagged
@@ -54624,6 +54625,7 @@ GameObject:
   - component: {fileID: 7847862063843238195}
   - component: {fileID: 1785748347442666282}
   - component: {fileID: 4045154353033486282}
+  - component: {fileID: 7847862063843238196}
   m_Layer: 5
   m_Name: windimage
   m_TagString: Untagged
@@ -54902,6 +54904,7 @@ GameObject:
   - component: {fileID: 1823672598141642050}
   - component: {fileID: 1307694956200885539}
   - component: {fileID: 788054898172686492}
+  - component: {fileID: 8266166706433264286}
   m_Layer: 5
   m_Name: darkimage
   m_TagString: Untagged
@@ -56190,6 +56193,7 @@ GameObject:
   - component: {fileID: 2175613457587446719}
   - component: {fileID: 230626360076078608}
   - component: {fileID: 8568243648187551357}
+  - component: {fileID: 8568243648187551358}
   m_Layer: 5
   m_Name: fireimage
   m_TagString: Untagged
@@ -76048,6 +76052,7 @@ GameObject:
   - component: {fileID: 9213794387424033460}
   - component: {fileID: 1217696040288398432}
   - component: {fileID: 8865802292775587854}
+  - component: {fileID: 9213794387424033461}
   m_Layer: 5
   m_Name: lightimage
   m_TagString: Untagged
@@ -76420,6 +76425,28 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   amplitude: 10
   speed: 5
+--- !u!95 &7623471184049695805
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3499717450853819905}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: a3c044751d7332549808f4ff5dd6bb17, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &7628399046122771825
 GameObject:
   m_ObjectHideFlags: 0
@@ -78421,6 +78448,28 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!95 &7847862063843238196
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5338497608793776527}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: d1c466a36a6580e4ead251d83cea9e2c, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!222 &7850046197532175091
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -82238,6 +82287,28 @@ RectTransform:
   m_AnchoredPosition: {x: 964.4426, y: 121.37529}
   m_SizeDelta: {x: 386.5409, y: 417.735}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!95 &8266166706433264286
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5385046295034332926}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 77c4c722de2347140b296d6cf4d60c29, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!224 &8269656560615745119
 RectTransform:
   m_ObjectHideFlags: 0
@@ -85020,6 +85091,28 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   amplitude: 10
   speed: 5
+--- !u!95 &8568243648187551358
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5501854438421645727}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 44c6b4dfe8b1f1d449411e50d659da3d, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!224 &8568714663072348097
 RectTransform:
   m_ObjectHideFlags: 0
@@ -91912,6 +92005,28 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!95 &9213794387424033461
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7586382199335671051}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: ba2252491edd0fc49a43520039505ed3, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!222 &9214439257029249354
 CanvasRenderer:
   m_ObjectHideFlags: 0

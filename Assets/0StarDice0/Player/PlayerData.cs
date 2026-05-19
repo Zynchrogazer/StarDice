@@ -15,6 +15,12 @@ public class PlayerData : ScriptableObject
     public int attackDamage = 10;
     public int speed = 10;
     public int def = 1;
+
+    public int maxHPbase = 100;
+    public int attackDamagebase = 10;
+    public int speedbase = 10;
+    public int defbase = 1;
+
     public SkillData[] skills = new SkillData[3];
     public SkillData[] allSkills = new SkillData[10];
     public ElementType elementType;
@@ -208,4 +214,6 @@ public class PlayerData : ScriptableObject
         skills[1] = allSkills[1];
         skills[2] = allSkills[2];
     }
+
+    
 }

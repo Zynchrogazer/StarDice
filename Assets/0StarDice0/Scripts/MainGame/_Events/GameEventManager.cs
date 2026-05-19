@@ -840,7 +840,7 @@ private IEnumerator ShowPanelAndMoveRoutine(PlayerPathWalker walker, int steps)
 {
     // 1. เปิด Panel (false = ไม่ให้ Panel สั่งจบเทิร์นเอง)
     ShowPanel("movepanel", false);
-    PlayEventSound(0);
+  
 
     // 2. โชว์ Panel 1.5 วินาที
     yield return new WaitForSeconds(1.5f);
@@ -1298,11 +1298,6 @@ private IEnumerator ShowPanelAndMoveRoutine(PlayerPathWalker walker, int steps)
         RememberCurrentBoardScene();
         yield return null;
 
-        if (SceneFlowController.TryRequestScene(sceneName))
-        {
-            yield break;
-        }
-
         if (!Application.CanStreamedLevelBeLoaded(sceneName))
         {
             Debug.LogError($"[EventManager] Cannot load minigame scene '{sceneName}'. Check Build Profiles.");
@@ -1310,17 +1305,38 @@ private IEnumerator ShowPanelAndMoveRoutine(PlayerPathWalker walker, int steps)
             yield break;
         }
 
-        yield return LoadSceneAdditiveThenUnloadCurrent(sceneName);
+        yield return LoadMinigameSceneAdditiveCoroutine(sceneName);
     }
 
-    private IEnumerator LoadSceneAdditiveThenUnloadCurrent(string targetSceneName)
+    private IEnumerator LoadMinigameSceneAdditiveCoroutine(string sceneName)
     {
-        Scene currentActiveScene = SceneManager.GetActiveScene();
+        if (SceneManager.GetSceneByName(sceneName).isLoaded)
+        {
+            bool hidBoardForLoadedMinigame = HideBoardSceneRootsForBattle();
+            Scene existingMinigameScene = SceneManager.GetSceneByName(sceneName);
+            if (existingMinigameScene.IsValid() && existingMinigameScene.isLoaded)
+            {
+                SceneManager.SetActiveScene(existingMinigameScene);
+            }
+            else if (hidBoardForLoadedMinigame)
+            {
+                RestoreHiddenBoardSceneRoots();
+            }
 
-        AsyncOperation loadOp = SceneManager.LoadSceneAsync(targetSceneName, LoadSceneMode.Additive);
+            Debug.LogWarning($"[EventManager] Minigame scene '{sceneName}' ถูกโหลดอยู่แล้ว -> ไม่โหลดซ้ำ");
+            yield break;
+        }
+
+        bool hidBoardScene = HideBoardSceneRootsForBattle();
+        AsyncOperation loadOp = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
         if (loadOp == null)
         {
-            Debug.LogError($"[EventManager] Failed to start additive load for '{targetSceneName}'.");
+            Debug.LogError($"[EventManager] Failed to start additive load for '{sceneName}'.");
+            if (hidBoardScene)
+            {
+                RestoreHiddenBoardSceneRoots();
+            }
+
             ResolveGameTurnManager()?.RequestEndTurn();
             yield break;
         }
@@ -1330,23 +1346,23 @@ private IEnumerator ShowPanelAndMoveRoutine(PlayerPathWalker walker, int steps)
             yield return null;
         }
 
-        Scene targetScene = SceneManager.GetSceneByName(targetSceneName);
+        Scene targetScene = SceneManager.GetSceneByName(sceneName);
         if (targetScene.IsValid() && targetScene.isLoaded)
         {
             SceneManager.SetActiveScene(targetScene);
+            Debug.Log($"[EventManager] โหลด minigame scene '{sceneName}' แบบ additive สำเร็จ และซ่อน BoardGame ชั่วคราว");
         }
-
-        if (currentActiveScene.IsValid()
-            && currentActiveScene.isLoaded
-            && !string.Equals(currentActiveScene.name, targetSceneName, System.StringComparison.OrdinalIgnoreCase)
-            && !string.Equals(currentActiveScene.name, "RuntimeHub", System.StringComparison.OrdinalIgnoreCase))
+        else if (hidBoardScene)
         {
-            AsyncOperation unloadOp = SceneManager.UnloadSceneAsync(currentActiveScene);
-            while (unloadOp != null && !unloadOp.isDone)
-            {
-                yield return null;
-            }
+            RestoreHiddenBoardSceneRoots();
+            ResolveGameTurnManager()?.RequestEndTurn();
         }
+    }
+
+    public void ResumeBoardAfterOverlayScene(string boardSceneName)
+    {
+        RestoreHiddenBoardSceneRoots();
+        NotifyBoardSceneReady(boardSceneName);
     }
 
     private string ResolveMinigameSceneName(string minigameKey)
@@ -1356,7 +1372,7 @@ private IEnumerator ShowPanelAndMoveRoutine(PlayerPathWalker walker, int steps)
         switch (minigameKey.Trim().ToLower())
         {
             case "minigamefappy": return "MiniGameFappy";
-            case "level 1": return "Level 1";
+            case "level 3": return "Level 3";
             case "minigamespotmemory": return "MiniGameSpotMemory";
             case "minigamemath": return "MiniGameMath";
             default: return null;
@@ -1402,38 +1418,38 @@ private IEnumerator ShowPanelAndMoveRoutine(PlayerPathWalker walker, int steps)
 
        if (currentSceneName == "MainLight")
        {
-           if(bosslevel < 11) battleSceneName = "FinalBoss hard";
-           else if(bosslevel >=11  && bosslevel <= 15) battleSceneName = "FianlBoss medium";
+           if(bosslevel < 10) battleSceneName = "FinalBoss hard";
+           else if(bosslevel >=11  && bosslevel <= 20) battleSceneName = "FianlBoss medium";
            else battleSceneName = "FinalBoss";
        }
        else if (currentSceneName == "TestMain")
        {
-           if(bosslevel < 11) battleSceneName = "bossfire hard";
-           else if(bosslevel >=11  && bosslevel <= 15) battleSceneName = "bossfire medium";
+           if(bosslevel < 10) battleSceneName = "bossfire hard";
+           else if(bosslevel >=11  && bosslevel <= 20) battleSceneName = "bossfire medium";
            else battleSceneName = "bossfire";
        }
        else if (currentSceneName == "MainWater")
        {
-           if(bosslevel < 11) battleSceneName = "boss water hard";
-           else if(bosslevel >=11  && bosslevel <= 15) battleSceneName = "boss water medium";
+           if(bosslevel < 10) battleSceneName = "boss water hard";
+           else if(bosslevel >=11  && bosslevel <= 20) battleSceneName = "boss water medium";
            else battleSceneName = "boss water";
        }
        else if (currentSceneName == "MainWind")
        {
-           if(bosslevel < 11) battleSceneName = "boss wind hard";
-           else if(bosslevel >=11  && bosslevel <= 15) battleSceneName = "boss wind medium";
+           if(bosslevel < 10) battleSceneName = "boss wind hard";
+           else if(bosslevel >=11  && bosslevel <= 20) battleSceneName = "boss wind medium";
            else battleSceneName = "boss wind";
        }
        else if (currentSceneName == "MainEarth")
        {
-           if(bosslevel < 11) battleSceneName = "boss earth hard";
-           else if(bosslevel >=11  && bosslevel <= 15) battleSceneName = "boss earth medium";
+           if(bosslevel < 10) battleSceneName = "boss earth hard";
+           else if(bosslevel >=11  && bosslevel <= 20) battleSceneName = "boss earth medium";
            else battleSceneName = "boss earth";
        }
        else if (currentSceneName == "MainDark")
        {
-           if(bosslevel < 11) battleSceneName = "boss dark hard";
-           else if(bosslevel >=11  && bosslevel <= 15) battleSceneName = "boss dark medium";
+           if(bosslevel < 10) battleSceneName = "boss dark hard";
+           else if(bosslevel >=11  && bosslevel <= 20) battleSceneName = "boss dark medium";
            else battleSceneName = "boss dark";
        }
 

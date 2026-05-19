@@ -445,7 +445,7 @@ public bool isBattleOver = false;
 
     }
 
-    void UpdateSkillButtons()
+   void UpdateSkillButtons()
     {
         
         for (int i = 0; i < skillButtons.Length; i++)
@@ -476,6 +476,19 @@ public bool isBattleOver = false;
             }
         }
         attackButton.interactable = isPlayerTurn;
+
+        if (cardButtons != null)
+        {
+            for (int i = 0; i < cardButtons.Length; i++)
+            {
+                if (cardButtons[i] != null)
+                {
+                    // ถ้าเป็นเทิร์นผู้เล่น (isPlayerTurn = true) จะกดได้
+                    // ถ้าเป็นเทิร์นศัตรู (isPlayerTurn = false) จะกดไม่ได้
+                    cardButtons[i].interactable = isPlayerTurn;
+                }
+            }
+        }
     }
 
 

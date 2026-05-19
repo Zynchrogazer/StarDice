@@ -726,6 +726,11 @@ public class RouteManager : MonoBehaviour
     public float rockObstacleSpawnHeight = 0.02f;
     [Tooltip("ตำแหน่งช่องที่อยากให้มีหินตั้งแต่เริ่มเกม")]
     public List<int> initialRockTileIDs = new List<int>();
+    [Tooltip("สุ่มวางหินเพิ่มตอนเริ่มฉาก (นอกเหนือจาก initialRockTileIDs)")]
+    public bool randomSpawnRockOnStart = false;
+    [Tooltip("จำนวนหินที่สุ่มเพิ่มตอนเริ่มฉาก")]
+    [Min(0)]
+    public int randomSpawnRockCountOnStart = 0;
     [Tooltip("สถานะหินที่กำลังใช้งานในเกม")]
     public List<RockObstacleState> activeRockObstacles = new List<RockObstacleState>();
 
@@ -739,24 +744,41 @@ public class RouteManager : MonoBehaviour
             return;
         }
 
-        if (initialRockTileIDs == null || initialRockTileIDs.Count == 0)
+        if (initialRockTileIDs != null)
         {
-            return;
+            foreach (int tileID in initialRockTileIDs)
+            {
+                ActivateRockObstacle(tileID);
+            }
         }
 
-        foreach (int tileID in initialRockTileIDs)
+        if (randomSpawnRockOnStart && randomSpawnRockCountOnStart > 0)
         {
-            ActivateRockObstacle(tileID);
+            int spawnedCount = TrySpawnRandomRockObstacles(randomSpawnRockCountOnStart);
+            if (spawnedCount > 0)
+            {
+                Debug.Log($"🪨 สุ่มหินตอนเริ่มฉาก {spawnedCount}/{randomSpawnRockCountOnStart} ก้อน");
+            }
         }
     }
 
     public bool TrySpawnRandomRockObstacle()
     {
+        return TrySpawnRandomRockObstacles(1) > 0;
+    }
+
+    public int TrySpawnRandomRockObstacles(int amount)
+    {
+        if (amount <= 0)
+        {
+            return 0;
+        }
+
         EnsureRockObstacleCache();
 
         if (nodeConnections == null || nodeConnections.Count == 0)
         {
-            return false;
+            return 0;
         }
 
         List<int> candidateTileIds = new List<int>();
@@ -784,18 +806,29 @@ public class RouteManager : MonoBehaviour
 
         if (candidateTileIds.Count == 0)
         {
-            return false;
+            return 0;
         }
 
-        int randomIndex = Random.Range(0, candidateTileIds.Count);
-        int targetTileId = candidateTileIds[randomIndex];
-        bool activated = ActivateRockObstacle(targetTileId);
-        if (activated)
+        int spawnTargetCount = Mathf.Min(amount, candidateTileIds.Count);
+        int activatedCount = 0;
+
+        for (int i = 0; i < spawnTargetCount; i++)
         {
+            int randomIndex = Random.Range(0, candidateTileIds.Count);
+            int targetTileId = candidateTileIds[randomIndex];
+            candidateTileIds.RemoveAt(randomIndex);
+
+            bool activated = ActivateRockObstacle(targetTileId);
+            if (!activated)
+            {
+                continue;
+            }
+
+            activatedCount++;
             Debug.Log($"🪨 สุ่มเสกหินที่ tile {targetTileId}");
         }
 
-        return activated;
+        return activatedCount;
     }
 
     public bool IsRockObstacleActive(int tileID)

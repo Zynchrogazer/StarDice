@@ -126,19 +126,27 @@ public class PlayerStatAggregator : MonoBehaviour
         equipmentSpeedBonus += equipmentTotals.speedBonus;
         equipmentDefenseBonus += equipmentTotals.defenseBonus;
 
-        int finalAttack = baseData.attackDamage + passiveAttackBonus + equipmentAttackBonus + player.RuntimeAttackModifier;
-        int finalMaxHealth = Mathf.Max(1, baseData.maxHP + passiveMaxHealthBonus + player.RuntimeMaxHealthModifier);
-        int finalStarBonus = Mathf.Max(0, passiveStarBonus);
-        int finalSpeed = Mathf.Max(0, baseData.speed + passiveSpeedBonus + equipmentSpeedBonus);
-        int finalDefense = Mathf.Max(0, baseData.def + passiveDefenseBonus + equipmentDefenseBonus);
+       // 🟢 เปลี่ยนสูตรคำนวณใหม่: เอาโบนัสจากเลเวล (player.GetLevelBonus...) มาบวกเข้าไปด้วย!
+        int finalAttack = baseData.attackDamage + passiveAttackBonus + equipmentAttackBonus + player.RuntimeAttackModifier + player.GetLevelBonusAttack();
+        
+        int finalMaxHealth = Mathf.Max(1, baseData.maxHP + passiveMaxHealthBonus + player.RuntimeMaxHealthModifier + player.GetLevelBonusMaxHealth());
+        
+        int finalStarBonus = Mathf.Max(0, passiveStarBonus); // ดาวไม่เกี่ยวกับเลเวล ปล่อยไว้เหมือนเดิม
+        
+        int finalSpeed = Mathf.Max(0, baseData.speed + passiveSpeedBonus + equipmentSpeedBonus + player.GetLevelBonusSpeed());
+        
+        int finalDefense = Mathf.Max(0, baseData.def + passiveDefenseBonus + equipmentDefenseBonus + player.GetLevelBonusDefense());
+
 
         int previousMaxHealth = player.MaxHealth;
 
+        // อัปเดตค่าพลังทั้งหมดกลับไปที่ Player
         player.CurrentAttack = finalAttack;
         player.MaxHealth = finalMaxHealth;
         player.CurrentSpeed = finalSpeed;
         player.CurrentDefense = finalDefense;
 
+        // คำนวณส่วนต่างของเลือด เพื่อไม่ให้เลือดเด้งเต็มหรือหดแปลกๆ เวลาเปลี่ยนของ
         int hpDelta = player.MaxHealth - previousMaxHealth;
         player.PlayerHealth = Mathf.Clamp(player.PlayerHealth + hpDelta, 0, player.MaxHealth);
 

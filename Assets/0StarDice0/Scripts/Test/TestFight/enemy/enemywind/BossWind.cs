@@ -163,35 +163,26 @@ public bool isBattleOver = false;
     int bossshieldwater = 0;
     int EnemyFireShield = 0;
     private List<CardData> selectedCards = new List<CardData>();
-     void Start()
+      void Start()
     { Debug.Log(">>> BattleSystem เริ่มทำงานแล้วนะ! <<<");
-
+ GameEventManager.TryAddCount2(1);
        ApplyEquippedItems();
 
-        if (GameData.Instance != null && GameData.Instance.selectedCards.Count > 0)
-        {
-            List<CardData> myHand = new List<CardData>();
+      List<CardData> myHand = DeckManager.GetShuffledCurrentDeck();
 
-        // 2. วนลูปหยิบการ์ดจาก DeckManager (cardUse คือเด็คที่เราจัดไว้)
-        foreach (var card in DeckManager.CurrentCardUse)
+        // 2. เช็คว่ามีไพ่ติดมาจริงๆ ไหม
+        if (myHand.Count > 0)
         {
-            if (card != null) // เช็คกันเหนียว เผื่อเป็นช่องว่าง
+            // 🟢 3. ถ้าอยากให้เริ่มเกมแล้วจั่วขึ้นมือแค่ 4 ใบแรก ให้ตัดลิสต์ตรงนี้ครับ
+            if (myHand.Count > 4)
             {
-                myHand.Add(card);
+                myHand = myHand.GetRange(0, 4); 
             }
-        }
 
-        // 3. (Optional) ถ้าอยากให้เริ่มเกมจั่วแค่ 3 ใบแรก
-        if (myHand.Count > 4)
-        {
-            // ตัดให้เหลือแค่ 3 ใบแรก
-            myHand = myHand.GetRange(0, 4);
-        }
+            Debug.Log($"[BattleSystem] จั่วการ์ดที่สับแล้วขึ้นมือ จำนวน {myHand.Count} ใบ");
 
-        Debug.Log($"[BattleSystem] เจอการ์ดจาก DeckManager จำนวน {myHand.Count} ใบ");
-
-        // 4. ส่งการ์ดเข้าสู่ระบบ UI ของ BattleSystem
-        LoadSelectedCards(myHand);
+            // 4. ส่งการ์ดที่สับแล้วไปโชว์ที่ UI
+            LoadSelectedCards(myHand);
         }
         else
         {
@@ -203,7 +194,6 @@ public bool isBattleOver = false;
         SetupButtons();
         UpdateSkillButtons();
         SetupCardsUI();
-
         if (selectedPlayer.speed >= enemySpeed)
         {
             isPlayerTurn = true;
@@ -484,6 +474,19 @@ public void LoadSelectedCards(List<CardData> cards)
             }
         }
         attackButton.interactable = isPlayerTurn;
+
+        if (cardButtons != null)
+        {
+            for (int i = 0; i < cardButtons.Length; i++)
+            {
+                if (cardButtons[i] != null)
+                {
+                    // ถ้าเป็นเทิร์นผู้เล่น (isPlayerTurn = true) จะกดได้
+                    // ถ้าเป็นเทิร์นศัตรู (isPlayerTurn = false) จะกดไม่ได้
+                    cardButtons[i].interactable = isPlayerTurn;
+                }
+            }
+        }
     }
 
 
@@ -2174,7 +2177,7 @@ public void LoadSelectedCards(List<CardData> cards)
     // ---------------------------------------------------------
     // 🟢 2. ฟังก์ชันหน่วงเวลาตอนตาย (นำไปวางไว้ด้านล่าง)
     // ---------------------------------------------------------
-    private IEnumerator EnemyDeathSequence()
+   private IEnumerator EnemyDeathSequence()
     {
         Debug.Log("💀 ศัตรูตายแล้ว! กำลังรอ 1 วินาที...");
 
@@ -2184,7 +2187,15 @@ public void LoadSelectedCards(List<CardData> cards)
         Debug.Log("🏆 รอครบ 1 วินาทีแล้ว โชว์หน้าต่าง Victory!");
 
         // 2. เด้ง Panel และแจกรางวัล
-      
+int nextLevelToUnlock = 4; // ⚠️ เปลี่ยนเลขนี้เป็นด่านถัดไปที่คุณอยากให้ปลดล็อค (เช่น ชนะด่าน 1 ให้ใส่เลข 2)
+
+        int currentLevelReached = PlayerPrefs.GetInt("levelReached", 1);
+        if (nextLevelToUnlock > currentLevelReached)
+        {
+            PlayerPrefs.SetInt("levelReached", nextLevelToUnlock);
+            PlayerPrefs.Save();
+            Debug.Log($"🔓 บอสตายแล้ว! ปลดล็อคด่านที่ {nextLevelToUnlock} สำเร็จ ลงเซฟโดยตรง!");
+        }
         OpenChest();
         ShowResultPanelVictory("Victory!");
     }

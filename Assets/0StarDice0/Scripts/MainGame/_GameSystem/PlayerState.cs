@@ -357,33 +357,34 @@ public class PlayerState : MonoBehaviour
         OnStatsUpdated?.Invoke();
     }
 
-    private void LevelUpRPG()
+  private void LevelUpRPG()
     {
         CurrentExp -= MaxExp;
         PlayerLevel++;
         MaxExp = Mathf.CeilToInt(MaxExp * 1.2f); // เวลต่อไปยากขึ้น 20%
 
-        // Bonus เมื่อเวลอัป (สไตล์ RPG)
-        MaxHealth += 5;
-        PlayerHealth = MaxHealth; // เลือดเด้งเต็ม
-        CurrentAttack += 1;       // ตีแรงขึ้น
+        Debug.Log($"💪 RPG LEVEL UP! ขึ้นเป็น Lv.{PlayerLevel}");
 
-        if (PlayerLevel % 2 == 0)
+        // 🟢 เปลี่ยนมาสั่งให้ระบบสเตตัสคำนวณพลังใหม่ทั้งหมด (เกราะ + เลเวล)
+        if (selectedPlayerPreset != null)
         {
-            CurrentDefense += 1; // เพิ่ม DEF ทุก ๆ 2 เลเวล
+            RequestAggregatedStatRefresh(selectedPlayerPreset);
         }
 
-        if (PlayerLevel % 5 == 0)
-        {
-            CurrentSpeed += 1; // เพิ่ม SPD ทุก ๆ 5 เลเวล
-        }
-
-        Debug.Log($"💪 RPG LEVEL UP! Lv.{PlayerLevel} (HP: {MaxHealth}, ATK: {CurrentAttack}, SPD: {CurrentSpeed}, DEF: {CurrentDefense})");
+        // เลือดเด้งเต็ม หลังคำนวณ MaxHealth ใหม่เสร็จแล้ว
+        PlayerHealth = MaxHealth; 
 
         // ถ้า EXP ยังเหลือเฟือ ก็ให้เช็คเวลอัปซ้ำ
         if (CurrentExp >= MaxExp) LevelUpRPG();
     }
 
+    // ---------------------------------------------------------
+    // 🟢 ฟังก์ชันสำหรับส่งค่าโบนัสเลเวลไปให้ระบบคำนวณสเตตัส
+    // ---------------------------------------------------------
+    public int GetLevelBonusMaxHealth() => (PlayerLevel - 1) * 5;
+    public int GetLevelBonusAttack() => (PlayerLevel - 1) * 1;
+    public int GetLevelBonusDefense() => PlayerLevel / 2;
+    public int GetLevelBonusSpeed() => PlayerLevel / 5;
   public void RecordBattleWin(int expReward)
     {
         WinCount++;
