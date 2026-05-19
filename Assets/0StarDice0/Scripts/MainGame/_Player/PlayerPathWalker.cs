@@ -39,6 +39,7 @@ public class PlayerPathWalker : MonoBehaviour
     private bool isMoving = false;
     private Transform chosenNodeFromUI;
     private int previousNodeID;
+    private int lastWalkSpriteFrame = -1;
 
     public bool IsExecutingTurn => isExecutingTurn;
     public bool IsMoving => isMoving;
@@ -295,6 +296,8 @@ public class PlayerPathWalker : MonoBehaviour
             audioSource.PlayOneShot(walkSound);
         }
 
+        lastWalkSpriteFrame = -1;
+
         Vector3 startPosition = transform.position;
         Vector3 endPosition = targetNode.position;
 
@@ -332,8 +335,22 @@ public class PlayerPathWalker : MonoBehaviour
         if (spriteRenderer == null || walkStepSprites == null || walkStepSprites.Length == 0)
             return;
 
-        int frame = Mathf.FloorToInt(moveProgress * walkStepSprites.Length) % walkStepSprites.Length;
-        spriteRenderer.sprite = walkStepSprites[Mathf.Clamp(frame, 0, walkStepSprites.Length - 1)];
+        // ถ้ามีสไปรต์เดินแค่ภาพเดียว ให้ล็อกภาพนั้นไปเลยเพื่อกันอาการกระพริบ
+        if (walkStepSprites.Length == 1)
+        {
+            if (spriteRenderer.sprite != walkStepSprites[0])
+                spriteRenderer.sprite = walkStepSprites[0];
+            return;
+        }
+
+        int frame = Mathf.FloorToInt(moveProgress * walkStepSprites.Length);
+        frame = Mathf.Clamp(frame, 0, walkStepSprites.Length - 1);
+
+        if (frame == lastWalkSpriteFrame)
+            return;
+
+        lastWalkSpriteFrame = frame;
+        spriteRenderer.sprite = walkStepSprites[frame];
     }
 
     private void SetIdleSprite()
