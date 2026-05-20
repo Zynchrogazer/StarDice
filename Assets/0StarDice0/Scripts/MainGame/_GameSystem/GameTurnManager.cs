@@ -264,7 +264,10 @@ public class GameTurnManager : MonoBehaviour
         SetState(GameState.Ending);
         PlayerState currentPlayer = CurrentPlayer;
         if (currentPlayer != null)
+        {
+            currentPlayer.TickEndTurnDebuffs();
             Debug.Log($"❌ End Turn: {currentPlayer.name}");
+        }
 
         currentPlayerIndex++;
         if (currentPlayerIndex >= allPlayers.Count)

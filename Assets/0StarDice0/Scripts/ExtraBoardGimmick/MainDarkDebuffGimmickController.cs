@@ -66,7 +66,7 @@ public class MainDarkDebuffGimmickController : MonoBehaviour
             return;
         }
 
-        GameObject target = GameTurnManager.CurrentPlayer != null ? GameTurnManager.CurrentPlayer.gameObject : null;
+        GameObject target = ResolveHumanPlayerTarget();
         bool triggered = TriggerGimmick(target);
         ResetAutoTriggerCounter();
         if (!triggered)
@@ -76,8 +76,25 @@ public class MainDarkDebuffGimmickController : MonoBehaviour
     [ContextMenu("Trigger MainDark Debuff Gimmick (Current Player)")]
     public bool TriggerGimmickOnCurrentPlayer()
     {
-        GameObject target = GameTurnManager.CurrentPlayer != null ? GameTurnManager.CurrentPlayer.gameObject : null;
-        return TriggerGimmick(target);
+        return TriggerGimmick(ResolveHumanPlayerTarget());
+    }
+
+
+    private static GameObject ResolveHumanPlayerTarget()
+    {
+        if (GameTurnManager.CurrentPlayer != null && !GameTurnManager.CurrentPlayer.isAI)
+            return GameTurnManager.CurrentPlayer.gameObject;
+
+        if (GameTurnManager.TryGet(out var gameTurnManager) && gameTurnManager.allPlayers != null)
+        {
+            foreach (PlayerState player in gameTurnManager.allPlayers)
+            {
+                if (player != null && !player.isAI)
+                    return player.gameObject;
+            }
+        }
+
+        return null;
     }
 
     public bool TriggerGimmick(GameObject target)
@@ -98,7 +115,7 @@ public class MainDarkDebuffGimmickController : MonoBehaviour
         }
 
         PlayerState playerState = target.GetComponent<PlayerState>();
-        if (playerState == null)
+        if (playerState == null || playerState.isAI)
         {
             return false;
         }

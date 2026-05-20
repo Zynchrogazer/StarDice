@@ -9,25 +9,10 @@ public class PlayerUIController : MonoBehaviour
     [SerializeField] private PlayerStatusPanelRefs fallbackPanelRefs;
     [SerializeField] private PlayerGlobalHudRefs globalHudRefs;
 
-    [Header("Debuff Presentation")]
-    public GameObject debuffIconPrefab;
-    public Vector2 debuffIconSize = new Vector2(32f, 32f);
-    public Sprite burnDebuffSprite;
-    public Sprite iceDebuffSprite;
-public Sprite curseDebuffSprite;
-public Sprite poisonDebuffSprite;
-public Sprite SleepDebuffSprite;
-
     private PlayerState myPlayer;
     private ElementButtonManager elementButtonManager;
     private Transform boundStatusRoot;
     private PlayerStatusPanelRefs boundPanelRefs;
-    private PlayerDebuffPresenter debuffPresenter;
-
-    private void Awake()
-    {
-        debuffPresenter = new PlayerDebuffPresenter(debuffIconPrefab, debuffIconSize, burnDebuffSprite, iceDebuffSprite,curseDebuffSprite, poisonDebuffSprite,SleepDebuffSprite);
-    }
 
     private void Update()
     {
@@ -62,15 +47,24 @@ public Sprite SleepDebuffSprite;
 
     private void RefreshUI()
     {
-        if (boundPanelRefs == null)
-        {
-            PlayerGlobalHudPresenter.Present(globalHudRefs, myPlayer);
-            return;
-        }
+        if (boundPanelRefs != null)
+            PlayerStatsPanelPresenter.Present(boundPanelRefs, myPlayer);
 
-        PlayerStatsPanelPresenter.Present(boundPanelRefs, myPlayer);
         PlayerGlobalHudPresenter.Present(globalHudRefs, myPlayer);
-        debuffPresenter.Present(globalHudRefs, myPlayer);
+        SyncSimpleDebuffUI();
+    }
+
+    private void SyncSimpleDebuffUI()
+    {
+        if (globalHudRefs == null)
+            return;
+
+        SimpleDebuffUI simpleDebuffUI = globalHudRefs.ResolveSimpleDebuffUI();
+        if (simpleDebuffUI == null)
+            return;
+
+        if (simpleDebuffUI.playerState != myPlayer)
+            simpleDebuffUI.playerState = myPlayer;
     }
 
     private void EnsureBindings()
@@ -98,7 +92,6 @@ public Sprite SleepDebuffSprite;
 
         boundStatusRoot = activeStatusRoot;
         boundPanelRefs = null;
-        debuffPresenter.ResetBindings();
     }
 
     private Transform ResolveActiveStatusRoot()

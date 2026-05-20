@@ -484,11 +484,6 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 44478517939995297, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
   m_PrefabInstance: {fileID: 1477739672992296933}
   m_PrefabAsset: {fileID: 0}
---- !u!224 &226102900 stripped
-RectTransform:
-  m_CorrespondingSourceObject: {fileID: 342469640803314363, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
-  m_PrefabInstance: {fileID: 1477739672992296933}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &247381556 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 241711575580759257, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
@@ -2353,11 +2348,6 @@ MonoBehaviour:
 --- !u!1 &1814923771 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1732008200156114077, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
-  m_PrefabInstance: {fileID: 1477739672992296933}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &1818944654 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 7581217828769665568, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
   m_PrefabInstance: {fileID: 1477739672992296933}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &1821855899 stripped
@@ -49998,7 +49988,7 @@ PrefabInstance:
     - target: {fileID: 4899641596940858081, guid: 0a40572749428194ab8ec1ec2928d74a, type: 3}
       propertyPath: debuffIconPrefab
       value: 
-      objectReference: {fileID: 1818944654}
+      objectReference: {fileID: 0}
     - target: {fileID: 5108979340304688292, guid: 0a40572749428194ab8ec1ec2928d74a, type: 3}
       propertyPath: levelText
       value: 
@@ -50012,6 +50002,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 226102895}
     - target: {fileID: 5108979340304688292, guid: 0a40572749428194ab8ec1ec2928d74a, type: 3}
+      propertyPath: simpleDebuffUI
+      value: 
+      objectReference: {fileID: 2641210735849775620}
+    - target: {fileID: 5108979340304688292, guid: 0a40572749428194ab8ec1ec2928d74a, type: 3}
       propertyPath: debuffTooltipRoot
       value: 
       objectReference: {fileID: 226102899}
@@ -50022,7 +50016,7 @@ PrefabInstance:
     - target: {fileID: 5108979340304688292, guid: 0a40572749428194ab8ec1ec2928d74a, type: 3}
       propertyPath: debuffIconContainer
       value: 
-      objectReference: {fileID: 226102900}
+      objectReference: {fileID: 0}
     - target: {fileID: 8243921093852075540, guid: 0a40572749428194ab8ec1ec2928d74a, type: 3}
       propertyPath: 'buttons.Array.data[0]'
       value: 
@@ -50076,6 +50070,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0a40572749428194ab8ec1ec2928d74a, type: 3}
+--- !u!114 &2641210735849775620 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1594534279502797025, guid: 0a40572749428194ab8ec1ec2928d74a, type: 3}
+  m_PrefabInstance: {fileID: 2641210735849775619}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79aa5c0e7de9b1242844a9a1ef7bc019, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &2643649382266108407
 GameObject:
   m_ObjectHideFlags: 0

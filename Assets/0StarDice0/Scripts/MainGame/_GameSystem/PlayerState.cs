@@ -325,13 +325,38 @@ public class PlayerState : MonoBehaviour
         if (!DebuffBurn || DebuffBurnTurnsRemaining <= 0) return false;
 
         TakeDamage(burnDamage);
-
-        DebuffBurnTurnsRemaining = Mathf.Max(0, DebuffBurnTurnsRemaining - 1);
-        DebuffBurn = DebuffBurnTurnsRemaining > 0;
-        if (!DebuffBurn)
-            burnDebuffAppliedOrder = 0;
-        OnStatsUpdated?.Invoke();
         return true;
+    }
+
+    public bool TickEndTurnDebuffs()
+    {
+        bool changed = false;
+
+        if (DebuffBurn && DebuffBurnTurnsRemaining > 0)
+        {
+            DebuffBurnTurnsRemaining = Mathf.Max(0, DebuffBurnTurnsRemaining - 1);
+            DebuffBurn = DebuffBurnTurnsRemaining > 0;
+            if (!DebuffBurn)
+                burnDebuffAppliedOrder = 0;
+            changed = true;
+        }
+
+        if (backwardCurseTurns > 0)
+        {
+            backwardCurseTurns = Mathf.Max(0, backwardCurseTurns - 1);
+            changed = true;
+        }
+
+        if (poisonDebuffTurns > 0)
+        {
+            poisonDebuffTurns = Mathf.Max(0, poisonDebuffTurns - 1);
+            changed = true;
+        }
+
+        if (changed)
+            OnStatsUpdated?.Invoke();
+
+        return changed;
     }
 
     private static int NextDebuffApplyOrder()

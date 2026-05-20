@@ -2528,11 +2528,6 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 44478517939995297, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
   m_PrefabInstance: {fileID: 737406307}
   m_PrefabAsset: {fileID: 0}
---- !u!224 &1063790992 stripped
-RectTransform:
-  m_CorrespondingSourceObject: {fileID: 342469640803314363, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
-  m_PrefabInstance: {fileID: 737406307}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1077905576
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2640,7 +2635,7 @@ PrefabInstance:
     - target: {fileID: 5108979340304688292, guid: 0a40572749428194ab8ec1ec2928d74a, type: 3}
       propertyPath: debuffIconContainer
       value: 
-      objectReference: {fileID: 1063790992}
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -4939,7 +4934,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: 6d13fda6d68721e499eabfaec0d2df37, type: 3}
+  m_Sprite: {fileID: 21300000, guid: ca55c2f1873ea6c469e3f03663613b52, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -5649,6 +5644,11 @@ MonoBehaviour:
   hitRockSound: {fileID: 0}
   soundVolume: 0.8
   eventManager: {fileID: 0}
+  hopHeight: 0.35
+  hopDurationPerTile: 0.2
+  spriteRenderer: {fileID: 0}
+  idleSprite: {fileID: 0}
+  walkStepSprites: []
   currentNodeID: 0
 --- !u!23 &980409088161711044
 MeshRenderer:
@@ -16986,6 +16986,12 @@ MonoBehaviour:
   hitRockSound: {fileID: 0}
   soundVolume: 0.8
   eventManager: {fileID: 0}
+  hopHeight: 0.35
+  hopDurationPerTile: 0.2
+  spriteRenderer: {fileID: 624021101760724925}
+  idleSprite: {fileID: 21300000, guid: ca55c2f1873ea6c469e3f03663613b52, type: 3}
+  walkStepSprites:
+  - {fileID: 21300000, guid: 6d13fda6d68721e499eabfaec0d2df37, type: 3}
   currentNodeID: 0
 --- !u!1 &7286975624060778825
 GameObject:
