@@ -122,17 +122,15 @@ public class PlayerPathWalker : MonoBehaviour
         // ---------------------------------------------------------
         if (myState != null && myState.backwardCurseTurns > 0)
         {
-            myState.backwardCurseTurns--; // หักไป 1 เทิร์น
-            Debug.Log($"<color=purple>😈 ผู้เล่น {name} ติดคำสาป! บังคับเดินถอยหลัง (เหลืออีก {myState.backwardCurseTurns} เทิร์น)</color>");
+            Debug.Log($"<color=purple>😈 ผู้เล่น {name} ติดคำสาป! บังคับเดินถอยหลัง (คงเหลือ {myState.backwardCurseTurns} เทิร์น เมื่อเริ่มเดิน)</color>");
         }
 
         if (myState != null && myState.poisonDebuffTurns > 0)
         {
             int poisonDamage = steps * 2; 
             myState.TakeDamage(poisonDamage); 
-            myState.poisonDebuffTurns--; 
             
-            Debug.Log($"<color=green>☠️ พิษกำเริบ! ทอยได้ {steps} ก้าว โดนดาเมจ {poisonDamage} (เหลือพิษอีก {myState.poisonDebuffTurns} เทิร์น)</color>");
+            Debug.Log($"<color=green>☠️ พิษกำเริบ! ทอยได้ {steps} ก้าว โดนดาเมจ {poisonDamage} (คงเหลือ {myState.poisonDebuffTurns} เทิร์น เมื่อเริ่มเดิน)</color>");
         }
 
         StartCoroutine(MoveTurnCoroutine());

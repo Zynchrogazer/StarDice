@@ -112,13 +112,6 @@ MonoBehaviour:
   elementPanelRegistry: {fileID: 8404951470289726877}
   fallbackPanelRefs: {fileID: 0}
   globalHudRefs: {fileID: 5108979340304688292}
-  debuffIconPrefab: {fileID: 0}
-  debuffIconSize: {x: 64, y: 64}
-  burnDebuffSprite: {fileID: 695775810, guid: 080cb6d98b00c2645b2c41df5f69bc78, type: 3}
-  iceDebuffSprite: {fileID: 1401011104, guid: 080cb6d98b00c2645b2c41df5f69bc78, type: 3}
-  curseDebuffSprite: {fileID: -606357570, guid: 080cb6d98b00c2645b2c41df5f69bc78, type: 3}
-  poisonDebuffSprite: {fileID: 2047992146, guid: 080cb6d98b00c2645b2c41df5f69bc78, type: 3}
-  SleepDebuffSprite: {fileID: 1812906440, guid: 080cb6d98b00c2645b2c41df5f69bc78, type: 3}
 --- !u!114 &8404951470289726877
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -156,13 +149,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a293c1a130ef4b8fa4ad2d65ab62c5aa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  simpleDebuffUI: {fileID: 1594534279502797025}
   currentHpText: {fileID: 0}
   creditText: {fileID: 0}
   levelText: {fileID: 0}
-  debuffLegacyText: {fileID: 0}
-  debuffIconContainer: {fileID: 0}
-  debuffTooltipRoot: {fileID: 0}
-  debuffTooltipText: {fileID: 0}
 --- !u!114 &1594534279502797025
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -420,7 +420,7 @@ PrefabInstance:
     - target: {fileID: 4899641596940858081, guid: 0a40572749428194ab8ec1ec2928d74a, type: 3}
       propertyPath: debuffIconPrefab
       value: 
-      objectReference: {fileID: 1901799073}
+      objectReference: {fileID: 0}
     - target: {fileID: 5108979340304688292, guid: 0a40572749428194ab8ec1ec2928d74a, type: 3}
       propertyPath: levelText
       value: 
@@ -444,7 +444,7 @@ PrefabInstance:
     - target: {fileID: 5108979340304688292, guid: 0a40572749428194ab8ec1ec2928d74a, type: 3}
       propertyPath: debuffIconContainer
       value: 
-      objectReference: {fileID: 1829145809}
+      objectReference: {fileID: 0}
     - target: {fileID: 8243921093852075540, guid: 0a40572749428194ab8ec1ec2928d74a, type: 3}
       propertyPath: buttons.Array.size
       value: 6
@@ -3408,11 +3408,6 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 44478517939995297, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
   m_PrefabInstance: {fileID: 1127151008}
   m_PrefabAsset: {fileID: 0}
---- !u!224 &1829145809 stripped
-RectTransform:
-  m_CorrespondingSourceObject: {fileID: 342469640803314363, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
-  m_PrefabInstance: {fileID: 1127151008}
-  m_PrefabAsset: {fileID: 0}
 --- !u!114 &1829145810 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 8633455023325299189, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
@@ -3446,11 +3441,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!1 &1901799073 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 7581217828769665568, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
-  m_PrefabInstance: {fileID: 1127151008}
-  m_PrefabAsset: {fileID: 0}
 --- !u!114 &1901799074 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 2997247708037144309, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
@@ -5091,7 +5081,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: 6d13fda6d68721e499eabfaec0d2df37, type: 3}
+  m_Sprite: {fileID: 21300000, guid: ca55c2f1873ea6c469e3f03663613b52, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -5370,6 +5360,11 @@ MonoBehaviour:
   hitRockSound: {fileID: 0}
   soundVolume: 0.8
   eventManager: {fileID: 0}
+  hopHeight: 0.35
+  hopDurationPerTile: 0.2
+  spriteRenderer: {fileID: 0}
+  idleSprite: {fileID: 0}
+  walkStepSprites: []
   currentNodeID: 0
 --- !u!1 &977817396639232508
 GameObject:
@@ -14771,6 +14766,12 @@ MonoBehaviour:
   hitRockSound: {fileID: 8300000, guid: 7e26c9daf4c32483b9c2790e662d3f1b, type: 3}
   soundVolume: 0.8
   eventManager: {fileID: 0}
+  hopHeight: 0.35
+  hopDurationPerTile: 0.2
+  spriteRenderer: {fileID: 624021101760724925}
+  idleSprite: {fileID: 21300000, guid: ca55c2f1873ea6c469e3f03663613b52, type: 3}
+  walkStepSprites:
+  - {fileID: 21300000, guid: 6d13fda6d68721e499eabfaec0d2df37, type: 3}
   currentNodeID: 0
 --- !u!61 &7285371958540634914
 BoxCollider2D:
