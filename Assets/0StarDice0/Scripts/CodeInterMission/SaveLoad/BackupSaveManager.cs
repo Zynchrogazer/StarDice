@@ -192,7 +192,6 @@ public class BackupSaveManager : MonoBehaviour
         PlayerPrefs.DeleteKey("CurrentDeckData");
         //PlayerData.ResetSharedCredit();
         SkillManager.ClearSavedUnlockedSkills();
-        PassiveSkillManager.ClearSavedProgress();
         PlayerDataManager.ClearSavedEquipSlots();
         EquipmentManager.ClearSavedOwnershipStates();
 

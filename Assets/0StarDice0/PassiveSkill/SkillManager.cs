@@ -41,7 +41,7 @@ public class SkillManager : MonoBehaviour
 
         if (GetAvailableCredit() < skill.costPoint) return false;
 
-        if (skill.requiredSkills != null)
+        if (skill.useRequiredSkills && skill.requiredSkills != null)
         {
             foreach (var req in skill.requiredSkills)
             {
