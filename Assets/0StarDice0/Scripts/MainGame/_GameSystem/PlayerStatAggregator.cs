@@ -22,6 +22,23 @@ public class PlayerStatAggregator : MonoBehaviour
         OnAggregatorAvailable?.Invoke(this);
     }
 
+
+    private void OnEnable()
+    {
+        GameEventManager.OnBoardSceneReady += RefreshStatsAfterBoardReady;
+    }
+
+    private void OnDisable()
+    {
+        GameEventManager.OnBoardSceneReady -= RefreshStatsAfterBoardReady;
+    }
+
+    private void RefreshStatsAfterBoardReady()
+    {
+        // รองรับ flow RuntimeHub + additive scene: กลับเข้า board แล้วคำนวณจาก save ล่าสุดทันที
+        RefreshCurrentPlayerStats();
+    }
+
     private void ResolveManagers()
     {
         ResolveSkillManager();
@@ -127,6 +144,7 @@ public class PlayerStatAggregator : MonoBehaviour
 
     private SkillPassiveTotals ResolveUnlockedSkillTotals()
     {
+        // ถ้า SkillManager อยู่คนละ scene/ถูก unload ให้ fallback ไปอ่านจาก save เสมอ
         SkillManager resolvedSkillManager = ResolveSkillManager();
         if (resolvedSkillManager != null)
             return resolvedSkillManager.GetUnlockedPassiveTotals();

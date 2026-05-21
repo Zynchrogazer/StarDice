@@ -2,6 +2,16 @@
 
 public class PlayerUIController : MonoBehaviour
 {
+    private enum UiBootstrapPhase
+    {
+        WaitingBoardReady,
+        ResolvePlayer,
+        ResolveBindings,
+        ResolveAggregator,
+        RefreshStats,
+        Ready
+    }
+
     [Header("Preferred explicit registry")]
     [SerializeField] private ElementStatusPanelRegistry elementPanelRegistry;
 
@@ -11,42 +21,114 @@ public class PlayerUIController : MonoBehaviour
 
     private PlayerState myPlayer;
     private ElementButtonManager elementButtonManager;
+    private PlayerStatAggregator playerStatAggregator;
     private Transform boundStatusRoot;
     private PlayerStatusPanelRefs boundPanelRefs;
+    private UiBootstrapPhase phase = UiBootstrapPhase.WaitingBoardReady;
+
+    private void OnEnable()
+    {
+        ResetBootstrap(UiBootstrapPhase.ResolvePlayer);
+    }
+
+    private void OnDisable()
+    {
+    }
 
     private void Update()
     {
-        EnsureBindings();
+        if (ShouldRestartBootstrapForBoardEntry())
+            ResetBootstrap(UiBootstrapPhase.ResolvePlayer);
 
-        if (myPlayer == null)
-        {
-            FindHumanPlayer();
-            return;
-        }
-
-        RefreshUI();
+        AdvanceBootstrap();
+        if (phase == UiBootstrapPhase.Ready)
+            RefreshUI();
     }
 
-    private void FindHumanPlayer()
+    private bool ShouldRestartBootstrapForBoardEntry()
     {
-        if (GameTurnManager.TryGet(out var gameTurnManager) && gameTurnManager.allPlayers != null)
+        if (!GameTurnManager.TryGet(out var turnManager) || turnManager == null)
+            return false;
+
+        return turnManager.TryConsumeBoardEntryBootstrap();
+    }
+
+    private void ResetBootstrap(UiBootstrapPhase startPhase)
+    {
+        phase = startPhase;
+        boundStatusRoot = null;
+        boundPanelRefs = null;
+    }
+
+    private void AdvanceBootstrap()
+    {
+        switch (phase)
         {
-            // วนหาในลิสต์ผู้เล่นทั้งหมด
-            foreach (var p in gameTurnManager.allPlayers)
-            {
-                // เงื่อนไข: เอาตัวที่ไม่ใช่ null และ ไม่ใช่ AI
-                if (p != null && !p.isAI)
-                {
-                    myPlayer = p;
-                    Debug.Log($"[UI] 🔒 ล็อคการแสดงผลที่ผู้เล่น: {myPlayer.name}");
-                    break; // เจอแล้วหยุดหาเลย
-                }
-            }
+            case UiBootstrapPhase.WaitingBoardReady:
+                return;
+
+            case UiBootstrapPhase.ResolvePlayer:
+                if (!TryResolveHumanPlayer())
+                    return;
+                phase = UiBootstrapPhase.ResolveBindings;
+                return;
+
+            case UiBootstrapPhase.ResolveBindings:
+                EnsureBindings();
+                if (boundPanelRefs == null || !boundPanelRefs.HasCoreBindings())
+                    return;
+                phase = UiBootstrapPhase.ResolveAggregator;
+                return;
+
+            case UiBootstrapPhase.ResolveAggregator:
+                if (!TryResolveAggregator())
+                    return;
+                phase = UiBootstrapPhase.RefreshStats;
+                return;
+
+            case UiBootstrapPhase.RefreshStats:
+                playerStatAggregator.RefreshPlayerStats(myPlayer, myPlayer.selectedPlayerPreset);
+                phase = UiBootstrapPhase.Ready;
+                return;
+
+            case UiBootstrapPhase.Ready:
+                return;
         }
+    }
+
+    private bool TryResolveHumanPlayer()
+    {
+        if (myPlayer != null)
+            return true;
+
+        if (!GameTurnManager.TryGet(out var gameTurnManager) || gameTurnManager.allPlayers == null)
+            return false;
+
+        foreach (var p in gameTurnManager.allPlayers)
+        {
+            if (p == null || p.isAI) continue;
+            myPlayer = p;
+            Debug.Log($"[UI] 🔒 ล็อคการแสดงผลที่ผู้เล่น: {myPlayer.name}");
+            return true;
+        }
+
+        return false;
+    }
+
+    private bool TryResolveAggregator()
+    {
+        if (playerStatAggregator != null)
+            return true;
+
+        playerStatAggregator = FindFirstObjectByType<PlayerStatAggregator>();
+        return playerStatAggregator != null;
     }
 
     private void RefreshUI()
     {
+        if (myPlayer == null)
+            return;
+
         if (boundPanelRefs != null)
             PlayerStatsPanelPresenter.Present(boundPanelRefs, myPlayer);
 
@@ -80,9 +162,13 @@ public class PlayerUIController : MonoBehaviour
             boundPanelRefs = explicitPanelRefs;
         }
         else if (activeStatusRoot != null)
+        {
             BindPanelRefs(activeStatusRoot);
+        }
         else if (fallbackPanelRefs != null)
+        {
             boundPanelRefs = fallbackPanelRefs;
+        }
     }
 
     private void RebindIfStatusRootChanged(Transform activeStatusRoot)
@@ -148,9 +234,7 @@ public class PlayerUIController : MonoBehaviour
 
         PlayerStatusPanelRefs panelRefs = statusRoot.GetComponent<PlayerStatusPanelRefs>();
         if (panelRefs == null)
-        {
             panelRefs = statusRoot.gameObject.AddComponent<PlayerStatusPanelRefs>();
-        }
 
         panelRefs.BindFromRoot(statusRoot);
         boundPanelRefs = panelRefs.HasCoreBindings() ? panelRefs : fallbackPanelRefs;
