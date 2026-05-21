@@ -156,7 +156,7 @@ public class PlayerStatAggregator : MonoBehaviour
         if (unlockedSet.Count == 0)
             return totals;
 
-        PassiveSkillData[] allSkills = Resources.LoadAll<PassiveSkillData>("");
+        PassiveSkillData[] allSkills = PassiveSkillCatalog.GetAll();
         for (int i = 0; i < allSkills.Length; i++)
         {
             PassiveSkillData passive = allSkills[i];

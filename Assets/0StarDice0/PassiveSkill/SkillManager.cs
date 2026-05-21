@@ -112,7 +112,7 @@ public class SkillManager : MonoBehaviour
         EnsureLoadedForCurrentPlayer();
 
         SkillPassiveTotals totals = new SkillPassiveTotals();
-        PassiveSkillData[] allSkills = Resources.LoadAll<PassiveSkillData>("");
+        PassiveSkillData[] allSkills = PassiveSkillCatalog.GetAll();
         foreach (var passive in allSkills)
         {
             if (passive == null || !IsUnlocked(passive)) continue;
