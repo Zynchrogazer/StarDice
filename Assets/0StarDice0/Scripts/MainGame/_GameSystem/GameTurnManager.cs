@@ -45,10 +45,6 @@ public class GameTurnManager : MonoBehaviour
     public List<PlayerState> allPlayers = new List<PlayerState>();
     public int currentPlayerIndex = 0;
 
-    // one-shot state: ให้ระบบ UI binding ใช้ได้เพียงครั้งเดียวต่อการเข้า board 1 รอบ
-    private int boardEntryVersion = 0;
-    private int consumedBoardEntryVersionForUi = -1;
-
     [Header("References (Refactor Prep)")]
     [SerializeField] private DiceRollerFromPNG diceRoller;
     [SerializeField] private GameEventManager gameEventManager;
@@ -74,20 +70,6 @@ public class GameTurnManager : MonoBehaviour
     {
         player = CurrentPlayer;
         return player != null;
-    }
-
-    public bool TryConsumeBoardEntryBootstrap()
-    {
-        if (consumedBoardEntryVersionForUi == boardEntryVersion)
-            return false;
-
-        consumedBoardEntryVersionForUi = boardEntryVersion;
-        return true;
-    }
-
-    private void MarkBoardEntryReady()
-    {
-        boardEntryVersion++;
     }
 
     // ===== UNITY =====
@@ -116,7 +98,6 @@ public class GameTurnManager : MonoBehaviour
         RefreshPlayers(); // ✅ จัดแถวทันทีที่เริ่ม
         currentPlayerIndex = 0; // ✅ มั่นใจว่าเริ่มที่คนแรก (Human)
 
-        MarkBoardEntryReady();
         StartCoroutine(StartTurnRoutine());
     }
 
@@ -413,7 +394,6 @@ public class GameTurnManager : MonoBehaviour
         if (ResolveGameEventManager() != null) ResolveGameEventManager().ResetEventStatus();
 
         Debug.Log($"[Manager] ✅ กลับจาก Battle แล้ว ส่งต่อเทิร์นให้: {CurrentPlayer?.name}");
-        MarkBoardEntryReady();
         StartCoroutine(StartTurnRoutine());
     }
 
