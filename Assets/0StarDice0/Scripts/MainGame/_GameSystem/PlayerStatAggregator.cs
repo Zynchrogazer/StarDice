@@ -2,10 +2,9 @@
 
 public class PlayerStatAggregator : MonoBehaviour
 {
-    private const string UnlockedSkillsSaveKey = "PassiveUnlockedSkills_SHARED";
-
     public static event System.Action<PlayerStatAggregator> OnAggregatorAvailable;
 
+    [SerializeField] private PassiveSkillManager passiveSkillManager;
     [SerializeField] private SkillManager skillManager;
     [SerializeField] private PlayerDataManager playerDataManager;
 
@@ -22,27 +21,19 @@ public class PlayerStatAggregator : MonoBehaviour
         OnAggregatorAvailable?.Invoke(this);
     }
 
-
-    private void OnEnable()
-    {
-        GameEventManager.OnBoardSceneReady += RefreshStatsAfterBoardReady;
-    }
-
-    private void OnDisable()
-    {
-        GameEventManager.OnBoardSceneReady -= RefreshStatsAfterBoardReady;
-    }
-
-    private void RefreshStatsAfterBoardReady()
-    {
-        // รองรับ flow RuntimeHub + additive scene: กลับเข้า board แล้วคำนวณจาก save ล่าสุดทันที
-        RefreshCurrentPlayerStats();
-    }
-
     private void ResolveManagers()
     {
+        ResolvePassiveSkillManager();
         ResolveSkillManager();
         ResolvePlayerDataManager();
+    }
+
+    private PassiveSkillManager ResolvePassiveSkillManager()
+    {
+        if (passiveSkillManager == null)
+            passiveSkillManager = FindFirstObjectByType<PassiveSkillManager>();
+
+        return passiveSkillManager;
     }
 
     private SkillManager ResolveSkillManager()
@@ -103,26 +94,48 @@ public class PlayerStatAggregator : MonoBehaviour
         if (baseData == null)
             return;
 
-        SkillPassiveTotals unlockedSkillTotals = ResolveUnlockedSkillTotals();
+        int passiveAttackBonus = 0;
+        int passiveMaxHealthBonus = 0;
+        int passiveStarBonus = 0;
+        int passiveSpeedBonus = 0;
+        int passiveDefenseBonus = 0;
+        int equipmentAttackBonus = 0;
+        int equipmentSpeedBonus = 0;
+        int equipmentDefenseBonus = 0;
+
+        PassiveSkillManager passiveManager = ResolvePassiveSkillManager();
+        if (passiveManager != null)
+        {
+            passiveAttackBonus += passiveManager.GetAttackBonusAmount();
+            passiveStarBonus += passiveManager.GetStarGainBonusAmount();
+        }
+
+        SkillManager resolvedSkillManager = ResolveSkillManager();
+        if (resolvedSkillManager != null)
+        {
+            SkillPassiveTotals totals = resolvedSkillManager.GetUnlockedPassiveTotals();
+            passiveAttackBonus += totals.attackBonus;
+            passiveMaxHealthBonus += totals.maxHpBonus;
+            passiveStarBonus += totals.starBonus;
+            passiveSpeedBonus += totals.speedBonus;
+            passiveDefenseBonus += totals.defenseBonus;
+        }
+
         EquipmentStatTotals equipmentTotals = GetEquippedStatTotals();
+        equipmentAttackBonus += equipmentTotals.attackBonus;
+        equipmentSpeedBonus += equipmentTotals.speedBonus;
+        equipmentDefenseBonus += equipmentTotals.defenseBonus;
 
        // 🟢 เปลี่ยนสูตรคำนวณใหม่: เอาโบนัสจากเลเวล (player.GetLevelBonus...) มาบวกเข้าไปด้วย!
-        int finalAttack = baseData.attackDamage
-            + unlockedSkillTotals.attackBonus
-            + equipmentTotals.attackBonus
-            + player.RuntimeAttackModifier
-            + player.GetLevelBonusAttack();
+        int finalAttack = baseData.attackDamage + passiveAttackBonus + equipmentAttackBonus + player.RuntimeAttackModifier + player.GetLevelBonusAttack();
         
-        int finalMaxHealth = Mathf.Max(1, baseData.maxHP
-            + unlockedSkillTotals.maxHpBonus
-            + player.RuntimeMaxHealthModifier
-            + player.GetLevelBonusMaxHealth());
+        int finalMaxHealth = Mathf.Max(1, baseData.maxHP + passiveMaxHealthBonus + player.RuntimeMaxHealthModifier + player.GetLevelBonusMaxHealth());
         
-        int finalStarBonus = Mathf.Max(0, unlockedSkillTotals.starBonus);
+        int finalStarBonus = Mathf.Max(0, passiveStarBonus); // ดาวไม่เกี่ยวกับเลเวล ปล่อยไว้เหมือนเดิม
         
-        int finalSpeed = Mathf.Max(0, baseData.speed + unlockedSkillTotals.speedBonus + equipmentTotals.speedBonus + player.GetLevelBonusSpeed());
+        int finalSpeed = Mathf.Max(0, baseData.speed + passiveSpeedBonus + equipmentSpeedBonus + player.GetLevelBonusSpeed());
         
-        int finalDefense = Mathf.Max(0, baseData.def + unlockedSkillTotals.defenseBonus + equipmentTotals.defenseBonus + player.GetLevelBonusDefense());
+        int finalDefense = Mathf.Max(0, baseData.def + passiveDefenseBonus + equipmentDefenseBonus + player.GetLevelBonusDefense());
 
 
         int previousMaxHealth = player.MaxHealth;
@@ -140,55 +153,6 @@ public class PlayerStatAggregator : MonoBehaviour
         player.PassiveStarGainBonus = finalStarBonus;
 
         player.NotifyStatsUpdated();
-    }
-
-    private SkillPassiveTotals ResolveUnlockedSkillTotals()
-    {
-        // ถ้า SkillManager อยู่คนละ scene/ถูก unload ให้ fallback ไปอ่านจาก save เสมอ
-        SkillManager resolvedSkillManager = ResolveSkillManager();
-        if (resolvedSkillManager != null)
-            return resolvedSkillManager.GetUnlockedPassiveTotals();
-
-        return LoadUnlockedPassiveTotalsFromSave();
-    }
-
-    private static SkillPassiveTotals LoadUnlockedPassiveTotalsFromSave()
-    {
-        SkillPassiveTotals totals = new SkillPassiveTotals();
-        string serializedSkills = PlayerPrefs.GetString(UnlockedSkillsSaveKey, string.Empty);
-        if (string.IsNullOrWhiteSpace(serializedSkills))
-            return totals;
-
-        string[] unlockedSkillIds = serializedSkills.Split('|');
-        if (unlockedSkillIds == null || unlockedSkillIds.Length == 0)
-            return totals;
-
-        System.Collections.Generic.HashSet<string> unlockedSet = new System.Collections.Generic.HashSet<string>();
-        for (int i = 0; i < unlockedSkillIds.Length; i++)
-        {
-            string skillId = unlockedSkillIds[i];
-            if (!string.IsNullOrWhiteSpace(skillId))
-                unlockedSet.Add(skillId);
-        }
-
-        if (unlockedSet.Count == 0)
-            return totals;
-
-        PassiveSkillData[] allSkills = Resources.LoadAll<PassiveSkillData>("");
-        for (int i = 0; i < allSkills.Length; i++)
-        {
-            PassiveSkillData passive = allSkills[i];
-            if (passive == null || !unlockedSet.Contains(passive.skillID))
-                continue;
-
-            totals.attackBonus += passive.bonusAttack;
-            totals.maxHpBonus += passive.bonusMaxHP;
-            totals.starBonus += passive.bonusStar;
-            totals.speedBonus += passive.bonusSpeed;
-            totals.defenseBonus += passive.bonusDefense;
-        }
-
-        return totals;
     }
 }
 
