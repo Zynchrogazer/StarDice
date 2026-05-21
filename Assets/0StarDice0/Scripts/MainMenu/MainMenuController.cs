@@ -79,7 +79,6 @@ public class MainMenuController : MonoBehaviour
     private void ResetSharedProgressForNewGame()
     {
         SkillManager.ClearSavedUnlockedSkills();
-        PassiveSkillManager.ClearSavedProgress();
     }
 
     private void ResetEquippedItemsForNewGame()
