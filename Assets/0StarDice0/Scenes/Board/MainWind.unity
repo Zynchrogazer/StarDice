@@ -13911,11 +13911,6 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 44478517939995297, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
   m_PrefabInstance: {fileID: 774394968}
   m_PrefabAsset: {fileID: 0}
---- !u!224 &501024258 stripped
-RectTransform:
-  m_CorrespondingSourceObject: {fileID: 342469640803314363, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
-  m_PrefabInstance: {fileID: 774394968}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &504336314
 GameObject:
   m_ObjectHideFlags: 0
@@ -26850,7 +26845,7 @@ PrefabInstance:
     - target: {fileID: 5108979340304688292, guid: 0a40572749428194ab8ec1ec2928d74a, type: 3}
       propertyPath: debuffIconContainer
       value: 
-      objectReference: {fileID: 501024258}
+      objectReference: {fileID: 0}
     - target: {fileID: 6044677963202408386, guid: 0a40572749428194ab8ec1ec2928d74a, type: 3}
       propertyPath: debuffImage
       value: 
@@ -39936,6 +39931,22 @@ PrefabInstance:
       propertyPath: moveSpeed
       value: 4
       objectReference: {fileID: 0}
+    - target: {fileID: 2761467947554564247, guid: f4f70568a09330342b88e5c13b680a83, type: 3}
+      propertyPath: idleSprite
+      value: 
+      objectReference: {fileID: 21300000, guid: dade8677fa8357448a00e4f37e86b97a, type: 3}
+    - target: {fileID: 2761467947554564247, guid: f4f70568a09330342b88e5c13b680a83, type: 3}
+      propertyPath: spriteRenderer
+      value: 
+      objectReference: {fileID: 1536241611}
+    - target: {fileID: 2761467947554564247, guid: f4f70568a09330342b88e5c13b680a83, type: 3}
+      propertyPath: walkStepSprites.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2761467947554564247, guid: f4f70568a09330342b88e5c13b680a83, type: 3}
+      propertyPath: 'walkStepSprites.Array.data[0]'
+      value: 
+      objectReference: {fileID: 21300000, guid: fbf2f49ad2c0a8b4b8366ad28c9561ee, type: 3}
     - target: {fileID: 6665360065281291988, guid: f4f70568a09330342b88e5c13b680a83, type: 3}
       propertyPath: m_Layer
       value: 2
@@ -40306,13 +40317,6 @@ MonoBehaviour:
   elementPanelRegistry: {fileID: 0}
   fallbackPanelRefs: {fileID: 0}
   globalHudRefs: {fileID: 0}
-  debuffIconPrefab: {fileID: 0}
-  debuffIconSize: {x: 32, y: 32}
-  burnDebuffSprite: {fileID: 0}
-  iceDebuffSprite: {fileID: 0}
-  curseDebuffSprite: {fileID: 0}
-  poisonDebuffSprite: {fileID: 0}
-  SleepDebuffSprite: {fileID: 0}
 --- !u!114 &1507829553
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -41212,6 +41216,11 @@ RectTransform:
   m_AnchoredPosition: {x: 809, y: 153.5}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!212 &1536241611 stripped
+SpriteRenderer:
+  m_CorrespondingSourceObject: {fileID: 2550636713719953643, guid: f4f70568a09330342b88e5c13b680a83, type: 3}
+  m_PrefabInstance: {fileID: 1500036684}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1542134517
 GameObject:
   m_ObjectHideFlags: 0

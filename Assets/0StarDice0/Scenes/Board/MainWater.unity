@@ -3641,6 +3641,11 @@ MonoBehaviour:
   - {fileID: 1822417824}
   highlightColor: {r: 0, g: 0.09956598, b: 1, a: 1}
   transparency: 0.5
+--- !u!212 &127427550 stripped
+SpriteRenderer:
+  m_CorrespondingSourceObject: {fileID: 2550636713719953643, guid: f4f70568a09330342b88e5c13b680a83, type: 3}
+  m_PrefabInstance: {fileID: 1295324769}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &143515362
 GameObject:
   m_ObjectHideFlags: 0
@@ -33559,6 +33564,22 @@ PrefabInstance:
       propertyPath: moveSpeed
       value: 4
       objectReference: {fileID: 0}
+    - target: {fileID: 2761467947554564247, guid: f4f70568a09330342b88e5c13b680a83, type: 3}
+      propertyPath: idleSprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 95f6e1fee8dd8fa4aaf6423ffb15099e, type: 3}
+    - target: {fileID: 2761467947554564247, guid: f4f70568a09330342b88e5c13b680a83, type: 3}
+      propertyPath: spriteRenderer
+      value: 
+      objectReference: {fileID: 127427550}
+    - target: {fileID: 2761467947554564247, guid: f4f70568a09330342b88e5c13b680a83, type: 3}
+      propertyPath: walkStepSprites.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2761467947554564247, guid: f4f70568a09330342b88e5c13b680a83, type: 3}
+      propertyPath: 'walkStepSprites.Array.data[0]'
+      value: 
+      objectReference: {fileID: 21300000, guid: a095d72fa9c65f448a79386a3ae8b23e, type: 3}
     - target: {fileID: 6665360065281291988, guid: f4f70568a09330342b88e5c13b680a83, type: 3}
       propertyPath: m_Layer
       value: 2

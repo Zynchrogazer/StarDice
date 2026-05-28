@@ -13449,7 +13449,20 @@ MonoBehaviour:
   - {fileID: 1320757521}
   - {fileID: 1344394902}
   - {fileID: 1622013065}
-  sfxList: []
+  sfxList:
+  - {fileID: 8300000, guid: 323e15cfe809e114ab92c9f4b25e8bc2, type: 3}
+  - {fileID: 8300000, guid: b7b5a6156961bac44a67504d42ce6fcf, type: 3}
+  - {fileID: 8300000, guid: cfce0cea076109f478783201b2a9f57f, type: 3}
+  - {fileID: 8300000, guid: b0e62ed71b1538648b719821f4f63b4c, type: 3}
+  - {fileID: 8300000, guid: 00e4eb96f4f6cc249a632e4027644cad, type: 3}
+  - {fileID: 8300000, guid: acbcb75601b0082458fda8807f67c813, type: 3}
+  - {fileID: 8300000, guid: 6cf9c85b5a3b88c468b21b9d21250adf, type: 3}
+  - {fileID: 8300000, guid: a652877b012108e41871f867ada9f176, type: 3}
+  - {fileID: 8300000, guid: 1eb7cbaf61d23a64bbd36c0a38b5cb0c, type: 3}
+  - {fileID: 8300000, guid: c91fcf414acc0344cb03b13996f1bf3b, type: 3}
+  - {fileID: 8300000, guid: b7f8695cf65a4f24eb37544298821146, type: 3}
+  - {fileID: 8300000, guid: 83829ff414f47a048b5387e4ab33571c, type: 3}
+  - {fileID: 8300000, guid: 7a9de5c4d998126449cf964a6b27a8b0, type: 3}
   playerturntext: {fileID: 123669556}
   enemyturntext: {fileID: 1373580141}
   elementType: 0
@@ -13546,6 +13559,7 @@ MonoBehaviour:
   - {fileID: 27114651}
   - {fileID: 340454067}
   isBattleOver: 0
+  attackMoveDistance: 300
   player: {fileID: 0}
   itemImages:
   - {fileID: 21300000, guid: c4de93e9656ab9049863d0661958483e, type: 3}
@@ -13666,6 +13680,7 @@ GameObject:
   - component: {fileID: 1665009138}
   - component: {fileID: 1665009137}
   - component: {fileID: 1665009136}
+  - component: {fileID: 1665009140}
   m_Layer: 5
   m_Name: enemyimage
   m_TagString: Untagged
@@ -13758,6 +13773,28 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1665009134}
   m_CullTransparentMesh: 1
+--- !u!95 &1665009140
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1665009134}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: aa780b2378b007a499437d2f22b1bc51, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &1683215631
 GameObject:
   m_ObjectHideFlags: 0

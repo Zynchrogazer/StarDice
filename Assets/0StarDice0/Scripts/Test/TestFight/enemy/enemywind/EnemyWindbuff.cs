@@ -1865,6 +1865,57 @@ public bool isBattleOver = false;
 
     }
 
+  [Header("Attack Movement Setting")]
+public float attackMoveDistance = 300f; // ระยะพุ่งไปข้างหน้า (ปรับให้เยอะขึ้นได้เลย เช่น 500 หรือ 800)
+private RectTransform GetActivePlayer()
+{
+    foreach (RectTransform player in playerRects) 
+    {
+        if (player != null && player.gameObject.activeInHierarchy)
+        {
+            return player; 
+        }
+    }
+    return null; 
+}
+
+// 2. Coroutine สั่งพุ่งเฉพาะแกน X
+private System.Collections.IEnumerator PlayerAttackMove(RectTransform playerToMove)
+{
+    if (playerToMove == null) yield break;
+
+    // จำเฉพาะตำแหน่ง "แกน X" เริ่มต้น
+    float originalX = playerToMove.anchoredPosition.x;
+    float targetX = originalX + attackMoveDistance; 
+
+    float moveDuration = 0.15f; // เวลาพุ่ง (ยิ่งน้อยยิ่งพุ่งเร็ว)
+    float elapsed = 0f;
+
+    // พุ่งไปข้างหน้า
+    while (elapsed < moveDuration)
+    {
+        float currentX = Mathf.Lerp(originalX, targetX, elapsed / moveDuration);
+        playerToMove.anchoredPosition = new Vector2(currentX, playerToMove.anchoredPosition.y);
+        elapsed += Time.deltaTime;
+        yield return null; 
+    }
+    playerToMove.anchoredPosition = new Vector2(targetX, playerToMove.anchoredPosition.y);
+
+    yield return new WaitForSeconds(0.05f); // หยุดค้างตอนชนนิดนึง
+
+    // ถอยกลับจุดเดิม
+    elapsed = 0f;
+    while (elapsed < moveDuration)
+    {
+        float currentX = Mathf.Lerp(targetX, originalX, elapsed / moveDuration);
+        playerToMove.anchoredPosition = new Vector2(currentX, playerToMove.anchoredPosition.y);
+        elapsed += Time.deltaTime;
+        yield return null;
+    }
+
+    playerToMove.anchoredPosition = new Vector2(originalX, playerToMove.anchoredPosition.y); 
+}
+
     void DamageNormalEnemy(int damagenormal)
     {
          playerturntext.gameObject.SetActive(false);
@@ -1897,11 +1948,14 @@ public bool isBattleOver = false;
         //enemyHP -= finalWaterDamage;
         enemyHP = Mathf.Clamp(enemyHP, 0, enemyMaxHP);
         ShowSkillEffectOnce(8);
+        RectTransform activePlayer = GetActivePlayer();
+        StartCoroutine(PlayerAttackMove(activePlayer));
         StartCoroutine(ShakeEnemy()); // ศัตรูสั่น
         ShowDamageNumber($"-{damageN}"); // แสดงเลขดาเมจ
         UpdateEnemyHPUI();
 
-     if (enemyHP <= 0)
+         // 🟢 1. จุดที่เช็คเลือดตอนตาย (แทนที่ของเดิม)
+        if (enemyHP <= 0)
         {
             if (isBattleOver) return; // ป้องกันโค้ดรันซ้ำถ้าบังเอิญโดนดาเมจต่อ
 
@@ -1910,7 +1964,6 @@ public bool isBattleOver = false;
         }
 
     }
-
 
 public PlayerState player;
     public void GiveExpToPlayer()
@@ -2649,6 +2702,7 @@ StartCoroutine(DelayedEnemyTurn());
         else
         {
             Debug.Log("AI เลือก: โจมตีปกติ");
+            StartCoroutine(EnemyAttackMove(enemyImage));
             ShowSkillEffectOnce(9);
             DamagePlayer(basicAttackDamage);
         }
@@ -2726,7 +2780,48 @@ StartCoroutine(DelayedEnemyTurn());
 
             return score;
         }
+// เปลี่ยนมาให้รับเป็น Transform แทน จะได้ใช้กับตัวแปรเดิมของคุณได้ทันที
+private System.Collections.IEnumerator EnemyAttackMove(Transform enemyTransform)
+{
+    if (enemyTransform == null) yield break;
 
+    // ดึง RectTransform ออกมาจากตัวแปรเดิมอัตโนมัติ โดยไม่ต้องประกาศตัวแปรใหม่ในสคริปต์
+    RectTransform enemyRect = enemyTransform.GetComponent<RectTransform>();
+    if (enemyRect == null) yield break;
+
+    // ใช้ค่าคงที่ 300f ไปเลยในโค้ด จะได้ไม่ต้องสร้างตัวแปรปรับระยะทางให้เกะกะหน้า Inspector
+    float moveDistance = 300f; 
+    
+    float originalX = enemyRect.anchoredPosition.x;
+    float targetX = originalX - moveDistance; // พุ่งไปทางซ้าย (-)
+
+    float moveDuration = 0.15f;
+    float elapsed = 0f;
+
+    // พุ่งไปข้างหน้า
+    while (elapsed < moveDuration)
+    {
+        float currentX = Mathf.Lerp(originalX, targetX, elapsed / moveDuration);
+        enemyRect.anchoredPosition = new Vector2(currentX, enemyRect.anchoredPosition.y);
+        elapsed += Time.deltaTime;
+        yield return null; 
+    }
+    enemyRect.anchoredPosition = new Vector2(targetX, enemyRect.anchoredPosition.y);
+
+    yield return new WaitForSeconds(0.05f);
+
+    // ถอยกลับ
+    elapsed = 0f;
+    while (elapsed < moveDuration)
+    {
+        float currentX = Mathf.Lerp(targetX, originalX, elapsed / moveDuration);
+        enemyRect.anchoredPosition = new Vector2(currentX, enemyRect.anchoredPosition.y);
+        elapsed += Time.deltaTime;
+        yield return null;
+    }
+
+    enemyRect.anchoredPosition = new Vector2(originalX, enemyRect.anchoredPosition.y); 
+}
 
         void UpdatePlayerHPUI()
         {

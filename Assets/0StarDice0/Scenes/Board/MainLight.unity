@@ -1427,7 +1427,7 @@ PrefabInstance:
     - target: {fileID: 4899641596940858081, guid: 0a40572749428194ab8ec1ec2928d74a, type: 3}
       propertyPath: debuffIconPrefab
       value: 
-      objectReference: {fileID: 1567267543}
+      objectReference: {fileID: 0}
     - target: {fileID: 5108979340304688292, guid: 0a40572749428194ab8ec1ec2928d74a, type: 3}
       propertyPath: levelText
       value: 
@@ -1451,7 +1451,7 @@ PrefabInstance:
     - target: {fileID: 5108979340304688292, guid: 0a40572749428194ab8ec1ec2928d74a, type: 3}
       propertyPath: debuffIconContainer
       value: 
-      objectReference: {fileID: 1935575000}
+      objectReference: {fileID: 0}
     - target: {fileID: 8243921093852075540, guid: 0a40572749428194ab8ec1ec2928d74a, type: 3}
       propertyPath: buttons.Array.size
       value: 6
@@ -2334,11 +2334,6 @@ GameObject:
 --- !u!1 &1426322123 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 8889701211888385168, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
-  m_PrefabInstance: {fileID: 1800484141}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &1567267543 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 7581217828769665568, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
   m_PrefabInstance: {fileID: 1800484141}
   m_PrefabAsset: {fileID: 0}
 --- !u!114 &1567267544 stripped
@@ -4062,11 +4057,6 @@ MonoBehaviour:
 --- !u!1 &1935574999 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 44478517939995297, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
-  m_PrefabInstance: {fileID: 1800484141}
-  m_PrefabAsset: {fileID: 0}
---- !u!224 &1935575000 stripped
-RectTransform:
-  m_CorrespondingSourceObject: {fileID: 342469640803314363, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
   m_PrefabInstance: {fileID: 1800484141}
   m_PrefabAsset: {fileID: 0}
 --- !u!114 &1935575001 stripped
@@ -6001,6 +5991,12 @@ MonoBehaviour:
   hitRockSound: {fileID: 0}
   soundVolume: 0.8
   eventManager: {fileID: 0}
+  hopHeight: 0.35
+  hopDurationPerTile: 0.2
+  spriteRenderer: {fileID: 598364098989483521}
+  idleSprite: {fileID: 21300000, guid: 8bcdffcf898126c4388fd2d92c9bc097, type: 3}
+  walkStepSprites:
+  - {fileID: 21300000, guid: 1820283f66bebac42bd68edaf9954bb4, type: 3}
   currentNodeID: 0
 --- !u!1 &1011136627489359282
 GameObject:
@@ -13014,6 +13010,12 @@ MonoBehaviour:
   hitRockSound: {fileID: 0}
   soundVolume: 0.8
   eventManager: {fileID: 0}
+  hopHeight: 0.35
+  hopDurationPerTile: 0.2
+  spriteRenderer: {fileID: 624021101760724925}
+  idleSprite: {fileID: 21300000, guid: ca55c2f1873ea6c469e3f03663613b52, type: 3}
+  walkStepSprites:
+  - {fileID: 21300000, guid: 6d13fda6d68721e499eabfaec0d2df37, type: 3}
   currentNodeID: 0
 --- !u!23 &7347650300552600534
 MeshRenderer:
