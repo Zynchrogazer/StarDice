@@ -949,6 +949,7 @@ MonoBehaviour:
   - {fileID: 1690438962}
   - {fileID: 1311768495}
   isBattleOver: 0
+  attackMoveDistance: 300
   player: {fileID: 0}
   itemImages:
   - {fileID: 21300000, guid: 1328fdac4f9659944ba1f9ef1a937afc, type: 3}
@@ -11683,6 +11684,7 @@ GameObject:
   - component: {fileID: 1624870605}
   - component: {fileID: 1624870607}
   - component: {fileID: 1624870608}
+  - component: {fileID: 1624870609}
   m_Layer: 5
   m_Name: enemyimage
   m_TagString: Untagged
@@ -11775,6 +11777,28 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   amplitude: 10
   speed: 5
+--- !u!95 &1624870609
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1624870603}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 26d280589e1f7ab41a880aa17f3760c3, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &1641479887
 GameObject:
   m_ObjectHideFlags: 0
