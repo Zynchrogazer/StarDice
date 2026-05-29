@@ -65,7 +65,7 @@ public class PlayerPathWalker : MonoBehaviour
 
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        if (scene.name == "TestFight" || scene.name == "Shop" || scene.name.Contains("Minigame")) return;
+        if (scene.name == "TestFight" || scene.name == "ShopIntermission" || scene.name.Contains("Minigame")) return;
 
         RouteManager.TryGet(out routeManager);
         choiceUIManager = FindObjectOfType<ChoiceUIManager>();

@@ -1,10 +1,8 @@
 using System.Collections;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public static class BattleResultFlowService
 {
-    private const string RuntimeHubSceneName = "RuntimeHub";
     private const string InterMissionSceneName = "InterMission";
     private const int DefaultMinReward = 50;
     private const int DefaultMaxReward = 300;
@@ -51,6 +49,7 @@ public static class BattleResultFlowService
         {
             Debug.Log("👑 [BattleResultFlow] ปราบบอสสำเร็จ! จบเกม กลับหน้า InterMission");
             PlayerPrefs.SetInt("IsBossBattle", 0);
+            GameEventManager.ClearBoardReturnState();
             PlayerPrefs.Save();
             StartTransition(ReturnToSceneKeepingRuntimeHub(InterMissionSceneName));
         }
@@ -58,7 +57,7 @@ public static class BattleResultFlowService
         {
             Debug.Log("⚔️ [BattleResultFlow] ชนะมอนสเตอร์ปกติ กลับไปกระดาน");
 
-            string savedScene = PlayerPrefs.GetString(GameEventManager.LastBoardSceneKey, "");
+            GameEventManager.TryGetLastBoardSceneName(out string savedScene);
 
             if (string.IsNullOrEmpty(savedScene))
             {
@@ -81,6 +80,7 @@ public static class BattleResultFlowService
         
         // 🟢 เคลียร์ค่าสวิตช์บอสทิ้งด้วย (เผื่อผู้เล่นสู้บอสแพ้ หรือกดยอมแพ้)
         PlayerPrefs.SetInt("IsBossBattle", 0);
+        GameEventManager.ClearBoardReturnState();
         PlayerPrefs.Save();
 
         StartTransition(ReturnToSceneKeepingRuntimeHub(InterMissionSceneName));
@@ -132,57 +132,15 @@ public static class BattleResultFlowService
             if (string.IsNullOrWhiteSpace(targetSceneName))
                 yield break;
 
-            Scene targetScene = SceneManager.GetSceneByName(targetSceneName);
-            bool wasAlreadyLoaded = targetScene.IsValid() && targetScene.isLoaded;
-            if (!targetScene.IsValid() || !targetScene.isLoaded)
+            if (!SceneFlowController.TryRequestSceneKeepingPersistent(targetSceneName, true))
             {
-                AsyncOperation loadOp = SceneManager.LoadSceneAsync(targetSceneName, LoadSceneMode.Additive);
-                while (loadOp != null && !loadOp.isDone)
-                {
-                    yield return null;
-                }
-
-                targetScene = SceneManager.GetSceneByName(targetSceneName);
+                Debug.LogError($"[BattleResultFlow] SceneFlow could not return to scene '{targetSceneName}'.");
+                yield break;
             }
 
-            bool targetBoardReady = false;
-            if (targetScene.IsValid() && targetScene.isLoaded)
+            while (SceneFlowController.IsTransitioning)
             {
-                foreach (GameObject root in targetScene.GetRootGameObjects())
-                {
-                    if (root != null) root.SetActive(true);
-                }
-
-                SceneManager.SetActiveScene(targetScene);
-                targetBoardReady = true;
-            }
-
-            if (targetBoardReady && wasAlreadyLoaded)
-            {
-                // KISS: ถ้า board ถูกโหลดค้างอยู่แล้ว จะไม่เกิด SceneLoaded event
-                // จึงยิงสัญญาณ ready ตรงนี้เพื่อให้ TurnManager กู้ flow ได้แน่นอน
-                GameEventManager.NotifyBoardSceneReady(targetSceneName);
-            }
-
-            int sceneCount = SceneManager.sceneCount;
-            var toUnload = new System.Collections.Generic.List<Scene>();
-            for (int i = 0; i < sceneCount; i++)
-            {
-                Scene scene = SceneManager.GetSceneAt(i);
-                if (!scene.IsValid() || !scene.isLoaded) continue;
-                if (string.Equals(scene.name, RuntimeHubSceneName, System.StringComparison.OrdinalIgnoreCase)) continue;
-                if (string.Equals(scene.name, targetSceneName, System.StringComparison.OrdinalIgnoreCase)) continue;
-
-                toUnload.Add(scene);
-            }
-
-            for (int i = 0; i < toUnload.Count; i++)
-            {
-                AsyncOperation unloadOp = SceneManager.UnloadSceneAsync(toUnload[i]);
-                while (unloadOp != null && !unloadOp.isDone)
-                {
-                    yield return null;
-                }
+                yield return null;
             }
         }
         finally

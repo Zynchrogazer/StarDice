@@ -37,31 +37,54 @@ public class RuntimeHubController : MonoBehaviour
             yield break;
         }
 
-        // โหลดฉากใหม่แบบ Additive
+        HideConfiguredUI();
+
+        if (SceneFlowController.TryRequestScene(nextScene))
+        {
+            while (SceneFlowController.IsTransitioning)
+            {
+                yield return null;
+            }
+
+            isTransitioning = false;
+            yield break;
+        }
+
+        // Fallback for builds that do not have a SceneFlowController-compatible scene entry.
         AsyncOperation loadOperation = SceneManager.LoadSceneAsync(nextScene, LoadSceneMode.Additive);
+        if (loadOperation == null)
+        {
+            Debug.LogError($"[RuntimeHubController] Failed to start additive load for scene '{nextScene}'.");
+            isTransitioning = false;
+            yield break;
+        }
+
         yield return loadOperation;
 
-        // ตั้งฉากใหม่เป็น Active Scene
         Scene loadedScene = SceneManager.GetSceneByName(nextScene);
         if (loadedScene.IsValid() && loadedScene.isLoaded)
         {
             SceneManager.SetActiveScene(loadedScene);
         }
 
-        // 🎯 [KISS] วนลูปปิด UI ทุกตัวที่คุณลากมาใส่ใน Inspector ทิ้งไปตรงๆ
-        if (uiElementsToHide != null)
-        {
-            foreach (GameObject ui in uiElementsToHide)
-            {
-                if (ui != null) 
-                {
-                    ui.SetActive(false);
-                }
-            }
-        }
-
         EnsureSingleEventSystemAndAudioListener(loadedScene);
         isTransitioning = false;
+    }
+
+    private void HideConfiguredUI()
+    {
+        if (uiElementsToHide == null)
+        {
+            return;
+        }
+
+        foreach (GameObject ui in uiElementsToHide)
+        {
+            if (ui != null)
+            {
+                ui.SetActive(false);
+            }
+        }
     }
 
     private static void EnsureSingleEventSystemAndAudioListener(Scene preferredScene)
