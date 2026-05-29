@@ -56,7 +56,7 @@ public class BossSceneController : MonoBehaviour
     {
         Debug.Log("--- BOSS BATTLE END ---");
 
-        string targetBoardScene = PlayerPrefs.GetString(GameEventManager.LastBoardSceneKey, mainBoardSceneName);
+        string targetBoardScene = GameEventManager.GetLastBoardSceneNameOrDefault(mainBoardSceneName);
 
         // ตรวจสอบว่ามี Persistence Instance อยู่หรือไม่
         if (GameTurnManager.CurrentPlayer != null)

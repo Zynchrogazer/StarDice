@@ -68,6 +68,58 @@ public class GameEventManager : MonoBehaviour
 
     public const string LastBoardSceneKey = "LastBoardSceneName";
 
+    public static void SetLastBoardSceneName(string sceneName)
+    {
+        string normalizedSceneName = string.IsNullOrWhiteSpace(sceneName) ? string.Empty : sceneName.Trim();
+
+        if (RunSessionStore.TryGet(out var sessionStore))
+        {
+            sessionStore.SetLastBoardSceneName(normalizedSceneName);
+            return;
+        }
+
+        if (string.IsNullOrEmpty(normalizedSceneName))
+        {
+            PlayerPrefs.DeleteKey(LastBoardSceneKey);
+        }
+        else
+        {
+            PlayerPrefs.SetString(LastBoardSceneKey, normalizedSceneName);
+        }
+
+        PlayerPrefs.Save();
+    }
+
+    public static bool TryGetLastBoardSceneName(out string sceneName)
+    {
+        if (RunSessionStore.TryGet(out var sessionStore)
+            && sessionStore.TryGetLastBoardSceneName(out sceneName))
+        {
+            return true;
+        }
+
+        sceneName = PlayerPrefs.GetString(LastBoardSceneKey, string.Empty);
+        return !string.IsNullOrWhiteSpace(sceneName);
+    }
+
+    public static string GetLastBoardSceneNameOrDefault(string fallbackSceneName)
+    {
+        return TryGetLastBoardSceneName(out string sceneName) ? sceneName : fallbackSceneName;
+    }
+
+    public static void ClearBoardReturnState()
+    {
+        if (RunSessionStore.TryGet(out var sessionStore))
+        {
+            sessionStore.ClearBoardReturnState();
+            return;
+        }
+
+        PlayerPrefs.DeleteKey(LastBoardSceneKey);
+        PlayerPrefs.SetInt(GameTurnManager.PendingBattleReturnKey, 0);
+        PlayerPrefs.Save();
+    }
+
     [Header("Scene Settings")]
     public string boardGameSceneName = "TestMain";
 
@@ -1124,7 +1176,7 @@ private IEnumerator ShowPanelAndMoveRoutine(PlayerPathWalker walker, int steps)
         string boardSceneNameToHide = boardGameSceneName;
         if (string.IsNullOrEmpty(boardSceneNameToHide))
         {
-            boardSceneNameToHide = PlayerPrefs.GetString(LastBoardSceneKey, string.Empty);
+            TryGetLastBoardSceneName(out boardSceneNameToHide);
         }
 
         if (string.IsNullOrEmpty(boardSceneNameToHide))
@@ -1622,8 +1674,7 @@ public AudioClip[] eventSounds;
         if (string.IsNullOrEmpty(currentSceneName)) return;
 
         boardGameSceneName = currentSceneName;
-        PlayerPrefs.SetString(LastBoardSceneKey, currentSceneName);
-        PlayerPrefs.Save();
+        SetLastBoardSceneName(currentSceneName);
 
         Debug.Log($"[EventManager] จำฉากบอร์ดล่าสุดเป็น '{currentSceneName}'");
     }

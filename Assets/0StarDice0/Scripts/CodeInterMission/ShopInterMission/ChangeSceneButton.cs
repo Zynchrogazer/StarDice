@@ -197,9 +197,7 @@ public class ChangeSceneButton : MonoBehaviour
     {
         PersistHumanPlayerCredit();
 
-        PlayerPrefs.SetInt(GameTurnManager.PendingBattleReturnKey, 0);
-        PlayerPrefs.DeleteKey(GameEventManager.LastBoardSceneKey);
-        PlayerPrefs.Save();
+        GameEventManager.ClearBoardReturnState();
 
         PlayerStartSpawner.LastKnownPositions.Clear();
 
