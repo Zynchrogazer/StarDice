@@ -76389,6 +76389,7 @@ GameObject:
   - component: {fileID: 2838476022432473049}
   - component: {fileID: 8848675854986940205}
   - component: {fileID: 971310900627142269}
+  - component: {fileID: 8848675854986940206}
   m_Layer: 0
   m_Name: CPU_root
   m_TagString: Player
@@ -148285,6 +148286,21 @@ MonoBehaviour:
     maxExp: 100
   StunTurnsRemaining: 0
   hasDoubleStarBuff: 0
+--- !u!114 &8848675854986940206
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4046898412366521653}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a68ce8b0219d260498795f7d888e84de, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  personality: 0
+  logDecisionScores: 1
+  randomScoreNoise: 0
 --- !u!1 &8853801437567468366
 GameObject:
   m_ObjectHideFlags: 0

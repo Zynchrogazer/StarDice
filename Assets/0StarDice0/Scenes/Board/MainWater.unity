@@ -3641,11 +3641,6 @@ MonoBehaviour:
   - {fileID: 1822417824}
   highlightColor: {r: 0, g: 0.09956598, b: 1, a: 1}
   transparency: 0.5
---- !u!212 &127427550 stripped
-SpriteRenderer:
-  m_CorrespondingSourceObject: {fileID: 2550636713719953643, guid: f4f70568a09330342b88e5c13b680a83, type: 3}
-  m_PrefabInstance: {fileID: 1295324769}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &143515362
 GameObject:
   m_ObjectHideFlags: 0
@@ -33540,66 +33535,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: CPU_root
       objectReference: {fileID: 0}
-    - target: {fileID: 2047042482808951808, guid: f4f70568a09330342b88e5c13b680a83, type: 3}
-      propertyPath: m_LocalScale.x
-      value: 0.24275844
-      objectReference: {fileID: 0}
-    - target: {fileID: 2047042482808951808, guid: f4f70568a09330342b88e5c13b680a83, type: 3}
-      propertyPath: m_LocalScale.y
-      value: 0.2026583
-      objectReference: {fileID: 0}
-    - target: {fileID: 2047042482808951808, guid: f4f70568a09330342b88e5c13b680a83, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0.21
-      objectReference: {fileID: 0}
-    - target: {fileID: 2047042482808951808, guid: f4f70568a09330342b88e5c13b680a83, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0.9028
-      objectReference: {fileID: 0}
-    - target: {fileID: 2550636713719953643, guid: f4f70568a09330342b88e5c13b680a83, type: 3}
-      propertyPath: m_Sprite
-      value: 
-      objectReference: {fileID: 21300000, guid: 95f6e1fee8dd8fa4aaf6423ffb15099e, type: 3}
-    - target: {fileID: 2761467947554564247, guid: f4f70568a09330342b88e5c13b680a83, type: 3}
-      propertyPath: moveSpeed
-      value: 4
-      objectReference: {fileID: 0}
-    - target: {fileID: 2761467947554564247, guid: f4f70568a09330342b88e5c13b680a83, type: 3}
-      propertyPath: idleSprite
-      value: 
-      objectReference: {fileID: 21300000, guid: 95f6e1fee8dd8fa4aaf6423ffb15099e, type: 3}
-    - target: {fileID: 2761467947554564247, guid: f4f70568a09330342b88e5c13b680a83, type: 3}
-      propertyPath: spriteRenderer
-      value: 
-      objectReference: {fileID: 127427550}
-    - target: {fileID: 2761467947554564247, guid: f4f70568a09330342b88e5c13b680a83, type: 3}
-      propertyPath: walkStepSprites.Array.size
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 2761467947554564247, guid: f4f70568a09330342b88e5c13b680a83, type: 3}
-      propertyPath: 'walkStepSprites.Array.data[0]'
-      value: 
-      objectReference: {fileID: 21300000, guid: a095d72fa9c65f448a79386a3ae8b23e, type: 3}
-    - target: {fileID: 6665360065281291988, guid: f4f70568a09330342b88e5c13b680a83, type: 3}
-      propertyPath: m_Layer
-      value: 2
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 6665360065281291988, guid: f4f70568a09330342b88e5c13b680a83, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1295324773}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: f4f70568a09330342b88e5c13b680a83, type: 3}
 --- !u!4 &1295324770 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 886141014568894771, guid: f4f70568a09330342b88e5c13b680a83, type: 3}
-  m_PrefabInstance: {fileID: 1295324769}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &1295324771 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 6665360065281291988, guid: f4f70568a09330342b88e5c13b680a83, type: 3}
   m_PrefabInstance: {fileID: 1295324769}
   m_PrefabAsset: {fileID: 0}
 --- !u!114 &1295324772 stripped
@@ -33613,20 +33556,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 92cd66f82ed8fd6449e7e7ac45a21819, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &1295324773
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1295324771}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 14cf92533715c32479e41ad6112074eb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  standUpright: 1
-  yawOffset: 0
 --- !u!114 &1295324774 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 5901036743852233159, guid: f4f70568a09330342b88e5c13b680a83, type: 3}
