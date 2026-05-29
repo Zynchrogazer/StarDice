@@ -33,6 +33,7 @@ public class PlayerPathWalker : MonoBehaviour
     private RouteManager routeManager;
     private ChoiceUIManager choiceUIManager;
     private PlayerState myState;
+    private AIController aiController;
 
     private int stepsRemaining = 0;
     private bool isExecutingTurn = false;
@@ -49,6 +50,7 @@ public class PlayerPathWalker : MonoBehaviour
     private void Awake()
     {
         myState = GetComponent<PlayerState>();
+        aiController = GetComponent<AIController>();
         audioSource = GetComponent<AudioSource>();
         if (audioSource != null)
         {
@@ -200,7 +202,13 @@ public class PlayerPathWalker : MonoBehaviour
                     // === ระบบทางแยก ===
                     if (myState != null && myState.isAI)
                     {
-                        nextNode = choices[Random.Range(0, choices.Count)];
+                        if (aiController == null)
+                            aiController = GetComponent<AIController>();
+
+                        nextNode = aiController != null
+                            ? aiController.ChoosePath(choices)
+                            : choices[Random.Range(0, choices.Count)];
+
                         yield return new WaitForSeconds(0.5f);
                     }
                     else
