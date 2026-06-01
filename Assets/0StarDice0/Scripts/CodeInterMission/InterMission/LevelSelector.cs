@@ -18,7 +18,8 @@ public class LevelSelector : MonoBehaviour
         for (int i = 0; i < levelButtons.Length; i++)
         {
             // เช็คว่าปุ่มนี้ (ด่าน i+1) ควรจะปลดล็อคไหม
-            if (i + 1 > levelReached)
+            // เช็คว่าปุ่มนี้ (ด่าน i+2 ของเกม) ควรจะปลดล็อคไหม
+if (i + 1 >= levelReached)
             {
                 // --- กรณีล็อค (Locked) ---
                 levelButtons[i].interactable = false; // กดไม่ได้

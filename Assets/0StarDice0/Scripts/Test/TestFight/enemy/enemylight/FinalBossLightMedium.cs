@@ -2228,7 +2228,15 @@ private System.Collections.IEnumerator PlayerAttackMove(RectTransform playerToMo
         Debug.Log("🏆 รอครบ 1 วินาทีแล้ว โชว์หน้าต่าง Victory!");
 
         // 2. เด้ง Panel และแจกรางวัล
+ int nextLevelToUnlock = 1; // ⚠️ เปลี่ยนเลขนี้เป็นด่านถัดไปที่คุณอยากให้ปลดล็อค (เช่น ชนะด่าน 1 ให้ใส่เลข 2)
 
+        int currentLevelReached = PlayerPrefs.GetInt("levelReached", 1);
+        if (nextLevelToUnlock > currentLevelReached)
+        {
+            PlayerPrefs.SetInt("levelReached", nextLevelToUnlock);
+            PlayerPrefs.Save();
+            Debug.Log($"🔓 บอสตายแล้ว! ปลดล็อคด่านที่ {nextLevelToUnlock} สำเร็จ ลงเซฟโดยตรง!");
+        }
         OpenChest();
         ShowResultPanelVictory("Victory!");
     }
