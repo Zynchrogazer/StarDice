@@ -1944,6 +1944,11 @@ private System.Collections.IEnumerator PlayerAttackMove(RectTransform playerToMo
             damageN *= 5;
             EarthSmashEarthLeft = false;
         }
+          if (EnemyShieldEarth > 0)
+        {
+            damageN = 0;
+            EnemyShieldEarth--;
+        }
         
       PlaySoundEffect(0);
 
@@ -3103,7 +3108,7 @@ private System.Collections.IEnumerator EnemyAttackMove(Transform enemyTransform)
 
     void EnemySkill3() //<--สกิล 3 ศัตรู
     {
-         int healAmount = 50;
+         int healAmount = 40;
         enemyHP += healAmount;
         enemyHP = Mathf.Clamp(enemyHP, 0, enemyMaxHP);
         ShowSkillEffectOnce(51);
@@ -3135,10 +3140,10 @@ private System.Collections.IEnumerator EnemyAttackMove(Transform enemyTransform)
 
     void EnemySkill6()
     {
-        EnemyShieldEarth =2;
-        enemySkill6Cooldown = 5;
+        EnemyShieldEarth =1;
+        enemySkill6Cooldown = 6;
 
-         int healAmount = 35;
+         int healAmount = 0;
         enemyHP += healAmount;
         enemyHP = Mathf.Clamp(enemyHP, 0, enemyMaxHP);
         ShowSkillEffectOnce(51);

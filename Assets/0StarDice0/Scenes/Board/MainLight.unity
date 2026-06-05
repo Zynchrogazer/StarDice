@@ -2955,6 +2955,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Canvas
       objectReference: {fileID: 0}
+    - target: {fileID: 1806239088679650630, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1867413240219100134, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
       propertyPath: m_Sprite
       value: 
@@ -2963,6 +2967,14 @@ PrefabInstance:
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 1036462598}
+    - target: {fileID: 1992821261991973276, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: TogglePanel
+      objectReference: {fileID: 0}
+    - target: {fileID: 2027443257824663923, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2200186038528168525, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
       propertyPath: m_fontColor.b
       value: 0
@@ -3175,6 +3187,22 @@ PrefabInstance:
       propertyPath: m_Sprite
       value: 
       objectReference: {fileID: 21300000, guid: 8bcdffcf898126c4388fd2d92c9bc097, type: 3}
+    - target: {fileID: 3877113923451841289, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 225.8743
+      objectReference: {fileID: 0}
+    - target: {fileID: 3877113923451841289, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3877113923451841289, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -732
+      objectReference: {fileID: 0}
+    - target: {fileID: 3877113923451841289, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 33.94867
+      objectReference: {fileID: 0}
     - target: {fileID: 4074689033051071062, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
       propertyPath: m_fontColor.b
       value: 0
@@ -3411,6 +3439,10 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: -474.73
       objectReference: {fileID: 0}
+    - target: {fileID: 6258395865974363151, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 6270288244899171882, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
       propertyPath: m_fontColor.b
       value: 0
@@ -3435,6 +3467,10 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 90.24571
       objectReference: {fileID: 0}
+    - target: {fileID: 6628505484105113007, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 1036462598}
     - target: {fileID: 6706122638791670448, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
       propertyPath: m_fontColor.b
       value: 0
@@ -11320,19 +11356,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 897b010cf51bc674790b5d149a3bd320, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  skillButtons:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  randomPanel: {fileID: 0}
-  randomButtons:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
 --- !u!33 &5395951724952519354
 MeshFilter:
   m_ObjectHideFlags: 0

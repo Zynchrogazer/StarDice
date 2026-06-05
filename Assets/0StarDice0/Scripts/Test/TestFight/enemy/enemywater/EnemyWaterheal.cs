@@ -2984,7 +2984,7 @@ private System.Collections.IEnumerator EnemyAttackMove(Transform enemyTransform)
 
     void EnemySkill2() //<--สกิล 2 ศัตรู
     {
-          int healAmount = 40;
+          int healAmount = 30;
         enemyHP += healAmount;
         enemyHP = Mathf.Clamp(enemyHP, 0, enemyMaxHP);
         ShowSkillEffectOnce(3);
@@ -2997,7 +2997,7 @@ private System.Collections.IEnumerator EnemyAttackMove(Transform enemyTransform)
     void EnemySkill3() //<--สกิล 3 ศัตรู
     {
 
-       int healAmount = 60;
+       int healAmount = 50;
         enemyHP += healAmount;
         enemyHP = Mathf.Clamp(enemyHP, 0, enemyMaxHP);
         ShowSkillEffectOnce(3);

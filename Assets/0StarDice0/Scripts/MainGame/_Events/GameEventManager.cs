@@ -466,7 +466,7 @@ public class GameEventManager : MonoBehaviour
                 break;
             case "iceeffect": ApplyIceEffect(target); break;
             case "minigamefappy":
-            case "level 1":
+            case "level 3":
             case "minigamespotmemory":
             case "minigamemath":
                 StartCoroutine(LoadBattleSceneAdditiveCoroutine(eventName));

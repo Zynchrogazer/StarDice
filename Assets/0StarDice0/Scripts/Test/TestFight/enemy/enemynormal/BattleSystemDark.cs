@@ -1938,6 +1938,10 @@ private System.Collections.IEnumerator PlayerAttackMove(RectTransform playerToMo
             damageN *= 5;
             EarthSmashEarthLeft = false;
         }
+        if(EnemyDarkWalk > 0)
+        {
+            EnemyDarkWalk--;
+        }
         
       PlaySoundEffect(0);
 
@@ -2994,7 +2998,7 @@ void EnemyUseSkill1() //<--สกิล 1 ศัตรู
     void EnemySkill3() //<--สกิล 3 ศัตรู
     {
 
-        EnemyDarkWalk = 3;
+        EnemyDarkWalk = 2;
         enemySkill3Cooldown = 5;
         PlaySoundEffect(6);
         Debug.Log("ศัตรูใช้สกิล 3 มืด");

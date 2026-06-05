@@ -1939,6 +1939,11 @@ private System.Collections.IEnumerator PlayerAttackMove(RectTransform playerToMo
             damageN *= 5;
             EarthSmashEarthLeft = false;
         }
+
+        if(EnemyDarkWalk > 0)
+        {
+            EnemyDarkWalk--;
+        }
         
       PlaySoundEffect(0);
 
@@ -3020,7 +3025,7 @@ private System.Collections.IEnumerator EnemyAttackMove(Transform enemyTransform)
     {
 
         EnemyDarkWalk =  Random.Range(1,4);
-        enemySkill3Cooldown = 6;
+        enemySkill3Cooldown = 7;
         Debug.Log($"ศัตรูใช้สกิล dodge");
     ShowSkillEffectOnce(49);
         PlaySoundEffect(6);

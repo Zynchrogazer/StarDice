@@ -223,25 +223,13 @@ public class PassiveSkillSlot : MonoBehaviour, IPointerEnterHandler, IPointerExi
             builder.AppendLine();
         }
 
-        AppendBonusLine(builder, "ATK", passiveSkillData.bonusAttack);
-        AppendBonusLine(builder, "HP", passiveSkillData.bonusMaxHP);
-        AppendBonusLine(builder, "STAR", passiveSkillData.bonusStar);
-        AppendBonusLine(builder, "SPD", passiveSkillData.bonusSpeed);
-        AppendBonusLine(builder, "DEF", passiveSkillData.bonusDefense);
-
         if (passiveSkillData.costPoint > 0)
         {
             builder.AppendLine($"Cost: {passiveSkillData.costPoint}");
         }
 
         string result = builder.ToString().TrimEnd();
-        return string.IsNullOrEmpty(result) ? "No bonus" : result;
+        return string.IsNullOrEmpty(result) ? "No description" : result;
     }
 
-    private static void AppendBonusLine(StringBuilder builder, string label, int value)
-    {
-        if (value == 0) return;
-        string sign = value > 0 ? "+" : string.Empty;
-        builder.AppendLine($"{label}: {sign}{value}");
-    }
 }
