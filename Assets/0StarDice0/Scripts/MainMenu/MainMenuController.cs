@@ -8,7 +8,7 @@ public class MainMenuController : MonoBehaviour
 {
     [Header("Flow")]
     [SerializeField] private string runtimeHubSceneName = "RuntimeHub";
-    [SerializeField] private string continueInterMissionSceneName = "InterMission";
+   
 
     [Header("New Game Defaults")]
     [SerializeField] private int resetCreditValue = 0;
@@ -36,7 +36,7 @@ public class MainMenuController : MonoBehaviour
 
     public void OnContinueClicked()
     {
-        StartCoroutine(RequestRuntimeHubScene(continueInterMissionSceneName));
+        StartCoroutine(RequestRuntimeHubScene());
     }
 
     private void ResetProgressForRuntimeHubStart()
@@ -230,7 +230,7 @@ public class MainMenuController : MonoBehaviour
         PlayerStartSpawner.LastKnownPositions.Clear();
     }
 
-    private IEnumerator RequestRuntimeHubScene(string additiveSceneNameAfterLoad = null)
+    private IEnumerator RequestRuntimeHubScene()
     {
         if (isRequestingFlowScene)
         {
@@ -246,7 +246,6 @@ public class MainMenuController : MonoBehaviour
 
         if (Application.CanStreamedLevelBeLoaded(runtimeHubSceneName))
         {
-            RuntimeHubController.RequestInitialAdditiveSceneAfterHubLoad(additiveSceneNameAfterLoad);
             SceneManager.LoadScene(runtimeHubSceneName, LoadSceneMode.Single);
         }
         else

@@ -5,42 +5,12 @@ using UnityEngine.EventSystems;
 
 public class RuntimeHubController : MonoBehaviour
 {
-    private static string initialAdditiveSceneAfterHubLoad;
-
     [Header("UI References to Hide")]
     [Tooltip("ใส่ Canvas หรือ Panel ทั้งหมดที่ต้องการซ่อนตอนย้ายฉากลงในนี้")]
     // ✅ เปลี่ยนจาก GameObject ธรรมดา เป็น GameObject[] (Array)
     public GameObject[] uiElementsToHide; 
 
     private bool isTransitioning = false;
-
-    private void Awake()
-    {
-        if (!string.IsNullOrWhiteSpace(initialAdditiveSceneAfterHubLoad))
-        {
-            HideConfiguredUI();
-        }
-    }
-
-    public static void RequestInitialAdditiveSceneAfterHubLoad(string sceneName)
-    {
-        initialAdditiveSceneAfterHubLoad = string.IsNullOrWhiteSpace(sceneName) ? null : sceneName.Trim();
-    }
-
-    private void Start()
-    {
-        if (!string.IsNullOrWhiteSpace(initialAdditiveSceneAfterHubLoad))
-        {
-            string sceneName = initialAdditiveSceneAfterHubLoad;
-            initialAdditiveSceneAfterHubLoad = null;
-            StartCoroutine(LoadInitialAdditiveSceneRoutine(sceneName));
-        }
-    }
-
-    private IEnumerator LoadInitialAdditiveSceneRoutine(string sceneName)
-    {
-        yield return LoadSceneRoutine(sceneName);
-    }
 
     public void ConfirmAndGoNextScene(string nextScene)
     {

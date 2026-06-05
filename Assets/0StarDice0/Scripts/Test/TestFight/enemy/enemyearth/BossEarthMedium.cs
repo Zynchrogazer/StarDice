@@ -1963,6 +1963,16 @@ private System.Collections.IEnumerator PlayerAttackMove(RectTransform playerToMo
             damageN *= 5;
             EarthSmashEarthLeft = false;
         }
+          if (EnemyShieldWater > 0)
+        {
+            damageN = Mathf.RoundToInt(damageN * 0.5f);
+            EnemyShieldWater--;
+        }
+         if (EnemyShieldEarth > 0)
+        {
+            damageN = 0;
+            EnemyShieldEarth--;
+        }
         
       PlaySoundEffect(0);
 
