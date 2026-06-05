@@ -45,7 +45,7 @@ public static class MiniGameRewardService
 
     public static void ReturnToBoardScene()
     {
-        string boardScene = PlayerPrefs.GetString(GameEventManager.LastBoardSceneKey, "TestMain");
+        string boardScene = GameEventManager.GetLastBoardSceneNameOrDefault("TestMain");
 
         Scene loadedBoardScene = SceneManager.GetSceneByName(boardScene);
         if (loadedBoardScene.IsValid() && loadedBoardScene.isLoaded)

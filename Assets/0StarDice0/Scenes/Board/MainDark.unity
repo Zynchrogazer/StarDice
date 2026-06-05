@@ -152,7 +152,7 @@ MonoBehaviour:
   enableMainDarkDebuffGimmick: 1
   mainDarkDebuffOnlyInMainDark: 1
   enableAutoTriggerByTurn: 1
-  autoTriggerIntervalTurns: 1
+  autoTriggerIntervalTurns: 3
   autoTriggerOnlyPlayerTurn: 0
   debuffPool:
   - type: 0
@@ -759,6 +759,16 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &362258415 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1806239088679650630, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+  m_PrefabInstance: {fileID: 737406307}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &362258416 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6258395865974363151, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+  m_PrefabInstance: {fileID: 737406307}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &373153981
 GameObject:
   m_ObjectHideFlags: 0
@@ -1005,6 +1015,58 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1 &469622000
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 469622002}
+  - component: {fileID: 469622001}
+  m_Layer: 0
+  m_Name: paneltutorial
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &469622001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 469622000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68d5638436ef7d84cbd61f40c406273d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  panels:
+  - {fileID: 362258416}
+  - {fileID: 362258415}
+  allowToggleOffWhenTargetAlreadyOpen: 0
+  openPolicy: 1
+  closeOnOutsideClick: 1
+  ignoreOutsideCloseWhenPointerOverAnyUI: 1
+  enableDebugLogs: 0
+--- !u!4 &469622002
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 469622000}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 390.42212, y: 341.3204, z: -87.97651}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &538505011 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 286983589677044495, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
@@ -1442,6 +1504,14 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 282249893176127688, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 469622001}
+    - target: {fileID: 282249893176127688, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: ClosePanel
+      objectReference: {fileID: 0}
     - target: {fileID: 322662778833493359, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: -39
@@ -1542,6 +1612,14 @@ PrefabInstance:
       propertyPath: m_Sprite
       value: 
       objectReference: {fileID: 21300000, guid: 0697523fae6a2714190a8bcc8fbedc8a, type: 3}
+    - target: {fileID: 1992821261991973276, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 469622001}
+    - target: {fileID: 1992821261991973276, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: TogglePanel
+      objectReference: {fileID: 0}
     - target: {fileID: 2200186038528168525, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
       propertyPath: m_fontColor.b
       value: 0.335849
@@ -1577,6 +1655,14 @@ PrefabInstance:
     - target: {fileID: 2425169400070961813, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
       propertyPath: m_fontColor32.rgba
       value: 4283848278
+      objectReference: {fileID: 0}
+    - target: {fileID: 2606142593814356318, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 469622001}
+    - target: {fileID: 2606142593814356318, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: TogglePanel
       objectReference: {fileID: 0}
     - target: {fileID: 2794970196056107942, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
@@ -1818,6 +1904,14 @@ PrefabInstance:
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
       value: OnCardSelected
       objectReference: {fileID: 0}
+    - target: {fileID: 5142800157789344096, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 469622001}
+    - target: {fileID: 5142800157789344096, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: ClosePanel
+      objectReference: {fileID: 0}
     - target: {fileID: 5253253964259599661, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: -39
@@ -1841,6 +1935,14 @@ PrefabInstance:
     - target: {fileID: 5312858078207768936, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
       value: 169.58
+      objectReference: {fileID: 0}
+    - target: {fileID: 5556683251703556024, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 469622001}
+    - target: {fileID: 5556683251703556024, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: TogglePanel
       objectReference: {fileID: 0}
     - target: {fileID: 5677309007614622733, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
       propertyPath: m_IsActive
@@ -10555,6 +10657,7 @@ GameObject:
   - component: {fileID: 2838476022432473049}
   - component: {fileID: 8848675854986940205}
   - component: {fileID: 971310900627142269}
+  - component: {fileID: 8848675854986940206}
   m_Layer: 0
   m_Name: CPU_root
   m_TagString: Player
@@ -28190,6 +28293,21 @@ MonoBehaviour:
     maxExp: 100
   StunTurnsRemaining: 0
   hasDoubleStarBuff: 0
+--- !u!114 &8848675854986940206
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4046898412366521653}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a68ce8b0219d260498795f7d888e84de, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  personality: 0
+  logDecisionScores: 1
+  randomScoreNoise: 0
 --- !u!23 &8885097399028577372
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -30208,3 +30326,4 @@ SceneRoots:
   - {fileID: 332179515}
   - {fileID: 1103424838}
   - {fileID: 1648109999}
+  - {fileID: 469622002}

@@ -72,7 +72,7 @@ public class DiceRollerFromPNG : MonoBehaviour
 
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        if (scene.name == "TestFight" || scene.name == "Shop" || scene.name.Contains("Minigame")) return;
+        if (scene.name == "TestFight" || scene.name == "ShopIntermission" || scene.name.Contains("Minigame")) return;
         RefreshReferences();
     }
 

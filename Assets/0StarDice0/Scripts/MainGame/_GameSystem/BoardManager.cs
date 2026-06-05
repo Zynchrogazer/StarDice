@@ -207,8 +207,7 @@ public class BoardManager : MonoBehaviour
                     if (evtName == "lava" || evtName == "warp" || evtName == "windteleport" || evtName == "teleport")
                     {
                         // 🟢 ให้ AI จดจำด่านไว้ด้วยเหมือนกันเผื่อต้องโหลดฉาก!
-                        PlayerPrefs.SetString(GameEventManager.LastBoardSceneKey, UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
-                        PlayerPrefs.Save();
+                        GameEventManager.SetLastBoardSceneName(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
                         
                         Debug.Log($"[BoardManager] 🌪️ AI {playerObject.name} เหยียบช่อง {evtName}! ส่งต่อให้วาร์ป...");
                         GameEventManager.TryTriggerEvent(nodeData.eventName, playerObject);
@@ -240,8 +239,7 @@ public class BoardManager : MonoBehaviour
         }
 
         string currentSceneName = SceneManager.GetActiveScene().name;
-        PlayerPrefs.SetString(GameEventManager.LastBoardSceneKey, currentSceneName);
-        PlayerPrefs.Save();
+        GameEventManager.SetLastBoardSceneName(currentSceneName);
         Debug.Log($"<color=cyan>💾 [BoardManager] บันทึกชื่อด่าน '{currentSceneName}' ก่อนเข้า Event: {nodeData.eventName} เรียบร้อย!</color>");
 
         switch (nodeData.type)
@@ -331,8 +329,7 @@ public class BoardManager : MonoBehaviour
 
         string currentSceneName = SceneManager.GetActiveScene().name; 
 
-        PlayerPrefs.SetString(GameEventManager.LastBoardSceneKey, currentSceneName);
-        PlayerPrefs.Save();
+        GameEventManager.SetLastBoardSceneName(currentSceneName);
         Debug.Log($"<color=magenta>💾 [BoardManager] บันทึกชื่อด่าน '{currentSceneName}' ก่อนเข้าฉากสู้เรียบร้อย!</color>");
     
     string battleSceneName = "TestFight"; 

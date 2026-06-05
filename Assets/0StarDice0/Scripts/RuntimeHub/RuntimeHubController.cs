@@ -5,12 +5,42 @@ using UnityEngine.EventSystems;
 
 public class RuntimeHubController : MonoBehaviour
 {
+    private static string initialAdditiveSceneAfterHubLoad;
+
     [Header("UI References to Hide")]
     [Tooltip("ใส่ Canvas หรือ Panel ทั้งหมดที่ต้องการซ่อนตอนย้ายฉากลงในนี้")]
     // ✅ เปลี่ยนจาก GameObject ธรรมดา เป็น GameObject[] (Array)
     public GameObject[] uiElementsToHide; 
 
     private bool isTransitioning = false;
+
+    private void Awake()
+    {
+        if (!string.IsNullOrWhiteSpace(initialAdditiveSceneAfterHubLoad))
+        {
+            HideConfiguredUI();
+        }
+    }
+
+    public static void RequestInitialAdditiveSceneAfterHubLoad(string sceneName)
+    {
+        initialAdditiveSceneAfterHubLoad = string.IsNullOrWhiteSpace(sceneName) ? null : sceneName.Trim();
+    }
+
+    private void Start()
+    {
+        if (!string.IsNullOrWhiteSpace(initialAdditiveSceneAfterHubLoad))
+        {
+            string sceneName = initialAdditiveSceneAfterHubLoad;
+            initialAdditiveSceneAfterHubLoad = null;
+            StartCoroutine(LoadInitialAdditiveSceneRoutine(sceneName));
+        }
+    }
+
+    private IEnumerator LoadInitialAdditiveSceneRoutine(string sceneName)
+    {
+        yield return LoadSceneRoutine(sceneName);
+    }
 
     public void ConfirmAndGoNextScene(string nextScene)
     {
@@ -37,31 +67,54 @@ public class RuntimeHubController : MonoBehaviour
             yield break;
         }
 
-        // โหลดฉากใหม่แบบ Additive
+        HideConfiguredUI();
+
+        if (SceneFlowController.TryRequestScene(nextScene))
+        {
+            while (SceneFlowController.IsTransitioning)
+            {
+                yield return null;
+            }
+
+            isTransitioning = false;
+            yield break;
+        }
+
+        // Fallback for builds that do not have a SceneFlowController-compatible scene entry.
         AsyncOperation loadOperation = SceneManager.LoadSceneAsync(nextScene, LoadSceneMode.Additive);
+        if (loadOperation == null)
+        {
+            Debug.LogError($"[RuntimeHubController] Failed to start additive load for scene '{nextScene}'.");
+            isTransitioning = false;
+            yield break;
+        }
+
         yield return loadOperation;
 
-        // ตั้งฉากใหม่เป็น Active Scene
         Scene loadedScene = SceneManager.GetSceneByName(nextScene);
         if (loadedScene.IsValid() && loadedScene.isLoaded)
         {
             SceneManager.SetActiveScene(loadedScene);
         }
 
-        // 🎯 [KISS] วนลูปปิด UI ทุกตัวที่คุณลากมาใส่ใน Inspector ทิ้งไปตรงๆ
-        if (uiElementsToHide != null)
-        {
-            foreach (GameObject ui in uiElementsToHide)
-            {
-                if (ui != null) 
-                {
-                    ui.SetActive(false);
-                }
-            }
-        }
-
         EnsureSingleEventSystemAndAudioListener(loadedScene);
         isTransitioning = false;
+    }
+
+    private void HideConfiguredUI()
+    {
+        if (uiElementsToHide == null)
+        {
+            return;
+        }
+
+        foreach (GameObject ui in uiElementsToHide)
+        {
+            if (ui != null)
+            {
+                ui.SetActive(false);
+            }
+        }
     }
 
     private static void EnsureSingleEventSystemAndAudioListener(Scene preferredScene)

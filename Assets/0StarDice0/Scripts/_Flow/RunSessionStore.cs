@@ -8,6 +8,7 @@ public class RunSessionStore : MonoBehaviour
     [SerializeField] private string selectedMonsterId;
     [SerializeField] private List<string> selectedDeckIds = new List<string>();
     [SerializeField] private int runRoundIndex;
+    [SerializeField] private string lastBoardSceneName;
     [SerializeField] private bool hydrateFromPlayerPrefsOnAwake = true;
     [SerializeField] private float monsterSyncIntervalSeconds = 0.2f;
 
@@ -20,6 +21,7 @@ public class RunSessionStore : MonoBehaviour
     public string SelectedMonsterId => selectedMonsterId;
     public IReadOnlyList<string> SelectedDeckIds => selectedDeckIds;
     public int RunRoundIndex => runRoundIndex;
+    public string LastBoardSceneName => lastBoardSceneName;
 
     private void Awake()
     {
@@ -145,13 +147,59 @@ public class RunSessionStore : MonoBehaviour
         runRoundIndex = Mathf.Max(0, roundIndex);
     }
 
+    public void SetLastBoardSceneName(string sceneName)
+    {
+        lastBoardSceneName = string.IsNullOrWhiteSpace(sceneName) ? string.Empty : sceneName.Trim();
+
+        // Keep PlayerPrefs as a backward-compatible mirror for legacy callers while
+        // RunSessionStore becomes the runtime source of truth for the current session.
+        if (string.IsNullOrEmpty(lastBoardSceneName))
+        {
+            PlayerPrefs.DeleteKey(GameEventManager.LastBoardSceneKey);
+        }
+        else
+        {
+            PlayerPrefs.SetString(GameEventManager.LastBoardSceneKey, lastBoardSceneName);
+        }
+
+        PlayerPrefs.Save();
+    }
+
+    public bool TryGetLastBoardSceneName(out string sceneName)
+    {
+        if (!string.IsNullOrWhiteSpace(lastBoardSceneName))
+        {
+            sceneName = lastBoardSceneName;
+            return true;
+        }
+
+        sceneName = string.Empty;
+        return false;
+    }
+
+    public void ClearBoardReturnState()
+    {
+        lastBoardSceneName = string.Empty;
+        PlayerPrefs.DeleteKey(GameEventManager.LastBoardSceneKey);
+        PlayerPrefs.SetInt(GameTurnManager.PendingBattleReturnKey, 0);
+        PlayerPrefs.Save();
+    }
+
+    public void HydrateBoardReturnStateFromPlayerPrefs()
+    {
+        lastBoardSceneName = PlayerPrefs.GetString(GameEventManager.LastBoardSceneKey, string.Empty);
+    }
+
     public void ClearRunState()
     {
         selectedMonsterId = string.Empty;
         selectedDeckIds.Clear();
         runRoundIndex = 0;
+        lastBoardSceneName = string.Empty;
 
         PlayerPrefs.DeleteKey(SelectedMonsterKey);
+        PlayerPrefs.DeleteKey(GameEventManager.LastBoardSceneKey);
+        PlayerPrefs.SetInt(GameTurnManager.PendingBattleReturnKey, 0);
         PlayerPrefs.DeleteKey(SelectedDeckKey);
         PlayerPrefs.Save();
     }
@@ -175,6 +223,7 @@ public class RunSessionStore : MonoBehaviour
     public void HydrateFromPlayerPrefs()
     {
         SyncMonsterFromPlayerPrefs();
+        HydrateBoardReturnStateFromPlayerPrefs();
 
         string deckSnapshot = PlayerPrefs.GetString(SelectedDeckKey, string.Empty);
         if (string.IsNullOrEmpty(deckSnapshot))
