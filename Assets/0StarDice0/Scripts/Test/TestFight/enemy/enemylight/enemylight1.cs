@@ -1937,6 +1937,12 @@ private System.Collections.IEnumerator PlayerAttackMove(RectTransform playerToMo
             damageN *= 5;
             EarthSmashEarthLeft = false;
         }
+         if (EnemyShieldWater100 > 0)
+        {
+            EnemyShieldWater100--;
+            damageN = 0;
+
+        }
         
       PlaySoundEffect(0);
 

@@ -1962,6 +1962,12 @@ private System.Collections.IEnumerator PlayerAttackMove(RectTransform playerToMo
             damageN *= 5;
             EarthSmashEarthLeft = false;
         }
+        if (bossshield100 > 0)
+        {
+            bossshield100--;
+            damageN = 0;
+        }
+
         
       PlaySoundEffect(0);
 

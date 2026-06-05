@@ -1943,6 +1943,15 @@ private System.Collections.IEnumerator PlayerAttackMove(RectTransform playerToMo
             damageN *= 5;
             EarthSmashEarthLeft = false;
         }
+           if (EnemyDarkWalk > 0)
+        {
+            EnemyDarkWalk--;
+        }
+         if (EnemyReflectWind > 0)
+        {
+            EnemyReflectWind--;
+            damageN=0;
+        }
         
       PlaySoundEffect(0);
 

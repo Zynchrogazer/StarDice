@@ -2972,7 +2972,7 @@ private System.Collections.IEnumerator EnemyAttackMove(Transform enemyTransform)
     void EnemySkill2() //<--สกิล 2 ศัตรู
     {
          EnemyFireBuff = 2;
-        enemySkill3Cooldown = 5;
+        enemySkill2Cooldown = 5;
         ShowSkillEffectOnce(48);
         PlaySoundEffect(3);
     }
