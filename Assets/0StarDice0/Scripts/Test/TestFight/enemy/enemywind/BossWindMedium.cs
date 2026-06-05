@@ -1963,15 +1963,6 @@ private System.Collections.IEnumerator PlayerAttackMove(RectTransform playerToMo
             damageN *= 5;
             EarthSmashEarthLeft = false;
         }
-         if (EnemyDarkWalk > 0)
-        {
-            EnemyDarkWalk--;
-        }
-         if (EnemyReflectWind > 0)
-        {
-            EnemyReflectWind--;
-            damageN=0;
-        }
         
       PlaySoundEffect(0);
 
@@ -3173,7 +3164,7 @@ private System.Collections.IEnumerator EnemyAttackMove(Transform enemyTransform)
     void EnemySkill4() //<--สกิล 4 ศัตรู
     {
 
-          int healAmount = 30;
+          int healAmount = 50;
         enemyHP += healAmount;
         enemyHP = Mathf.Clamp(enemyHP, 0, enemyMaxHP);
         ShowSkillEffectOnce(3);
@@ -3186,7 +3177,7 @@ private System.Collections.IEnumerator EnemyAttackMove(Transform enemyTransform)
         void EnemySkill5() //<--สกิล 5 ศัตรู
     {
 
-       EnemyDarkWalk = 2; 
+       EnemyDarkWalk = 3; 
         enemySkill5Cooldown = 6;
         ShowSkillEffectOnce(51);
         PlaySoundEffect(6);
@@ -3195,8 +3186,8 @@ private System.Collections.IEnumerator EnemyAttackMove(Transform enemyTransform)
      void EnemySkill6() //<--สกิล 5 ศัตรู
     {
 
-        EnemyReflectWind = 1;
-        enemySkill6Cooldown = 5;
+        EnemyReflectWind = 2;
+        enemySkill6Cooldown = 6;
         ShowSkillEffectOnce(52);
     }
 

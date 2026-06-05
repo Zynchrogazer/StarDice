@@ -1943,11 +1943,6 @@ private System.Collections.IEnumerator PlayerAttackMove(RectTransform playerToMo
             damageN *= 5;
             EarthSmashEarthLeft = false;
         }
-          if (EnemyShieldEarth > 0)
-        {
-            damageN = 0;
-            EnemyShieldEarth--;
-        }
         
       PlaySoundEffect(0);
 
@@ -3048,7 +3043,7 @@ private System.Collections.IEnumerator EnemyAttackMove(Transform enemyTransform)
             damage /= 2;
             Debug.Log($"ดาเมจของศัตรูจากสกิลลดลงครึ่งหนึ่ง เหลือ {damage}");
         }
-         int healAmount = 0;
+         int healAmount = 10;
         enemyHP += healAmount;
         enemyHP = Mathf.Clamp(enemyHP, 0, enemyMaxHP);
         ShowSkillEffectOnce(3);
@@ -3078,7 +3073,7 @@ private System.Collections.IEnumerator EnemyAttackMove(Transform enemyTransform)
             Debug.Log($"ดาเมจของศัตรูจากสกิลลดลงครึ่งหนึ่ง เหลือ {damage}");
         }
         //ShowSkillEffectOnce(5); 
-         int healAmount = 0;
+         int healAmount = 20;
         enemyHP += healAmount;
         enemyHP = Mathf.Clamp(enemyHP, 0, enemyMaxHP);
         ShowSkillEffectOnce(3);
@@ -3108,14 +3103,14 @@ private System.Collections.IEnumerator EnemyAttackMove(Transform enemyTransform)
         ShowSkillEffectOnce(51);
         PlaySoundEffect(2);
         UpdateEnemyHPUI();
-        enemySkill4Cooldown = 8;
+        enemySkill4Cooldown = 7;
         Debug.Log($"ศัตรูใช้สกิล Heal ฟื้น {healAmount} HP");
         
     }
         void EnemySkill5() //<--สกิล 5 ศัตรู
     {
 
-        EnemyShieldEarth =1;
+        EnemyShieldEarth =2;
         enemySkill5Cooldown = 7;
         ShowSkillEffectOnce(52);
     }

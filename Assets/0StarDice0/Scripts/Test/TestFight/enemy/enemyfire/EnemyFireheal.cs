@@ -1938,11 +1938,6 @@ private System.Collections.IEnumerator PlayerAttackMove(RectTransform playerToMo
             damageN *= 5;
             EarthSmashEarthLeft = false;
         }
-         if(EnemyFireShield > 0)
-        {
-            damageN /= 2;
-            EnemyFireShield--;
-        }
         
       PlaySoundEffect(0);
 

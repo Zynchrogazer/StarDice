@@ -1944,10 +1944,6 @@ private System.Collections.IEnumerator PlayerAttackMove(RectTransform playerToMo
             damageN *= 5;
             EarthSmashEarthLeft = false;
         }
-        if(EnemyDarkWalk100 > 0)
-        {
-            EnemyDarkWalk100--;
-        }
         
       PlaySoundEffect(0);
 
@@ -3096,7 +3092,7 @@ private System.Collections.IEnumerator EnemyAttackMove(Transform enemyTransform)
             Debug.Log($"ดาเมจของศัตรูจากสกิลลดลงครึ่งหนึ่ง เหลือ {damage}");
         }
 
-        int healAmount =10;
+        int healAmount =damage;
         enemyHP += healAmount;
         enemyHP = Mathf.Clamp(enemyHP, 0, enemyMaxHP);
         UpdateEnemyHPUI();
@@ -3121,7 +3117,7 @@ private System.Collections.IEnumerator EnemyAttackMove(Transform enemyTransform)
     {
 
         EnemyDarkWalk100 = Random.Range(1,4);
-        enemySkill5Cooldown = 6;
+        enemySkill5Cooldown = 5;
         ShowSkillEffectOnce(51);
         PlaySoundEffect(6);
     }

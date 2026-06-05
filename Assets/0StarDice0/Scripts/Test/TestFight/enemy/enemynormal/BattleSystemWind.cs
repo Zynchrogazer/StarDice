@@ -1937,11 +1937,6 @@ private System.Collections.IEnumerator PlayerAttackMove(RectTransform playerToMo
             damageN *= 5;
             EarthSmashEarthLeft = false;
         }
-          if(EnemyReflectWind > 0)
-        {
-            EnemyReflectWind--;
-            
-        }
         
       PlaySoundEffect(0);
 
