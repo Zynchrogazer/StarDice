@@ -33,16 +33,17 @@ public class MainDarkDebuffGimmickController : MonoBehaviour
     [SerializeField] private bool mainDarkDebuffOnlyInMainDark = true;
     [SerializeField] private bool enableAutoTriggerByTurn = false;
     [Min(1)] [SerializeField] private int autoTriggerIntervalTurns = 4;
-    [SerializeField] private bool autoTriggerOnlyPlayerTurn = false;
+    [SerializeField] private bool autoTriggerOnlyPlayerTurn = true;
+    [SerializeField] private bool preventDuplicateActiveDebuffs = true;
 
     [Header("Debuff Pool (Random 1 Option Per Trigger)")]
     [SerializeField] private List<DebuffOption> debuffPool = new List<DebuffOption>
     {
         new DebuffOption { type = DebuffType.Ice, turns = 1 },
-        new DebuffOption { type = DebuffType.Burn, turns = 3 },
-        new DebuffOption { type = DebuffType.Curse, turns = 3 },
-        new DebuffOption { type = DebuffType.Poison, turns = 3 },
-        new DebuffOption { type = DebuffType.Sleep, turns = 3 }
+        new DebuffOption { type = DebuffType.Burn, turns = 2 },
+        new DebuffOption { type = DebuffType.Curse, turns = 2 },
+        new DebuffOption { type = DebuffType.Poison, turns = 2 },
+        new DebuffOption { type = DebuffType.Sleep, turns = 1 }
     };
 
     private int autoTriggerTurnsLeft;
@@ -125,8 +126,15 @@ public class MainDarkDebuffGimmickController : MonoBehaviour
             return false;
         }
 
-        int randomIndex = Random.Range(0, debuffPool.Count);
-        DebuffOption selectedOption = debuffPool[randomIndex];
+        List<DebuffOption> eligibleDebuffs = BuildEligibleDebuffPool(playerState);
+        if (eligibleDebuffs.Count == 0)
+        {
+            Debug.Log("[MainDarkDebuffGimmick] Skip trigger because every debuff in pool is already active.");
+            return false;
+        }
+
+        int randomIndex = Random.Range(0, eligibleDebuffs.Count);
+        DebuffOption selectedOption = eligibleDebuffs[randomIndex];
         if (selectedOption.turns <= 0)
         {
             selectedOption.turns = 1;
@@ -136,6 +144,45 @@ public class MainDarkDebuffGimmickController : MonoBehaviour
         Debug.Log($"[MainDarkDebuffGimmick] Applied {selectedOption.type} ({selectedOption.turns} turn(s)) to {target.name}");
 
         return true;
+    }
+
+    private List<DebuffOption> BuildEligibleDebuffPool(PlayerState playerState)
+    {
+        List<DebuffOption> eligibleDebuffs = new List<DebuffOption>();
+        for (int i = 0; i < debuffPool.Count; i++)
+        {
+            DebuffOption option = debuffPool[i];
+            if (!preventDuplicateActiveDebuffs || !IsDebuffActive(playerState, option.type))
+            {
+                eligibleDebuffs.Add(option);
+            }
+        }
+
+        return eligibleDebuffs;
+    }
+
+    private static bool IsDebuffActive(PlayerState playerState, DebuffType type)
+    {
+        if (playerState == null)
+        {
+            return false;
+        }
+
+        switch (type)
+        {
+            case DebuffType.Ice:
+                return playerState.hasIceEffect || playerState.StunTurnsRemaining > 0;
+            case DebuffType.Burn:
+                return playerState.DebuffBurn && playerState.DebuffBurnTurnsRemaining > 0;
+            case DebuffType.Curse:
+                return playerState.backwardCurseTurns > 0;
+            case DebuffType.Poison:
+                return playerState.poisonDebuffTurns > 0;
+            case DebuffType.Sleep:
+                return playerState.sleepDebuffTurns > 0;
+            default:
+                return false;
+        }
     }
 
     private bool CanTriggerInCurrentScene()

@@ -781,6 +781,7 @@ public class RouteManager : MonoBehaviour
             return 0;
         }
 
+        HashSet<int> occupiedPlayerTileIds = GetOccupiedPlayerTileIds();
         List<int> candidateTileIds = new List<int>();
         for (int i = 0; i < nodeConnections.Count; i++)
         {
@@ -791,7 +792,7 @@ public class RouteManager : MonoBehaviour
             }
 
             int tileId = nodeData.tileID;
-            if (tileId <= 0 || IsRockObstacleActive(tileId))
+            if (tileId <= 0 || IsRockObstacleActive(tileId) || occupiedPlayerTileIds.Contains(tileId))
             {
                 continue;
             }
@@ -835,6 +836,38 @@ public class RouteManager : MonoBehaviour
     {
         RockObstacleState state = GetOrCreateRockObstacleState(tileID, false);
         return state != null && state.isActive;
+    }
+
+    public int CountActiveRockObstacles()
+    {
+        EnsureRockObstacleCache();
+
+        int activeCount = 0;
+        foreach (RockObstacleState state in rockObstacleMap.Values)
+        {
+            if (state != null && state.isActive)
+            {
+                activeCount++;
+            }
+        }
+
+        return activeCount;
+    }
+
+    private static HashSet<int> GetOccupiedPlayerTileIds()
+    {
+        HashSet<int> occupiedTileIds = new HashSet<int>();
+        PlayerPathWalker[] walkers = FindObjectsByType<PlayerPathWalker>(FindObjectsSortMode.None);
+        for (int i = 0; i < walkers.Length; i++)
+        {
+            PlayerPathWalker walker = walkers[i];
+            if (walker != null && walker.currentNodeID > 0)
+            {
+                occupiedTileIds.Add(walker.currentNodeID);
+            }
+        }
+
+        return occupiedTileIds;
     }
 
     public bool TryBreakRockObstacle(int tileID)

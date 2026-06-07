@@ -15,6 +15,8 @@ public class MainDarkDebuffGimmickTurnTicker : MonoBehaviour
     [Header("Debug")]
     [SerializeField] private bool verboseLog = false;
 
+    private bool isSubscribedToTurnManager;
+
     private void Awake()
     {
         if (darkDebuffGimmickController == null)
@@ -30,17 +32,38 @@ public class MainDarkDebuffGimmickTurnTicker : MonoBehaviour
             return;
         }
 
+        TrySubscribeTurnManager();
+    }
+
+    private void Start()
+    {
+        if (!Application.isPlaying || isSubscribedToTurnManager)
+        {
+            return;
+        }
+
+        TrySubscribeTurnManager();
+    }
+
+    private void TrySubscribeTurnManager()
+    {
+        if (isSubscribedToTurnManager)
+        {
+            return;
+        }
+
         if (GameTurnManager.TryGet(out var gameTurnManager))
         {
             gameTurnManager.OnTurnChanged += HandleTurnChanged;
+            isSubscribedToTurnManager = true;
             if (verboseLog)
             {
                 Debug.Log("[MainDarkDebuffGimmickTurnTicker] Subscribed OnTurnChanged");
             }
         }
-        else
+        else if (verboseLog)
         {
-            Debug.LogWarning("[MainDarkDebuffGimmickTurnTicker] ไม่พบ GameTurnManager ขณะ OnEnable");
+            Debug.LogWarning("[MainDarkDebuffGimmickTurnTicker] ไม่พบ GameTurnManager ขณะ Subscribe");
         }
     }
 
@@ -51,10 +74,12 @@ public class MainDarkDebuffGimmickTurnTicker : MonoBehaviour
             return;
         }
 
-        if (GameTurnManager.TryGet(out var gameTurnManager))
+        if (isSubscribedToTurnManager && GameTurnManager.TryGet(out var gameTurnManager))
         {
             gameTurnManager.OnTurnChanged -= HandleTurnChanged;
         }
+
+        isSubscribedToTurnManager = false;
     }
 
     private void HandleTurnChanged(bool isAITurn)
