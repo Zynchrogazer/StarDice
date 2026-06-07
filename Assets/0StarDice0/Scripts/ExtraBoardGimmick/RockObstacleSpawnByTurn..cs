@@ -15,6 +15,8 @@ public class RockObstacleSpawnByTurn : MonoBehaviour
     [SerializeField] private bool enableRandomRockSpawnByTurn = true;
     [SerializeField, Min(1)] private int randomRockSpawnIntervalTurns = 5;
     [SerializeField, Min(1)] private int randomRockSpawnCountPerInterval = 1;
+    [SerializeField, Min(0)] private int maxActiveRandomRockObstacles = 6;
+    [SerializeField] private bool spawnOnlyOnPlayerTurn = true;
 
     [Header("Scene Filter")]
     [SerializeField] private bool randomRockOnlyInMainEarth = true;
@@ -24,6 +26,7 @@ public class RockObstacleSpawnByTurn : MonoBehaviour
     [SerializeField] private bool verboseLog = false;
 
     private int turnStartCounter;
+    private bool isSubscribedToTurnManager;
 
     private void Awake()
     {
@@ -40,9 +43,30 @@ public class RockObstacleSpawnByTurn : MonoBehaviour
             return;
         }
 
+        TrySubscribeTurnManager();
+    }
+
+    private void Start()
+    {
+        if (!Application.isPlaying || isSubscribedToTurnManager)
+        {
+            return;
+        }
+
+        TrySubscribeTurnManager();
+    }
+
+    private void TrySubscribeTurnManager()
+    {
+        if (isSubscribedToTurnManager)
+        {
+            return;
+        }
+
         if (GameTurnManager.TryGet(out var gameTurnManager))
         {
             gameTurnManager.OnTurnChanged += HandleTurnChanged;
+            isSubscribedToTurnManager = true;
             if (verboseLog)
             {
                 Debug.Log("[RockObstacleSpawnByTurn] Subscribed OnTurnChanged");
@@ -50,7 +74,7 @@ public class RockObstacleSpawnByTurn : MonoBehaviour
         }
         else if (verboseLog)
         {
-            Debug.LogWarning("[RockObstacleSpawnByTurn] ไม่พบ GameTurnManager ขณะ OnEnable");
+            Debug.LogWarning("[RockObstacleSpawnByTurn] ไม่พบ GameTurnManager ขณะ Subscribe");
         }
     }
 
@@ -61,15 +85,22 @@ public class RockObstacleSpawnByTurn : MonoBehaviour
             return;
         }
 
-        if (GameTurnManager.TryGet(out var gameTurnManager))
+        if (isSubscribedToTurnManager && GameTurnManager.TryGet(out var gameTurnManager))
         {
             gameTurnManager.OnTurnChanged -= HandleTurnChanged;
         }
+
+        isSubscribedToTurnManager = false;
     }
 
     private void HandleTurnChanged(bool isAITurn)
     {
         if (!enableRandomRockSpawnByTurn)
+        {
+            return;
+        }
+
+        if (spawnOnlyOnPlayerTurn && isAITurn)
         {
             return;
         }
@@ -108,7 +139,24 @@ public class RockObstacleSpawnByTurn : MonoBehaviour
             return;
         }
 
-        int spawnedCount = routeManager.TrySpawnRandomRockObstacles(randomRockSpawnCountPerInterval);
+        int spawnCount = randomRockSpawnCountPerInterval;
+        if (maxActiveRandomRockObstacles > 0)
+        {
+            int activeRockCount = routeManager.CountActiveRockObstacles();
+            int remainingCapacity = maxActiveRandomRockObstacles - activeRockCount;
+            if (remainingCapacity <= 0)
+            {
+                if (verboseLog)
+                {
+                    Debug.Log($"[RockObstacleSpawnByTurn] ถึงเพดานหินแล้ว ({activeRockCount}/{maxActiveRandomRockObstacles})");
+                }
+                return;
+            }
+
+            spawnCount = Mathf.Min(spawnCount, remainingCapacity);
+        }
+
+        int spawnedCount = routeManager.TrySpawnRandomRockObstacles(spawnCount);
         if (spawnedCount <= 0 && verboseLog)
         {
             Debug.Log("[RockObstacleSpawnByTurn] ไม่มีช่องว่างสำหรับสุ่มวางหินเพิ่ม");

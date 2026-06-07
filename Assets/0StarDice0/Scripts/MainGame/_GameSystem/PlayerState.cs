@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System;
 using System.Collections.Generic;
 using UnityEngine.SceneManagement;
@@ -231,6 +231,13 @@ public class PlayerState : MonoBehaviour
 
     public void TakeDamage(int dmg)
     {
+        if (isAI)
+        {
+            EnsureBoardAIAlive();
+            Debug.Log($"[PlayerState] Board AI {name} ignores {dmg} damage (zombie nuisance mode).");
+            return;
+        }
+
         PlayerHealth -= dmg;
         Debug.Log($"Took {dmg} damage. HP: {PlayerHealth}/{MaxHealth}");
 
@@ -243,6 +250,13 @@ public class PlayerState : MonoBehaviour
 
     public void Heal(int heal)
     {
+        if (isAI)
+        {
+            EnsureBoardAIAlive();
+            Debug.Log($"[PlayerState] Board AI {name} ignores heal {heal} (zombie nuisance mode).");
+            return;
+        }
+
         PlayerHealth += heal;
 
         // ✅ เพิ่ม Logic: ห้ามเกิน MaxHealth
@@ -259,6 +273,17 @@ public class PlayerState : MonoBehaviour
             PlayerHealth = 0;
             OnDied?.Invoke();
         }
+    }
+
+    public void EnsureBoardAIAlive()
+    {
+        if (!isAI)
+            return;
+
+        int safeMaxHealth = Mathf.Max(1, MaxHealth);
+        MaxHealth = safeMaxHealth;
+        PlayerHealth = safeMaxHealth;
+        OnStatsUpdated?.Invoke();
     }
 
     public bool TryConsumeIceDebuff()

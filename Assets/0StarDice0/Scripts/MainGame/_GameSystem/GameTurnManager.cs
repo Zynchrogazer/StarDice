@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.SceneManagement;
@@ -189,7 +189,11 @@ public class GameTurnManager : MonoBehaviour
                 yield return new WaitForSeconds(0.5f);
             }
 
-            if (currentPlayer.PlayerHealth <= 0)
+            if (currentPlayer.isAI)
+            {
+                currentPlayer.EnsureBoardAIAlive();
+            }
+            else if (currentPlayer.PlayerHealth <= 0)
             {
                 yield break;
             }
