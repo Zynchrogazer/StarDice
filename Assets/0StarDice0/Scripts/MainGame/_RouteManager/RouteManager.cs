@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using System.Text.RegularExpressions;
 using System.Linq;
 #if UNITY_EDITOR
@@ -909,10 +910,28 @@ public class RouteManager : MonoBehaviour
             // อย่า parent หินกับ node โดยตรง เพราะบาง node ในฉากมี scale บางแกนผิดปกติ
             // ทำให้หินที่ spawn ถูกบีบจนดูแบนคล้าย 2D
             state.spawnedObject = Instantiate(rockObstaclePrefab, nodeData.node.position, spawnRotation);
+            MoveRockObstacleToRouteScene(state.spawnedObject);
             state.spawnedObject.transform.position = GetRockObstacleSpawnPosition(nodeData.node, state.spawnedObject);
         }
 
         return true;
+    }
+
+
+    private void MoveRockObstacleToRouteScene(GameObject rockInstance)
+    {
+        if (rockInstance == null)
+        {
+            return;
+        }
+
+        Scene routeScene = gameObject.scene;
+        if (!routeScene.IsValid() || !routeScene.isLoaded || rockInstance.scene.handle == routeScene.handle)
+        {
+            return;
+        }
+
+        SceneManager.MoveGameObjectToScene(rockInstance, routeScene);
     }
 
     private Vector3 GetRockObstacleSpawnPosition(Transform nodeTransform, GameObject rockInstance)
