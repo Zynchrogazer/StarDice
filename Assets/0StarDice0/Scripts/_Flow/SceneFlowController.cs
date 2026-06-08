@@ -269,9 +269,19 @@ public class SceneFlowController : MonoBehaviour
         }
         finally
         {
-            Debug.Log($"[SceneFlow] {currentActive.name} -> {nextSceneName} done in {(Time.unscaledTime - startedAt):0.00}s");
+            Debug.Log($"[SceneFlow] {GetSceneLogName(currentActive)} -> {nextSceneName} done in {(Time.unscaledTime - startedAt):0.00}s");
             isTransitioning = false;
         }
+    }
+
+    private static string GetSceneLogName(Scene scene)
+    {
+        if (!scene.IsValid())
+        {
+            return "<no active scene>";
+        }
+
+        return string.IsNullOrEmpty(scene.name) ? "<unnamed active scene>" : scene.name;
     }
 
     private static void ActivateScene(Scene scene)

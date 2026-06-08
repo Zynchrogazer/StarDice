@@ -1,4 +1,4 @@
-﻿﻿using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
@@ -238,6 +238,9 @@ public class GameEventManager : MonoBehaviour
         if (IsBoardScene(scene))
         {
             Debug.Log($"<color=cyan>[EventManager] ซีน '{scene.name}' ถูกระบุเป็น Board Game</color>");
+
+            boardGameSceneName = scene.name;
+            SetLastBoardSceneName(scene.name);
 
             SetupReferences();
             RestoreHiddenBoardSceneRoots();
@@ -1173,7 +1176,7 @@ private IEnumerator ShowPanelAndMoveRoutine(PlayerPathWalker walker, int steps)
             hasBoardSkyboxBeforeBattle = true;
         }
 
-        string boardSceneNameToHide = boardGameSceneName;
+        string boardSceneNameToHide = ResolveCurrentBoardSceneName();
         if (string.IsNullOrEmpty(boardSceneNameToHide))
         {
             TryGetLastBoardSceneName(out boardSceneNameToHide);
@@ -1670,13 +1673,48 @@ public AudioClip[] eventSounds;
 
     private void RememberCurrentBoardScene()
     {
-        string currentSceneName = gameObject.scene.name;
+        string currentSceneName = ResolveCurrentBoardSceneName();
         if (string.IsNullOrEmpty(currentSceneName)) return;
 
         boardGameSceneName = currentSceneName;
         SetLastBoardSceneName(currentSceneName);
 
         Debug.Log($"[EventManager] จำฉากบอร์ดล่าสุดเป็น '{currentSceneName}'");
+    }
+
+    private string ResolveCurrentBoardSceneName()
+    {
+        Scene activeScene = SceneManager.GetActiveScene();
+        if (IsBoardScene(activeScene))
+        {
+            return activeScene.name;
+        }
+
+        if (TryGetLastBoardSceneName(out string rememberedSceneName))
+        {
+            Scene rememberedScene = SceneManager.GetSceneByName(rememberedSceneName);
+            if (IsBoardScene(rememberedScene))
+            {
+                return rememberedScene.name;
+            }
+        }
+
+        for (int i = 0; i < SceneManager.sceneCount; i++)
+        {
+            Scene loadedScene = SceneManager.GetSceneAt(i);
+            if (IsBoardScene(loadedScene))
+            {
+                return loadedScene.name;
+            }
+        }
+
+        Scene ownerScene = gameObject.scene;
+        if (IsBoardScene(ownerScene))
+        {
+            return ownerScene.name;
+        }
+
+        return string.Empty;
     }
     #endregion
 }
