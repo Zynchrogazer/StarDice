@@ -13,6 +13,7 @@ public class RunSessionStore : MonoBehaviour
     [SerializeField] private float monsterSyncIntervalSeconds = 0.2f;
 
     private const string SelectedMonsterKey = "SelectedMonster";
+    private const string LegacySelectedCharacterKey = "SelectedCharacter";
     private const string SelectedDeckKey = "CurrentDeckData";
     private const string BossBattleKey = "IsBossBattle";
 
@@ -214,6 +215,7 @@ public class RunSessionStore : MonoBehaviour
         lastBoardSceneName = string.Empty;
 
         PlayerPrefs.DeleteKey(SelectedMonsterKey);
+        PlayerPrefs.DeleteKey(LegacySelectedCharacterKey);
         PlayerPrefs.DeleteKey(GameEventManager.LastBoardSceneKey);
         PlayerPrefs.SetInt(GameTurnManager.PendingBattleReturnKey, 0);
         PlayerPrefs.DeleteKey(BossBattleKey);
