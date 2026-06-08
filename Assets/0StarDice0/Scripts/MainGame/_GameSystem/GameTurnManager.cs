@@ -386,6 +386,10 @@ public class GameTurnManager : MonoBehaviour
         }
 
         // กลับจาก battle = จบเทิร์นของผู้เล่น/AI ที่เพิ่งเข้าฉากสู้
+        // จึงต้อง tick debuff ปลายเทิร์นด้วย ไม่งั้นสถานะจาก MainDark อาจค้างข้ามรอบ
+        PlayerState endedPlayer = CurrentPlayer;
+        endedPlayer?.TickEndTurnDebuffs();
+
         // ไม่ควรรีเซ็ตทั้งระบบกลับไปคนแรกเสมอ เพราะจะทำให้วนเทิร์นผู้เล่นซ้ำ
         currentPlayerIndex++;
         if (currentPlayerIndex >= allPlayers.Count)
@@ -399,6 +403,18 @@ public class GameTurnManager : MonoBehaviour
 
         Debug.Log($"[Manager] ✅ กลับจาก Battle แล้ว ส่งต่อเทิร์นให้: {CurrentPlayer?.name}");
         StartCoroutine(StartTurnRoutine());
+        StartCoroutine(RecoverRollButtonAfterBoardReturn());
+    }
+
+    private IEnumerator RecoverRollButtonAfterBoardReturn()
+    {
+        yield return new WaitForSeconds(1.75f);
+
+        PlayerState currentPlayer = CurrentPlayer;
+        if (currentState == GameState.WaitingForRoll && currentPlayer != null && !currentPlayer.isAI)
+        {
+            ResolveDiceRoller()?.ForceEnableButton();
+        }
     }
 
     // (และอย่าลืมฟังก์ชันจัดแถวที่ผมให้ไปคราวก่อน ถ้ายังไม่มีให้เติมลงไปครับ)

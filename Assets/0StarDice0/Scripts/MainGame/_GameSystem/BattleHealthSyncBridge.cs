@@ -112,9 +112,22 @@ public static class BattleHealthSyncBridge
         // จึงต้อง sync กลับเข้า PlayerState/ข้อมูลหลักก่อนทำลาย runtime clone
         int syncedCredit = Mathf.Max(0, runtimeData.Credit);
         currentPlayer.PlayerCredit = syncedCredit;
-        currentPlayer.PlayerLevel = Mathf.Max(1, runtimeData.level);
-        currentPlayer.CurrentExp = Mathf.Max(0, runtimeData.currentExp);
-        currentPlayer.MaxExp = Mathf.Max(1, runtimeData.maxExp);
+
+        int runtimeLevel = Mathf.Max(1, runtimeData.level);
+        int runtimeExp = Mathf.Max(0, runtimeData.currentExp);
+        int runtimeMaxExp = Mathf.Max(1, runtimeData.maxExp);
+
+        // Do not let a stale runtime PlayerData clone roll the board player back after
+        // BattleResultFlowService already granted EXP/level-up before the battle scene unloads.
+        bool runtimeProgressIsAhead = runtimeLevel > currentPlayer.PlayerLevel ||
+                                      (runtimeLevel == currentPlayer.PlayerLevel && runtimeExp > currentPlayer.CurrentExp);
+        if (runtimeProgressIsAhead)
+        {
+            currentPlayer.PlayerLevel = runtimeLevel;
+            currentPlayer.CurrentExp = runtimeExp;
+            currentPlayer.MaxExp = runtimeMaxExp;
+        }
+
         currentPlayer.NotifyStatsUpdated();
 
         if (GameData.Instance != null)
@@ -139,6 +152,7 @@ public static class BattleHealthSyncBridge
         }
 
         GameData.Instance.selectedPlayer = runtimeBattlePlayerData;
+        SyncLegacySelectedCharacterPrefs(runtimeBattlePlayerData);
     }
 
     private static void RestoreGlobalSelectedPlayerAfterBattle(PlayerData runtimeData)
@@ -198,8 +212,50 @@ public static class BattleHealthSyncBridge
         runtimeData.currentExp = Mathf.Max(0, currentPlayer.CurrentExp);
         runtimeData.maxExp = Mathf.Max(1, currentPlayer.MaxExp);
         runtimeData.SetCredit(currentPlayer.PlayerCredit);
+        SyncRuntimeSkillList(runtimeData, currentPlayer);
 
         return runtimeData;
+    }
+
+    private static void SyncRuntimeSkillList(PlayerData runtimeData, PlayerState currentPlayer)
+    {
+        if (runtimeData == null || currentPlayer == null) return;
+
+        SkillData[] sourceSkills = runtimeData.allSkills != null && runtimeData.allSkills.Length > 0
+            ? runtimeData.allSkills
+            : runtimeData.skills;
+
+        if (sourceSkills == null || sourceSkills.Length == 0) return;
+
+        int unlockedCount = Mathf.Clamp(
+            currentPlayer.GetRuntimeUnlockedSkillCount(),
+            0,
+            sourceSkills.Length);
+
+        if (unlockedCount <= 0) return;
+
+        SkillData[] syncedSkills = new SkillData[unlockedCount];
+        for (int i = 0; i < unlockedCount; i++)
+        {
+            syncedSkills[i] = sourceSkills[i];
+        }
+
+        runtimeData.skills = syncedSkills;
+    }
+
+    private static void SyncLegacySelectedCharacterPrefs(PlayerData playerData)
+    {
+        if (playerData == null) return;
+
+        string selectedName = !string.IsNullOrWhiteSpace(playerData.playerName)
+            ? playerData.playerName.Trim()
+            : playerData.name.Replace("_RuntimeBattle", string.Empty).Trim();
+
+        if (string.IsNullOrEmpty(selectedName)) return;
+
+        PlayerPrefs.SetString("SelectedMonster", selectedName);
+        PlayerPrefs.SetString("SelectedCharacter", selectedName);
+        PlayerPrefs.Save();
     }
 
     private static void TryUpdateHpBar(MonoBehaviour behaviour, PlayerState currentPlayer, int syncedHealth)
