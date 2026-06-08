@@ -2,8 +2,35 @@
 
 public class DiceTester : MonoBehaviour
 {
+    private static readonly KeyCode[] ForcedRollKeys =
+    {
+        KeyCode.Keypad1,
+        KeyCode.Keypad2,
+        KeyCode.Keypad3,
+        KeyCode.Keypad4,
+        KeyCode.Keypad5,
+        KeyCode.Keypad6
+    };
+
     // เปิด/ปิด UI สำหรับเทส
     public bool showTestButtons = true;
+
+    // เปิด/ปิดปุ่มลัด NumPad สำหรับบังคับหน้าลูกเต๋า 1-6
+    public bool enableNumpadShortcuts = true;
+
+    private void Update()
+    {
+        if (!enableNumpadShortcuts) return;
+
+        for (int i = 0; i < ForcedRollKeys.Length; i++)
+        {
+            if (Input.GetKeyDown(ForcedRollKeys[i]))
+            {
+                RollForced(i + 1);
+                return;
+            }
+        }
+    }
 
     private void OnGUI()
     {

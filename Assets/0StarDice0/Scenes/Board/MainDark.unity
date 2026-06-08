@@ -2085,6 +2085,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.y
       value: 169.58
       objectReference: {fileID: 0}
+    - target: {fileID: 7449019850857928124, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7839543638330161655, guid: a962b4b4c2e5a0643831b9021567ca52, type: 3}
       propertyPath: m_fontColor.b
       value: 0.335849
@@ -25414,7 +25418,7 @@ MonoBehaviour:
     lockRandomType: 0
   - node: {fileID: 346978812957822419}
     connectedNodes:
-    - {fileID: 1626622829120148756}
+    - {fileID: 4150289539193025904}
     tileID: 63
     type: 0
     eventName: 
@@ -25478,7 +25482,6 @@ MonoBehaviour:
   - node: {fileID: 5299752683991107106}
     connectedNodes:
     - {fileID: 8022574493494801152}
-    - {fileID: 4895718784098872155}
     tileID: 72
     type: 0
     eventName: 
@@ -25536,7 +25539,6 @@ MonoBehaviour:
   - node: {fileID: 4083400522323694760}
     connectedNodes:
     - {fileID: 5780346736752342278}
-    - {fileID: 7408994952089341167}
     tileID: 80
     type: 0
     eventName: 
@@ -25665,7 +25667,7 @@ MonoBehaviour:
     lockRandomType: 0
   showGizmos: 1
   autoConnectSequential: 0
-  clearPreviousConnectionsOnAutoConnect: 1
+  clearPreviousConnectionsOnAutoConnect: 0
   tileVisualSettings:
   - type: 4
     sprite: {fileID: 0}
@@ -28313,6 +28315,10 @@ MonoBehaviour:
   personality: 0
   logDecisionScores: 1
   randomScoreNoise: 0
+  autoSwitchPersonality: 1
+  ambushDistance: 3
+  personalitySwitchMinDecisions: 2
+  personalitySwitchMaxDecisions: 4
 --- !u!23 &8885097399028577372
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -29950,7 +29956,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 628bf7716d88a7545b5f5028901f13ed, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  showTestButtons: 1
+  showTestButtons: 0
+  enableNumpadShortcuts: 1
 --- !u!4 &9217469942337828927
 Transform:
   m_ObjectHideFlags: 0
