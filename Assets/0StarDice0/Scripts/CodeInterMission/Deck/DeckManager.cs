@@ -375,39 +375,60 @@ public class DeckManager : MonoBehaviour
         StartCoroutine(WaitAndBindUI());
     }
 
-    private IEnumerator WaitAndBindUI()
+   private IEnumerator WaitAndBindUI()
+{
+    yield return null;
+    Scene activeScene = SceneManager.GetActiveScene();
+
+    // สร้าง List มารับ Object เพื่อให้ลำดับไม่เพี้ยน
+    List<GameObject> addObjsList = new List<GameObject>();
+    List<GameObject> removeObjsList = new List<GameObject>();
+    List<GameObject> useCardObjsList = new List<GameObject>();
+
+    // 1. ดึง Object ตัวแม่ที่อยู่นอกสุดของ Scene (Root) ทั้งหมดมา
+    GameObject[] rootObjects = activeScene.GetRootGameObjects();
+
+    // 2. ให้มันไล่สแกนลงไปหาลูกหลานทุกตัว (ใส่ true เพื่อให้หาตัวที่ SetActive(false) ปิดอยู่ด้วย)
+    foreach (GameObject root in rootObjects)
     {
-        yield return null;
-        Scene activeScene = SceneManager.GetActiveScene();
-
-        var addObjs = GameObject.FindGameObjectsWithTag("AddButton")
-            .Where(obj => obj.scene == activeScene)
-            .ToArray();
-        var removeObjs = GameObject.FindGameObjectsWithTag("RemoveButton")
-            .Where(obj => obj.scene == activeScene)
-            .ToArray();
-        var useCardObjs = GameObject.FindGameObjectsWithTag("UseCardImage")
-            .Where(obj => obj.scene == activeScene)
-            .ToArray();
-
-        if (addObjs.Length > 0)
+        // GetComponentsInChildren(true) จะกวาดข้อมูล "จากบนลงล่างตาม Hierarchy เสมอ"
+        Transform[] allTransforms = root.GetComponentsInChildren<Transform>(true);
+        
+        foreach (Transform t in allTransforms)
         {
-            // Sort UI elements based on hierarchy order
-            System.Array.Sort(addObjs, (a, b) => a.transform.GetSiblingIndex().CompareTo(b.transform.GetSiblingIndex()));
-            System.Array.Sort(removeObjs, (a, b) => a.transform.GetSiblingIndex().CompareTo(b.transform.GetSiblingIndex()));
-            System.Array.Sort(useCardObjs, (a, b) => a.transform.GetSiblingIndex().CompareTo(b.transform.GetSiblingIndex()));
-
-            addButtons = System.Array.ConvertAll(addObjs, o => o.GetComponent<Button>());
-            removeButtons = System.Array.ConvertAll(removeObjs, o => o.GetComponent<Button>());
-            useCardImages = System.Array.ConvertAll(useCardObjs, o => o.GetComponent<Image>());
-
-            BindRemoveButtons();
-            BindRightClickEvents();
-            UpdateUseCardUI();
-            SortAndRefreshCards();
-            Debug.Log("✅ DeckManager: UI Bound สำเร็จใน Scene " + SceneManager.GetActiveScene().name);
+            if (t.CompareTag("AddButton")) 
+                addObjsList.Add(t.gameObject);
+            else if (t.CompareTag("RemoveButton")) 
+                removeObjsList.Add(t.gameObject);
+            else if (t.CompareTag("UseCardImage")) 
+                useCardObjsList.Add(t.gameObject);
         }
     }
+
+    // 3. ผูก UI โดยใช้ข้อมูลที่เรียงลำดับมาอย่างถูกต้องแล้ว 
+    // (เอาคำสั่ง System.Array.Sort... ที่ทำให้รวนออกไปได้เลย)
+    
+    if (addObjsList.Count > 0)
+    {
+        addButtons = addObjsList.Select(o => o.GetComponent<Button>()).ToArray();
+        SortAndRefreshCards();
+    }
+
+    if (removeObjsList.Count > 0)
+    {
+        removeButtons = removeObjsList.Select(o => o.GetComponent<Button>()).ToArray();
+        BindRemoveButtons();
+    }
+
+    if (useCardObjsList.Count > 0)
+    {
+        useCardImages = useCardObjsList.Select(o => o.GetComponent<Image>()).ToArray();
+        BindRightClickEvents(); // สคริปต์คลิกขวาทำงานปกติ
+        UpdateUseCardUI();
+    }
+
+    Debug.Log($"✅ DeckManager: UI Bound สำเร็จ และเรียงลำดับถูกต้องเป๊ะ!");
+}
     
     void BindRightClickEvents()
     {

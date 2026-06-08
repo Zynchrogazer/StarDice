@@ -4,7 +4,10 @@ using UnityEngine;
 [Serializable]
 public class PlayerProgress
 {
+    // Credit is shared across all monsters so changing the selected monster does not swap wallets.
+    // The legacy per-player key is still written as a fallback for older saves/tools.
     private const string CreditKeyPrefix = "PLAYER_PROGRESS_CREDIT_";
+    private const string SharedCreditKey = "PLAYER_PROGRESS_SHARED_CREDIT";
     private const string LevelKeyPrefix = "PLAYER_PROGRESS_LEVEL_";
     private const string CurrentExpKeyPrefix = "PLAYER_PROGRESS_CURRENT_EXP_";
     private const string MaxExpKeyPrefix = "PLAYER_PROGRESS_MAX_EXP_";
@@ -45,29 +48,69 @@ public class PlayerProgress
     {
         if (string.IsNullOrEmpty(playerId)) return;
 
-        credit = Mathf.Max(0, PlayerPrefs.GetInt(GetCreditKey(playerId), credit));
+        credit = LoadSharedCreditWithLegacyFallback();
         level = Mathf.Max(1, PlayerPrefs.GetInt(GetLevelKey(playerId), level));
         currentExp = Mathf.Max(0, PlayerPrefs.GetInt(GetCurrentExpKey(playerId), currentExp));
         maxExp = Mathf.Max(1, PlayerPrefs.GetInt(GetMaxExpKey(playerId), maxExp));
+    }
+
+    private int LoadSharedCreditWithLegacyFallback()
+    {
+        if (PlayerPrefs.HasKey(SharedCreditKey))
+        {
+            return Mathf.Max(0, PlayerPrefs.GetInt(SharedCreditKey, credit));
+        }
+
+        int migratedCredit = Mathf.Max(0, PlayerPrefs.GetInt(GetCreditKey(playerId), credit));
+        PlayerPrefs.SetInt(SharedCreditKey, migratedCredit);
+        PlayerPrefs.Save();
+        return migratedCredit;
     }
 
     public void Save()
     {
         if (string.IsNullOrEmpty(playerId)) return;
 
+        SaveCreditFields(false);
+        SaveProgressFields(false);
+        PlayerPrefs.Save();
+    }
+
+    private void SaveCreditFields(bool flush = true)
+    {
+        if (string.IsNullOrEmpty(playerId)) return;
+
+        PlayerPrefs.SetInt(SharedCreditKey, credit);
         PlayerPrefs.SetInt(GetCreditKey(playerId), credit);
+
+        if (flush)
+        {
+            PlayerPrefs.Save();
+        }
+    }
+
+    private void SaveProgressFields(bool flush = true)
+    {
+        if (string.IsNullOrEmpty(playerId)) return;
+
         PlayerPrefs.SetInt(GetLevelKey(playerId), level);
         PlayerPrefs.SetInt(GetCurrentExpKey(playerId), currentExp);
         PlayerPrefs.SetInt(GetMaxExpKey(playerId), maxExp);
-        PlayerPrefs.Save();
+
+        if (flush)
+        {
+            PlayerPrefs.Save();
+        }
     }
 
     public void SetCredit(int amount)
     {
         int normalized = Mathf.Max(0, amount);
-        if (credit == normalized) return;
+        bool sharedCreditIsCurrent = PlayerPrefs.HasKey(SharedCreditKey) && PlayerPrefs.GetInt(SharedCreditKey, normalized) == normalized;
+        if (credit == normalized && sharedCreditIsCurrent) return;
+
         credit = normalized;
-        Save();
+        SaveCreditFields();
         OnCreditChanged?.Invoke(credit);
         OnProgressChanged?.Invoke();
     }
@@ -92,7 +135,7 @@ public class PlayerProgress
         level = Mathf.Max(1, newLevel);
         currentExp = Mathf.Max(0, newCurrentExp);
         maxExp = Mathf.Max(1, newMaxExp);
-        Save();
+        SaveProgressFields();
         OnProgressChanged?.Invoke();
     }
 
@@ -121,6 +164,12 @@ public class PlayerProgress
         PlayerPrefs.DeleteKey(GetLevelKey(id));
         PlayerPrefs.DeleteKey(GetCurrentExpKey(id));
         PlayerPrefs.DeleteKey(GetMaxExpKey(id));
+    }
+
+    public static void ResetSharedCredit(int creditAmount = 0)
+    {
+        PlayerPrefs.SetInt(SharedCreditKey, Mathf.Max(0, creditAmount));
+        PlayerPrefs.Save();
     }
 
     private static string GetCreditKey(string id) => CreditKeyPrefix + id;

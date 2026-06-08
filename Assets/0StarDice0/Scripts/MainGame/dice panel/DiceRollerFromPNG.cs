@@ -295,9 +295,11 @@ public class DiceRollerFromPNG : MonoBehaviour
     private IEnumerator ApplyInitialState()
     {
         yield return new WaitForSeconds(0.3f); 
+        PlayerState currentPlayer = GameTurnManager.CurrentPlayer;
         if (GameTurnManager.TryGet(out var gameTurnManager) &&
             gameTurnManager.currentState == GameState.WaitingForRoll &&
-            !GameTurnManager.CurrentPlayer.isAI)
+            currentPlayer != null &&
+            !currentPlayer.isAI)
         {
             SetRollButtonActive(true);
         }

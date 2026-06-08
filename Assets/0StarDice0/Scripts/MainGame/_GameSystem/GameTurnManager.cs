@@ -363,14 +363,9 @@ public class GameTurnManager : MonoBehaviour
 
     // ===== ⭐ 핵심: RETURN FROM BATTLE =====
     // เปลี่ยนจาก private void HandleReturnFromBattle() เป็น public
-    public void HandleReturnFromBattle()
+   public void HandleReturnFromBattle()
     {
-        // ทำงานเฉพาะกรณีกลับจากฉาก Battle จริง ๆ เท่านั้น
-        if (PlayerPrefs.GetInt(PendingBattleReturnKey, 0) != 1)
-        {
-            return;
-        }
-
+        if (PlayerPrefs.GetInt(PendingBattleReturnKey, 0) != 1) return;
         PlayerPrefs.SetInt(PendingBattleReturnKey, 0);
         PlayerPrefs.Save();
 
@@ -378,20 +373,54 @@ public class GameTurnManager : MonoBehaviour
 
         RefreshPlayers();
 
-        // 🛡️ Safety Check: ถ้าหาคนไม่เจอ ห้ามรันต่อเดี๋ยวค้าง
-        if (allPlayers.Count == 0)
-        {
-            Debug.LogError("❌ ไม่สามารถเริ่มเทิร์นได้ เพราะไม่มีผู้เล่นใน List");
-            return;
-        }
+        if (allPlayers.Count == 0) return;
 
-        // กลับจาก battle = จบเทิร์นของผู้เล่น/AI ที่เพิ่งเข้าฉากสู้
-        // ไม่ควรรีเซ็ตทั้งระบบกลับไปคนแรกเสมอ เพราะจะทำให้วนเทิร์นผู้เล่นซ้ำ
-        currentPlayerIndex++;
-        if (currentPlayerIndex >= allPlayers.Count)
+        PlayerState endedPlayer = CurrentPlayer;
+        endedPlayer?.TickEndTurnDebuffs();
+
+        // 🟢🟢 [เพิ่มโค้ดส่วนนี้] ระบบจับมอนสเตอร์โยนไปช่องอื่นหลังสู้เสร็จ 🟢🟢
+        if (endedPlayer != null && RouteManager.TryGet(out var routeManager))
         {
-            currentPlayerIndex = 0;
+            PlayerPathWalker currentWalker = endedPlayer.GetComponent<PlayerPathWalker>();
+            if (currentWalker != null)
+            {
+                int currentTile = currentWalker.currentNodeID;
+                PlayerState monsterToRelocate = null;
+
+                if (endedPlayer.isAI) 
+                {
+                    // กรณีที่ 1: มอนสเตอร์เป็นคนเดินมาชนเรา (Attacker) ให้เด้งมอนสเตอร์(ตัวมันเอง)ออกไป
+                    monsterToRelocate = endedPlayer;
+                }
+                else
+                {
+                    // กรณีที่ 2: เราเดินไปชนมอนสเตอร์ (Defender) ให้ค้นหาว่า AI ตัวไหนที่ยืนทับช่องเราอยู่
+                    foreach (var p in allPlayers)
+                    {
+                        if (p != endedPlayer && p.isAI)
+                        {
+                            var w = p.GetComponent<PlayerPathWalker>();
+                            if (w != null && w.currentNodeID == currentTile)
+                            {
+                                monsterToRelocate = p;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // ถ้าเจอมอนสเตอร์ที่เพิ่งสู้กัน ให้สั่งย้ายมันไปช่องอื่น
+                if (monsterToRelocate != null)
+                {
+                    RelocateMovingMonster(monsterToRelocate, routeManager);
+                }
+            }
         }
+        // 🟢🟢 [จบส่วนที่เพิ่ม] 🟢🟢
+
+        // สลับเทิร์น
+        currentPlayerIndex++;
+        if (currentPlayerIndex >= allPlayers.Count) currentPlayerIndex = 0;
 
         SetState(GameState.Idle);
         StopAllCoroutines();
@@ -399,6 +428,65 @@ public class GameTurnManager : MonoBehaviour
 
         Debug.Log($"[Manager] ✅ กลับจาก Battle แล้ว ส่งต่อเทิร์นให้: {CurrentPlayer?.name}");
         StartCoroutine(StartTurnRoutine());
+        StartCoroutine(RecoverRollButtonAfterBoardReturn());
+    }
+
+    // ==========================================
+    // 👾 ฟังก์ชันสุ่มที่อยู่ใหม่ให้ AI มอนสเตอร์
+    // ==========================================
+    private void RelocateMovingMonster(PlayerState monsterAI, RouteManager routeManager)
+    {
+        // 1. เก็บ ID ของช่องที่ "มีคนยืนอยู่แล้ว" เพื่อป้องกันไม่ให้มอนสเตอร์วาร์ปไปตกทับคนอื่นอีกรอบ
+        HashSet<int> occupiedIDs = new HashSet<int>();
+        foreach (var p in allPlayers)
+        {
+            var w = p.GetComponent<PlayerPathWalker>();
+            if (w != null) occupiedIDs.Add(w.currentNodeID);
+        }
+
+        // 2. รวบรวมช่องว่างทั้งหมดในกระดาน
+        List<Transform> candidateNodes = new List<Transform>();
+        foreach (var nc in routeManager.nodeConnections)
+        {
+            // กรองเงื่อนไข: ต้องไม่ใช่ช่อง Start/Shop และ ต้องไม่มีใครยืนอยู่
+            if (nc != null && nc.node != null && 
+                nc.type != TileType.Start && 
+                nc.type != TileType.Shop && 
+                !occupiedIDs.Contains(nc.tileID))
+            {
+                candidateNodes.Add(nc.node);
+            }
+        }
+
+        // 3. สุ่มจับมอนสเตอร์โยนไปที่ช่องใหม่
+        if (candidateNodes.Count > 0)
+        {
+            int randomIndex = UnityEngine.Random.Range(0, candidateNodes.Count);
+            Transform randomNode = candidateNodes[randomIndex];
+
+            PlayerPathWalker aiWalker = monsterAI.GetComponent<PlayerPathWalker>();
+            if (aiWalker != null)
+            {
+                // ใช้คำสั่ง TeleportToNode ที่คุณเขียนเตรียมไว้ใน PlayerPathWalker แล้วได้เลย!
+                aiWalker.TeleportToNode(randomNode);
+                Debug.Log($"<color=orange>💨 [Manager] จับมอนสเตอร์ AI ({monsterAI.name}) วาร์ปหนีไปซ่อนที่ {randomNode.name} แล้ว!</color>");
+            }
+        }
+        else
+        {
+            Debug.LogWarning("⚠️ ไม่มีช่องว่างเหลือให้มอนสเตอร์หนีเลย!");
+        }
+    }
+
+    private IEnumerator RecoverRollButtonAfterBoardReturn()
+    {
+        yield return new WaitForSeconds(1.75f);
+
+        PlayerState currentPlayer = CurrentPlayer;
+        if (currentState == GameState.WaitingForRoll && currentPlayer != null && !currentPlayer.isAI)
+        {
+            ResolveDiceRoller()?.ForceEnableButton();
+        }
     }
 
     // (และอย่าลืมฟังก์ชันจัดแถวที่ผมให้ไปคราวก่อน ถ้ายังไม่มีให้เติมลงไปครับ)

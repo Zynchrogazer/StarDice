@@ -149,11 +149,13 @@ public class ElementButtonManager : MonoBehaviour
 
     private PlayerData ResolveSelectedPlayer()
     {
-        if (selectedPlayer != null)
-            return selectedPlayer;
-
+        // Runtime selection is authoritative. The serialized fallback can be stale per scene
+        // (for example Earth assigned in Inspector while the player picked Wind/Dark).
         if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
-            return GameData.Instance.selectedPlayer;
+        {
+            selectedPlayer = GameData.Instance.selectedPlayer;
+            return selectedPlayer;
+        }
 
         // fallback: เข้า TestMain ตรงจากหน้าเลือกตัวแรก จะเก็บชื่อไว้ใน PlayerPrefs
         string selectedName = PlayerPrefs.GetString("SelectedMonster", string.Empty);
@@ -169,7 +171,7 @@ public class ElementButtonManager : MonoBehaviour
             }
         }
 
-        return null;
+        return selectedPlayer;
     }
 
 

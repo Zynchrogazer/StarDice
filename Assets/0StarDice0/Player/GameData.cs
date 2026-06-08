@@ -53,6 +53,40 @@ public class GameData : MonoBehaviour
         if (player != null)
         {
             UnlockPlayerInPrefs(player.name);
+            SyncSelectedPlayerPrefs(player);
+        }
+    }
+
+    private void SyncSelectedPlayerPrefs(PlayerData player)
+    {
+        string monsterName = ResolveMonsterPrefsName(player);
+        if (string.IsNullOrEmpty(monsterName)) return;
+
+        // Keep both keys in sync: board/menu code reads SelectedMonster, while legacy battle scripts read SelectedCharacter.
+        PlayerPrefs.SetString("SelectedMonster", monsterName);
+        PlayerPrefs.SetString("SelectedCharacter", monsterName);
+        PlayerPrefs.Save();
+    }
+
+    private static string ResolveMonsterPrefsName(PlayerData player)
+    {
+        if (player == null) return string.Empty;
+
+        if (!string.IsNullOrWhiteSpace(player.playerName))
+            return player.playerName.Trim();
+
+        if (!string.IsNullOrWhiteSpace(player.name))
+            return player.name.Trim();
+
+        switch (player.element)
+        {
+            case ElementType.Water: return "MonsterWater";
+            case ElementType.Earth: return "MonsterEarth";
+            case ElementType.Wind: return "MonsterWind";
+            case ElementType.Light: return "MonsterLight";
+            case ElementType.Dark: return "MonsterDark";
+            case ElementType.Fire: return "MonsterFire";
+            default: return string.Empty;
         }
     }
 

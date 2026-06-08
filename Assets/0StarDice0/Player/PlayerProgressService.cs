@@ -18,6 +18,11 @@ public static class PlayerProgressService
         PlayerProgress.ResetStoredProgress(playerData);
     }
 
+    public static void ResetSharedCredit(int creditAmount = 0)
+    {
+        PlayerProgress.ResetSharedCredit(creditAmount);
+    }
+
     public static PlayerProgress EnsureSelectedPlayerProgress(GameData gameData)
     {
         if (gameData == null || gameData.SelectedPlayer == null)

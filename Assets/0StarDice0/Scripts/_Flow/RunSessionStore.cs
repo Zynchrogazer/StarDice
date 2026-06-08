@@ -13,7 +13,9 @@ public class RunSessionStore : MonoBehaviour
     [SerializeField] private float monsterSyncIntervalSeconds = 0.2f;
 
     private const string SelectedMonsterKey = "SelectedMonster";
+    private const string LegacySelectedCharacterKey = "SelectedCharacter";
     private const string SelectedDeckKey = "CurrentDeckData";
+    private const string BossBattleKey = "IsBossBattle";
 
     private static RunSessionStore cached;
     private float nextMonsterSyncAt;
@@ -60,6 +62,8 @@ public class RunSessionStore : MonoBehaviour
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
+        ClearBossBattleFlagIfIntermission(scene.name);
+
         if (!hydrateFromPlayerPrefsOnAwake)
         {
             return;
@@ -69,6 +73,19 @@ public class RunSessionStore : MonoBehaviour
         SyncMonsterFromPlayerPrefs();
     }
 
+    private static void ClearBossBattleFlagIfIntermission(string sceneName)
+    {
+        if (string.IsNullOrWhiteSpace(sceneName)
+            || sceneName.IndexOf("intermission", System.StringComparison.OrdinalIgnoreCase) < 0
+            || PlayerPrefs.GetInt(BossBattleKey, 0) == 0)
+        {
+            return;
+        }
+
+        PlayerPrefs.SetInt(BossBattleKey, 0);
+        PlayerPrefs.Save();
+        Debug.Log($"[RunSessionStore] Cleared {BossBattleKey} after entering intermission scene '{sceneName}'.");
+    }
 
     private void Update()
     {
@@ -198,8 +215,10 @@ public class RunSessionStore : MonoBehaviour
         lastBoardSceneName = string.Empty;
 
         PlayerPrefs.DeleteKey(SelectedMonsterKey);
+        PlayerPrefs.DeleteKey(LegacySelectedCharacterKey);
         PlayerPrefs.DeleteKey(GameEventManager.LastBoardSceneKey);
         PlayerPrefs.SetInt(GameTurnManager.PendingBattleReturnKey, 0);
+        PlayerPrefs.DeleteKey(BossBattleKey);
         PlayerPrefs.DeleteKey(SelectedDeckKey);
         PlayerPrefs.Save();
     }

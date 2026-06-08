@@ -47,6 +47,7 @@ public class MainMenuController : MonoBehaviour
         }
 
         PlayerPrefs.DeleteKey("SelectedMonster");
+        PlayerPrefs.DeleteKey("SelectedCharacter");
         PlayerPrefs.SetInt("HasChosenMainCharacter", 0);
 
         PlayerPrefs.SetInt("levelReached", 1);
@@ -187,6 +188,9 @@ public class MainMenuController : MonoBehaviour
     private void ResetAllPlayerCredits()
     {
         int clampedCredit = Mathf.Max(0, resetCreditValue);
+        PlayerProgressService.ResetSharedCredit(clampedCredit);
+        PlayerPrefs.SetInt("PlayerCredit", clampedCredit);
+
         HashSet<PlayerData> players = new HashSet<PlayerData>();
 
         PlayerData[] resourcePlayers = Resources.LoadAll<PlayerData>("PlayerData");
