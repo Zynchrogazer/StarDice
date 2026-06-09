@@ -39,13 +39,8 @@ public class IntermissionCreditUI : MonoBehaviour
             if (creditText == null) return;
         }
 
-        int credit = 0;
-
-        // Intermission (นอกด่าน) ใช้เครดิตจากข้อมูลถาวรเท่านั้น
-        if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
-        {
-            credit = GameData.Instance.GetSelectedPlayerCredit();
-        }
+        // Intermission (นอกด่าน) ใช้เครดิตถาวร แม้ยังไม่ได้เลือกตัวละคร
+        int credit = PlayerProgressService.GetSelectedPlayerCredit(GameData.Instance);
 
         creditText.text = $"{prefix}{credit}";
     }

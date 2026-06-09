@@ -65,13 +65,9 @@ public class RandomUnlock : MonoBehaviour
         {
             currentCredit = boardPlayer.PlayerCredit; // ดึงจากกระดาน
         }
-        else if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
-        {
-            currentCredit = GameData.Instance.GetSelectedPlayerCredit(); // ดึงจากเซฟหลัก
-        }
         else
         {
-            currentCredit = PlayerPrefs.GetInt("PlayerCredit", 0); // ระบบสำรองเผื่อเทสต์เดี่ยวๆ
+            currentCredit = PlayerProgressService.GetSelectedPlayerCredit(GameData.Instance); // ดึงเครดิตถาวร แม้ยังไม่ได้เลือกตัวละคร
         }
 
         // 🟢 2. เช็คว่าเงินพอไหม?
@@ -107,13 +103,9 @@ public class RandomUnlock : MonoBehaviour
         {
             boardPlayer.PlayerCredit = currentCredit; // ให้ PlayerState จัดการเซฟให้
         }
-        else if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
-        {
-            GameData.Instance.SetSelectedPlayerCredit(currentCredit); // เซฟลง GameData โดยตรง
-        }
         else
         {
-            PlayerPrefs.SetInt("PlayerCredit", currentCredit); // เซฟสำรอง
+            PlayerProgressService.SetSelectedPlayerCredit(GameData.Instance, currentCredit); // เซฟเครดิตถาวร แม้ยังไม่ได้เลือกตัวละคร
         }
 
         UpdateCreditText(); // อัปเดตตัวหนังสือ
@@ -156,13 +148,9 @@ public class RandomUnlock : MonoBehaviour
         {
             currentCredit = GameTurnManager.CurrentPlayer.PlayerCredit;
         }
-        else if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
-        {
-            currentCredit = GameData.Instance.GetSelectedPlayerCredit();
-        }
         else
         {
-            currentCredit = PlayerPrefs.GetInt("PlayerCredit", 0);
+            currentCredit = PlayerProgressService.GetSelectedPlayerCredit(GameData.Instance);
         }
 
         creditText.text = "Credit: " + currentCredit.ToString();

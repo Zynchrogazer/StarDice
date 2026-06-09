@@ -48,12 +48,6 @@ public class ShopPackManager : MonoBehaviour
 
     void OpenPack(int packIndex)
     {
-        if (GameData.Instance == null || GameData.Instance.selectedPlayer == null)
-        {
-            Debug.LogWarning("เปิดซองไม่สำเร็จ: ไม่พบข้อมูลผู้เล่น");
-            return;
-        }
-
         int price = GetPackPrice(packIndex);
         if (!TrySpendIntermissionCredit(price, out int remainingCredit))
         {
@@ -122,12 +116,7 @@ public class ShopPackManager : MonoBehaviour
 
     private int GetCurrentCredit()
     {
-        if (GameData.Instance != null && GameData.Instance.selectedPlayer != null)
-        {
-            return Mathf.Max(0, GameData.Instance.GetSelectedPlayerCredit());
-        }
-
-        return 0;
+        return Mathf.Max(0, PlayerProgressService.GetSelectedPlayerCredit(GameData.Instance));
     }
 
     private bool TrySpendIntermissionCredit(int amount, out int remainingCredit)
@@ -140,20 +129,12 @@ public class ShopPackManager : MonoBehaviour
             return false;
         }
 
-        if (GameData.Instance == null || GameData.Instance.selectedPlayer == null)
+        if (amount > 0 && !PlayerProgressService.TrySpendSelectedPlayerCredit(GameData.Instance, amount))
         {
             return false;
         }
 
-        if (amount > 0)
-        {
-            if (!GameData.Instance.TrySpendSelectedPlayerCredit(amount))
-            {
-                return false;
-            }
-        }
-
-        remainingCredit = GameData.Instance.GetSelectedPlayerCredit();
+        remainingCredit = PlayerProgressService.GetSelectedPlayerCredit(GameData.Instance);
         return true;
     }
 

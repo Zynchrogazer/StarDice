@@ -223,7 +223,8 @@ public class MainMenuController : MonoBehaviour
 
         if (GameData.Instance != null)
         {
-            GameData.Instance.EnsureSelectedPlayerProgressLoaded();
+            PlayerProgress refreshedProgress = PlayerProgressService.LoadForPlayer(GameData.Instance.selectedPlayer);
+            GameData.Instance.SetSelectedPlayerProgressInternal(refreshedProgress);
         }
     }
 

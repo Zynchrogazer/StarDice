@@ -44,7 +44,7 @@ public static class PlayerProgressService
     public static int GetSelectedPlayerCredit(GameData gameData, int fallback = 0)
     {
         PlayerProgress progress = EnsureSelectedPlayerProgress(gameData);
-        return progress != null ? Mathf.Max(0, progress.Credit) : Mathf.Max(0, fallback);
+        return progress != null ? Mathf.Max(0, progress.Credit) : PlayerProgress.GetSharedCredit(fallback);
     }
 
     public static void SetSelectedPlayerCredit(GameData gameData, int amount)
@@ -52,6 +52,7 @@ public static class PlayerProgressService
         PlayerProgress progress = EnsureSelectedPlayerProgress(gameData);
         if (progress == null)
         {
+            PlayerProgress.SetSharedCredit(amount);
             return;
         }
 
@@ -66,6 +67,7 @@ public static class PlayerProgressService
         PlayerProgress progress = EnsureSelectedPlayerProgress(gameData);
         if (progress == null)
         {
+            PlayerProgress.SetSharedCredit(PlayerProgress.GetSharedCredit() + amount);
             return;
         }
 
@@ -80,7 +82,7 @@ public static class PlayerProgressService
         PlayerProgress progress = EnsureSelectedPlayerProgress(gameData);
         if (progress == null)
         {
-            return false;
+            return PlayerProgress.TrySpendSharedCredit(amount, out _);
         }
 
         bool spent = progress.TrySpendCredit(amount);
