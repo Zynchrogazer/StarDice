@@ -5,39 +5,31 @@ using System.Collections.Generic;
 public enum BoardAIPersonality
 {
     Balanced,
-    Aggressive,
-    Greedy,
-    Defensive,
     Hunter
 }
 
 public class AIController : MonoBehaviour
 {
     [Header("Board AI Personality")]
-    [Tooltip("บุคลิกตั้งต้นของ AI บนบอร์ด (AI มีหน้าที่ป่วนผู้เล่น ไม่ใช่แข่งเก็บแต้ม)")]
+    [Tooltip("บุคลิกตั้งต้นของ AI บนบอร์ด: Balanced เป็นค่าเริ่มต้นเพื่อคอยป่วนช่องรางวัล, Hunter จะใช้เมื่อผู้เล่นเลือดต่ำ")]
     [SerializeField] private BoardAIPersonality personality = BoardAIPersonality.Balanced;
     [SerializeField] private bool logDecisionScores = true;
     [SerializeField] private float randomScoreNoise = 0f;
 
     [Header("Nuisance AI Tuning")]
-    [Tooltip("เปิดให้ AI สลับบุคลิกตามสถานการณ์แบบซอมบี้ เช่น อยู่ใกล้ผู้เล่นจะไล่ป่วน, roaming จะเลือกทางกดดัน")]
+    [Tooltip("เปิดให้ AI เปลี่ยนเป็น Hunter อัตโนมัติเมื่อมีผู้เล่นมนุษย์ HP น้อยกว่าหรือเท่ากับ Hunter Health Threshold")]
     [SerializeField] private bool autoSwitchPersonality = true;
-    [SerializeField, Min(1)] private int ambushDistance = 3;
-    [SerializeField, Min(1)] private int personalitySwitchMinDecisions = 2;
-    [SerializeField, Min(1)] private int personalitySwitchMaxDecisions = 4;
+    [SerializeField, Range(0.01f, 1f)] private float hunterHealthThreshold = 0.6f;
 
     private PlayerState myState;
-    private PlayerPathWalker myWalker;
     private RouteManager routeManager;
     private BoardAIPersonality activePersonality;
-    private int decisionsUntilPersonalitySwitch;
+    private PlayerState currentHunterTarget;
 
     private void Awake()
     {
         myState = GetComponent<PlayerState>();
-        myWalker = GetComponent<PlayerPathWalker>();
         activePersonality = personality;
-        ResetPersonalitySwitchCountdown();
     }
 
     private void Start()
@@ -84,7 +76,7 @@ public class AIController : MonoBehaviour
             return fallbackChoice;
         }
 
-        BoardAIPersonality decisionPersonality = GetDecisionPersonality(choices);
+        BoardAIPersonality decisionPersonality = GetDecisionPersonality();
         Transform bestChoice = choices[0];
         float bestScore = float.MinValue;
 
@@ -96,7 +88,7 @@ public class AIController : MonoBehaviour
             {
                 NodeConnection nodeData = GetNodeData(choice);
                 string tileType = nodeData != null ? nodeData.type.ToString() : "Unknown";
-                Debug.Log($"🤖 {name} [{decisionPersonality}] nuisance-evaluates {choice.name} ({tileType}) = {score:0.##}");
+                Debug.Log($"🤖 {name} [{decisionPersonality}] evaluates {choice.name} ({tileType}) = {score:0.##}");
             }
 
             if (score > bestScore)
@@ -106,7 +98,7 @@ public class AIController : MonoBehaviour
             }
         }
 
-        Debug.Log($"🤖 {name} [{decisionPersonality}] chose nuisance path {bestChoice.name} with score {bestScore:0.##}");
+        Debug.Log($"🤖 {name} [{decisionPersonality}] chose path {bestChoice.name} with score {bestScore:0.##}");
         return bestChoice;
     }
 
@@ -116,9 +108,8 @@ public class AIController : MonoBehaviour
         if (nodeData == null)
             return -999f;
 
-        float score = GetNuisanceTileScore(nodeData.type);
-        score += GetPlayerDisruptionScore(nodeData.tileID, decisionPersonality);
-        score += GetHazardPressureScore(nodeData, decisionPersonality);
+        float score = GetBaseTileScore(nodeData.type);
+        score += GetPlayerTargetScore(nodeData.tileID, decisionPersonality);
         score += GetPersonalityModifier(nodeData.type, decisionPersonality);
 
         if (randomScoreNoise > 0f)
@@ -127,64 +118,32 @@ public class AIController : MonoBehaviour
         return score;
     }
 
-    private BoardAIPersonality GetDecisionPersonality(List<Transform> choices)
+    private BoardAIPersonality GetDecisionPersonality()
     {
+        currentHunterTarget = null;
+
         if (!autoSwitchPersonality)
-            return personality;
-
-        int nearestHumanDistance = GetNearestHumanDistanceFromCurrentNode();
-        if (nearestHumanDistance >= 0 && nearestHumanDistance <= ambushDistance)
-            return SwitchPersonality(BoardAIPersonality.Hunter, "human nearby");
-
-        decisionsUntilPersonalitySwitch--;
-        if (decisionsUntilPersonalitySwitch > 0)
-            return activePersonality;
-
-        BoardAIPersonality nextPersonality = PickRoamingPersonality(choices);
-        return SwitchPersonality(nextPersonality, "roaming nuisance");
-    }
-
-    private BoardAIPersonality PickRoamingPersonality(List<Transform> choices)
-    {
-        int disruptiveOptions = 0;
-        int denialOptions = 0;
-
-        foreach (Transform choice in choices)
         {
-            NodeConnection nodeData = GetNodeData(choice);
-            if (nodeData == null)
-                continue;
+            if (personality == BoardAIPersonality.Hunter)
+                currentHunterTarget = GetLowestHealthHumanTarget();
 
-            if (IsDisruptiveTile(nodeData.type))
-                disruptiveOptions++;
-            else if (IsCompetitiveRewardTile(nodeData.type))
-                denialOptions++;
+            return SwitchPersonality(personality, "manual personality");
         }
 
-        if (disruptiveOptions > 0)
-            return BoardAIPersonality.Aggressive;
+        currentHunterTarget = GetLowestHealthHumanTargetUnderThreshold();
+        if (currentHunterTarget != null)
+            return SwitchPersonality(BoardAIPersonality.Hunter, $"low HP target {currentHunterTarget.name}");
 
-        if (denialOptions > 0)
-            return BoardAIPersonality.Greedy;
-
-        return Random.value < 0.55f ? BoardAIPersonality.Balanced : BoardAIPersonality.Hunter;
+        return SwitchPersonality(BoardAIPersonality.Balanced, "default board nuisance");
     }
 
     private BoardAIPersonality SwitchPersonality(BoardAIPersonality nextPersonality, string reason)
     {
         if (activePersonality != nextPersonality && logDecisionScores)
-            Debug.Log($"🤖 {name} switches board nuisance personality {activePersonality} -> {nextPersonality} ({reason})");
+            Debug.Log($"🤖 {name} switches board personality {activePersonality} -> {nextPersonality} ({reason})");
 
         activePersonality = nextPersonality;
-        ResetPersonalitySwitchCountdown();
         return activePersonality;
-    }
-
-    private void ResetPersonalitySwitchCountdown()
-    {
-        int min = Mathf.Max(1, personalitySwitchMinDecisions);
-        int max = Mathf.Max(min, personalitySwitchMaxDecisions);
-        decisionsUntilPersonalitySwitch = Random.Range(min, max + 1);
     }
 
     private NodeConnection GetNodeData(Transform choice)
@@ -204,32 +163,24 @@ public class AIController : MonoBehaviour
         return routeManager;
     }
 
-    private float GetNuisanceTileScore(TileType tileType)
+    private float GetBaseTileScore(TileType tileType)
     {
         switch (tileType)
         {
-            case TileType.Teleport:
-                return 18f;
-            case TileType.Event:
-            case TileType.Minigame:
-                return 10f;
             case TileType.Normal:
-                return 4f;
             case TileType.Start:
                 return 2f;
-            case TileType.Heal:
-                return -12f;
+            case TileType.Teleport:
+            case TileType.Event:
+            case TileType.Minigame:
+                return 4f;
             case TileType.Trap:
             case TileType.iceeffect:
                 return -6f;
             case TileType.Lava:
                 return -10f;
-            case TileType.Draw:
-            case TileType.Shop:
-                return -10f;
-            case TileType.Star:
-            case TileType.Treasure:
-                return -14f;
+            case TileType.Heal:
+                return -12f;
             case TileType.Monster:
             case TileType.Boss:
             case TileType.SpecialBoss:
@@ -239,88 +190,49 @@ public class AIController : MonoBehaviour
         }
     }
 
-    private float GetPlayerDisruptionScore(int choiceTileID, BoardAIPersonality decisionPersonality)
+    private float GetPlayerTargetScore(int choiceTileID, BoardAIPersonality decisionPersonality)
     {
-        int distance = GetNearestHumanDistance(choiceTileID);
+        if (decisionPersonality != BoardAIPersonality.Hunter || currentHunterTarget == null)
+            return 0f;
+
+        PlayerPathWalker targetWalker = currentHunterTarget.GetComponent<PlayerPathWalker>();
+        if (targetWalker == null)
+            return 0f;
+
+        int distance = GetGraphDistance(choiceTileID, targetWalker.currentNodeID);
         if (distance < 0)
             return 0f;
 
         if (distance == 0)
-            return 90f;
+            return 120f;
 
-        float maxScore = decisionPersonality == BoardAIPersonality.Hunter ? 60f : 42f;
-        float falloff = decisionPersonality == BoardAIPersonality.Hunter ? 10f : 8f;
-        return Mathf.Clamp(maxScore - distance * falloff, 0f, maxScore);
-    }
-
-    private float GetHazardPressureScore(NodeConnection nodeData, BoardAIPersonality decisionPersonality)
-    {
-        if (nodeData == null || !IsHazardTile(nodeData.type))
-            return 0f;
-
-        int distance = GetNearestHumanDistance(nodeData.tileID);
-        if (distance < 0 || distance > ambushDistance + 1)
-            return 0f;
-
-        // Hazard tiles are not good by themselves. They become useful only when
-        // the AI can use that route to pressure/block a nearby human player.
-        float pressure = Mathf.Max(0f, ambushDistance + 1 - distance) * 6f;
-
-        if (decisionPersonality == BoardAIPersonality.Aggressive)
-            pressure += 8f;
-        else if (decisionPersonality == BoardAIPersonality.Hunter)
-            pressure += 4f;
-
-        return pressure;
+        return Mathf.Clamp(90f - distance * 15f, 0f, 90f);
     }
 
     private float GetPersonalityModifier(TileType tileType, BoardAIPersonality decisionPersonality)
     {
         switch (decisionPersonality)
         {
-            case BoardAIPersonality.Aggressive:
-                switch (tileType)
-                {
-                    case TileType.Trap:
-                    case TileType.Lava:
-                    case TileType.iceeffect:
-                        return 8f;
-                    case TileType.Monster:
-                    case TileType.Boss:
-                    case TileType.SpecialBoss:
-                        return -5f;
-                    case TileType.Heal:
-                        return -12f;
-                }
-                break;
-
-            case BoardAIPersonality.Greedy:
+            case BoardAIPersonality.Balanced:
                 switch (tileType)
                 {
                     case TileType.Star:
                     case TileType.Treasure:
+                        return 28f;
                     case TileType.Shop:
                     case TileType.Draw:
-                        return 24f; // เดินไปยึด/บังช่องรางวัลมากกว่าเก็บแต้มแข่ง
+                        return 22f;
                     case TileType.Teleport:
-                        return 8f;
-                }
-                break;
-
-            case BoardAIPersonality.Defensive:
-                switch (tileType)
-                {
-                    case TileType.Teleport:
-                        return 14f;
-                    case TileType.Normal:
-                    case TileType.Start:
+                        return 10f;
+                    case TileType.Event:
+                    case TileType.Minigame:
                         return 8f;
                     case TileType.Heal:
                         return -10f;
-                    case TileType.Monster:
-                    case TileType.Boss:
-                    case TileType.SpecialBoss:
-                        return -24f;
+                    case TileType.Trap:
+                    case TileType.Lava:
+                    case TileType.iceeffect:
+                        return -6f;
                 }
                 break;
 
@@ -328,16 +240,21 @@ public class AIController : MonoBehaviour
                 switch (tileType)
                 {
                     case TileType.Normal:
+                    case TileType.Start:
+                        return 8f;
                     case TileType.Teleport:
-                        return 10f;
-                    case TileType.Trap:
-                    case TileType.Lava:
-                    case TileType.iceeffect:
-                        return 0f;
+                        return 14f;
                     case TileType.Star:
                     case TileType.Treasure:
                     case TileType.Shop:
-                        return -8f;
+                    case TileType.Draw:
+                        return -14f;
+                    case TileType.Heal:
+                        return -18f;
+                    case TileType.Monster:
+                    case TileType.Boss:
+                    case TileType.SpecialBoss:
+                        return -12f;
                 }
                 break;
         }
@@ -345,77 +262,31 @@ public class AIController : MonoBehaviour
         return 0f;
     }
 
-    private bool IsDisruptiveTile(TileType tileType)
+    private PlayerState GetLowestHealthHumanTargetUnderThreshold()
     {
-        switch (tileType)
-        {
-            case TileType.Trap:
-            case TileType.Lava:
-            case TileType.iceeffect:
-            case TileType.Teleport:
-            case TileType.Event:
-            case TileType.Minigame:
-                return true;
-            default:
-                return false;
-        }
+        return GetLowestHealthHumanTarget(hunterHealthThreshold);
     }
 
-    private bool IsHazardTile(TileType tileType)
-    {
-        switch (tileType)
-        {
-            case TileType.Trap:
-            case TileType.Lava:
-            case TileType.iceeffect:
-                return true;
-            default:
-                return false;
-        }
-    }
-
-    private bool IsCompetitiveRewardTile(TileType tileType)
-    {
-        switch (tileType)
-        {
-            case TileType.Star:
-            case TileType.Treasure:
-            case TileType.Shop:
-            case TileType.Draw:
-                return true;
-            default:
-                return false;
-        }
-    }
-
-    private int GetNearestHumanDistanceFromCurrentNode()
-    {
-        if (myWalker == null)
-            return -1;
-
-        return GetNearestHumanDistance(myWalker.currentNodeID);
-    }
-
-    private int GetNearestHumanDistance(int fromTileID)
+    private PlayerState GetLowestHealthHumanTarget(float maxHealthRatio = 1f)
     {
         PlayerState[] players = FindObjectsOfType<PlayerState>();
-        int nearestDistance = int.MaxValue;
+        PlayerState lowestHealthTarget = null;
+        float lowestHealthRatio = float.MaxValue;
 
         foreach (PlayerState player in players)
         {
-            if (player == null || player.isAI)
+            if (player == null || player.isAI || player.MaxHealth <= 0)
                 continue;
 
-            PlayerPathWalker walker = player.GetComponent<PlayerPathWalker>();
-            if (walker == null)
+            float healthRatio = Mathf.Clamp01((float)player.PlayerHealth / player.MaxHealth);
+            if (healthRatio > maxHealthRatio || healthRatio >= lowestHealthRatio)
                 continue;
 
-            int distance = GetGraphDistance(fromTileID, walker.currentNodeID);
-            if (distance >= 0 && distance < nearestDistance)
-                nearestDistance = distance;
+            lowestHealthRatio = healthRatio;
+            lowestHealthTarget = player;
         }
 
-        return nearestDistance == int.MaxValue ? -1 : nearestDistance;
+        return lowestHealthTarget;
     }
 
     private int GetGraphDistance(int startTileID, int targetTileID)
