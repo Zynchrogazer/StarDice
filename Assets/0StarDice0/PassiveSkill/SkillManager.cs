@@ -77,6 +77,58 @@ public class SkillManager : MonoBehaviour
         return true;
     }
 
+    public bool CanRefundSkill(PassiveSkillData skill)
+    {
+        EnsureLoadedForCurrentPlayer();
+        if (skill == null || !IsUnlocked(skill)) return false;
+
+        PassiveSkillData[] allSkills = PassiveSkillCatalog.GetAll();
+        for (int i = 0; i < allSkills.Length; i++)
+        {
+            PassiveSkillData candidate = allSkills[i];
+            if (candidate == null || SkillIdsEqual(candidate, skill) || !IsUnlocked(candidate))
+            {
+                continue;
+            }
+
+            if (!candidate.useRequiredSkills || candidate.requiredSkills == null)
+            {
+                continue;
+            }
+
+            for (int reqIndex = 0; reqIndex < candidate.requiredSkills.Count; reqIndex++)
+            {
+                if (SkillIdsEqual(candidate.requiredSkills[reqIndex], skill))
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    public bool TryRefundSkill(PassiveSkillData skill)
+    {
+        EnsureLoadedForCurrentPlayer();
+        if (!CanRefundSkill(skill))
+        {
+            return false;
+        }
+
+        if (!unlockedSkillIDs.Remove(skill.skillID))
+        {
+            return false;
+        }
+
+        RefundCredit(skill.costPoint);
+        SaveUnlockedSkills();
+        ApplyAllPassiveBonusesToCurrentPlayer();
+
+        OnSkillTreeUpdated?.Invoke();
+        return true;
+    }
+
     public void ApplyAllPassiveBonusesToCurrentPlayer()
     {
         PlayerStatAggregator aggregator = ResolvePlayerStatAggregator();
@@ -133,12 +185,11 @@ public class SkillManager : MonoBehaviour
             return GameTurnManager.CurrentPlayer.PlayerCredit;
         }
 
-        if (GameData.Instance?.selectedPlayer != null)
-        {
-            return GameData.Instance.GetSelectedPlayerCredit();
-        }
-
-        return 0;
+        // The upgrade scene can be opened without a selected monster. Credit is stored in
+        // PlayerProgress as a shared wallet, so read through the service even when
+        // GameData.Instance or GameData.selectedPlayer is missing. This lets slots still
+        // show whether each skill is affordable/unlockable.
+        return PlayerProgressService.GetSelectedPlayerCredit(GameData.Instance);
     }
 
     private bool TrySpendCredit(int amount)
@@ -160,19 +211,28 @@ public class SkillManager : MonoBehaviour
             return true;
         }
 
-        if (GameData.Instance?.selectedPlayer != null)
-        {
-            int selectedPlayerCredit = GameData.Instance.GetSelectedPlayerCredit();
-            if (selectedPlayerCredit < amount)
-            {
-                return false;
-            }
+        // Spend from the same shared wallet used by the HUD/upgrade credit text.
+        // PlayerProgressService falls back to PlayerProgress.TrySpendSharedCredit when
+        // no monster has been selected, so upgrades still work from Upgrade.unity.
+        return PlayerProgressService.TrySpendSelectedPlayerCredit(GameData.Instance, amount);
+    }
 
-            GameData.Instance.SetSelectedPlayerCredit(selectedPlayerCredit - amount);
-            return true;
+    private void RefundCredit(int amount)
+    {
+        if (amount <= 0) return;
+
+        if (GameTurnManager.CurrentPlayer != null)
+        {
+            GameTurnManager.CurrentPlayer.PlayerCredit += amount;
+            return;
         }
 
-        return false;
+        PlayerProgressService.AddSelectedPlayerCredit(GameData.Instance, amount);
+    }
+
+    private static bool SkillIdsEqual(PassiveSkillData a, PassiveSkillData b)
+    {
+        return a != null && b != null && a.skillID == b.skillID;
     }
 
     private void SaveUnlockedSkills()

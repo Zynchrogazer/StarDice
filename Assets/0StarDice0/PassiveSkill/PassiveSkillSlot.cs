@@ -90,22 +90,43 @@ public class PassiveSkillSlot : MonoBehaviour, IPointerEnterHandler, IPointerExi
 
         if (ResolveCostText() != null && passiveSkillData != null)
         {
-            ResolveCostText().text = $"Cost: {passiveSkillData.costPoint}";
+            ResolveCostText().text = $"Credit: {passiveSkillData.costPoint}";
         }
     }
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        if (passiveSkillData != null && ResolveSkillManager() != null)
+        if (passiveSkillData == null || ResolveSkillManager() == null)
         {
-            if (ResolveSkillManager().TryUnlockSkill(passiveSkillData))
+            return;
+        }
+
+        if (eventData.button == PointerEventData.InputButton.Right)
+        {
+            if (ResolveSkillManager().TryRefundSkill(passiveSkillData))
             {
-                Debug.Log($"Upgrade {passiveSkillData.skillName} Success!");
+                Debug.Log($"Refund {passiveSkillData.skillName} Success!");
             }
             else
             {
-                Debug.Log("Cannot Unlock (Not enough points or requirements not met)");
+                Debug.Log("Cannot Refund (Skill is locked or another unlocked skill requires it)");
             }
+
+            return;
+        }
+
+        if (eventData.button != PointerEventData.InputButton.Left)
+        {
+            return;
+        }
+
+        if (ResolveSkillManager().TryUnlockSkill(passiveSkillData))
+        {
+            Debug.Log($"Upgrade {passiveSkillData.skillName} Success!");
+        }
+        else
+        {
+            Debug.Log("Cannot Unlock (Not enough points or requirements not met)");
         }
     }
 
@@ -225,7 +246,13 @@ public class PassiveSkillSlot : MonoBehaviour, IPointerEnterHandler, IPointerExi
 
         if (passiveSkillData.costPoint > 0)
         {
-            builder.AppendLine($"Cost: {passiveSkillData.costPoint}");
+            builder.AppendLine($"Credit: {passiveSkillData.costPoint}");
+        }
+
+        SkillManager manager = ResolveSkillManager();
+        if (manager != null && manager.IsUnlocked(passiveSkillData))
+        {
+            builder.AppendLine("Right-click to cancel upgrade and refund Credit.");
         }
 
         string result = builder.ToString().TrimEnd();
