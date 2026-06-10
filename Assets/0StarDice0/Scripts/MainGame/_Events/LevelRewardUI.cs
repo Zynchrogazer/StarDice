@@ -24,6 +24,40 @@ public class LevelRewardUI : MonoBehaviour
     [Header("Character & Reward Setup")]
     public List<CharacterRewardSetup> rewardSetups = new List<CharacterRewardSetup>();
 
+
+    public static bool IsAnyRewardPanelVisible()
+    {
+        LevelRewardUI[] rewardUIs = FindObjectsByType<LevelRewardUI>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        for (int i = 0; i < rewardUIs.Length; i++)
+        {
+            LevelRewardUI rewardUI = rewardUIs[i];
+            if (rewardUI == null || rewardUI.rewardSetups == null)
+            {
+                continue;
+            }
+
+            for (int setupIndex = 0; setupIndex < rewardUI.rewardSetups.Count; setupIndex++)
+            {
+                CharacterRewardSetup setup = rewardUI.rewardSetups[setupIndex];
+                if (setup == null || setup.rewardPanels == null)
+                {
+                    continue;
+                }
+
+                for (int panelIndex = 0; panelIndex < setup.rewardPanels.Count; panelIndex++)
+                {
+                    GameObject panel = setup.rewardPanels[panelIndex];
+                    if (panel != null && panel.activeInHierarchy)
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
     private IEnumerator Start()
     {
         foreach (var setup in rewardSetups)

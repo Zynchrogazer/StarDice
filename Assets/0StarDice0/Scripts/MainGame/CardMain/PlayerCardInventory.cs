@@ -35,10 +35,10 @@ public class PlayerCardInventory : MonoBehaviour
 
     public void OnUseCardButtonPress()
     {
-        // 🛑 ป้องกันชั้นที่ 1: เช็คว่าเป็นเทิร์นของเราไหม ถ้าไม่ใช่ให้หยุดการทำงานทันที
-        if (!isPlayerTurn)
+        // 🛑 ป้องกันชั้นที่ 1: ใช้การ์ดได้เฉพาะเทิร์นผู้เล่นที่เข้าสู่ WaitingForRoll แล้วเท่านั้น
+        if (!CanUseCurrentCard())
         {
-            Debug.LogWarning("[Inventory] ไม่สามารถใช้การ์ดได้ เพราะไม่ใช่เทิร์นของผู้เล่น!");
+            Debug.LogWarning("[Inventory] ไม่สามารถใช้การ์ดได้ เพราะยังไม่ถึงช่วง WaitingForRoll ของผู้เล่น!");
             return;
         }
 
@@ -62,8 +62,8 @@ public class PlayerCardInventory : MonoBehaviour
 
     private void UpdateUI()
     {
-        // 🛑 ป้องกันชั้นที่ 2: ปุ่มจะกดได้ก็ต่อเมื่อ "มีการ์ด" และ "เป็นเทิร์นของเรา"
-        if (currentCard != null && isPlayerTurn)
+        // 🛑 ป้องกันชั้นที่ 2: ปุ่มจะกดได้ก็ต่อเมื่อ "มีการ์ด" และเข้า WaitingForRoll ของผู้เล่นแล้ว
+        if (CanUseCurrentCard())
         {
             useCardImage.sprite = currentCard.cardImage;
             useCardImage.color = Color.white; 
@@ -94,9 +94,12 @@ public class PlayerCardInventory : MonoBehaviour
         // 1. ลองหา GameTurnManager ในฉาก 
         if (GameTurnManager.TryGet(out var turnManager))
         {
-            // 2. ถ้าเจอ ให้สมัครรับข้อมูลเมื่อมีการเปลี่ยนเทิร์น
+            // 2. ถ้าเจอ ให้สมัครรับข้อมูลเมื่อมีการเปลี่ยนเทิร์นและ state
             turnManager.OnTurnChanged += HandleTurnChanged;
+            turnManager.OnStateChanged += HandleTurnStateChanged;
         }
+
+        UpdateUI();
     }
 
     private void OnDisable()
@@ -105,6 +108,7 @@ public class PlayerCardInventory : MonoBehaviour
         if (GameTurnManager.TryGet(out var turnManager))
         {
             turnManager.OnTurnChanged -= HandleTurnChanged;
+            turnManager.OnStateChanged -= HandleTurnStateChanged;
         }
     }
 
@@ -115,4 +119,21 @@ public class PlayerCardInventory : MonoBehaviour
         // ถ้าเป็นเทิร์นของคน (isAI == false) หมายความว่า "เป็นเทิร์นของผู้เล่น"
         UpdateTurnState(!isAI); 
     }
+
+    private void HandleTurnStateChanged(GameState newState)
+    {
+        UpdateUI();
+    }
+
+    private bool CanUseCurrentCard()
+    {
+        PlayerState currentPlayer = GameTurnManager.CurrentPlayer;
+        return currentCard != null &&
+            isPlayerTurn &&
+            currentPlayer != null &&
+            !currentPlayer.isAI &&
+            GameTurnManager.TryGet(out var turnManager) &&
+            turnManager.currentState == GameState.WaitingForRoll;
+    }
+
 }

@@ -8,6 +8,8 @@ public enum GameState
 {
     Idle,
     Preparing,
+    TurnAnnouncement,
+    TurnGimmickProcessing,
     WaitingForRoll,
     Rolling,
     Moving,
@@ -49,8 +51,12 @@ public class GameTurnManager : MonoBehaviour
     [SerializeField] private DiceRollerFromPNG diceRoller;
     [SerializeField] private GameEventManager gameEventManager;
 
+    [Header("Turn Flow Timing")]
+    [Min(0f)] [SerializeField] private float turnAnnouncementWaitSeconds = 1.5f;
+
     
     public event System.Action<bool> OnTurnChanged;
+    public event System.Action<GameState> OnStateChanged;
     // ===== Current Player =====
     public static PlayerState CurrentPlayer
     {
@@ -115,7 +121,13 @@ public class GameTurnManager : MonoBehaviour
     // ===== STATE =====
     public void SetState(GameState newState)
     {
+        if (currentState == newState)
+        {
+            return;
+        }
+
         currentState = newState;
+        OnStateChanged?.Invoke(newState);
         Debug.Log($"<color=magenta>[State] → {newState}</color>");
     }
 
@@ -146,8 +158,14 @@ public class GameTurnManager : MonoBehaviour
         if (currentPlayer != null)
         {
             yield return new WaitForSeconds(0.5f);
+            SetState(GameState.TurnAnnouncement);
             Debug.Log($"<color=cyan>[Turn] รอ UI ประกาศเทิร์น...</color>");
             OnTurnChanged?.Invoke(currentPlayer.isAI);
+            yield return new WaitForSeconds(ResolveTurnAnnouncementWaitSeconds());
+
+            SetState(GameState.TurnGimmickProcessing);
+            MainDarkDebuffGimmickController.ReleasePendingHumanPreviewAfterTurnAnnouncement(currentPlayer);
+            yield return MainDarkDebuffGimmickController.WaitForPendingHumanPreview(currentPlayer);
 
             if (currentPlayer.sleepDebuffTurns > 0)
             {
@@ -224,6 +242,23 @@ public class GameTurnManager : MonoBehaviour
             else
                 Debug.LogError("[GameTurnManager] DiceRollerFromPNG not found for player turn.");
         }
+    }
+
+
+    private float ResolveTurnAnnouncementWaitSeconds()
+    {
+        float waitSeconds = Mathf.Max(0f, turnAnnouncementWaitSeconds);
+        TurnAnnouncementUI[] announcementUIs = FindObjectsByType<TurnAnnouncementUI>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        for (int i = 0; i < announcementUIs.Length; i++)
+        {
+            TurnAnnouncementUI announcementUI = announcementUIs[i];
+            if (announcementUI != null)
+            {
+                waitSeconds = Mathf.Max(waitSeconds, announcementUI.showDuration);
+            }
+        }
+
+        return waitSeconds;
     }
 
     // ===== DICE RESULT =====

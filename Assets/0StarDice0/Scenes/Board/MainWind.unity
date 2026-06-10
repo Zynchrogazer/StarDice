@@ -23844,6 +23844,7 @@ GameObject:
   m_Component:
   - component: {fileID: 856200670}
   - component: {fileID: 856200669}
+  - component: {fileID: 856200671}
   m_Layer: 0
   m_Name: NormaUIManager
   m_TagString: Untagged
@@ -23897,6 +23898,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &856200671
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 856200668}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eb56108441fa4dda8e30e1e0388f884d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enableKeyboardShortcuts: 1
+  fillNormaKey: 288
+  forceBossPhaseKey: 289
 --- !u!1 &856936585
 GameObject:
   m_ObjectHideFlags: 0
@@ -42049,6 +42065,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   showTestButtons: 1
+  enableNumpadShortcuts: 1
 --- !u!4 &1563442516
 Transform:
   m_ObjectHideFlags: 0

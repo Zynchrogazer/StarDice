@@ -26,7 +26,7 @@ public class ShopUIManager : MonoBehaviour
                 return GameData.Instance != null ? GameData.Instance.GetSelectedPlayerCredit(data.Credit) : Mathf.Max(0, data.Credit);
             }
 
-            return Mathf.Max(0, playerCredit);
+            return PlayerProgressService.GetSelectedPlayerCredit(GameData.Instance, playerCredit);
         }
         set
         {

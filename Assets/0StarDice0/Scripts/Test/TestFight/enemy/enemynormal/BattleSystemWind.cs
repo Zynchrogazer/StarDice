@@ -528,7 +528,7 @@ public bool isBattleOver = false;
             return; // ไม่ส่งเทิร์น ให้ใช้สกิลอื่นต่อ
         }
 
-        int finalDamage = skill.power;
+        int finalDamage = BattleDamageFormula.WithPlayerAttack(selectedPlayer, skill.power);
 
         // เช็คธาตุศัตรูสำหรับ skill 1 และ 2 เท่านั้น
         if (skill.effectType == SkillData.SkillEffectType.DamageFire || skill.effectType == SkillData.SkillEffectType.Burn || skill.effectType == SkillData.SkillEffectType.RandomDamgeFire || skill.effectType == SkillData.SkillEffectType.SuperSuperFire || skill.effectType == SkillData.SkillEffectType.SuperFire)
@@ -3768,7 +3768,7 @@ StartCoroutine(MyDelay());
 
               case CardEffectType.ElementAttack_Fire:
                 {
-                    int damage = card.value;
+                    int damage = BattleDamageFormula.WithPlayerAttack(selectedPlayer, card.value);
                     if (enemyElement == ElementType.Wind)
                     {
                         damage *= 2;
@@ -3793,7 +3793,7 @@ StartCoroutine(MyDelay());
                 }
             case CardEffectType.ElementAttack_Water:
                 {
-                    int damage = card.value;
+                    int damage = BattleDamageFormula.WithPlayerAttack(selectedPlayer, card.value);
                     if (enemyElement == ElementType.Fire)
                     {
                         damage *= 2;
@@ -3818,7 +3818,7 @@ StartCoroutine(MyDelay());
                 }
             case CardEffectType.ElementAttack_Wind:
                 {
-                    int damage = card.value;
+                    int damage = BattleDamageFormula.WithPlayerAttack(selectedPlayer, card.value);
                     if (enemyElement == ElementType.Earth)
                     {
                         damage *= 2;
@@ -3843,7 +3843,7 @@ StartCoroutine(MyDelay());
                 }
             case CardEffectType.ElementAttack_Earth:
                 {
-                    int damage = card.value;
+                    int damage = BattleDamageFormula.WithPlayerAttack(selectedPlayer, card.value);
                     if (enemyElement == ElementType.Water)
                     {
                         damage *= 2;
@@ -3868,7 +3868,7 @@ StartCoroutine(MyDelay());
                 }
             case CardEffectType.ElementAttack_Dark:
                 {
-                    int damage = card.value;
+                    int damage = BattleDamageFormula.WithPlayerAttack(selectedPlayer, card.value);
                     if (enemyElement == ElementType.Light)
                     {
                         damage *= 2;
@@ -3888,7 +3888,7 @@ StartCoroutine(MyDelay());
                 }
             case CardEffectType.ElementAttack_Light:
                 {
-                    int damage = card.value;
+                    int damage = BattleDamageFormula.WithPlayerAttack(selectedPlayer, card.value);
                     if (enemyElement == ElementType.Dark)
                     {
                         damage *= 2;
@@ -3908,7 +3908,7 @@ StartCoroutine(MyDelay());
                 }
             case CardEffectType.ElementAttack_Physical:
                 {
-                    int damage = card.value;
+                    int damage = BattleDamageFormula.WithPlayerAttack(selectedPlayer, card.value);
                     DamageEnemy(damage);
                     PlaySoundEffect(0);
                     Debug.Log($"ใช้การ์ดโจมตีกายภาพ ดาเมจ: {damage}");

@@ -134,9 +134,13 @@ public class ShopManager : MonoBehaviour
     private void RefreshCreditText()
     {
         TryAutoAssignCreditText();
-        if (shopCreditText == null || GameTurnManager.CurrentPlayer == null) return;
+        if (shopCreditText == null) return;
 
-        shopCreditText.text = $"{creditPrefix}{GameTurnManager.CurrentPlayer.PlayerCredit}";
+        int currentCredit = GameTurnManager.CurrentPlayer != null
+            ? GameTurnManager.CurrentPlayer.PlayerCredit
+            : PlayerProgressService.GetSelectedPlayerCredit(GameData.Instance);
+
+        shopCreditText.text = $"{creditPrefix}{currentCredit}";
     }
 
     private void RefreshShopItems()

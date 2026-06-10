@@ -140918,6 +140918,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2561458251498192993}
   - component: {fileID: 3516852093450957079}
+  - component: {fileID: 7811183225842879154}
   m_Layer: 0
   m_Name: NormaUIManager
   m_TagString: Untagged
@@ -140925,6 +140926,21 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &7811183225842879154
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7811183225842879153}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eb56108441fa4dda8e30e1e0388f884d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enableKeyboardShortcuts: 1
+  fillNormaKey: 288
+  forceBossPhaseKey: 289
 --- !u!199 &7838580407461890326
 ParticleSystemRenderer:
   serializedVersion: 6
@@ -148447,6 +148463,8 @@ MonoBehaviour:
   personality: 0
   logDecisionScores: 1
   randomScoreNoise: 0
+  autoSwitchPersonality: 1
+  hunterHealthThreshold: 0.6
 --- !u!1 &8853801437567468366
 GameObject:
   m_ObjectHideFlags: 0
@@ -159957,6 +159975,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   showTestButtons: 1
+  enableNumpadShortcuts: 1
 --- !u!33 &9216542448610338781
 MeshFilter:
   m_ObjectHideFlags: 0

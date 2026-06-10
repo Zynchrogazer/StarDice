@@ -166,10 +166,39 @@ public class PlayerProgress
         PlayerPrefs.DeleteKey(GetMaxExpKey(id));
     }
 
+    public static int GetSharedCredit(int fallback = 0)
+    {
+        int normalizedFallback = Mathf.Max(0, fallback);
+        if (PlayerPrefs.HasKey(SharedCreditKey))
+        {
+            return Mathf.Max(0, PlayerPrefs.GetInt(SharedCreditKey, normalizedFallback));
+        }
+
+        return Mathf.Max(0, PlayerPrefs.GetInt("PlayerCredit", normalizedFallback));
+    }
+
+    public static void SetSharedCredit(int creditAmount)
+    {
+        int normalizedCredit = Mathf.Max(0, creditAmount);
+        PlayerPrefs.SetInt(SharedCreditKey, normalizedCredit);
+        PlayerPrefs.SetInt("PlayerCredit", normalizedCredit);
+        PlayerPrefs.Save();
+    }
+
+    public static bool TrySpendSharedCredit(int amount, out int remainingCredit, int fallback = 0)
+    {
+        remainingCredit = GetSharedCredit(fallback);
+        if (amount <= 0) return true;
+        if (remainingCredit < amount) return false;
+
+        remainingCredit -= amount;
+        SetSharedCredit(remainingCredit);
+        return true;
+    }
+
     public static void ResetSharedCredit(int creditAmount = 0)
     {
-        PlayerPrefs.SetInt(SharedCreditKey, Mathf.Max(0, creditAmount));
-        PlayerPrefs.Save();
+        SetSharedCredit(creditAmount);
     }
 
     private static string GetCreditKey(string id) => CreditKeyPrefix + id;
