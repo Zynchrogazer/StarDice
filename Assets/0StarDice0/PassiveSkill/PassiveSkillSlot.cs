@@ -90,7 +90,7 @@ public class PassiveSkillSlot : MonoBehaviour, IPointerEnterHandler, IPointerExi
 
         if (ResolveCostText() != null && passiveSkillData != null)
         {
-            ResolveCostText().text = $"Cost: {passiveSkillData.costPoint}";
+            ResolveCostText().text = $"Credit: {passiveSkillData.costPoint}";
         }
     }
 
@@ -225,7 +225,7 @@ public class PassiveSkillSlot : MonoBehaviour, IPointerEnterHandler, IPointerExi
 
         if (passiveSkillData.costPoint > 0)
         {
-            builder.AppendLine($"Cost: {passiveSkillData.costPoint}");
+            builder.AppendLine($"Credit: {passiveSkillData.costPoint}");
         }
 
         string result = builder.ToString().TrimEnd();
