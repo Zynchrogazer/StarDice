@@ -1,5 +1,7 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
 /// <summary>
@@ -36,6 +38,23 @@ public class MainDarkDebuffGimmickController : MonoBehaviour
     [SerializeField] private bool autoTriggerOnlyPlayerTurn = true;
     [SerializeField] private bool preventDuplicateActiveDebuffs = true;
 
+    [Header("Debuff Event Preview UI")]
+    [SerializeField] private GameObject debuffPreviewRoot;
+    [SerializeField] private Image debuffPreviewImage;
+    [SerializeField] private Sprite debuffEventPreviewSprite;
+    [SerializeField] private float debuffPreviewDurationSeconds = 2f;
+    [SerializeField] private bool waitForTurnAnnouncementBeforePreview = true;
+    [SerializeField] private bool waitForLevelRewardPanelsBeforePreview = true;
+
+    [Header("Debuff Event Preview Visual")]
+    [SerializeField] private bool autoConfigurePreviewImage = true;
+    [SerializeField] private Vector2 debuffPreviewSize = new Vector2(640f, 640f);
+    [SerializeField] private Vector2 debuffPreviewAnchoredPosition = Vector2.zero;
+    [Range(0f, 1f)] [SerializeField] private float debuffPreviewAlpha = 0.35f;
+    [SerializeField] private bool debuffPreviewPreserveAspect = true;
+    [SerializeField] private bool debuffPreviewRaycastTarget = false;
+    [SerializeField] private bool debuffPreviewBringToFront = true;
+
     [Header("Debuff Pool (Random 1 Option Per Trigger)")]
     [SerializeField] private List<DebuffOption> debuffPool = new List<DebuffOption>
     {
@@ -47,10 +66,14 @@ public class MainDarkDebuffGimmickController : MonoBehaviour
     };
 
     private int autoTriggerTurnsLeft;
+    private Coroutine activePreviewRoutine;
+    private bool isHumanDebuffPreviewBlockingRoll;
+    private bool isWaitingForTurnAnnouncementToFinish;
 
     private void Awake()
     {
         ResetAutoTriggerCounter();
+        HideDebuffPreview();
     }
 
     public void TickTurn(bool isAITurn)
@@ -141,9 +164,182 @@ public class MainDarkDebuffGimmickController : MonoBehaviour
         }
 
         ApplyDebuff(playerState, selectedOption);
+        QueueHumanDebuffPreview(playerState);
         Debug.Log($"[MainDarkDebuffGimmick] Applied {selectedOption.type} ({selectedOption.turns} turn(s)) to {target.name}");
 
         return true;
+    }
+
+    public bool IsBlockingRollFor(PlayerState playerState)
+    {
+        return isHumanDebuffPreviewBlockingRoll && playerState != null && !playerState.isAI;
+    }
+
+    public static void ReleasePendingHumanPreviewAfterTurnAnnouncement(PlayerState playerState)
+    {
+        if (playerState == null || playerState.isAI)
+        {
+            return;
+        }
+
+        MainDarkDebuffGimmickController[] controllers = FindObjectsByType<MainDarkDebuffGimmickController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        for (int i = 0; i < controllers.Length; i++)
+        {
+            MainDarkDebuffGimmickController controller = controllers[i];
+            if (controller != null && controller.IsBlockingRollFor(playerState))
+            {
+                controller.isWaitingForTurnAnnouncementToFinish = false;
+            }
+        }
+    }
+
+    public static IEnumerator WaitForPendingHumanPreview(PlayerState playerState)
+    {
+        if (playerState == null || playerState.isAI)
+        {
+            yield break;
+        }
+
+        MainDarkDebuffGimmickController[] controllers = FindObjectsByType<MainDarkDebuffGimmickController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        for (int i = 0; i < controllers.Length; i++)
+        {
+            MainDarkDebuffGimmickController controller = controllers[i];
+            if (controller == null || !controller.IsBlockingRollFor(playerState))
+            {
+                continue;
+            }
+
+            while (controller != null && controller.IsBlockingRollFor(playerState))
+            {
+                yield return null;
+            }
+        }
+    }
+
+    private void QueueHumanDebuffPreview(PlayerState playerState)
+    {
+        if (playerState == null || playerState.isAI)
+        {
+            return;
+        }
+
+        if (activePreviewRoutine != null)
+        {
+            StopCoroutine(activePreviewRoutine);
+            activePreviewRoutine = null;
+        }
+
+        isHumanDebuffPreviewBlockingRoll = true;
+        isWaitingForTurnAnnouncementToFinish = ShouldWaitForTurnAnnouncementToFinish();
+        activePreviewRoutine = StartCoroutine(ShowHumanDebuffPreviewRoutine());
+    }
+
+    private IEnumerator ShowHumanDebuffPreviewRoutine()
+    {
+        while (isWaitingForTurnAnnouncementToFinish)
+        {
+            HideDebuffPreview();
+            yield return null;
+        }
+
+        if (waitForLevelRewardPanelsBeforePreview)
+        {
+            while (LevelRewardUI.IsAnyRewardPanelVisible())
+            {
+                HideDebuffPreview();
+                yield return null;
+            }
+        }
+
+        ShowDebuffPreview();
+        yield return new WaitForSeconds(Mathf.Max(0.1f, debuffPreviewDurationSeconds));
+        HideDebuffPreview();
+
+        isHumanDebuffPreviewBlockingRoll = false;
+        activePreviewRoutine = null;
+    }
+
+    private bool ShouldWaitForTurnAnnouncementToFinish()
+    {
+        return waitForTurnAnnouncementBeforePreview &&
+            GameTurnManager.TryGet(out var gameTurnManager) &&
+            gameTurnManager.currentState == GameState.TurnAnnouncement;
+    }
+
+    private void ShowDebuffPreview()
+    {
+        ApplyDebuffPreviewVisualSettings();
+
+        if (debuffPreviewImage != null && debuffEventPreviewSprite != null)
+        {
+            debuffPreviewImage.sprite = debuffEventPreviewSprite;
+        }
+
+        if (debuffPreviewRoot != null)
+        {
+            debuffPreviewRoot.SetActive(true);
+        }
+        else if (debuffPreviewImage != null)
+        {
+            debuffPreviewImage.gameObject.SetActive(true);
+        }
+    }
+
+    private void HideDebuffPreview()
+    {
+        if (debuffPreviewRoot != null)
+        {
+            debuffPreviewRoot.SetActive(false);
+        }
+        else if (debuffPreviewImage != null)
+        {
+            debuffPreviewImage.gameObject.SetActive(false);
+        }
+    }
+
+    private void ApplyDebuffPreviewVisualSettings()
+    {
+        if (debuffPreviewImage == null)
+        {
+            return;
+        }
+
+        debuffPreviewImage.color = new Color(
+            debuffPreviewImage.color.r,
+            debuffPreviewImage.color.g,
+            debuffPreviewImage.color.b,
+            Mathf.Clamp01(debuffPreviewAlpha));
+        debuffPreviewImage.preserveAspect = debuffPreviewPreserveAspect;
+        debuffPreviewImage.raycastTarget = debuffPreviewRaycastTarget;
+
+        if (autoConfigurePreviewImage)
+        {
+            RectTransform imageRect = debuffPreviewImage.rectTransform;
+            imageRect.anchorMin = new Vector2(0.5f, 0.5f);
+            imageRect.anchorMax = new Vector2(0.5f, 0.5f);
+            imageRect.pivot = new Vector2(0.5f, 0.5f);
+            imageRect.anchoredPosition = debuffPreviewAnchoredPosition;
+            imageRect.sizeDelta = debuffPreviewSize;
+        }
+
+        if (debuffPreviewBringToFront)
+        {
+            Transform frontTarget = debuffPreviewRoot != null ? debuffPreviewRoot.transform : debuffPreviewImage.transform;
+            frontTarget.SetAsLastSibling();
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (activePreviewRoutine != null)
+        {
+            StopCoroutine(activePreviewRoutine);
+            activePreviewRoutine = null;
+        }
+
+        isHumanDebuffPreviewBlockingRoll = false;
+        isWaitingForTurnAnnouncementToFinish = false;
+        HideDebuffPreview();
     }
 
     private List<DebuffOption> BuildEligibleDebuffPool(PlayerState playerState)
