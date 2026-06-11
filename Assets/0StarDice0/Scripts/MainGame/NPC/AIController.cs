@@ -16,6 +16,12 @@ public class AIController : MonoBehaviour
     [SerializeField] private bool logDecisionScores = true;
     [SerializeField] private float randomScoreNoise = 0f;
 
+    [Header("Path Planning")]
+    [Tooltip("จำนวนก้าวสูงสุดที่ AI จะจำลองล่วงหน้าด้วย graph search เพื่อเลือกทางแยก โดยไม่เปลี่ยน flow การเดินจริง")]
+    [SerializeField, Range(1, 12)] private int maxLookAheadSteps = 6;
+    [Tooltip("น้ำหนักคะแนนอนาคตจากการจำลองเส้นทาง ยิ่งสูง AI ยิ่งมองปลายทางมากขึ้น")]
+    [SerializeField, Range(0f, 1f)] private float futurePathScoreWeight = 0.35f;
+
     [Header("Nuisance AI Tuning")]
     [Tooltip("เปิดให้ AI เปลี่ยนเป็น Hunter อัตโนมัติเมื่อมีผู้เล่นมนุษย์ HP น้อยกว่าหรือเท่ากับ Hunter Health Threshold")]
     [SerializeField] private bool autoSwitchPersonality = true;
@@ -63,6 +69,11 @@ public class AIController : MonoBehaviour
     // --- 2. ฟังก์ชันตัดสินใจเลือกทางแยก (ถูกเรียกจาก PlayerPathWalker) ---
     public Transform ChoosePath(List<Transform> choices)
     {
+        return ChoosePath(choices, 1);
+    }
+
+    public Transform ChoosePath(List<Transform> choices, int stepsRemaining)
+    {
         if (choices == null || choices.Count == 0)
             return null;
 
@@ -79,16 +90,19 @@ public class AIController : MonoBehaviour
         BoardAIPersonality decisionPersonality = GetDecisionPersonality();
         Transform bestChoice = choices[0];
         float bestScore = float.MinValue;
+        int lookAheadSteps = Mathf.Clamp(stepsRemaining, 1, maxLookAheadSteps);
 
         foreach (Transform choice in choices)
         {
-            float score = EvaluatePathChoice(choice, decisionPersonality);
+            float immediateScore = EvaluatePathChoice(choice, decisionPersonality, true);
+            float futureScore = EstimateFuturePathScore(choice, lookAheadSteps - 1, decisionPersonality);
+            float score = immediateScore + futureScore * futurePathScoreWeight;
 
             if (logDecisionScores)
             {
                 NodeConnection nodeData = GetNodeData(choice);
                 string tileType = nodeData != null ? nodeData.type.ToString() : "Unknown";
-                Debug.Log($"🤖 {name} [{decisionPersonality}] evaluates {choice.name} ({tileType}) = {score:0.##}");
+                Debug.Log($"🤖 {name} [{decisionPersonality}] evaluates {choice.name} ({tileType}) immediate={immediateScore:0.##}, future={futureScore:0.##}, total={score:0.##}, lookAhead={lookAheadSteps}");
             }
 
             if (score > bestScore)
@@ -98,11 +112,11 @@ public class AIController : MonoBehaviour
             }
         }
 
-        Debug.Log($"🤖 {name} [{decisionPersonality}] chose path {bestChoice.name} with score {bestScore:0.##}");
+        Debug.Log($"🤖 {name} [{decisionPersonality}] chose path {bestChoice.name} with score {bestScore:0.##} using graph look-ahead ({lookAheadSteps} step(s))");
         return bestChoice;
     }
 
-    private float EvaluatePathChoice(Transform choice, BoardAIPersonality decisionPersonality)
+    private float EvaluatePathChoice(Transform choice, BoardAIPersonality decisionPersonality, bool includeNoise = false)
     {
         NodeConnection nodeData = GetNodeData(choice);
         if (nodeData == null)
@@ -112,10 +126,59 @@ public class AIController : MonoBehaviour
         score += GetPlayerTargetScore(nodeData.tileID, decisionPersonality);
         score += GetPersonalityModifier(nodeData.type, decisionPersonality);
 
-        if (randomScoreNoise > 0f)
+        if (includeNoise && randomScoreNoise > 0f)
             score += Random.Range(-randomScoreNoise, randomScoreNoise);
 
         return score;
+    }
+
+    private float EstimateFuturePathScore(Transform startNode, int remainingSteps, BoardAIPersonality decisionPersonality)
+    {
+        if (startNode == null || remainingSteps <= 0)
+            return 0f;
+
+        Queue<PathSearchNode> frontier = new Queue<PathSearchNode>();
+        frontier.Enqueue(new PathSearchNode(startNode, 0));
+
+        float bestTerminalScore = float.MinValue;
+
+        while (frontier.Count > 0)
+        {
+            PathSearchNode current = frontier.Dequeue();
+
+            if (current.Depth >= remainingSteps)
+            {
+                bestTerminalScore = Mathf.Max(bestTerminalScore, EvaluatePathChoice(current.Node, decisionPersonality));
+                continue;
+            }
+
+            List<Transform> nextNodes = routeManager.GetAllConnectedNodes(current.Node);
+            if (nextNodes.Count == 0)
+            {
+                bestTerminalScore = Mathf.Max(bestTerminalScore, EvaluatePathChoice(current.Node, decisionPersonality));
+                continue;
+            }
+
+            foreach (Transform nextNode in nextNodes)
+            {
+                if (nextNode != null)
+                    frontier.Enqueue(new PathSearchNode(nextNode, current.Depth + 1));
+            }
+        }
+
+        return bestTerminalScore > float.MinValue ? bestTerminalScore : 0f;
+    }
+
+    private struct PathSearchNode
+    {
+        public PathSearchNode(Transform node, int depth)
+        {
+            Node = node;
+            Depth = depth;
+        }
+
+        public Transform Node;
+        public int Depth;
     }
 
     private BoardAIPersonality GetDecisionPersonality()
