@@ -1,6 +1,8 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 /// <summary>
 /// รับผิดชอบกิมมิคช่อง Heal ชั่วคราวของด่าน MainLight
@@ -43,8 +45,28 @@ public class MainLightHealGimmickController : MonoBehaviour
     [Tooltip("ถ้าเปิดจะนับเฉพาะตอนจบเทิร์นผู้เล่น (ไม่นับ AI)")]
     [SerializeField] private bool autoTriggerOnlyPlayerTurn = false;
 
+    [Header("Heal Event Preview UI")]
+    [SerializeField] private GameObject healPreviewRoot;
+    [SerializeField] private Image healPreviewImage;
+    [SerializeField] private Sprite healEventPreviewSprite;
+    [SerializeField] private float healPreviewDurationSeconds = 2f;
+    [SerializeField] private bool waitForTurnAnnouncementBeforePreview = true;
+    [SerializeField] private bool waitForLevelRewardPanelsBeforePreview = true;
+
+    [Header("Heal Event Preview Visual")]
+    [SerializeField] private bool autoConfigurePreviewImage = true;
+    [SerializeField] private Vector2 healPreviewSize = new Vector2(640f, 640f);
+    [SerializeField] private Vector2 healPreviewAnchoredPosition = Vector2.zero;
+    [Range(0f, 1f)] [SerializeField] private float healPreviewAlpha = 0.35f;
+    [SerializeField] private bool healPreviewPreserveAspect = true;
+    [SerializeField] private bool healPreviewRaycastTarget = false;
+    [SerializeField] private bool healPreviewBringToFront = true;
+
     private int mainLightHealTurnsLeft;
     private int autoTriggerTurnsLeft;
+    private Coroutine activePreviewRoutine;
+    private bool isHumanHealPreviewBlockingRoll;
+    private bool isWaitingForTurnAnnouncementToFinish;
     private readonly List<TemporaryTileChange> activeMainLightHealChanges = new List<TemporaryTileChange>();
 
     private void Awake()
@@ -55,6 +77,7 @@ public class MainLightHealGimmickController : MonoBehaviour
         }
 
         ResetAutoTriggerCounter();
+        HideHealPreview();
     }
 
     public void TickTurn(bool isAITurn)
@@ -172,8 +195,182 @@ public class MainLightHealGimmickController : MonoBehaviour
         }
 
         mainLightHealTurnsLeft = mainLightHealDurationTurns;
+        QueueHumanHealPreview();
         Debug.Log($"💚 Trigger MainLight Heal Gimmick: เปลี่ยน {changedCount} ช่อง เป็นเวลา {mainLightHealDurationTurns} เทิร์น");
         return true;
+    }
+
+    public bool IsBlockingRollFor(PlayerState playerState)
+    {
+        return isHumanHealPreviewBlockingRoll && playerState != null && !playerState.isAI;
+    }
+
+    public static void ReleasePendingHumanPreviewAfterTurnAnnouncement(PlayerState playerState)
+    {
+        if (playerState == null || playerState.isAI)
+        {
+            return;
+        }
+
+        MainLightHealGimmickController[] controllers = FindObjectsByType<MainLightHealGimmickController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        for (int i = 0; i < controllers.Length; i++)
+        {
+            MainLightHealGimmickController controller = controllers[i];
+            if (controller != null && controller.IsBlockingRollFor(playerState))
+            {
+                controller.isWaitingForTurnAnnouncementToFinish = false;
+            }
+        }
+    }
+
+    public static IEnumerator WaitForPendingHumanPreview(PlayerState playerState)
+    {
+        if (playerState == null || playerState.isAI)
+        {
+            yield break;
+        }
+
+        MainLightHealGimmickController[] controllers = FindObjectsByType<MainLightHealGimmickController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        for (int i = 0; i < controllers.Length; i++)
+        {
+            MainLightHealGimmickController controller = controllers[i];
+            if (controller == null || !controller.IsBlockingRollFor(playerState))
+            {
+                continue;
+            }
+
+            while (controller != null && controller.IsBlockingRollFor(playerState))
+            {
+                yield return null;
+            }
+        }
+    }
+
+    private void QueueHumanHealPreview()
+    {
+        PlayerState currentPlayer = GameTurnManager.CurrentPlayer;
+        if (currentPlayer == null || currentPlayer.isAI)
+        {
+            return;
+        }
+
+        if (activePreviewRoutine != null)
+        {
+            StopCoroutine(activePreviewRoutine);
+            activePreviewRoutine = null;
+        }
+
+        isHumanHealPreviewBlockingRoll = true;
+        isWaitingForTurnAnnouncementToFinish = ShouldWaitForTurnAnnouncementToFinish();
+        activePreviewRoutine = StartCoroutine(ShowHumanHealPreviewRoutine());
+    }
+
+    private IEnumerator ShowHumanHealPreviewRoutine()
+    {
+        while (isWaitingForTurnAnnouncementToFinish)
+        {
+            HideHealPreview();
+            yield return null;
+        }
+
+        if (waitForLevelRewardPanelsBeforePreview)
+        {
+            while (LevelRewardUI.IsAnyRewardPanelVisible())
+            {
+                HideHealPreview();
+                yield return null;
+            }
+        }
+
+        ShowHealPreview();
+        yield return new WaitForSeconds(Mathf.Max(0.1f, healPreviewDurationSeconds));
+        HideHealPreview();
+
+        isHumanHealPreviewBlockingRoll = false;
+        activePreviewRoutine = null;
+    }
+
+    private bool ShouldWaitForTurnAnnouncementToFinish()
+    {
+        return waitForTurnAnnouncementBeforePreview &&
+            GameTurnManager.TryGet(out var gameTurnManager) &&
+            gameTurnManager.currentState == GameState.TurnAnnouncement;
+    }
+
+    private void ShowHealPreview()
+    {
+        ApplyHealPreviewVisualSettings();
+
+        if (healPreviewImage != null && healEventPreviewSprite != null)
+        {
+            healPreviewImage.sprite = healEventPreviewSprite;
+        }
+
+        if (healPreviewRoot != null)
+        {
+            healPreviewRoot.SetActive(true);
+        }
+        else if (healPreviewImage != null)
+        {
+            healPreviewImage.gameObject.SetActive(true);
+        }
+    }
+
+    private void HideHealPreview()
+    {
+        if (healPreviewRoot != null)
+        {
+            healPreviewRoot.SetActive(false);
+        }
+        else if (healPreviewImage != null)
+        {
+            healPreviewImage.gameObject.SetActive(false);
+        }
+    }
+
+    private void ApplyHealPreviewVisualSettings()
+    {
+        if (healPreviewImage == null)
+        {
+            return;
+        }
+
+        healPreviewImage.color = new Color(
+            healPreviewImage.color.r,
+            healPreviewImage.color.g,
+            healPreviewImage.color.b,
+            Mathf.Clamp01(healPreviewAlpha));
+        healPreviewImage.preserveAspect = healPreviewPreserveAspect;
+        healPreviewImage.raycastTarget = healPreviewRaycastTarget;
+
+        if (autoConfigurePreviewImage)
+        {
+            RectTransform imageRect = healPreviewImage.rectTransform;
+            imageRect.anchorMin = new Vector2(0.5f, 0.5f);
+            imageRect.anchorMax = new Vector2(0.5f, 0.5f);
+            imageRect.pivot = new Vector2(0.5f, 0.5f);
+            imageRect.anchoredPosition = healPreviewAnchoredPosition;
+            imageRect.sizeDelta = healPreviewSize;
+        }
+
+        if (healPreviewBringToFront)
+        {
+            Transform frontTarget = healPreviewRoot != null ? healPreviewRoot.transform : healPreviewImage.transform;
+            frontTarget.SetAsLastSibling();
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (activePreviewRoutine != null)
+        {
+            StopCoroutine(activePreviewRoutine);
+            activePreviewRoutine = null;
+        }
+
+        isHumanHealPreviewBlockingRoll = false;
+        isWaitingForTurnAnnouncementToFinish = false;
+        HideHealPreview();
     }
 
     private bool CanTriggerInCurrentScene()

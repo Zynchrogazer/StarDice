@@ -165,7 +165,9 @@ public class GameTurnManager : MonoBehaviour
 
             SetState(GameState.TurnGimmickProcessing);
             MainDarkDebuffGimmickController.ReleasePendingHumanPreviewAfterTurnAnnouncement(currentPlayer);
+            MainLightHealGimmickController.ReleasePendingHumanPreviewAfterTurnAnnouncement(currentPlayer);
             yield return MainDarkDebuffGimmickController.WaitForPendingHumanPreview(currentPlayer);
+            yield return MainLightHealGimmickController.WaitForPendingHumanPreview(currentPlayer);
 
             if (currentPlayer.sleepDebuffTurns > 0)
             {
