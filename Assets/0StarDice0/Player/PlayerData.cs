@@ -10,24 +10,33 @@ public class PlayerData : ScriptableObject
     public ElementType element;
     public Sprite playerSprite;
 
-    [Tooltip("Primary max HP value used by runtime systems.")]
+    [Header("Base Combat Stats")]
+    [Tooltip("Single source of truth for the character base max HP before level, passive, equipment, and runtime bonuses.")]
     public int maxHP = 100;
+    [Tooltip("Single source of truth for the character base ATK before level, passive, equipment, and runtime bonuses.")]
     public int attackDamage = 10;
+    [Tooltip("Single source of truth for the character base SPD before level, passive, equipment, and runtime bonuses.")]
     public int speed = 10;
+    [Tooltip("Single source of truth for the character base DEF before level, passive, equipment, and runtime bonuses.")]
     public int def = 1;
 
-    public int maxHPbase = 100;
-    public int attackDamagebase = 10;
-    public int speedbase = 10;
-    public int defbase = 1;
+    [Header("Legacy Base Stat Mirrors")]
+    [SerializeField, HideInInspector]
+    private int maxHPbase = 100;
+    [SerializeField, HideInInspector]
+    private int attackDamagebase = 10;
+    [SerializeField, HideInInspector]
+    private int speedbase = 10;
+    [SerializeField, HideInInspector]
+    private int defbase = 1;
 
     public SkillData[] skills = new SkillData[3];
     public SkillData[] allSkills = new SkillData[10];
     public ElementType elementType;
 
     [Header("Player Stats")]
-    [Obsolete("Use maxHP as the source of truth.")]
-    public int maxHealth = 100;
+    [SerializeField, HideInInspector]
+    private int maxHealth = 100;
     [FormerlySerializedAs("currentHealth")]
     [SerializeField, HideInInspector]
     private int legacyCurrentHealth;
@@ -100,18 +109,46 @@ public class PlayerData : ScriptableObject
 
     private void OnEnable()
     {
-        NormalizeMaxHpFields();
+        NormalizeBaseStatFields();
     }
 
-    private void NormalizeMaxHpFields()
+    private void NormalizeBaseStatFields()
     {
+        // KISS: keep one editable stat set (maxHP/attackDamage/speed/def) and mirror
+        // legacy fields so old serialized assets keep loading without becoming a
+        // second source of truth.
         if (maxHP <= 0 && maxHealth > 0)
         {
             maxHP = maxHealth;
         }
+        if (maxHP <= 0 && maxHPbase > 0)
+        {
+            maxHP = maxHPbase;
+        }
+        if (attackDamage <= 0 && attackDamagebase > 0)
+        {
+            attackDamage = attackDamagebase;
+        }
+        if (speed <= 0 && speedbase > 0)
+        {
+            speed = speedbase;
+        }
+        if (def <= 0 && defbase > 0)
+        {
+            def = defbase;
+        }
 
         maxHP = Mathf.Max(1, maxHP);
+        attackDamage = Mathf.Max(0, attackDamage);
+        speed = Mathf.Max(0, speed);
+        def = Mathf.Max(0, def);
+
         maxHealth = maxHP;
+        maxHPbase = maxHP;
+        attackDamagebase = attackDamage;
+        speedbase = speed;
+        defbase = def;
+
         startingLevel = Mathf.Max(1, startingLevel);
         startingCurrentExp = Mathf.Max(0, startingCurrentExp);
         startingMaxExp = Mathf.Max(1, startingMaxExp);
@@ -120,7 +157,7 @@ public class PlayerData : ScriptableObject
 
     private void OnValidate()
     {
-        NormalizeMaxHpFields();
+        NormalizeBaseStatFields();
     }
 
     private PlayerProgress ResolveProgress()
@@ -148,6 +185,21 @@ public class PlayerData : ScriptableObject
     public int GetMaxHealth()
     {
         return Mathf.Max(1, maxHP);
+    }
+
+    public int GetBaseAttack()
+    {
+        return Mathf.Max(0, attackDamage);
+    }
+
+    public int GetBaseSpeed()
+    {
+        return Mathf.Max(0, speed);
+    }
+
+    public int GetBaseDefense()
+    {
+        return Mathf.Max(0, def);
     }
 
     internal void NotifyCreditChangedFromProgress(int newCredit)

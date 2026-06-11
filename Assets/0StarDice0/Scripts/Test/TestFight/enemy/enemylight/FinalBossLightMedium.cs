@@ -2255,7 +2255,7 @@ private System.Collections.IEnumerator PlayerAttackMove(RectTransform playerToMo
         // เรียกใช้คำสั่งปลดล็อก
          int roll = Random.Range(1, 101);
             
-            if (roll < 61)
+            if (roll <= 45)
             {
                  EquipmentManager.Instance.UnlockItem(GodArmor);
                  showImage.sprite = itemImages[0]; 

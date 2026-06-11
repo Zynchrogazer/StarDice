@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Text.RegularExpressions;
@@ -418,6 +418,11 @@ public class RouteManager : MonoBehaviour
 
     public void RandomizeTilesAtGameStart()
     {
+        RandomizeTiles();
+    }
+
+    public bool RandomizeTiles(IEnumerable<TileType> injectedTileTypes = null, bool forceRandomSeed = false)
+    {
         var unlockedNodes = nodeConnections
             .Where(nc => nc != null && nc.node != null && !nc.lockRandomType)
             .ToList();
@@ -425,24 +430,13 @@ public class RouteManager : MonoBehaviour
         if (unlockedNodes.Count == 0)
         {
             Debug.LogWarning("[RouteManager] ไม่พบช่องที่สุ่มได้ (อาจถูกล็อกทั้งหมด)");
-            return;
+            return false;
         }
 
         var originalUnlockedTypes = unlockedNodes.Select(nc => nc.type).ToList();
-        int seedToUse = useDeterministicSeed ? randomSeed : UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+        int seedToUse = useDeterministicSeed && !forceRandomSeed ? randomSeed : UnityEngine.Random.Range(int.MinValue, int.MaxValue);
         System.Random rng = new System.Random(seedToUse);
-        var settings = new TileRandomizerSettings
-        {
-            mode = tileRandomMode,
-            fallbackTileType = fallbackTileType,
-            tileRandomLimits = tileRandomLimits,
-            useLimitAllowList = useLimitAllowList,
-            limitAllowedTypes = limitAllowedTypes,
-            excludeLockedTilesFromLimitCounts = excludeLockedTilesFromLimitCounts,
-            validateInvariantsAfterRandom = validateInvariantsAfterRandom,
-            maxRandomizeAttempts = maxRandomizeAttempts,
-            tileInvariantRules = tileInvariantRules
-        };
+        var settings = BuildRandomizerSettings();
 
         bool success = tileRandomizer.Randomize(
             nodeConnections,
@@ -456,9 +450,54 @@ public class RouteManager : MonoBehaviour
         {
             Debug.LogWarning("[RouteManager] สุ่มครบจำนวนครั้งแล้วแต่ invariant ไม่ผ่าน -> revert เป็นค่าก่อนสุ่ม");
         }
+        else
+        {
+            ApplyInjectedTileTypes(unlockedNodes, injectedTileTypes, rng);
+        }
 
         ApplyTileVisuals();
         RebuildNodeDataMap();
+        return success;
+    }
+
+    private void ApplyInjectedTileTypes(List<NodeConnection> unlockedNodes, IEnumerable<TileType> injectedTileTypes, System.Random rng)
+    {
+        if (injectedTileTypes == null || unlockedNodes == null || unlockedNodes.Count == 0)
+        {
+            return;
+        }
+
+        List<NodeConnection> candidates = new List<NodeConnection>(unlockedNodes);
+        foreach (TileType injectedType in injectedTileTypes)
+        {
+            if (candidates.Count == 0)
+            {
+                candidates.AddRange(unlockedNodes);
+            }
+
+            int randomIndex = rng.Next(0, candidates.Count);
+            NodeConnection selectedNode = candidates[randomIndex];
+            candidates.RemoveAt(randomIndex);
+
+            selectedNode.type = injectedType;
+            selectedNode.eventName = GetDefaultEventName(injectedType);
+        }
+    }
+
+    private TileRandomizerSettings BuildRandomizerSettings()
+    {
+        return new TileRandomizerSettings
+        {
+            mode = tileRandomMode,
+            fallbackTileType = fallbackTileType,
+            tileRandomLimits = tileRandomLimits,
+            useLimitAllowList = useLimitAllowList,
+            limitAllowedTypes = limitAllowedTypes,
+            excludeLockedTilesFromLimitCounts = excludeLockedTilesFromLimitCounts,
+            validateInvariantsAfterRandom = validateInvariantsAfterRandom,
+            maxRandomizeAttempts = maxRandomizeAttempts,
+            tileInvariantRules = tileInvariantRules
+        };
     }
 
     static readonly Dictionary<TileType, string> DefaultEventNames = new Dictionary<TileType, string>

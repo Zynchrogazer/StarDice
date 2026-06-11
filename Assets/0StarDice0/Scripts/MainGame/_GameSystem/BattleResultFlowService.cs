@@ -4,8 +4,8 @@ using UnityEngine;
 public static class BattleResultFlowService
 {
     private const string InterMissionSceneName = "InterMission";
-    private const int DefaultMinReward = 50;
-    private const int DefaultMaxReward = 300;
+    private const int DefaultMinReward = 40;
+    private const int DefaultMaxReward = 120;
     private static CoroutineRunner runner;
     private static bool isProcessingTransition;
 

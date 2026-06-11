@@ -37,8 +37,8 @@ public class EquipmentManager : MonoBehaviour
     }
 
     // --- แก้ไข: เปลี่ยนจาก void เป็น bool เพื่อให้บอกได้ว่า "ได้ของใหม่" หรือ "ได้ของซ้ำ" ---
-    // รับค่า duplicateReward เข้ามาด้วย เผื่ออยากให้ไอเท็มแต่ละชิ้นให้เงินคืนไม่เท่ากัน (ค่าเริ่มต้น 150)
-    public bool UnlockItem(ItemID idToUnlock, int duplicateReward = 300)
+    // รับค่า duplicateReward เข้ามาด้วย เผื่ออยากให้ไอเท็มแต่ละชิ้นให้เงินคืนไม่เท่ากัน (ค่าเริ่มต้น 100)
+    public bool UnlockItem(ItemID idToUnlock, int duplicateReward = 100)
     {
         if (equipmentMap.ContainsKey(idToUnlock))
         {

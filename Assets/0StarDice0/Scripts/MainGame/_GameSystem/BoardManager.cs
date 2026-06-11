@@ -203,13 +203,13 @@ public class BoardManager : MonoBehaviour
                     // ดึงชื่อ Event มาทำเป็นตัวพิมพ์เล็กให้หมด จะได้เช็คง่ายๆ
                     string evtName = string.IsNullOrEmpty(nodeData.eventName) ? "" : nodeData.eventName.ToLower();
 
-                    // 🟢 เพิ่มข้อยกเว้น: ให้ AI โดน Event ลาวา และ Event วาร์ป (ถ้าช่องลมชื่ออื่น ให้เติมตรงนี้ได้เลย)
-                    if (evtName == "lava" || evtName == "warp" || evtName == "windteleport" || evtName == "teleport")
+                    // 🟢 ให้ AI โดนช่องพิเศษที่ไม่เปิดฉากย่อยได้ เพื่อให้ Lava/Ice จาก MainDark ทำงานจริง
+                    if (evtName == "lava" || evtName == "iceeffect" || evtName == "warp" || evtName == "windteleport" || evtName == "teleport")
                     {
                         // 🟢 ให้ AI จดจำด่านไว้ด้วยเหมือนกันเผื่อต้องโหลดฉาก!
                         GameEventManager.SetLastBoardSceneName(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
                         
-                        Debug.Log($"[BoardManager] 🌪️ AI {playerObject.name} เหยียบช่อง {evtName}! ส่งต่อให้วาร์ป...");
+                        Debug.Log($"[BoardManager] 🌪️ AI {playerObject.name} เหยียบช่อง {evtName}! ส่งต่อให้ GameEventManager...");
                         GameEventManager.TryTriggerEvent(nodeData.eventName, playerObject);
                     }
                     else
@@ -288,6 +288,7 @@ public class BoardManager : MonoBehaviour
         // 1. ดึงข้อมูลว่าคนที่กำลังเดินอยู่ (Attacker) เป็น AI หรือเปล่า
         PlayerState currentPState = currentPlayer.GetComponent<PlayerState>();
         bool isCurrentPlayerAI = (currentPState != null && currentPState.isAI);
+        bool foundOnlyAiOverlap = false;
 
         PlayerPathWalker[] allPlayers = FindObjectsOfType<PlayerPathWalker>();
         foreach (var otherPlayer in allPlayers)
@@ -303,24 +304,160 @@ public class BoardManager : MonoBehaviour
                 // 🛑 กฎเหล็ก: ถ้า "คนเดิน" เป็น AI และ "คนรอ" ก็เป็น AI -> ห้ามตีกันเด็ดขาด!
                 if (isCurrentPlayerAI && isOtherPlayerAI)
                 {
-                    Debug.Log($"🤖 [BoardManager] AI เดินชนกันเอง ({currentPlayer.name} ชนกับ {otherPlayer.gameObject.name}) -> เมินใส่กัน ไม่สู้!");
-                    
+                    foundOnlyAiOverlap = true;
+                    Debug.Log($"🤖 [BoardManager] AI เดินชนกันเอง ({currentPlayer.name} ชนกับ {otherPlayer.gameObject.name}) -> ไม่สู้ และจะหาช่องว่างแยกออกหลังเช็คผู้เล่นจริง");
+
                     // ใช้ continue เพื่อข้ามคนนี้ไปเลย (เผื่อมี "ผู้เล่นคนจริง" ยืนซ้อนอยู่ในช่องนี้อีกคน จะได้ข้ามไปตีคนเล่นแทน!)
-                    continue; 
+                    continue;
                 }
 
                 GameObject attacker = currentPlayer;
                 GameObject defender = otherPlayer.gameObject;
 
-                // 🟢 รวบรวมร่างโคลนกลับมาเป็นตัวเดียวก่อนตัดเข้าฉากสู้!
-                MergeAllAIClones(ref attacker, ref defender);
+                if (IsMainDarkScene())
+                {
+                    ResolveMainDarkCloneBattle(ref attacker, ref defender);
+                }
+                else
+                {
+                    // 🟢 รวบรวมร่างโคลนกลับมาเป็นตัวเดียวก่อนตัดเข้าฉากสู้!
+                    MergeAllAIClones(ref attacker, ref defender);
+                }
+
+                if (attacker == null || defender == null)
+                {
+                    StartCoroutine(FinishTurnRoutine());
+                    return true;
+                }
 
                 // เจอศัตรูที่ไม่ใช่พวกเดียวกันยืนช่องเดียวกัน -> สู้!
                 StartBattle(attacker, defender);
                 return true;
             }
         }
+
+        if (foundOnlyAiOverlap)
+        {
+            SeparateOverlappingMonster(currentPlayer);
+            StartCoroutine(FinishTurnRoutine());
+            return true;
+        }
+
         return false;
+    }
+
+    private void SeparateOverlappingMonster(GameObject monsterObject)
+    {
+        PlayerPathWalker walker = monsterObject != null ? monsterObject.GetComponent<PlayerPathWalker>() : null;
+        if (walker == null || !RouteManager.TryGet(out var routeManager))
+        {
+            return;
+        }
+
+        HashSet<int> occupiedTileIds = new HashSet<int>();
+        PlayerPathWalker[] walkers = FindObjectsOfType<PlayerPathWalker>();
+        foreach (PlayerPathWalker otherWalker in walkers)
+        {
+            if (otherWalker != null && otherWalker != walker)
+            {
+                occupiedTileIds.Add(otherWalker.currentNodeID);
+            }
+        }
+
+        List<NodeConnection> candidates = new List<NodeConnection>();
+        foreach (NodeConnection node in routeManager.nodeConnections)
+        {
+            if (node == null || node.node == null || occupiedTileIds.Contains(node.tileID))
+            {
+                continue;
+            }
+
+            if (node.type == TileType.Start || node.type == TileType.Shop || node.type == TileType.Boss || node.type == TileType.SpecialBoss)
+            {
+                continue;
+            }
+
+            candidates.Add(node);
+        }
+
+        if (candidates.Count == 0)
+        {
+            Debug.LogWarning($"[BoardManager] ไม่มีช่องว่างสำหรับแยกมอนสเตอร์ {monsterObject.name} ออกจากจุดทับซ้อน");
+            return;
+        }
+
+        NodeConnection targetNode = candidates[Random.Range(0, candidates.Count)];
+        walker.ReconnectReferences(routeManager);
+        walker.TeleportToNode(targetNode.node);
+        walker.currentNodeID = targetNode.tileID;
+        Debug.Log($"<color=orange>[BoardManager] แยกมอนสเตอร์ {monsterObject.name} ไป Tile {targetNode.tileID} เพื่อป้องกัน AI ทับกัน</color>");
+    }
+
+
+    private bool IsMainDarkScene()
+    {
+        return string.Equals(SceneManager.GetActiveScene().name, "MainDark", System.StringComparison.Ordinal);
+    }
+
+    private void ResolveMainDarkCloneBattle(ref GameObject attacker, ref GameObject defender)
+    {
+        RemoveMainDarkCloneParticipant(ref attacker);
+        RemoveMainDarkCloneParticipant(ref defender);
+    }
+
+    private void RemoveMainDarkCloneParticipant(ref GameObject participant)
+    {
+        if (!MainDarkMonsterCloneMarker.TryGet(participant, out var cloneMarker))
+        {
+            return;
+        }
+
+        GameObject cloneObject = participant;
+        PlayerState cloneState = cloneObject.GetComponent<PlayerState>();
+        PlayerState originalMonster = cloneMarker.OriginalMonster;
+
+        if (originalMonster != null)
+        {
+            participant = originalMonster.gameObject;
+        }
+        else
+        {
+            participant = null;
+        }
+
+        RemoveCloneFromTurnQueue(cloneState);
+        Destroy(cloneObject);
+        Debug.Log("<color=purple>[MainDark] สู้กับร่าง clone -> ลบเฉพาะ clone ตัวนี้ และใช้ original เป็นตัวแทนในการเข้าฉากสู้</color>");
+    }
+
+    private void RemoveCloneFromTurnQueue(PlayerState cloneState)
+    {
+        if (cloneState == null || !GameTurnManager.TryGet(out var turnManager))
+        {
+            return;
+        }
+
+        int removedIndex = turnManager.allPlayers.IndexOf(cloneState);
+        if (removedIndex < 0)
+        {
+            return;
+        }
+
+        turnManager.allPlayers.RemoveAt(removedIndex);
+        if (turnManager.allPlayers.Count == 0)
+        {
+            turnManager.currentPlayerIndex = 0;
+            return;
+        }
+
+        if (removedIndex < turnManager.currentPlayerIndex)
+        {
+            turnManager.currentPlayerIndex--;
+        }
+        else if (turnManager.currentPlayerIndex >= turnManager.allPlayers.Count)
+        {
+            turnManager.currentPlayerIndex = turnManager.allPlayers.Count - 1;
+        }
     }
 
     private void StartBattle(GameObject attacker, GameObject defender)

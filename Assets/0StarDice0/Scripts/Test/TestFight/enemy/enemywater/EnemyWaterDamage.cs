@@ -2231,19 +2231,19 @@ public PlayerState player;
         // เรียกใช้คำสั่งปลดล็อก
          int roll = Random.Range(1, 101);
             
-            if (roll < 21)
+            if (roll <= 10)
             {
                  EquipmentManager.Instance.UnlockItem(WaterArmor);
                  showImage.sprite = itemImages[0]; 
                  showImage.gameObject.SetActive(true);
             }
-            else if (roll < 41 && roll > 20)
+            else if (roll <= 20)
         {
              EquipmentManager.Instance.UnlockItem(RegenRing);
              showImage.sprite = itemImages[1]; 
                  showImage.gameObject.SetActive(true);
         }
-          else if (roll < 61 && roll > 40)
+          else if (roll <= 30)
         {
              EquipmentManager.Instance.UnlockItem(WaterNeckless);
              showImage.sprite = itemImages[2]; 

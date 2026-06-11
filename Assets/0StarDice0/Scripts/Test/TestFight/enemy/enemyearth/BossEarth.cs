@@ -2268,7 +2268,7 @@ private System.Collections.IEnumerator PlayerAttackMove(RectTransform playerToMo
         // เรียกใช้คำสั่งปลดล็อก
          int roll = Random.Range(1, 101);
             
-            if (roll < 51)
+            if (roll <= 35)
             {
                  EquipmentManager.Instance.UnlockItem(EarthLegendaryHammer);
                  showImage.sprite = itemImages[0]; 
