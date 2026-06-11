@@ -10,6 +10,12 @@ public class BoardManager : MonoBehaviour
     [Header("References")]
     [SerializeField] private EventManager eventManager;
 
+    [Header("Test Only - Battle Scene Lock")]
+    [Tooltip("เปิดเพื่อบังคับฉาก Battle ที่สุ่มจาก BoardManager ตอนชนผู้เล่น/มอนสเตอร์ ใช้สำหรับเทสเท่านั้น")]
+    [SerializeField] private bool lockBoardBattleSceneForTest = false;
+    [Tooltip("ใส่ชื่อ Scene ที่ต้องการเทส เช่น enemy earth, enemy earth buff, enemy earth damage, enemy earth heal")]
+    [SerializeField] private string lockedBoardBattleSceneName = string.Empty;
+
     private void Awake()
     {
         myID = Random.Range(1000, 9999); // สุ่มเลข 4 หลัก
@@ -515,10 +521,24 @@ public class BoardManager : MonoBehaviour
         battleSceneName = randomScenes[randomIndex];
     }
 
+    battleSceneName = ResolveBoardBattleSceneForTest(battleSceneName);
+
     if (!GameEventManager.TryLoadBattleSceneAdditive(battleSceneName))
     {
         Debug.LogError($"[BoardManager] Failed to load PvP battle scene '{battleSceneName}' additively.");
     }
+    }
+
+    private string ResolveBoardBattleSceneForTest(string randomBattleSceneName)
+    {
+        if (!lockBoardBattleSceneForTest || string.IsNullOrWhiteSpace(lockedBoardBattleSceneName))
+        {
+            return randomBattleSceneName;
+        }
+
+        string lockedSceneName = lockedBoardBattleSceneName.Trim();
+        Debug.Log($"<color=yellow>[BoardManager Test] Lock battle scene: สุ่มได้ '{randomBattleSceneName}' แต่บังคับโหลด '{lockedSceneName}' จาก Inspector</color>");
+        return lockedSceneName;
     }
 
     // ==========================================

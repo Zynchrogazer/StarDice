@@ -593,10 +593,18 @@ public class RouteManager : MonoBehaviour
     }
     #endregion
     private bool isWarpModeActive = false;
+    private bool endTurnAfterWarpSelection = true;
+
     public void StartWarpSelection()
+    {
+        StartWarpSelection(true);
+    }
+
+    public void StartWarpSelection(bool shouldEndTurnAfterWarp)
     {
         if (isWarpModeActive) return;
         isWarpModeActive = true;
+        endTurnAfterWarpSelection = shouldEndTurnAfterWarp;
 
         Debug.Log(">>> เข้าสู่โหมดเลือกพื้นที่ Warp! (กรุณาคลิกที่ช่องบนฉาก)");
 
@@ -651,6 +659,16 @@ public class RouteManager : MonoBehaviour
                 // ใช้คำสั่ง TeleportToNode ที่มีอยู่จริงในสคริปต์
                 walker.TeleportToNode(selectedNode);
                 Debug.Log($"🛸 Warped {GameTurnManager.CurrentPlayer.name} to {selectedNode.name}");
+
+                if (!endTurnAfterWarpSelection)
+                {
+                    if (GameTurnManager.TryGet(out var turnManager) && turnManager.currentState == GameState.WaitingForRoll)
+                    {
+                        turnManager.ForceEnableCurrentPlayerRollButton();
+                    }
+
+                    return;
+                }
         
                 GameEventManager eventManager = FindObjectOfType<GameEventManager>();
         

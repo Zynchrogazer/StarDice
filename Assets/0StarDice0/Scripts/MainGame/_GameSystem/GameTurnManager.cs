@@ -17,6 +17,12 @@ public enum GameState
     Ending
 }
 
+public enum MonsterPostBattleRelocationMode
+{
+    RandomFreeTile,
+    ForwardTwoTiles
+}
+
 public class GameTurnManager : MonoBehaviour
 {
     private static GameTurnManager cachedManager;
@@ -53,6 +59,15 @@ public class GameTurnManager : MonoBehaviour
 
     [Header("Turn Flow Timing")]
     [Min(0f)] [SerializeField] private float turnAnnouncementWaitSeconds = 1.5f;
+
+    [Header("Monster Post-Battle Relocation")]
+    [Tooltip("โหมดเทสหลังจบ Battle: RandomFreeTile = สุ่มโยนไปช่องว่าง, ForwardTwoTiles = ปลิวไปข้างหน้า 2 ช่อง")]
+    [SerializeField] private MonsterPostBattleRelocationMode monsterPostBattleRelocationMode = MonsterPostBattleRelocationMode.RandomFreeTile;
+
+    [Header("Test Only - Player Board Warp Hotkey")]
+    [Tooltip("เปิดเพื่อให้ผู้เล่นกด M ระหว่าง WaitingForRoll แล้วคลิกช่องบนบอร์ดเพื่อวาร์ป ใช้สำหรับเทสเท่านั้น")]
+    [SerializeField] private bool enablePlayerWarpHotkeyForTest = true;
+    [SerializeField] private KeyCode playerWarpHotkeyForTest = KeyCode.M;
 
     
     public event System.Action<bool> OnTurnChanged;
@@ -105,6 +120,36 @@ public class GameTurnManager : MonoBehaviour
         currentPlayerIndex = 0; // ✅ มั่นใจว่าเริ่มที่คนแรก (Human)
 
         StartCoroutine(StartTurnRoutine());
+    }
+
+    private void Update()
+    {
+        HandlePlayerWarpHotkeyForTest();
+    }
+
+    private void HandlePlayerWarpHotkeyForTest()
+    {
+        if (!enablePlayerWarpHotkeyForTest || !Input.GetKeyDown(playerWarpHotkeyForTest))
+        {
+            return;
+        }
+
+        PlayerState currentPlayer = CurrentPlayer;
+        if (currentState != GameState.WaitingForRoll || currentPlayer == null || currentPlayer.isAI)
+        {
+            Debug.Log("[GameTurnManager] กด M วาร์ปได้เฉพาะช่วงเทิร์นผู้เล่นก่อนทอยเต๋าเท่านั้น");
+            return;
+        }
+
+        if (RouteManager.TryGet(out var routeManager))
+        {
+            routeManager.StartWarpSelection(false);
+            Debug.Log("<color=cyan>[GameTurnManager Test] กด M: เลือกช่องบนบอร์ดเพื่อวาร์ปผู้เล่นโดยไม่จบเทิร์น</color>");
+        }
+        else
+        {
+            Debug.LogWarning("[GameTurnManager] กด M แล้วแต่หา RouteManager ไม่เจอ");
+        }
     }
 
     private void OnEnable()
@@ -317,6 +362,15 @@ public class GameTurnManager : MonoBehaviour
         StartCoroutine(StartTurnRoutine());
     }
 
+    public void ForceEnableCurrentPlayerRollButton()
+    {
+        PlayerState currentPlayer = CurrentPlayer;
+        if (currentState == GameState.WaitingForRoll && currentPlayer != null && !currentPlayer.isAI)
+        {
+            ResolveDiceRoller()?.ForceEnableButton();
+        }
+    }
+
 
 
     private DiceRollerFromPNG ResolveDiceRoller()
@@ -469,50 +523,90 @@ public class GameTurnManager : MonoBehaviour
     }
 
     // ==========================================
-    // 👾 ฟังก์ชันสุ่มที่อยู่ใหม่ให้ AI มอนสเตอร์
+    // 👾 เลือกโหมดหลังจบ Battle ให้ AI มอนสเตอร์
     // ==========================================
     private void RelocateMovingMonster(PlayerState monsterAI, RouteManager routeManager)
     {
-        // 1. เก็บ ID ของช่องที่ "มีคนยืนอยู่แล้ว" เพื่อป้องกันไม่ให้มอนสเตอร์วาร์ปไปตกทับคนอื่นอีกรอบ
+        PlayerPathWalker aiWalker = monsterAI != null ? monsterAI.GetComponent<PlayerPathWalker>() : null;
+        if (aiWalker == null || routeManager == null)
+        {
+            return;
+        }
+
+        switch (monsterPostBattleRelocationMode)
+        {
+            case MonsterPostBattleRelocationMode.ForwardTwoTiles:
+                RelocateMonsterForwardTwoTiles(monsterAI, aiWalker, routeManager);
+                break;
+
+            case MonsterPostBattleRelocationMode.RandomFreeTile:
+            default:
+                RelocateMonsterToRandomFreeTile(monsterAI, aiWalker, routeManager);
+                break;
+        }
+    }
+
+    private void RelocateMonsterToRandomFreeTile(PlayerState monsterAI, PlayerPathWalker aiWalker, RouteManager routeManager)
+    {
         HashSet<int> occupiedIDs = new HashSet<int>();
         foreach (var p in allPlayers)
         {
-            var w = p.GetComponent<PlayerPathWalker>();
+            var w = p != null ? p.GetComponent<PlayerPathWalker>() : null;
             if (w != null) occupiedIDs.Add(w.currentNodeID);
         }
 
-        // 2. รวบรวมช่องว่างทั้งหมดในกระดาน
         List<Transform> candidateNodes = new List<Transform>();
         foreach (var nc in routeManager.nodeConnections)
         {
-            // กรองเงื่อนไข: ต้องไม่ใช่ช่อง Start/Shop และ ต้องไม่มีใครยืนอยู่
-            if (nc != null && nc.node != null && 
-                nc.type != TileType.Start && 
-                nc.type != TileType.Shop && 
+            if (nc != null && nc.node != null &&
+                nc.type != TileType.Start &&
+                nc.type != TileType.Shop &&
                 !occupiedIDs.Contains(nc.tileID))
             {
                 candidateNodes.Add(nc.node);
             }
         }
 
-        // 3. สุ่มจับมอนสเตอร์โยนไปที่ช่องใหม่
-        if (candidateNodes.Count > 0)
-        {
-            int randomIndex = UnityEngine.Random.Range(0, candidateNodes.Count);
-            Transform randomNode = candidateNodes[randomIndex];
-
-            PlayerPathWalker aiWalker = monsterAI.GetComponent<PlayerPathWalker>();
-            if (aiWalker != null)
-            {
-                // ใช้คำสั่ง TeleportToNode ที่คุณเขียนเตรียมไว้ใน PlayerPathWalker แล้วได้เลย!
-                aiWalker.TeleportToNode(randomNode);
-                Debug.Log($"<color=orange>💨 [Manager] จับมอนสเตอร์ AI ({monsterAI.name}) วาร์ปหนีไปซ่อนที่ {randomNode.name} แล้ว!</color>");
-            }
-        }
-        else
+        if (candidateNodes.Count == 0)
         {
             Debug.LogWarning("⚠️ ไม่มีช่องว่างเหลือให้มอนสเตอร์หนีเลย!");
+            return;
         }
+
+        Transform randomNode = candidateNodes[UnityEngine.Random.Range(0, candidateNodes.Count)];
+        aiWalker.TeleportToNode(randomNode);
+        Debug.Log($"<color=orange>💨 [Manager] โหมด RandomFreeTile: จับมอนสเตอร์ AI ({monsterAI.name}) วาร์ปหนีไปซ่อนที่ {randomNode.name} แล้ว!</color>");
+    }
+
+    private void RelocateMonsterForwardTwoTiles(PlayerState monsterAI, PlayerPathWalker aiWalker, RouteManager routeManager)
+    {
+        Transform targetNode = FindForwardNode(routeManager, aiWalker.CurrentNodeTransform, 2);
+        if (targetNode == null)
+        {
+            Debug.LogWarning($"⚠️ [Manager] หาเส้นทางข้างหน้า 2 ช่องให้มอนสเตอร์ {monsterAI.name} ไม่เจอ จึงไม่ย้ายตำแหน่ง");
+            return;
+        }
+
+        aiWalker.TeleportToNode(targetNode);
+        Debug.Log($"<color=orange>💨 [Manager] โหมด ForwardTwoTiles: หลังจบ Battle ขยับมอนสเตอร์ AI ({monsterAI.name}) ไปข้างหน้า 2 ช่องที่ {targetNode.name}</color>");
+    }
+
+    private Transform FindForwardNode(RouteManager routeManager, Transform startNode, int steps)
+    {
+        Transform currentNode = startNode;
+
+        for (int i = 0; i < steps; i++)
+        {
+            List<Transform> nextNodes = routeManager.GetAllConnectedNodes(currentNode);
+            if (nextNodes == null || nextNodes.Count == 0)
+            {
+                break;
+            }
+
+            currentNode = nextNodes[0];
+        }
+
+        return currentNode != startNode ? currentNode : null;
     }
 
     private IEnumerator RecoverRollButtonAfterBoardReturn()

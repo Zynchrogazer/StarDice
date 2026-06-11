@@ -228,7 +228,7 @@ MonoBehaviour:
   enableMainDarkDebuffGimmick: 1
   mainDarkDebuffOnlyInMainDark: 1
   enableAutoTriggerByTurn: 1
-  autoTriggerIntervalTurns: 3
+  autoTriggerIntervalTurns: 5
   autoTriggerOnlyPlayerTurn: 1
   preventDuplicateActiveDebuffs: 1
   debuffPreviewRoot: {fileID: 6898545}
@@ -254,7 +254,7 @@ MonoBehaviour:
   - type: 3
     turns: 2
   - type: 4
-    turns: 1
+    turns: 2
 --- !u!114 &47958836
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -269,27 +269,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   darkDebuffGimmickController: {fileID: 47958835}
   enableTurnTick: 1
-  verboseLog: 1
---- !u!114 &47958838
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 47958834}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d363a4db687741bdb0b918744a024484, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
-  routeManager: {fileID: 8398005926403194322}
-  enableBoardChaos: 1
-  onlyInMainDark: 1
-  mainDarkSceneName: MainDark
-  randomizeEveryPlayerTurns: 10
-  cloneEveryPlayerTurns: 15
-  maxMonstersOnBoard: 0
-  cloneOriginalMonsterFirst: 1
   verboseLog: 1
 --- !u!4 &47958837
 Transform:
@@ -306,6 +285,28 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &47958838
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 47958834}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d363a4db687741bdb0b918744a024484, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  routeManager: {fileID: 8398005926403194322}
+  enableBoardChaos: 1
+  onlyInMainDark: 1
+  mainDarkSceneName: MainDark
+  randomizeEveryPlayerTurns: 10
+  cloneEveryPlayerTurns: 15
+  maxMonstersOnBoard: 0
+  cloneOriginalMonsterFirst: 1
+  cloneTint: {r: 0.65, g: 0.35, b: 1, a: 1}
+  verboseLog: 1
 --- !u!1 &99765258
 GameObject:
   m_ObjectHideFlags: 0
@@ -503,6 +504,10 @@ PrefabInstance:
       propertyPath: 'allPlayers.Array.data[1]'
       value: 
       objectReference: {fileID: 8848675854986940205}
+    - target: {fileID: 7336030021920867527, guid: fff837b42c8d21149b156102d8ba724b, type: 3}
+      propertyPath: monsterPostBattleRelocationMode
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -26041,6 +26046,10 @@ MonoBehaviour:
     sprite: {fileID: 0}
     material: {fileID: 2100000, guid: b23f9b62fa2b3d041a3a81488cc0efe7, type: 2}
     texture: {fileID: 0}
+  - type: 15
+    sprite: {fileID: 0}
+    material: {fileID: 2100000, guid: 4726dff4cff57a24ca896214d4885bbc, type: 2}
+    texture: {fileID: 0}
   autoFillEventNameOnSync: 1
   autoFillVisualOnSync: 1
   randomizeTilesOnGameStart: 1
@@ -26066,11 +26075,15 @@ MonoBehaviour:
     maxCount: 16
   - type: 1
     maxCount: 18
+  - type: 14
+    maxCount: 6
+  - type: 14
+    maxCount: 6
   fallbackTileType: 0
   useDeterministicSeed: 1
   randomSeed: 12345
   useLimitAllowList: 1
-  limitAllowedTypes: 010000000200000003000000040000000500000006000000070000000c0000000a0000000b000000
+  limitAllowedTypes: 010000000200000003000000040000000500000006000000070000000c0000000a0000000b0000000f0000000e000000
   excludeLockedTilesFromLimitCounts: 1
   autoApplyLockByTileIds: 1
   lockTileIDs: 
