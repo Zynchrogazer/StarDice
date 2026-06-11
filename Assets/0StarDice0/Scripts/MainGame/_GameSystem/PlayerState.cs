@@ -187,9 +187,9 @@ public class PlayerState : MonoBehaviour
         // 1. โหลดค่าพลังชีวิต
         MaxHealth = data.GetMaxHealth();
         PlayerHealth = MaxHealth;
-        CurrentAttack = data.attackDamage;
-        CurrentSpeed = data.speed;
-        CurrentDefense = data.def;
+        CurrentAttack = data.GetBaseAttack();
+        CurrentSpeed = data.GetBaseSpeed();
+        CurrentDefense = data.GetBaseDefense();
         RuntimeAttackModifier = 0;
         RuntimeMaxHealthModifier = 0;
         RuntimeStarModifier = 0;
@@ -543,9 +543,9 @@ public class PlayerState : MonoBehaviour
             PlayerStateProgressCoordinator.ApplyPersistentProgressToRuntime(this, sourceData);
             MaxHealth = sourceData.GetMaxHealth();
             PlayerHealth = MaxHealth;
-            CurrentAttack = sourceData.attackDamage;
-            CurrentSpeed = sourceData.speed;
-            CurrentDefense = sourceData.def;
+            CurrentAttack = sourceData.GetBaseAttack();
+            CurrentSpeed = sourceData.GetBaseSpeed();
+            CurrentDefense = sourceData.GetBaseDefense();
         }
         else
         {

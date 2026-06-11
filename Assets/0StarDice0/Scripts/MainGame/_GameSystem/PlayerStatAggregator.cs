@@ -1,4 +1,4 @@
-﻿﻿using UnityEngine;
+﻿using UnityEngine;
 
 public class PlayerStatAggregator : MonoBehaviour
 {
@@ -90,22 +90,22 @@ public class PlayerStatAggregator : MonoBehaviour
         EquipmentStatTotals equipmentTotals = GetEquippedStatTotals();
 
        // 🟢 เปลี่ยนสูตรคำนวณใหม่: เอาโบนัสจากเลเวล (player.GetLevelBonus...) มาบวกเข้าไปด้วย!
-        int finalAttack = baseData.attackDamage
+        int finalAttack = baseData.GetBaseAttack()
             + unlockedSkillTotals.attackBonus
             + equipmentTotals.attackBonus
             + player.RuntimeAttackModifier
             + player.GetLevelBonusAttack();
         
-        int finalMaxHealth = Mathf.Max(1, baseData.maxHP
+        int finalMaxHealth = Mathf.Max(1, baseData.GetMaxHealth()
             + unlockedSkillTotals.maxHpBonus
             + player.RuntimeMaxHealthModifier
             + player.GetLevelBonusMaxHealth());
         
         int finalStarBonus = Mathf.Max(0, unlockedSkillTotals.starBonus);
         
-        int finalSpeed = Mathf.Max(0, baseData.speed + unlockedSkillTotals.speedBonus + equipmentTotals.speedBonus + player.GetLevelBonusSpeed());
+        int finalSpeed = Mathf.Max(0, baseData.GetBaseSpeed() + unlockedSkillTotals.speedBonus + equipmentTotals.speedBonus + player.GetLevelBonusSpeed());
         
-        int finalDefense = Mathf.Max(0, baseData.def + unlockedSkillTotals.defenseBonus + equipmentTotals.defenseBonus + player.GetLevelBonusDefense());
+        int finalDefense = Mathf.Max(0, baseData.GetBaseDefense() + unlockedSkillTotals.defenseBonus + equipmentTotals.defenseBonus + player.GetLevelBonusDefense());
 
 
         int previousMaxHealth = player.MaxHealth;

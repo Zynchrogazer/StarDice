@@ -2870,7 +2870,7 @@ if (isBattleOver) return;
 
     float CalculateSkill6Score()
     {
-         if (enemySkill5Cooldown > 0) return -1000; // ใช้ไม่ได้
+         if (enemySkill6Cooldown > 0) return -1000; // ใช้ไม่ได้
 
         float score = 85; 
        
