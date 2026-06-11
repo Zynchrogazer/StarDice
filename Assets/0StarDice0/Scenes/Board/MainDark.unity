@@ -205,6 +205,7 @@ GameObject:
   - component: {fileID: 47958837}
   - component: {fileID: 47958836}
   - component: {fileID: 47958835}
+  - component: {fileID: 47958838}
   m_Layer: 0
   m_Name: MapDarkGimmick
   m_TagString: Untagged
@@ -268,6 +269,27 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   darkDebuffGimmickController: {fileID: 47958835}
   enableTurnTick: 1
+  verboseLog: 1
+--- !u!114 &47958838
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 47958834}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d363a4db687741bdb0b918744a024484, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  routeManager: {fileID: 8398005926403194322}
+  enableBoardChaos: 1
+  onlyInMainDark: 1
+  mainDarkSceneName: MainDark
+  randomizeEveryPlayerTurns: 10
+  cloneEveryPlayerTurns: 15
+  maxMonstersOnBoard: 0
+  cloneOriginalMonsterFirst: 1
   verboseLog: 1
 --- !u!4 &47958837
 Transform:
