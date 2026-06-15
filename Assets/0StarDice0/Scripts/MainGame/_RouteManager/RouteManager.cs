@@ -1,7 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement;
-using System.Text.RegularExpressions;
 using System.Linq;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -86,28 +84,17 @@ public struct TileVisualSetting
 }
 
 [ExecuteAlways]
+[RequireComponent(typeof(RouteGimmickController))]
 public class RouteManager : MonoBehaviour
 {
     private static RouteManager cachedManager;
+
     private readonly TileVisualCache tileVisualCache = new TileVisualCache();
     private readonly TileRandomizer tileRandomizer = new TileRandomizer();
+    private Dictionary<int, NodeConnection> nodeDataMap;
+    private RouteGimmickController gimmickController;
 
-    public static bool TryGet(out RouteManager manager)
-    {
-        if (cachedManager != null)
-        {
-            manager = cachedManager;
-            return true;
-        }
-
-        manager = FindFirstObjectByType<RouteManager>();
-        if (manager != null)
-        {
-            cachedManager = manager;
-        }
-        return manager != null;
-    }
-
+    [Header("Route Data")]
     [Tooltip("List ของ NodeConnection ทั้งหมดในบอร์ด")]
     public List<NodeConnection> nodeConnections = new List<NodeConnection>();
 
@@ -168,54 +155,44 @@ public class RouteManager : MonoBehaviour
     [Tooltip("กฎ min/max ของประเภทช่องสำคัญ (max = -1 คือไม่จำกัด)")]
     public List<TileInvariantRule> tileInvariantRules = new List<TileInvariantRule>();
 
-    // Dictionary สำหรับการค้นหาข้อมูลโหนดด้วยความเร็วสูงขณะเล่นเกม
-    private Dictionary<int, NodeConnection> nodeDataMap;
+    public static bool TryGet(out RouteManager manager)
+    {
+        if (cachedManager != null)
+        {
+            manager = cachedManager;
+            return true;
+        }
 
-    #region Unity Lifecycle & Editor
+        manager = FindFirstObjectByType<RouteManager>();
+        if (manager != null) cachedManager = manager;
+        return manager != null;
+    }
+
     private void Awake()
     {
-        // ส่วนนี้สามารถทำงานได้ทั้งใน Editor และ Play Mode
-        nodeDataMap = new Dictionary<int, NodeConnection>();
-        foreach (var nc in nodeConnections)
+        gimmickController = GetOrCreateGimmickController();
+        RebuildNodeDataMap();
+
+        if (!Application.isPlaying) return;
+
+        RouteManager[] managers = FindObjectsByType<RouteManager>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        if (managers.Length > 1)
         {
-            if (nc != null && !nodeDataMap.ContainsKey(nc.tileID))
-            {
-                nodeDataMap.Add(nc.tileID, nc);
-            }
+            Destroy(gameObject);
+            return;
         }
 
-        // ▼▼▼ เพิ่มเงื่อนไขนี้เข้าไป ▼▼▼
-        // ตรวจสอบว่าโค้ดกำลังรันใน Play Mode หรือไม่
-        if (Application.isPlaying)
-        {
-            // โค้ดส่วนนี้จะทำงาน "เฉพาะตอนกด Play" เท่านั้น
-            RouteManager[] managers = FindObjectsByType<RouteManager>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-            if (managers.Length > 1)
-            {
-                Destroy(gameObject);
-                return;
-            }
-
-            cachedManager = this;
-
-            if (randomizeTilesOnGameStart)
-            {
-                RandomizeTilesAtGameStart();
-            }
-        }
+        cachedManager = this;
+        if (randomizeTilesOnGameStart) RandomizeTilesAtGameStart();
     }
 
     private void OnDestroy()
     {
-        if (cachedManager == this)
-        {
-            cachedManager = null;
-        }
+        if (cachedManager == this) cachedManager = null;
     }
 
     private void OnValidate()
     {
-        // ทำงานใน Editor เท่านั้น เพื่อให้การปรับค่าใน Inspector เห็นผลทันที
         if (!Application.isEditor) return;
 
         tileVisualCache.MarkDirty();
@@ -225,176 +202,64 @@ public class RouteManager : MonoBehaviour
         ApplyTileVisuals();
     }
 
+    #region Node Sync & Route Data
     private void SyncNodesIfNeeded()
     {
-        if (ShouldSyncNodes())
-        {
-            SyncNodes();
-        }
-    }
-
-    private void RunEditorAutomation()
-    {
-        if (autoConnectSequential)
-        {
-            ConnectSequential();
-        }
-
-        if (autoApplyLockByTileIds)
-        {
-            ApplyLockFlagsFromTileIdList();
-        }
-    }
-
-    private bool ShouldSyncNodes()
-    {
-        if (nodeConnections == null)
-        {
-            return true;
-        }
-
-        int childCount = transform.childCount;
-        if (nodeConnections.Count != childCount)
-        {
-            return true;
-        }
-
-        HashSet<Transform> childSet = new HashSet<Transform>();
-        foreach (Transform child in transform)
-        {
-            childSet.Add(child);
-        }
-
-        for (int i = 0; i < nodeConnections.Count; i++)
-        {
-            NodeConnection nc = nodeConnections[i];
-            if (nc == null || nc.node == null || !childSet.Contains(nc.node))
-            {
-                return true;
-            }
-        }
-
-        return false;
+        if (RouteNodeSynchronizer.ShouldSync(transform, nodeConnections)) SyncNodes();
     }
 
     private void SyncNodes()
     {
-        // เก็บข้อมูลเก่าที่ตั้งค่าไว้ด้วยมือ (เช่น Type, EventName)
-        var oldData = new Dictionary<Transform, NodeConnection>();
-        foreach (var nc in nodeConnections)
-        {
-            if (nc != null && nc.node != null)
-            {
-                oldData[nc.node] = nc;
-            }
-        }
-
-        nodeConnections.Clear();
-        var children = new List<Transform>();
-        foreach (Transform child in transform)
-        {
-            children.Add(child);
-        }
-
-        // เรียงลำดับ Node ตามตัวเลขในชื่อ
-        children.Sort((a, b) => ExtractNumberFromName(a.name).CompareTo(ExtractNumberFromName(b.name)));
-
-        foreach (Transform child in children)
-        {
-            NodeConnection nc = new NodeConnection { node = child };
-
-            // กำหนด ID อัตโนมัติจากตัวเลขในชื่อ Node
-            nc.tileID = ExtractNumberFromName(child.name);
-
-            // นำข้อมูลเก่าที่เคยตั้งค่าไว้กลับมาใช้
-            if (oldData.TryGetValue(child, out var saved))
-            {
-                nc.connectedNodes = saved.connectedNodes;
-                nc.type = saved.type;
-                nc.eventName = saved.eventName;
-                nc.lockRandomType = saved.lockRandomType;
-            }
-            if (autoFillEventNameOnSync && ShouldAutoAssignEventName(nc.type, nc.eventName))
-            {
-                nc.eventName = GetDefaultEventName(nc.type);
-            }
-
-            // ให้เปิด/ปิดได้จาก Inspector
-            if (autoFillVisualOnSync)
-            {
-                ApplyTileVisual(nc);
-            }
-            nodeConnections.Add(nc);
-        }
+        RouteNodeSynchronizer.Sync(transform, nodeConnections, autoFillEventNameOnSync, autoFillVisualOnSync, ApplyTileVisual);
     }
 
     private void AutoFillEventNamesForCurrentNodes()
     {
-        if (!autoFillEventNameOnSync || nodeConnections == null)
-        {
-            return;
-        }
+        if (autoFillEventNameOnSync) RouteNodeSynchronizer.AutoFillEventNames(nodeConnections);
+    }
 
+    public void RebuildNodeDataMap()
+    {
+        nodeDataMap = new Dictionary<int, NodeConnection>();
         foreach (NodeConnection nc in nodeConnections)
         {
-            if (nc == null)
-            {
-                continue;
-            }
-
-            if (ShouldAutoAssignEventName(nc.type, nc.eventName))
-            {
-                nc.eventName = GetDefaultEventName(nc.type);
-            }
+            if (nc != null && !nodeDataMap.ContainsKey(nc.tileID)) nodeDataMap.Add(nc.tileID, nc);
         }
     }
 
-    bool ShouldAutoAssignEventName(TileType type, string currentEventName)
+    public NodeConnection GetNodeData(int tileID)
     {
-        if (string.IsNullOrWhiteSpace(currentEventName))
-        {
-            return true;
-        }
-
-        string trimmedEventName = currentEventName.Trim();
-        string defaultForType = GetDefaultEventName(type);
-        if (string.Equals(trimmedEventName, defaultForType, System.StringComparison.OrdinalIgnoreCase))
-        {
-            return false;
-        }
-
-        foreach (string defaultEvent in DefaultEventNames.Values)
-        {
-            if (string.Equals(trimmedEventName, defaultEvent, System.StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
-        }
-
-        return false;
+        if (nodeDataMap == null) RebuildNodeDataMap();
+        nodeDataMap.TryGetValue(tileID, out NodeConnection data);
+        return data;
     }
 
+    public List<Transform> GetAllConnectedNodes(Transform currentNode)
+    {
+        NodeConnection nc = nodeConnections.Find(x => x.node == currentNode);
+        return nc != null ? nc.connectedNodes : new List<Transform>();
+    }
+
+    public int ExtractNumberFromName(string name) => RouteNodeSynchronizer.ExtractNumberFromName(name);
+    public string GetDefaultEventName(TileType type) => RouteTileMetadata.GetDefaultEventName(type);
+    #endregion
+
+    #region Editor Automation & Lock Tools
+    private void RunEditorAutomation()
+    {
+        if (autoConnectSequential) ConnectSequential();
+        if (autoApplyLockByTileIds) ApplyLockFlagsFromTileIdList();
+    }
 
     [ContextMenu("Apply LockRandomType From lockTileIDs")]
     public void ApplyLockFlagsFromTileIdList()
     {
         HashSet<int> lockSet = new HashSet<int>(lockTileIDs);
-        foreach (var nc in nodeConnections)
+        foreach (NodeConnection nc in nodeConnections)
         {
-            if (nc == null || nc.node == null)
-            {
-                continue;
-            }
-
-            if (clearOtherLocksWhenApplyingList)
-            {
-                nc.lockRandomType = false;
-            }
-
-            if (lockSet.Contains(nc.tileID))
-            {
-                nc.lockRandomType = true;
-            }
+            if (nc == null || nc.node == null) continue;
+            if (clearOtherLocksWhenApplyingList) nc.lockRandomType = false;
+            if (lockSet.Contains(nc.tileID)) nc.lockRandomType = true;
         }
     }
 
@@ -407,23 +272,34 @@ public class RouteManager : MonoBehaviour
             .OrderBy(id => id)
             .ToList();
 
-        string message = lockedIds.Count > 0
-            ? string.Join(", ", lockedIds)
-            : "(none)";
-
-        Debug.Log($"[RouteManager] Locked tile IDs: {message}");
+        Debug.Log($"[RouteManager] Locked tile IDs: {(lockedIds.Count > 0 ? string.Join(", ", lockedIds) : "(none)")}");
     }
 
-
-
-    public void RandomizeTilesAtGameStart()
+    public void ConnectSequential()
     {
-        RandomizeTiles();
+        if (clearPreviousConnectionsOnAutoConnect)
+        {
+            foreach (NodeConnection nc in nodeConnections) nc?.connectedNodes.Clear();
+        }
+
+        for (int i = 0; i < nodeConnections.Count - 1; i++)
+        {
+            NodeConnection currentNc = nodeConnections[i];
+            NodeConnection nextNc = nodeConnections[i + 1];
+            if (currentNc?.node != null && nextNc?.node != null && !currentNc.connectedNodes.Contains(nextNc.node))
+            {
+                currentNc.connectedNodes.Add(nextNc.node);
+            }
+        }
     }
+    #endregion
+
+    #region Tile Randomization
+    public void RandomizeTilesAtGameStart() => RandomizeTiles();
 
     public bool RandomizeTiles(IEnumerable<TileType> injectedTileTypes = null, bool forceRandomSeed = false)
     {
-        var unlockedNodes = nodeConnections
+        List<NodeConnection> unlockedNodes = nodeConnections
             .Where(nc => nc != null && nc.node != null && !nc.lockRandomType)
             .ToList();
 
@@ -433,27 +309,13 @@ public class RouteManager : MonoBehaviour
             return false;
         }
 
-        var originalUnlockedTypes = unlockedNodes.Select(nc => nc.type).ToList();
+        List<TileType> originalUnlockedTypes = unlockedNodes.Select(nc => nc.type).ToList();
         int seedToUse = useDeterministicSeed && !forceRandomSeed ? randomSeed : UnityEngine.Random.Range(int.MinValue, int.MaxValue);
         System.Random rng = new System.Random(seedToUse);
-        var settings = BuildRandomizerSettings();
 
-        bool success = tileRandomizer.Randomize(
-            nodeConnections,
-            unlockedNodes,
-            originalUnlockedTypes,
-            settings,
-            rng,
-            GetDefaultEventName);
-
-        if (!success)
-        {
-            Debug.LogWarning("[RouteManager] สุ่มครบจำนวนครั้งแล้วแต่ invariant ไม่ผ่าน -> revert เป็นค่าก่อนสุ่ม");
-        }
-        else
-        {
-            ApplyInjectedTileTypes(unlockedNodes, injectedTileTypes, rng);
-        }
+        bool success = tileRandomizer.Randomize(nodeConnections, unlockedNodes, originalUnlockedTypes, BuildRandomizerSettings(), rng, GetDefaultEventName);
+        if (success) ApplyInjectedTileTypes(unlockedNodes, injectedTileTypes, rng);
+        else Debug.LogWarning("[RouteManager] สุ่มครบจำนวนครั้งแล้วแต่ invariant ไม่ผ่าน -> revert เป็นค่าก่อนสุ่ม");
 
         ApplyTileVisuals();
         RebuildNodeDataMap();
@@ -462,23 +324,15 @@ public class RouteManager : MonoBehaviour
 
     private void ApplyInjectedTileTypes(List<NodeConnection> unlockedNodes, IEnumerable<TileType> injectedTileTypes, System.Random rng)
     {
-        if (injectedTileTypes == null || unlockedNodes == null || unlockedNodes.Count == 0)
-        {
-            return;
-        }
+        if (injectedTileTypes == null || unlockedNodes == null || unlockedNodes.Count == 0) return;
 
         List<NodeConnection> candidates = new List<NodeConnection>(unlockedNodes);
         foreach (TileType injectedType in injectedTileTypes)
         {
-            if (candidates.Count == 0)
-            {
-                candidates.AddRange(unlockedNodes);
-            }
-
+            if (candidates.Count == 0) candidates.AddRange(unlockedNodes);
             int randomIndex = rng.Next(0, candidates.Count);
             NodeConnection selectedNode = candidates[randomIndex];
             candidates.RemoveAt(randomIndex);
-
             selectedNode.type = injectedType;
             selectedNode.eventName = GetDefaultEventName(injectedType);
         }
@@ -499,641 +353,76 @@ public class RouteManager : MonoBehaviour
             tileInvariantRules = tileInvariantRules
         };
     }
+    #endregion
 
-    static readonly Dictionary<TileType, string> DefaultEventNames = new Dictionary<TileType, string>
-    {
-        { TileType.Star, "star" },
-        { TileType.Monster, "battle" },
-        { TileType.Event, "randomevent" },
-        { TileType.Boss, "boss" },
-        { TileType.Trap, "trap" },
-        { TileType.Heal, "heal" },
-        { TileType.Teleport, "warp" },
-        { TileType.Minigame, "randomminigame" },
-        { TileType.SpecialBoss, "specialboss" },
-        { TileType.Draw, "draw" },
-        { TileType.Shop, "shop" },
-        { TileType.Start, "start" },
-        { TileType.Treasure, "treasurebox" },
-        { TileType.Lava, "lava" },
-        { TileType.iceeffect, "iceeffect" }
-    };
-
-    public string GetDefaultEventName(TileType type)
-    {
-        if (DefaultEventNames.TryGetValue(type, out string eventName))
-        {
-            return eventName;
-        }
-
-        return string.Empty;
-    }
-
-    public void RebuildNodeDataMap()
-    {
-        nodeDataMap = new Dictionary<int, NodeConnection>();
-        foreach (var nc in nodeConnections)
-        {
-            if (nc != null && !nodeDataMap.ContainsKey(nc.tileID))
-            {
-                nodeDataMap.Add(nc.tileID, nc);
-            }
-        }
-    }
-
-    public void ConnectSequential()
-    {
-        if (clearPreviousConnectionsOnAutoConnect)
-        {
-            foreach (var nc in nodeConnections)
-            {
-                if (nc != null)
-                {
-                    nc.connectedNodes.Clear();
-                }
-            }
-        }
-
-        for (int i = 0; i < nodeConnections.Count - 1; i++)
-        {
-            NodeConnection currentNc = nodeConnections[i];
-            NodeConnection nextNc = nodeConnections[i + 1];
-
-            if (currentNc != null && currentNc.node != null &&
-                nextNc != null && nextNc.node != null)
-            {
-                if (!currentNc.connectedNodes.Contains(nextNc.node))
-                {
-                    currentNc.connectedNodes.Add(nextNc.node);
-                }
-            }
-        }
-    }
-
+    #region Tile Visuals
     public void ApplyTileVisuals()
     {
-        foreach (var nc in nodeConnections)
-        {
-            ApplyTileVisual(nc);
-        }
+        foreach (NodeConnection nc in nodeConnections) ApplyTileVisual(nc);
     }
 
     public void ApplyTileVisual(NodeConnection nc)
     {
         if (nc == null || nc.node == null) return;
-
-        TileVisualSetting? setting = GetTileVisualSetting(nc.type);
-        if (setting == null) return;
-        TileVisualApplier.Apply(nc.node, setting.Value);
-    }
-
-    TileVisualSetting? GetTileVisualSetting(TileType type)
-    {
-        return tileVisualCache.Get(type, tileVisualSettings);
-    }
-    #endregion
-    private bool isWarpModeActive = false;
-    public void StartWarpSelection()
-    {
-        if (isWarpModeActive) return;
-        isWarpModeActive = true;
-
-        Debug.Log(">>> เข้าสู่โหมดเลือกพื้นที่ Warp! (กรุณาคลิกที่ช่องบนฉาก)");
-
-        // วนลูปทุกโหนดในลิสต์ เพื่อเปิดใช้งาน TileClickable
-        foreach (var nc in nodeConnections)
-        {
-            if (nc.node != null)
-            {
-                var tileScript = nc.node.GetComponent<TileClickable>();
-                if (tileScript != null)
-                {
-                    // 🔴 แก้ชื่อฟังก์ชันตรงนี้ให้ตรงกับ TileClickable.cs
-                    tileScript.SetSelectable(true);
-                }
-            }
-        }
-    }
-
-    /// <summary>
-    /// 2. เมื่อผู้เล่นกดเลือกช่องเสร็จแล้ว (ถูกเรียกจาก TileClickable)
-    /// </summary>
-    public void OnTileClicked(Transform selectedNode)
-    {
-        // ถ้าฟังก์ชันนี้ Error แปลว่าคุณยังไม่ได้ใส่ใน RouteManager
-
-        if (!isWarpModeActive) return;
-
-        // ปิดโหมดเลือกทันที
-        isWarpModeActive = false;
-
-        // วนลูปเพื่อคืนค่าสีเดิมให้ทุกช่อง
-        foreach (var nc in nodeConnections)
-        {
-            if (nc.node != null)
-            {
-                var tileScript = nc.node.GetComponent<TileClickable>();
-                if (tileScript != null)
-                {
-                    tileScript.SetSelectable(false);
-                }
-            }
-        }
-
-        // ✅ แก้ไข: สั่งให้ผู้เล่น "คนปัจจุบัน" วาร์ปไปที่นั่น
-        if (GameTurnManager.CurrentPlayer != null)
-        {
-            // ดึงขา (Walker) ของคนปัจจุบันออกมา
-            PlayerPathWalker walker = GameTurnManager.CurrentPlayer.GetComponent<PlayerPathWalker>();
-
-            if (walker != null)
-            {
-                // ใช้คำสั่ง TeleportToNode ที่มีอยู่จริงในสคริปต์
-                walker.TeleportToNode(selectedNode);
-                Debug.Log($"🛸 Warped {GameTurnManager.CurrentPlayer.name} to {selectedNode.name}");
-        
-                GameEventManager eventManager = FindObjectOfType<GameEventManager>();
-        
-        if (eventManager != null)
-        {
-            // 🟢 2. สั่งให้ผู้จัดการ รัน Coroutine ของตัวผู้จัดการเอง!
-            eventManager.StartCoroutine(eventManager.WaitAndEndTurn());
-        }
-        else
-        {
-            Debug.LogError("หา GameEventManager ไม่เจอ! ลืมลากใส่ฉากหรือเปล่า?");
-        }
-            }
-        }
-    }
-
-    
-
-    #region Public API
-    /// <summary>
-    /// ดึงข้อมูลทั้งหมดของโหนดจาก tileID (ทำงานเร็วมาก)
-    /// </summary>
-    public NodeConnection GetNodeData(int tileID)
-    {
-        if (nodeDataMap == null)
-        {
-            // กรณีที่ถูกเรียกใช้ใน Editor ก่อน Awake
-            Awake();
-        }
-        nodeDataMap.TryGetValue(tileID, out NodeConnection data);
-        return data;
-    }
-
-    /// <summary>
-    /// ดึง List ของโหนดถัดไปที่เป็นไปได้จากโหนดปัจจุบัน
-    /// </summary>
-    public List<Transform> GetAllConnectedNodes(Transform currentNode)
-    {
-        NodeConnection nc = nodeConnections.Find(x => x.node == currentNode);
-        if (nc != null)
-        {
-            return nc.connectedNodes;
-        }
-        return new List<Transform>(); // Return empty list if not found
-    }
-
-    /// <summary>
-    /// เมธอดช่วยสำหรับดึงตัวเลขออกจากชื่อของ GameObject
-    /// </summary>
-    public int ExtractNumberFromName(string name)
-    {
-        Match match = Regex.Match(name, @"\d+");
-        if (match.Success && int.TryParse(match.Value, out int result))
-        {
-            return result;
-        }
-        // คืนค่าที่สูงมากเพื่อให้โหนดที่ไม่มีตัวเลขไปอยู่ท้ายสุดตอนเรียงลำดับ
-        return int.MaxValue;
+        TileVisualSetting? setting = tileVisualCache.Get(nc.type, tileVisualSettings);
+        if (setting != null) TileVisualApplier.Apply(nc.node, setting.Value);
     }
     #endregion
 
+    #region Gimmick Facade
+    public void StartWarpSelection() => Gimmicks.StartWarpSelection();
+    public void OnTileClicked(Transform selectedNode) => Gimmicks.OnTileClicked(selectedNode);
+    public bool TrySpawnRandomRockObstacle() => Gimmicks.TrySpawnRandomRockObstacle();
+    public int TrySpawnRandomRockObstacles(int amount) => Gimmicks.TrySpawnRandomRockObstacles(amount);
+    public bool IsRockObstacleActive(int tileID) => Gimmicks.IsRockObstacleActive(tileID);
+    public int CountActiveRockObstacles() => Gimmicks.CountActiveRockObstacles();
+    public bool TryBreakRockObstacle(int tileID) => Gimmicks.TryBreakRockObstacle(tileID);
+    public bool ActivateRockObstacle(int tileID) => Gimmicks.ActivateRockObstacle(tileID);
+    public void SpawnBossTile() => Gimmicks.SpawnBossTile();
+
+    private RouteGimmickController Gimmicks
+    {
+        get
+        {
+            if (gimmickController == null) gimmickController = GetOrCreateGimmickController();
+            return gimmickController;
+        }
+    }
+
+    private RouteGimmickController GetOrCreateGimmickController()
+    {
+        RouteGimmickController controller = GetComponent<RouteGimmickController>();
+        return controller != null ? controller : gameObject.AddComponent<RouteGimmickController>();
+    }
+    #endregion
 
     #region Gizmos
 #if UNITY_EDITOR
-
     private void OnDrawGizmos()
     {
-        if (!showGizmos)
-            return;
+        if (!showGizmos) return;
 
-        GUIStyle labelStyle = new GUIStyle();
+        GUIStyle labelStyle = new GUIStyle
+        {
+            fontSize = 10,
+            fontStyle = FontStyle.Bold,
+            alignment = TextAnchor.MiddleCenter
+        };
         labelStyle.normal.textColor = Color.white;
-        labelStyle.fontSize = 10;
-        labelStyle.fontStyle = FontStyle.Bold;
-        labelStyle.alignment = TextAnchor.MiddleCenter;
 
-        foreach (var nc in nodeConnections)
+        foreach (NodeConnection nc in nodeConnections)
         {
             if (nc == null || nc.node == null) continue;
+
             Vector3 from = nc.node.position;
-
-            // วาด Sphere พร้อมกำหนดสีตามประเภทของช่อง
-            //Gizmos.color = GetColorForTileType(nc.type);
-            //Gizmos.DrawSphere(from, 0.1f);
-
-            #if UNITY_EDITOR
             Handles.Label(from + Vector3.up * 0.1f, nc.node.name, labelStyle);
-            #endif
-
-            // วาดเส้นเชื่อม
             Gizmos.color = Color.green;
-            foreach (var toNode in nc.connectedNodes)
+            foreach (Transform toNode in nc.connectedNodes)
             {
-                if (toNode == null) continue;
-                Gizmos.DrawLine(from, toNode.position);
+                if (toNode != null) Gizmos.DrawLine(from, toNode.position);
             }
         }
     }
-
-
-
-
 #endif
     #endregion
-    [Header("Boss Settings")]
-    public GameObject bossPrefab;
-
-    [Header("Rock Obstacle Settings")]
-    [Tooltip("Prefab ของหินที่ใช้วางเป็นสิ่งกีดขวาง (optional)")]
-    public GameObject rockObstaclePrefab;
-    [Tooltip("ระยะยกหินขึ้นจากตำแหน่ง node (หน่วยโลก)")]
-    [Min(0f)]
-    public float rockObstacleSpawnHeight = 0.02f;
-    [Tooltip("ตำแหน่งช่องที่อยากให้มีหินตั้งแต่เริ่มเกม")]
-    public List<int> initialRockTileIDs = new List<int>();
-    [Tooltip("สุ่มวางหินเพิ่มตอนเริ่มฉาก (นอกเหนือจาก initialRockTileIDs)")]
-    public bool randomSpawnRockOnStart = false;
-    [Tooltip("จำนวนหินที่สุ่มเพิ่มตอนเริ่มฉาก")]
-    [Min(0)]
-    public int randomSpawnRockCountOnStart = 0;
-    [Tooltip("สถานะหินที่กำลังใช้งานในเกม")]
-    public List<RockObstacleState> activeRockObstacles = new List<RockObstacleState>();
-
-    private readonly Dictionary<int, RockObstacleState> rockObstacleMap = new Dictionary<int, RockObstacleState>();
-    private bool isRockObstacleCacheInitialized;
-
-    private void Start()
-    {
-        if (!Application.isPlaying)
-        {
-            return;
-        }
-
-        if (initialRockTileIDs != null)
-        {
-            foreach (int tileID in initialRockTileIDs)
-            {
-                ActivateRockObstacle(tileID);
-            }
-        }
-
-        if (randomSpawnRockOnStart && randomSpawnRockCountOnStart > 0)
-        {
-            int spawnedCount = TrySpawnRandomRockObstacles(randomSpawnRockCountOnStart);
-            if (spawnedCount > 0)
-            {
-                Debug.Log($"🪨 สุ่มหินตอนเริ่มฉาก {spawnedCount}/{randomSpawnRockCountOnStart} ก้อน");
-            }
-        }
-    }
-
-    public bool TrySpawnRandomRockObstacle()
-    {
-        return TrySpawnRandomRockObstacles(1) > 0;
-    }
-
-    public int TrySpawnRandomRockObstacles(int amount)
-    {
-        if (amount <= 0)
-        {
-            return 0;
-        }
-
-        EnsureRockObstacleCache();
-
-        if (nodeConnections == null || nodeConnections.Count == 0)
-        {
-            return 0;
-        }
-
-        HashSet<int> occupiedPlayerTileIds = GetOccupiedPlayerTileIds();
-        List<int> candidateTileIds = new List<int>();
-        for (int i = 0; i < nodeConnections.Count; i++)
-        {
-            NodeConnection nodeData = nodeConnections[i];
-            if (nodeData == null || nodeData.node == null)
-            {
-                continue;
-            }
-
-            int tileId = nodeData.tileID;
-            if (tileId <= 0 || IsRockObstacleActive(tileId) || occupiedPlayerTileIds.Contains(tileId))
-            {
-                continue;
-            }
-
-            if (nodeData.type == TileType.Start || nodeData.type == TileType.Shop || nodeData.type == TileType.Teleport)
-            {
-                continue;
-            }
-
-            candidateTileIds.Add(tileId);
-        }
-
-        if (candidateTileIds.Count == 0)
-        {
-            return 0;
-        }
-
-        int spawnTargetCount = Mathf.Min(amount, candidateTileIds.Count);
-        int activatedCount = 0;
-
-        for (int i = 0; i < spawnTargetCount; i++)
-        {
-            int randomIndex = Random.Range(0, candidateTileIds.Count);
-            int targetTileId = candidateTileIds[randomIndex];
-            candidateTileIds.RemoveAt(randomIndex);
-
-            bool activated = ActivateRockObstacle(targetTileId);
-            if (!activated)
-            {
-                continue;
-            }
-
-            activatedCount++;
-            Debug.Log($"🪨 สุ่มเสกหินที่ tile {targetTileId}");
-        }
-
-        return activatedCount;
-    }
-
-    public bool IsRockObstacleActive(int tileID)
-    {
-        RockObstacleState state = GetOrCreateRockObstacleState(tileID, false);
-        return state != null && state.isActive;
-    }
-
-    public int CountActiveRockObstacles()
-    {
-        EnsureRockObstacleCache();
-
-        int activeCount = 0;
-        foreach (RockObstacleState state in rockObstacleMap.Values)
-        {
-            if (state != null && state.isActive)
-            {
-                activeCount++;
-            }
-        }
-
-        return activeCount;
-    }
-
-    private static HashSet<int> GetOccupiedPlayerTileIds()
-    {
-        HashSet<int> occupiedTileIds = new HashSet<int>();
-        PlayerPathWalker[] walkers = FindObjectsByType<PlayerPathWalker>(FindObjectsSortMode.None);
-        for (int i = 0; i < walkers.Length; i++)
-        {
-            PlayerPathWalker walker = walkers[i];
-            if (walker != null && walker.currentNodeID > 0)
-            {
-                occupiedTileIds.Add(walker.currentNodeID);
-            }
-        }
-
-        return occupiedTileIds;
-    }
-
-    public bool TryBreakRockObstacle(int tileID)
-    {
-        RockObstacleState state = GetOrCreateRockObstacleState(tileID, false);
-        if (state == null || !state.isActive)
-        {
-            return false;
-        }
-
-        state.isActive = false;
-        if (state.spawnedObject != null)
-        {
-            Destroy(state.spawnedObject);
-            state.spawnedObject = null;
-        }
-
-        Debug.Log($"🪨 Rock obstacle on tile {tileID} was broken.");
-        return true;
-    }
-
-    public bool ActivateRockObstacle(int tileID)
-    {
-        NodeConnection nodeData = GetNodeData(tileID);
-        if (nodeData == null || nodeData.node == null)
-        {
-            Debug.LogWarning($"[RouteManager] ไม่พบ tileID {tileID} สำหรับวางหิน");
-            return false;
-        }
-
-        RockObstacleState state = GetOrCreateRockObstacleState(tileID, true);
-        state.isActive = true;
-
-        if (rockObstaclePrefab != null && state.spawnedObject == null)
-        {
-            Quaternion spawnRotation = rockObstaclePrefab.transform.rotation;
-
-            // หมายเหตุ:
-            // อย่า parent หินกับ node โดยตรง เพราะบาง node ในฉากมี scale บางแกนผิดปกติ
-            // ทำให้หินที่ spawn ถูกบีบจนดูแบนคล้าย 2D
-            state.spawnedObject = Instantiate(rockObstaclePrefab, nodeData.node.position, spawnRotation);
-            MoveRockObstacleToRouteScene(state.spawnedObject);
-            state.spawnedObject.transform.position = GetRockObstacleSpawnPosition(nodeData.node, state.spawnedObject);
-        }
-
-        return true;
-    }
-
-
-    private void MoveRockObstacleToRouteScene(GameObject rockInstance)
-    {
-        if (rockInstance == null)
-        {
-            return;
-        }
-
-        Scene routeScene = gameObject.scene;
-        if (!routeScene.IsValid() || !routeScene.isLoaded || rockInstance.scene.handle == routeScene.handle)
-        {
-            return;
-        }
-
-        SceneManager.MoveGameObjectToScene(rockInstance, routeScene);
-    }
-
-    private Vector3 GetRockObstacleSpawnPosition(Transform nodeTransform, GameObject rockInstance)
-    {
-        Vector3 spawnPosition = nodeTransform.position;
-        float targetGroundY = nodeTransform.position.y;
-
-        if (TryGetCombinedBounds(nodeTransform, out Bounds nodeBounds))
-        {
-            spawnPosition.x = nodeBounds.center.x;
-            spawnPosition.z = nodeBounds.center.z;
-            targetGroundY = nodeBounds.max.y;
-        }
-
-        if (rockInstance != null && TryGetCombinedBounds(rockInstance.transform, out Bounds rockBounds))
-        {
-            float rockBottomOffset = rockBounds.min.y - rockInstance.transform.position.y;
-            spawnPosition.y = targetGroundY - rockBottomOffset + rockObstacleSpawnHeight;
-            return spawnPosition;
-        }
-
-        spawnPosition.y = targetGroundY + rockObstacleSpawnHeight;
-        return spawnPosition;
-    }
-
-    private bool TryGetCombinedBounds(Transform root, out Bounds bounds)
-    {
-        Renderer[] renderers = root.GetComponentsInChildren<Renderer>();
-        if (renderers.Length > 0)
-        {
-            bounds = renderers[0].bounds;
-            for (int i = 1; i < renderers.Length; i++)
-            {
-                bounds.Encapsulate(renderers[i].bounds);
-            }
-
-            return true;
-        }
-
-        Collider[] colliders = root.GetComponentsInChildren<Collider>();
-        if (colliders.Length > 0)
-        {
-            bounds = colliders[0].bounds;
-            for (int i = 1; i < colliders.Length; i++)
-            {
-                bounds.Encapsulate(colliders[i].bounds);
-            }
-
-            return true;
-        }
-
-        bounds = default;
-        return false;
-    }
-
-    private RockObstacleState GetOrCreateRockObstacleState(int tileID, bool createIfMissing)
-    {
-        if (tileID <= 0)
-        {
-            return null;
-        }
-
-        EnsureRockObstacleCache();
-
-        if (rockObstacleMap.TryGetValue(tileID, out RockObstacleState cached))
-        {
-            return cached;
-        }
-
-        if (!createIfMissing)
-        {
-            return null;
-        }
-
-        RockObstacleState newState = new RockObstacleState { tileID = tileID, isActive = true };
-        activeRockObstacles.Add(newState);
-        rockObstacleMap[tileID] = newState;
-        return newState;
-    }
-
-    private void EnsureRockObstacleCache()
-    {
-        if (isRockObstacleCacheInitialized)
-        {
-            return;
-        }
-
-        rockObstacleMap.Clear();
-        if (activeRockObstacles != null)
-        {
-            for (int i = 0; i < activeRockObstacles.Count; i++)
-            {
-                RockObstacleState state = activeRockObstacles[i];
-                if (state == null || state.tileID <= 0)
-                {
-                    continue;
-                }
-
-                if (!rockObstacleMap.ContainsKey(state.tileID))
-                {
-                    rockObstacleMap[state.tileID] = state;
-                }
-            }
-        }
-
-        isRockObstacleCacheInitialized = true;
-    }
-
-    public void SpawnBossTile()
-    {
-        Debug.Log("⚡ RouteManager: รับคำสั่งเตรียมเสกบอส...");
-
-        // สร้าง List ไว้เก็บช่องที่มีสิทธิ์เป็นบอสได้
-        List<NodeConnection> candidateNodes = new List<NodeConnection>();
-
-        foreach (var nc in nodeConnections)
-        {
-            // ✅ เงื่อนไขใหม่: ช่องอะไรก็ได้ ที่ไม่ใช่ Start, Shop, และ Teleport
-            if (nc.type != TileType.Start &&
-                nc.type != TileType.Shop &&
-                nc.type != TileType.Teleport)
-            {
-                candidateNodes.Add(nc);
-            }
-        }
-
-        // เช็คว่ามีช่องเหลือให้ลงไหม
-        if (candidateNodes.Count > 0)
-        {
-            // สุ่มเลือกมา 1 ช่อง
-            int randomIndex = Random.Range(0, candidateNodes.Count);
-            NodeConnection targetNode = candidateNodes[randomIndex];
-
-            // เก็บประเภทเดิมไว้ดูเล่น (เผื่อ Debug)
-            TileType oldType = targetNode.type;
-
-            // 👑 เปลี่ยนร่างเป็น BOSS
-            targetNode.type = TileType.Boss;
-            targetNode.eventName = "boss"; // บังคับให้เป็น event ต่อสู้
-            ApplyTileVisual(targetNode);
-
-            Debug.Log($"🔥 Boss Spawned at Tile ID: {targetNode.tileID} (Was: {oldType})");
-
-            // เสกโมเดลบอส
-            if (bossPrefab != null && targetNode.node != null)
-            {
-                Instantiate(bossPrefab, targetNode.node.position, Quaternion.identity);
-                 GameEventManager eventManager = FindObjectOfType<GameEventManager>();
-        
-        if (eventManager != null)
-        {
-            // 🟢 2. สั่งให้ผู้จัดการ รัน Coroutine ของตัวผู้จัดการเอง!
-            eventManager.StartCoroutine(eventManager.WaitAndEndTurn());
-        }
-        else
-        {
-            Debug.LogError("หา GameEventManager ไม่เจอ! ลืมลากใส่ฉากหรือเปล่า?");
-        }
-            }
-        }
-        else
-        {
-            Debug.LogError("❌ ไม่เหลือช่องที่สามารถเสกบอสได้เลย! (มีแต่ Start, Shop, Teleport เต็มแมพ)");
-        }
-    }
 }

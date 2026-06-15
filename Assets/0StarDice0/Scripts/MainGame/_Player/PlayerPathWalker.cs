@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.SceneManagement;
@@ -206,7 +206,7 @@ public class PlayerPathWalker : MonoBehaviour
                             aiController = GetComponent<AIController>();
 
                         nextNode = aiController != null
-                            ? aiController.ChoosePath(choices)
+                            ? aiController.ChoosePath(choices, stepsRemaining)
                             : choices[Random.Range(0, choices.Count)];
 
                         yield return new WaitForSeconds(0.5f);

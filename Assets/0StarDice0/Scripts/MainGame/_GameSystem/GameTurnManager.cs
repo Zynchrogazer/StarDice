@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using UnityEngine.SceneManagement;
 
 // ===== ENUM =====
+// FSM หลักของ board turn flow: จำกัดเกมให้อยู่ในสถานะที่คาดเดาได้
+// เช่น รอทอยได้เฉพาะ WaitingForRoll/Rolling และเริ่มเดินเมื่อเปลี่ยนเป็น Moving
 public enum GameState
 {
     Idle,
@@ -119,6 +121,7 @@ public class GameTurnManager : MonoBehaviour
     }
 
     // ===== STATE =====
+    // จุดเดียวสำหรับเปลี่ยน state เพื่อให้ debug/subscribe UI ได้ง่าย และลดการกระโดดสถานะผิดลำดับ
     public void SetState(GameState newState)
     {
         if (currentState == newState)
